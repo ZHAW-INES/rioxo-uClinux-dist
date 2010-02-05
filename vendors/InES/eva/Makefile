@@ -8,7 +8,7 @@ ROOT_TEMPLATE_DIR = rootfs
 ROMFS_DIRS = bin sbin dev etc home lib mnt proc usr var sys tmp root \
 	home/httpd home/httpd/cgi-bin usr/bin usr/sbin usr/share etc/init.d
 
-EXTRAMODULES = #hdoip_ether
+EXTRAMODULES = hdoip_ether
 
 all:
 	dirs=$(DIRS) ; \
