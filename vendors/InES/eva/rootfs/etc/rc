@@ -7,8 +7,8 @@ mkdir /var/run
 mkdir /var/lock
 ifconfig lo 127.0.0.1
 route add -net 127.0.0.0 netmask 255.0.0.0 lo
-#ifconfig eth0 hw ether 00:15:12:00:01:42
-#ifconfig eth0 192.168.1.10 netmask 255.255.255.0
+modprobe hdoip_ether
+ifconfig eth0 192.168.1.100 netmask 255.255.255.0 up
 # ethtool -s eth0 msglvl 0xffff
 # dhcpcd -p -a eth0 &
 # For debugging: make kernel messages appear at the console

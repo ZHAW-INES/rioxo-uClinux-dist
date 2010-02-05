@@ -27,6 +27,8 @@
 
 /* Register area sizes */
 #define TSE_MAC_SIZE			0x400
+#define ACB_ETH_OUT_SIZE		0x54
+#define ACB_ETH_IN_SIZE			0x8C
 
 /* Generic offsets into eth_st_in/eth_st_out configuration register regions */
 #define ETHIO_CONFIG			0x00

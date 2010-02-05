@@ -82,181 +82,184 @@ static inline bool hdoip_desc_accepts(struct hdoip_descriptor *desc, u32 len)
 /*
  * Read from eth_st_in register.
  */
-static inline u32 hdoip_ethi_read(unsigned int reg)
+static inline u32 hdoip_ethi_read(struct hdoip_ether *hde, unsigned int reg)
 {
-	void __iomem *ethi_base = (void __iomem *) ACB_ETH_IN_BASE;
-	return ioread32(ethi_base + reg);
+	return ioread32(hde->ethi_base + reg);
 }
 
 /*
  * Write to eth_st_in register.
  */
-static inline void hdoip_ethi_write(unsigned reg, u32 value)
+static inline void hdoip_ethi_write(struct hdoip_ether *hde, unsigned reg,
+                                    u32 value)
 {
-	void __iomem *ethi_base = (void __iomem *) ACB_ETH_IN_BASE;
-	iowrite32(value, ethi_base + reg);
+	iowrite32(value, hde->ethi_base + reg);
 }
 
 /*
  * Start the eth_st_in DMA controller state machine.
  */
-static inline void hdoip_ethi_start(void)
+static inline void hdoip_ethi_start(struct hdoip_ether *hde)
 {
-	u32 regval = hdoip_ethi_read(ETHIO_CONFIG);
+	u32 regval = hdoip_ethi_read(hde, ETHIO_CONFIG);
 
 	regval |= ETHI_CONFIG_RUN;
-	hdoip_ethi_write(ETHIO_CONFIG, regval);
+	hdoip_ethi_write(hde, ETHIO_CONFIG, regval);
 }
 
 /*
  * Stop the eth_st_in DMA controller state machine.
  */
-static inline void hdoip_ethi_stop(void)
+static inline void hdoip_ethi_stop(struct hdoip_ether *hde)
 {
-	u32 regval = hdoip_ethi_read(ETHIO_CONFIG);
+	u32 regval = hdoip_ethi_read(hde, ETHIO_CONFIG);
 
 	regval &= ~ETHI_CONFIG_RUN;
-	hdoip_ethi_write(ETHIO_CONFIG, regval);
+	hdoip_ethi_write(hde, ETHIO_CONFIG, regval);
 }
 
 /*
  * Update eth_st_in descriptor struct with values from the CPU descriptor
  * registers.
  */
-static inline void hdoip_ethi_desc_get_cpu(struct hdoip_descriptor *desc)
+static inline void hdoip_ethi_desc_get_cpu(struct hdoip_ether *hde,
+                                           struct hdoip_descriptor *desc)
 {
-	desc->start = hdoip_ethi_read(ETHIO_CPU_START_DESC);
-	desc->stop = hdoip_ethi_read(ETHIO_CPU_STOP_DESC);
-	desc->write = hdoip_ethi_read(ETHIO_CPU_WRITE_DESC);
-	desc->read = hdoip_ethi_read(ETHIO_CPU_READ_DESC);
+	desc->start = hdoip_ethi_read(hde, ETHIO_CPU_START_DESC);
+	desc->stop = hdoip_ethi_read(hde, ETHIO_CPU_STOP_DESC);
+	desc->write = hdoip_ethi_read(hde, ETHIO_CPU_WRITE_DESC);
+	desc->read = hdoip_ethi_read(hde, ETHIO_CPU_READ_DESC);
 }
 
 /*
  * Update eth_st_in CPU descriptor registers with values from the descriptor
  * struct.
  */
-static inline void hdoip_ethi_desc_set_cpu(struct hdoip_descriptor *desc)
+static inline void hdoip_ethi_desc_set_cpu(struct hdoip_ether *hde,
+                                           struct hdoip_descriptor *desc)
 {
-	hdoip_ethi_write(ETHIO_CPU_START_DESC, desc->start);
-	hdoip_ethi_write(ETHIO_CPU_STOP_DESC, desc->stop);
-	hdoip_ethi_write(ETHIO_CPU_WRITE_DESC, desc->write);
-	hdoip_ethi_write(ETHIO_CPU_READ_DESC, desc->read);
+	hdoip_ethi_write(hde, ETHIO_CPU_START_DESC, desc->start);
+	hdoip_ethi_write(hde, ETHIO_CPU_STOP_DESC, desc->stop);
+	hdoip_ethi_write(hde, ETHIO_CPU_WRITE_DESC, desc->write);
+	hdoip_ethi_write(hde, ETHIO_CPU_READ_DESC, desc->read);
 }
 
 /*
  *
  */
-static inline void hdoip_ethi_init(struct hdoip_descriptor *rx_desc,
+static inline void hdoip_ethi_init(struct hdoip_ether *hde,
                                    u16 dma_burst_size,
                                    __be32 addr)
 {
 	u32 regval;
 
 	/* Stop the state machines */
-	hdoip_ethi_stop();
+	hdoip_ethi_stop(hde);
 
 	/* Reset IRQ and statistics register */
-	regval = hdoip_ethi_read(ETHIO_CONFIG);
+	regval = hdoip_ethi_read(hde, ETHIO_CONFIG);
 	regval &= ~ETHI_CONFIG_IRQ1_RESET;
 	regval |= ETHI_CONFIG_STATS_RESET;
-	hdoip_ethi_write(ETHIO_CONFIG, regval);
+	hdoip_ethi_write(hde, ETHIO_CONFIG, regval);
 
 	/* Setup descriptors */
-	hdoip_ethi_desc_set_cpu(rx_desc);
+	hdoip_ethi_desc_set_cpu(hde, &hde->rx_desc);
 
 	/* Setup DMA... */
-	regval = hdoip_ethi_read(ETHI_DMA_CONFIG);
+	regval = hdoip_ethi_read(hde, ETHI_DMA_CONFIG);
 	/* ...burst size */
 	regval |= (dma_burst_size << ETHI_CONFIG_DMA_BURST_SIZE_INDEX)
 	          & ETHI_CONFIG_DMA_BURST_SIZE_MASK;
 
-	hdoip_ethi_write(ETHI_DMA_CONFIG, regval);
+	hdoip_ethi_write(hde, ETHI_DMA_CONFIG, regval);
 }
 
 /*
  * Read from eth_st_out register.
  */
-static inline u32 hdoip_etho_read(unsigned int reg)
+static inline u32 hdoip_etho_read(struct hdoip_ether *hde, unsigned int reg)
 {
-	void __iomem *etho_base = (void __iomem *) ACB_ETH_OUT_BASE;
-	return ioread32(etho_base + reg);
+	return ioread32(hde->etho_base + reg);
 }
 
 /*
  * Write to eth_st_out register.
  */
-static inline void hdoip_etho_write(unsigned reg, u32 value)
+static inline void hdoip_etho_write(struct hdoip_ether *hde, unsigned reg,
+                                    u32 value)
 {
-	void __iomem *etho_base = (void __iomem *) ACB_ETH_OUT_BASE;
-	iowrite32(value, etho_base + reg);
+	iowrite32(value, hde->etho_base + reg);
 }
 
 /*
  * Start the eth_st_out DMA controller and priorization state machine.
  */
-static inline void hdoip_etho_start(void)
+static inline void hdoip_etho_start(struct hdoip_ether *hde)
 {
-	u32 regval = hdoip_etho_read(ETHIO_CONFIG);
+	u32 regval = hdoip_etho_read(hde, ETHIO_CONFIG);
 
 	regval |= ETHO_CONFIG_RUN | ETHO_CONFIG_PRIO;
-	hdoip_etho_write(ETHIO_CONFIG, regval);
+	hdoip_etho_write(hde, ETHIO_CONFIG, regval);
 }
 
 /*
  * Stop the eth_st_out DMA controller and priorization state machine.
  */
-static inline void hdoip_etho_stop(void)
+static inline void hdoip_etho_stop(struct hdoip_ether *hde)
 {
-	u32 regval = hdoip_etho_read(ETHIO_CONFIG);
+	u32 regval = hdoip_etho_read(hde, ETHIO_CONFIG);
 
 	regval &= ~(ETHO_CONFIG_RUN | ETHO_CONFIG_PRIO);
-	hdoip_etho_write(ETHIO_CONFIG, regval);
+	hdoip_etho_write(hde, ETHIO_CONFIG, regval);
 }
 
 /*
  * Update eth_st_out descriptor struct with values from the CPU descriptor
  * registers.
  */
-static inline void hdoip_etho_desc_get_cpu(struct hdoip_descriptor *desc)
+static inline void hdoip_etho_desc_get_cpu(struct hdoip_ether *hde,
+                                           struct hdoip_descriptor *desc)
 {
-	desc->start = hdoip_etho_read(ETHIO_CPU_START_DESC);
-	desc->stop = hdoip_etho_read(ETHIO_CPU_STOP_DESC);
-	desc->write = hdoip_etho_read(ETHIO_CPU_WRITE_DESC);
-	desc->read = hdoip_etho_read(ETHIO_CPU_READ_DESC);
+	desc->start = hdoip_etho_read(hde, ETHIO_CPU_START_DESC);
+	desc->stop = hdoip_etho_read(hde, ETHIO_CPU_STOP_DESC);
+	desc->write = hdoip_etho_read(hde, ETHIO_CPU_WRITE_DESC);
+	desc->read = hdoip_etho_read(hde, ETHIO_CPU_READ_DESC);
 }
 
 /*
  * Update eth_st_out CPU descriptor registers with values from the descriptor
  * struct.
  */
-static inline void hdoip_etho_desc_set_cpu(struct hdoip_descriptor *desc)
+static inline void hdoip_etho_desc_set_cpu(struct hdoip_ether *hde,
+                                           struct hdoip_descriptor *desc)
 {
-	hdoip_etho_write(ETHIO_CPU_START_DESC, desc->start);
-	hdoip_etho_write(ETHIO_CPU_STOP_DESC, desc->stop);
-	hdoip_etho_write(ETHIO_CPU_WRITE_DESC, desc->write);
-	hdoip_etho_write(ETHIO_CPU_READ_DESC, desc->read);
+	hdoip_etho_write(hde, ETHIO_CPU_START_DESC, desc->start);
+	hdoip_etho_write(hde, ETHIO_CPU_STOP_DESC, desc->stop);
+	hdoip_etho_write(hde, ETHIO_CPU_WRITE_DESC, desc->write);
+	hdoip_etho_write(hde, ETHIO_CPU_READ_DESC, desc->read);
 }
 
 /*
  * Initialize the eth_st_out block.
  *
+ * @hde:             private data of the device to operate on
  * @tx_desc:         CPU descriptors to setup for TX ringbuffer
  * @dma_burst_size:  DMA burst size
  * @dma_fifo_thresh: DMA fifo threshold
  */
-static inline void hdoip_etho_init(struct hdoip_descriptor *tx_desc,
+static inline void hdoip_etho_init(struct hdoip_ether *hde,
                                    u16 dma_burst_size, u16 dma_fifo_thresh)
 {
 	u32 regval;
 
 	/* Stop the state machines */
-	hdoip_etho_stop();
+	hdoip_etho_stop(hde);
 
 	/* Setup descriptors */
-	hdoip_etho_desc_set_cpu(tx_desc);
+	hdoip_etho_desc_set_cpu(hde, &hde->tx_desc);
 
 	/* Setup DMA... */
-	regval = hdoip_etho_read(ETHO_DMA_CONFIG);
+	regval = hdoip_etho_read(hde, ETHO_DMA_CONFIG);
 	/* ...burst size */
 	regval |= (dma_burst_size << ETHO_CONFIG_DMA_BURST_SIZE_INDEX)
 	          & ETHO_CONFIG_DMA_BURST_SIZE_MASK;
@@ -264,7 +267,7 @@ static inline void hdoip_etho_init(struct hdoip_descriptor *tx_desc,
 	regval |= (dma_fifo_thresh << ETHO_CONFIG_DMA_FIFO_THRESH_INDEX)
 	          & ETHO_CONFIG_DMA_FIFO_THRESH_MASK;
 
-	hdoip_etho_write(ETHO_DMA_CONFIG, regval);
+	hdoip_etho_write(hde, ETHO_DMA_CONFIG, regval);
 }
 
 /*
@@ -337,12 +340,13 @@ static const struct ethtool_ops hdoip_ether_ethtool_ops = {
 
 static struct net_device_stats *hdoip_ether_get_stats(struct net_device *dev)
 {
+	struct hdoip_ether *hde = netdev_priv(dev);
 	struct net_device_stats *stats = &dev->stats;
 
 	if (netif_running(dev)) {
-		stats->rx_packets += hdoip_ethi_read(ETHI_CPU_PACKET_COUNT);
-		stats->rx_bytes	+= hdoip_ethi_read(ETHI_CPU_DATA_COUNT);
-		stats->rx_crc_errors += hdoip_ethi_read(ETHI_CPU_CRC_ERR_COUNT);
+		stats->rx_packets += hdoip_ethi_read(hde, ETHI_CPU_PACKET_COUNT);
+		stats->rx_bytes	+= hdoip_ethi_read(hde, ETHI_CPU_DATA_COUNT);
+		stats->rx_crc_errors += hdoip_ethi_read(hde, ETHI_CPU_CRC_ERR_COUNT);
 	}
 
 	return stats;
@@ -447,11 +451,13 @@ static void hdoip_ether_adjust_link(struct net_device *dev)
  */
 static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 {
-	struct hdoip_ether *priv = netdev_priv(dev);
-	struct hdoip_descriptor *tx_desc = &priv->tx_desc;
+	struct hdoip_ether *hde = netdev_priv(dev);
+	struct hdoip_descriptor *tx_desc = &hde->tx_desc;
 	unsigned long flags;
 	u32 *tx_buf;
 	u32 len = skb->len;
+
+	pr_debug("called %s\n", __func__);
 
 	if (unlikely(len > MAX_PKT_SIZE)) {
 		dev->stats.tx_dropped++;
@@ -462,13 +468,13 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	dev->stats.tx_packets++;
 	dev->stats.tx_bytes += len;
 
-	spin_lock_irqsave(&priv->tx_lock, flags);
+	spin_lock_irqsave(&hde->tx_lock, flags);
 
 	/* Is there space in the ringbuffer? */
 	if (!hdoip_desc_accepts(tx_desc, len)) {
 		/* The ringbuffer is full */
 		netif_stop_queue(dev);
-		spin_unlock_irqrestore(&priv->tx_lock, flags);
+		spin_unlock_irqrestore(&hde->tx_lock, flags);
 		printk(KERN_ERR "TX Ringbuffer is full\n");
 		return NETDEV_TX_BUSY;
 	}
@@ -485,9 +491,9 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 		tx_desc->write = tx_desc->start;
 
 	/* Write descriptors */
-	hdoip_etho_desc_set_cpu(tx_desc);
+	hdoip_etho_desc_set_cpu(hde, tx_desc);
 
-	spin_unlock_irqrestore(&priv->tx_lock, flags);
+	spin_unlock_irqrestore(&hde->tx_lock, flags);
 
 	dev->trans_start = jiffies;
 
@@ -501,29 +507,29 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
  */
 static void hdoip_ether_rx(struct net_device *dev)
 {
-	struct hdoip_ether *priv = netdev_priv(dev);
+	struct hdoip_ether *hde = netdev_priv(dev);
 	struct sk_buff *skb;
 	unsigned int len;
 	unsigned long flags;
 
-	spin_lock_irqsave(&priv->rx_lock, flags);
+	spin_lock_irqsave(&hde->rx_lock, flags);
 
 	/* Update the RX descriptor struct */
-	hdoip_ethi_desc_get_cpu(&priv->rx_desc);
+	hdoip_ethi_desc_get_cpu(hde, &hde->rx_desc);
 
 	/* Get the frame length (first byte) */
-	len = ioread32(priv->rx_desc.read);
+	len = ioread32(hde->rx_desc.read);
 	pr_debug("RX frame: %d bytes\n", len);
 
 	skb = dev_alloc_skb(len + 2);
 	if (!skb) {
-		spin_unlock_irqrestore(&priv->rx_lock, flags);
+		spin_unlock_irqrestore(&hde->rx_lock, flags);
 		dev->stats.rx_dropped++;
 		printk(KERN_NOTICE "%s: Memory squeeze, dropping packet.\n", dev->name);
 		return;
 	}
 
-	spin_unlock_irqrestore(&priv->rx_lock, flags);
+	spin_unlock_irqrestore(&hde->rx_lock, flags);
 }
 
 /*
@@ -532,17 +538,18 @@ static void hdoip_ether_rx(struct net_device *dev)
 static irqreturn_t hdoip_ether_interrupt(int irq, void *dev_id)
 {
 	struct net_device *dev = dev_id;
+	struct hdoip_ether *hde = netdev_priv(dev);
 	u32 status;
 
 	pr_debug("Got an interrupt\n");
 
-	status = hdoip_ethi_read(ETHIO_STATUS);
+	status = hdoip_ethi_read(hde, ETHIO_STATUS);
 	/* Check the status register for the IRQ */
 	if (!(status & ETHI_STATUS_IRQ1_FLAG))
 		return IRQ_HANDLED;
 
 	/* Reset IRQ */
-	hdoip_ethi_write(ETHIO_STATUS, status | ETHI_CONFIG_IRQ1_RESET);
+	hdoip_ethi_write(hde, ETHIO_STATUS, status | ETHI_CONFIG_IRQ1_RESET);
 
 	pr_debug("There was really an interrupt\n");
 
@@ -578,6 +585,7 @@ static int hdoip_ether_mac_init(struct net_device *dev)
 	}
 
 	/* Set default MTU */
+	dev->mtu = TSE_MAC_MTU;
 	hdoip_mac_write(hde, TSE_MAC_MTU, HDOIP_DEFAULT_MTU);
 
 	/* Set FIFO thresholds */
@@ -676,8 +684,7 @@ static int hdoip_ether_open(struct net_device *dev)
 	                           - MAX_PKT_SIZE);
 	hde->tx_desc.write = hde->tx_desc.start;
 	hde->tx_desc.read = hde->tx_desc.start;
-	hdoip_etho_init(&hde->tx_desc, ETHIO_DMA_BURST_SIZE,
-	                ETHO_DMA_FIFO_THRESH);
+	hdoip_etho_init(hde, ETHIO_DMA_BURST_SIZE, ETHO_DMA_FIFO_THRESH);
 
 	hde->rx_desc.start = (u32) hde->rx_buf_dma;
 	hde->rx_desc.stop = (u32) (hde->rx_buf_dma
@@ -685,7 +692,7 @@ static int hdoip_ether_open(struct net_device *dev)
 	                           - MAX_PKT_SIZE);
 	hde->rx_desc.write = (u32) hde->rx_desc.start;
 	hde->rx_desc.read = (u32) hde->rx_desc.start;
-	hdoip_ethi_init(&hde->rx_desc, ETHIO_DMA_BURST_SIZE, 0);
+	hdoip_ethi_init(hde, ETHIO_DMA_BURST_SIZE, 0);
 
 	/* Enable TX/RX on MAC */
 	regval = hdoip_mac_read(hde, TSE_MAC_COMMAND_CONFIG);
@@ -693,7 +700,7 @@ static int hdoip_ether_open(struct net_device *dev)
 	                regval | TSE_CMD_TX_ENA | TSE_CMD_RX_ENA);
 
 	/* Start the eth_st_in DMA controller */
-	hdoip_ethi_start();
+	hdoip_ethi_start(hde);
 
 	netif_start_queue(dev);
 
@@ -707,7 +714,7 @@ static int hdoip_ether_close(struct net_device *dev)
 	u32 regval;
 
 	/* Start the eth_st_in DMA controller */
-	hdoip_ethi_stop();
+	hdoip_ethi_stop(hde);
 
 	/* Disable TX/RX on MAC */
 	regval = hdoip_mac_read(hde, TSE_MAC_COMMAND_CONFIG);
@@ -750,23 +757,23 @@ static int hdoip_ether_inetaddr_event(struct notifier_block *nb,
 {
 	struct in_ifaddr *ifa = ptr;
 	struct net_device *dev = ifa->ifa_dev ? ifa->ifa_dev->dev : NULL;
-	struct hdoip_ether *priv;
+	struct hdoip_ether *hde;
 
 	pr_debug("called %s\n", __func__);
 
 	if (!dev || !netif_running(dev) || dev_net(dev) != &init_net)
 		return NOTIFY_DONE;
 
-	priv = netdev_priv(dev);
+	hde = netdev_priv(dev);
 
 	switch (event) {
 	case NETDEV_UP:
 		printk(KERN_INFO "IP address %pI4 set\n", &ifa->ifa_address);
-		hdoip_ethi_write(ETHI_IP_FILTER, ifa->ifa_address);
+		hdoip_ethi_write(hde, ETHI_IP_FILTER, ifa->ifa_address);
 		break;
 	case NETDEV_DOWN:
 		printk(KERN_INFO "IP address %pI4 unset\n", &ifa->ifa_address);
-		hdoip_ethi_write(ETHI_IP_FILTER, 0);
+		hdoip_ethi_write(hde, ETHI_IP_FILTER, 0);
 		break;
 	}
 
@@ -800,6 +807,8 @@ static int __init hdoip_ether_phy_init(struct net_device *dev)
 
 	priv->phydev = phydev;
 	phydev->autoneg = AUTONEG_ENABLE;
+	phydev->supported &= SUPPORTED_1000baseT_Full;
+	phydev->advertising = phydev->supported;
 
 	/* Reconfigure PHY LEDs */
 	phy_write(phydev, MII_M1111_PHY_LED_CONTROL, 0x43);
@@ -835,7 +844,7 @@ static int __init hdoip_mii_probe(struct net_device *dev)
 
 	hde->mdio_bus = mdio_bus;
 
-#ifdef HDOIP_DEBUG
+#if 0
 	/* Report all available PHYs */
 	for (phy_addr = 0; phy_addr < PHY_MAX_ADDR; phy_addr++) {
 		u32 phy_id1, phy_id2;
@@ -861,9 +870,6 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 	int ret = -ENOMEM;
 	u32 regval;
 
-	hdoip_etho_stop();
-	hdoip_ethi_stop();
-
 	/* HD over IP board specific: Perform a PHY hardware reset */
 	regval = ioread32(EXT_RESET_PIO_BASE);
 	iowrite32(regval & 0xFE, EXT_RESET_PIO_BASE);
@@ -881,6 +887,12 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 
 	/* Remap the register/memory areas */
 	priv->tse_mac_base = ioremap_nocache(TSE_MAC_BASE, TSE_MAC_SIZE);
+	if (!priv->tse_mac_base)
+		goto out_free;
+	priv->ethi_base = ioremap_nocache(ACB_ETH_IN_BASE, ACB_ETH_IN_SIZE);
+	if (!priv->tse_mac_base)
+		goto out_free;
+	priv->etho_base = ioremap_nocache(ACB_ETH_OUT_BASE, ACB_ETH_OUT_SIZE);
 	if (!priv->tse_mac_base)
 		goto out_free;
 	priv->ext_pio_base = ioremap_nocache(EXT_RESET_PIO_BASE, 4);
