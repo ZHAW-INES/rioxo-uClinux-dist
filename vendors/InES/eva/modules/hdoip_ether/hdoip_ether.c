@@ -29,15 +29,17 @@
 #include "hdoip.h"
 #include "hdoip_ether.h"
 
-#define HDOIP_ETHER_NAME	"hdoip_ether"
-#define HDOIP_ETHER_VERSION	"0.0"
+#define DRV_NAME			"hdoip_ether"
+#define DRV_VERSION			"0.0"
 
-#define NIOS_NC				0x80000000
-
+#define MII_M1111_PHY_LINK_STATUS	0x11
 #define MII_M1111_PHY_EXT_CR		0x14
 #define MII_M1111_PHY_LED_CONTROL	0x18
 
 #define MII_M1111_HWCFG_TX_EN		0x01
+
+#define mark_entry()			pr_debug("entering %s\n", __func__)
+#define mark_leave()			pr_debug("leaving %s\n", __func__)
 
 /*
  * The default MAC address to set in case the bootloader did not set a valid MAC
@@ -318,19 +320,94 @@ static int hdoip_ether_mdio_reset(struct mii_bus *mii)
 	struct hdoip_ether *hde = mii->priv;
 	u32 regval = ioread32(hde->ext_pio_base);
 
+	mark_entry();
+
 	iowrite32(regval & 0xFE, hde->ext_pio_base);
-	udelay(50);
+	udelay(500);
 	iowrite32(regval | 0x01, hde->ext_pio_base);
-	udelay(50);
+	udelay(500);
+
+	mark_leave();
 
 	return 0;
+}
+
+static int hdoip_ether_check_link(struct hdoip_ether *hde)
+{
+	return (phy_read(hde->phydev, MII_M1111_PHY_LINK_STATUS) & 0x400) >> 10;
+}
+
+/* XXX: For debugging only */
+static void hdoip_ether_print_status(struct hdoip_ether *hde)
+{
+	u32 regval;
+
+	pr_debug("%s PHY register status\n", DRV_NAME);
+	regval = hdoip_mac_read(hde, 0x204);
+	pr_debug(" Status register                : %04x\n\n", regval);
+	pr_debug(" Jabber condition               : %s\n", regval & 0x0002 ? "detected" : "not detected");
+	pr_debug(" Copper link status             : %s\n", regval & 0x0004 ? "up" : "down");
+	pr_debug(" Copper remote fault condition  : %s\n", regval & 0x0010 ? "detected" : "not detected");
+	pr_debug(" Autonegotiation process        : %s\n", regval & 0x0020 ? "completed" : "not completed");
+	pr_debug(" 10 Mbps Half-Duplex            : %s\n", regval & 0x0800 ? "available" : "not available");
+	pr_debug(" 10 Mbps Full-Duplex            : %s\n", regval & 0x1000 ? "available" : "not available");
+	pr_debug(" 100 Mbps Half-Duplex           : %s\n", regval & 0x2000 ? "available" : "not available");
+	pr_debug(" 100 Mbps Full-Duplex           : %s\n", regval & 0x4000 ? "available" : "not available");
+
+	pr_debug("\n===\n\n");
+
+	regval = hdoip_mac_read(hde, 0x244);
+	pr_debug(" PHY specific status register   : %04x\n\n", regval);
+	pr_debug(" Jabber (real time)             : %s\n", regval & 0x0001 ? "jabber" : "no jabber");
+	pr_debug(" Polarity (real time)           : %s\n", regval & 0x0002 ? "reversed" : "normal");
+	pr_debug(" Link (real time)               : %s\n", regval & 0x0400 ? "up" : "down");
+	pr_debug(" Speed and duplex resolved      : %s\n", regval & 0x0800 ? "resolved" : "not resolved");
+	pr_debug(" Duplex                         : %s\n", regval & 0x2000 ? "full" : "half");
+
+	pr_debug(" Speed                          : ");
+	switch (regval & 0xC000 >> 14) {
+	case 0:
+		pr_cont("10 Mbps\n");
+		break;
+	case 1:
+		pr_cont("100 Mbps\n");
+		break;
+	case 2:
+		pr_cont("1000 Mbps\n");
+		break;
+	default:
+		pr_cont("reserved\n");
+		break;
+	}
+
+	pr_debug("\n===\n\n");
+
+	regval = hdoip_mac_read(hde, 0x26C);
+	pr_debug(" Extended PHY specific status  : %04x\n", regval);
+	pr_debug(" HWCFG_MODE                    : ");
+	switch (regval & 0xF) {
+		case 0xF:
+			pr_cont("GMII to copper");
+			break;
+		case 0xB:
+			pr_cont("RGMII/Modified MII to Copper");
+			break;
+		case 0x7:
+			pr_cont("GMII to Fiber");
+		default:
+			pr_cont("reserved");
+			break;
+	}
+	pr_cont("\n");
+	pr_debug(" Fiber/copper resolution       : %s\n", regval & 0x2000 ? "fiber" : "copper");
+	pr_debug(" Fiber/copper auto selection   : %s\n", regval & 0x8000 ? "disabled" : "enabled");
 }
 
 static void hdoip_ether_get_drvinfo(struct net_device *dev,
                                     struct ethtool_drvinfo *info)
 {
-	strlcpy(info->driver, HDOIP_ETHER_NAME, sizeof(info->driver));
-	strlcpy(info->version, HDOIP_ETHER_VERSION, sizeof(info->version));
+	strlcpy(info->driver, DRV_NAME, sizeof(info->driver));
+	strlcpy(info->version, DRV_VERSION, sizeof(info->version));
 	strlcpy(info->bus_info, "avalon", sizeof(info->bus_info));
 }
 
@@ -423,8 +500,6 @@ static int hdoip_ether_set_mac_address(struct net_device *dev, void *addr)
 		memcpy(dev->dev_addr, mac_addr_default, dev->addr_len);
 	}
 
-	printk(KERN_INFO "%s: Setting MAC address to %pM\n", dev->name,
-	       dev->dev_addr);
 	/* Write the new address to hardware */
 	__hdoip_ether_set_mac_address(hde, dev->dev_addr);
 
@@ -442,6 +517,8 @@ static int hdoip_ether_change_mtu(struct net_device *dev, int mtu)
 
 static void hdoip_ether_adjust_link(struct net_device *dev)
 {
+	mark_entry();
+	mark_leave();
 }
 
 /*
@@ -457,11 +534,12 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	u32 *tx_buf;
 	u32 len = skb->len;
 
-	pr_debug("called %s\n", __func__);
+	mark_entry();
 
 	if (unlikely(len > MAX_PKT_SIZE)) {
 		dev->stats.tx_dropped++;
 		dev_kfree_skb(skb);
+		printk(KERN_ERR "%s: Packet too large\n", dev->name);
 		return NETDEV_TX_OK;
 	}
 
@@ -475,7 +553,7 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 		/* The ringbuffer is full */
 		netif_stop_queue(dev);
 		spin_unlock_irqrestore(&hde->tx_lock, flags);
-		printk(KERN_ERR "TX Ringbuffer is full\n");
+		printk(KERN_ERR "%s: TX Ringbuffer is full\n", dev->name);
 		return NETDEV_TX_BUSY;
 	}
 
@@ -496,6 +574,8 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	spin_unlock_irqrestore(&hde->tx_lock, flags);
 
 	dev->trans_start = jiffies;
+
+	mark_leave();
 
 	return NETDEV_TX_OK;
 }
@@ -585,7 +665,7 @@ static int hdoip_ether_mac_init(struct net_device *dev)
 	}
 
 	/* Set default MTU */
-	dev->mtu = TSE_MAC_MTU;
+	dev->mtu = HDOIP_DEFAULT_MTU;
 	hdoip_mac_write(hde, TSE_MAC_MTU, HDOIP_DEFAULT_MTU);
 
 	/* Set FIFO thresholds */
@@ -641,6 +721,8 @@ static int hdoip_ether_open(struct net_device *dev)
 	int ret = 0;
 	u32 regval;
 
+	mark_entry();
+
 	/* Check and hard set the MAC address, in case the user has changed it */
 	if (!is_valid_ether_addr(dev->dev_addr))
 		return -EADDRNOTAVAIL;
@@ -651,6 +733,7 @@ static int hdoip_ether_open(struct net_device *dev)
 	if (ret)
 		return ret;
 
+#if 0
 	/* Enable TX on PHY */
 	ret = phy_read(hde->phydev, MII_M1111_PHY_EXT_CR);
 	if (ret < 0)
@@ -658,10 +741,11 @@ static int hdoip_ether_open(struct net_device *dev)
 	ret |= MII_M1111_HWCFG_TX_EN;
 	if (phy_write(hde->phydev, MII_M1111_PHY_EXT_CR, ret & 0xffff))
 		return -EINVAL;
-
+#endif
 	/* XXX: Do we need to SW reset the PHY here? */
 
 	phy_print_status(hde->phydev);	/* XXX: only for debugging */
+	hdoip_ether_print_status(hde);
 
 	/* Setup memory for TX/RX ringbuffers */
 	hde->tx_buf = dma_alloc_coherent(&dev->dev, TX_RING_ENTRIES * MAX_PKTBUF_SIZE,
@@ -699,10 +783,10 @@ static int hdoip_ether_open(struct net_device *dev)
 	hdoip_mac_write(hde, TSE_MAC_COMMAND_CONFIG,
 	                regval | TSE_CMD_TX_ENA | TSE_CMD_RX_ENA);
 
-	/* Start the eth_st_in DMA controller */
 	hdoip_ethi_start(hde);
-
 	netif_start_queue(dev);
+
+	mark_leave();
 
 	return 0;
 }
@@ -721,13 +805,14 @@ static int hdoip_ether_close(struct net_device *dev)
 	hdoip_mac_write(hde, TSE_MAC_COMMAND_CONFIG,
 	                regval & ~(TSE_CMD_TX_ENA | TSE_CMD_RX_ENA));
 
+#if 0
 	/* Disable TX on PHY */
 	ret = phy_read(hde->phydev, MII_M1111_PHY_EXT_CR);
 	if (ret < 0)
 		return ret;
 	ret &= ~MII_M1111_HWCFG_TX_EN;
 	phy_write(hde->phydev, MII_M1111_PHY_EXT_CR, ret & 0xffff);
-
+#endif
 	/* Free ringbuffer memory */
 	dma_free_coherent(&dev->dev, TX_RING_ENTRIES * MAX_PKTBUF_SIZE,
 	                  hde->tx_buf, hde->tx_buf_dma);
@@ -759,9 +844,7 @@ static int hdoip_ether_inetaddr_event(struct notifier_block *nb,
 	struct net_device *dev = ifa->ifa_dev ? ifa->ifa_dev->dev : NULL;
 	struct hdoip_ether *hde;
 
-	pr_debug("called %s\n", __func__);
-
-	if (!dev || !netif_running(dev) || dev_net(dev) != &init_net)
+	if (!dev || dev_net(dev) != &init_net)
 		return NOTIFY_DONE;
 
 	hde = netdev_priv(dev);
@@ -793,26 +876,43 @@ static int __init hdoip_ether_phy_init(struct net_device *dev)
 	struct hdoip_ether *priv = netdev_priv(dev);
 	char mii_id[MII_BUS_ID_SIZE];
 	char phy_id[MII_BUS_ID_SIZE+3];
+	int regval;
 
 	snprintf(mii_id, MII_BUS_ID_SIZE, "%x", HDOIP_MII_ID);
 	snprintf(phy_id, MII_BUS_ID_SIZE + 3, PHY_ID_FMT, mii_id, HDOIP_PHY_ID);
 
-	phydev = phy_connect(dev, phy_id, hdoip_ether_adjust_link, 0,
-	                     PHY_INTERFACE_MODE_RGMII_RXID);
+	phydev = phy_connect(dev, phy_id, &hdoip_ether_adjust_link, 0,
+	                     PHY_INTERFACE_MODE_RGMII_ID);
 	if (IS_ERR(phydev)) {
 		printk(KERN_ERR "%s: Failed to attach to PHY at %s\n",
-		       HDOIP_ETHER_NAME, phy_id);
+		       DRV_NAME, phy_id);
 		return PTR_ERR(phydev);
 	}
 
 	priv->phydev = phydev;
 	phydev->autoneg = AUTONEG_ENABLE;
-	phydev->supported &= SUPPORTED_1000baseT_Full;
+	/* Only Gbit supported */
+	phydev->supported = SUPPORTED_1000baseT_Full;
 	phydev->advertising = phydev->supported;
+
+#if 0
+	regval = phy_read(phydev, 20);
+	phy_write(phydev, 20, (regval & ~0xD3) | 0xD1);
+
+	/* Enable auto-negotiation */
+	regval = phy_read(phydev, 0);
+	phy_write(phydev, 0, regval | (1 << 12));
+
+	/* Software Reset PHY */
+	regval = phy_read(phydev, 0);
+	phy_write(phydev, 0, regval | 0x8000);
+
+	while (phy_read(phydev, 0) & 0x8000 != 0)
+		pr_debug("still in PHY sw reset\n");
 
 	/* Reconfigure PHY LEDs */
 	phy_write(phydev, MII_M1111_PHY_LED_CONTROL, 0x43);
-
+#endif
 	return 0;
 }
 
@@ -828,9 +928,9 @@ static int __init hdoip_mii_probe(struct net_device *dev)
 		return -ENOMEM;
 
 	mdio_bus->name = "HD over IP TSE MII Bus";
-	mdio_bus->read = hdoip_ether_mdio_read;
-	mdio_bus->write = hdoip_ether_mdio_write;
-	mdio_bus->reset = hdoip_ether_mdio_reset;
+	mdio_bus->read = &hdoip_ether_mdio_read;
+	mdio_bus->write = &hdoip_ether_mdio_write;
+	mdio_bus->reset = &hdoip_ether_mdio_reset;
 	snprintf(mdio_bus->id, MII_BUS_ID_SIZE, "%x", HDOIP_MII_ID);
 
 	mdio_bus->priv = hde;
@@ -866,49 +966,51 @@ static int __init hdoip_mii_probe(struct net_device *dev)
 static int __init hdoip_ether_probe(struct platform_device *pdev)
 {
 	struct net_device *dev;
-	struct hdoip_ether *priv;
-	int ret = -ENOMEM;
+	struct hdoip_ether *hde;
+	int ret;
 	u32 regval;
 
 	/* HD over IP board specific: Perform a PHY hardware reset */
 	regval = ioread32(EXT_RESET_PIO_BASE);
 	iowrite32(regval & 0xFE, EXT_RESET_PIO_BASE);
-	udelay(50);
+	udelay(500);
 	iowrite32(regval | 0x01, EXT_RESET_PIO_BASE);
-	udelay(50);
+	udelay(500);
 
 	dev = alloc_etherdev(sizeof(struct hdoip_ether));
 	if (!dev) {
-		dev_err(&pdev->dev, "Failed to alloc etherdev\n");
+		printk(KERN_ERR "%s: Failed to alloc etherdev\n", DRV_NAME);
 		return -ENOMEM;
 	}
 
-	priv = netdev_priv(dev);
+	hde = netdev_priv(dev);
 
 	/* Remap the register/memory areas */
-	priv->tse_mac_base = ioremap_nocache(TSE_MAC_BASE, TSE_MAC_SIZE);
-	if (!priv->tse_mac_base)
+	ret = -ENOMEM;
+	hde->tse_mac_base = ioremap_nocache(TSE_MAC_BASE, TSE_MAC_SIZE);
+	if (!hde->tse_mac_base)
 		goto out_free;
-	priv->ethi_base = ioremap_nocache(ACB_ETH_IN_BASE, ACB_ETH_IN_SIZE);
-	if (!priv->tse_mac_base)
-		goto out_free;
-	priv->etho_base = ioremap_nocache(ACB_ETH_OUT_BASE, ACB_ETH_OUT_SIZE);
-	if (!priv->tse_mac_base)
-		goto out_free;
-	priv->ext_pio_base = ioremap_nocache(EXT_RESET_PIO_BASE, 4);
-	if (!priv->tse_mac_base)
-		goto out_free;
+	hde->ethi_base = ioremap_nocache(ACB_ETH_IN_BASE, ACB_ETH_IN_SIZE);
+	if (!hde->ethi_base)
+		goto out_unmap_tse_mac;
+	hde->etho_base = ioremap_nocache(ACB_ETH_OUT_BASE, ACB_ETH_OUT_SIZE);
+	if (!hde->etho_base)
+		goto out_unmap_ethi;
+	hde->ext_pio_base = ioremap_nocache(EXT_RESET_PIO_BASE, 4);
+	if (!hde->ext_pio_base)
+		goto out_unmap_etho;
 
 	/* Probe the MII bus */
 	ret = hdoip_mii_probe(dev);
 	if (ret)
-		goto out_free;
+		goto out_unmap_ext_pio;
 
 	/* Initialize the PHY */
 	ret = hdoip_ether_phy_init(dev);
 	if (ret)
 		goto out_mii_remove;
 
+	/* Register interrupt handler */
 	if (request_irq(ACB_ETH_IN_IRQ, hdoip_ether_interrupt, 0, dev->name, dev)) {
 		ret = -EBUSY;
 		goto out_phy_disconnect;
@@ -917,8 +1019,20 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 	dev->irq = ACB_ETH_IN_IRQ;
 	dev->base_addr = TSE_MAC_BASE;
 
-	spin_lock_init(&priv->rx_lock);
-	spin_lock_init(&priv->tx_lock);
+	/*
+	 * Get MAC address and write a default address, in case an invalid
+	 * address was configured previously.
+	 */
+	hdoip_ether_get_mac_address(dev);
+	if (!is_valid_ether_addr(dev->dev_addr)) {
+		printk(KERN_ERR
+		       "%s: Bootloader did not configure a valid MAC address, using default.\n",
+		       DRV_NAME);
+		hdoip_ether_set_mac_address(dev, NULL);
+	}
+
+	spin_lock_init(&hde->rx_lock);
+	spin_lock_init(&hde->tx_lock);
 
 	ether_setup(dev);
 	dev->netdev_ops = &hdoip_ether_netdev_ops;
@@ -931,19 +1045,6 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 	SET_NETDEV_DEV(dev, &pdev->dev);
 	platform_set_drvdata(pdev, dev);
 
-	/*
-	 * Get MAC address and write a default address, in case an invalid
-	 * address was configured previously.
-	 */
-	hdoip_ether_get_mac_address(dev);
-	if (!is_valid_ether_addr(dev->dev_addr)) {
-		printk(KERN_ERR
-		       "%s: Bootloader did not configure a valid MAC address, using default.\n",
-		       HDOIP_ETHER_NAME);
-		hdoip_ether_set_mac_address(dev, NULL);
-	}
-
-	/* Display a banner */
 	printk(KERN_INFO "%s: HD over IP Ethernet at 0x%08x, irq=%d\n",
 	       dev->name, (unsigned int) dev->base_addr, dev->irq);
 
@@ -952,10 +1053,18 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 out_irq_free:
 	free_irq(ACB_ETH_IN_IRQ, dev);
 out_phy_disconnect:
-	phy_disconnect(priv->phydev);
+	phy_disconnect(hde->phydev);
 out_mii_remove:
-	mdiobus_unregister(priv->mdio_bus);
-	mdiobus_free(priv->mdio_bus);
+	mdiobus_unregister(hde->mdio_bus);
+	mdiobus_free(hde->mdio_bus);
+out_unmap_ext_pio:
+	iounmap(hde->ext_pio_base);
+out_unmap_etho:
+	iounmap(hde->etho_base);
+out_unmap_ethi:
+	iounmap(hde->ethi_base);
+out_unmap_tse_mac:
+	iounmap(hde->tse_mac_base);
 out_free:
 	free_netdev(dev);
 	return ret;
@@ -964,17 +1073,22 @@ out_free:
 static int __devexit hdoip_ether_remove(struct platform_device *pdev)
 {
 	struct net_device *dev = platform_get_drvdata(pdev);
-	struct hdoip_ether *priv = netdev_priv(dev);
+	struct hdoip_ether *hde = netdev_priv(dev);
 
+	unregister_netdev(dev);
 	free_irq(dev->irq, dev);
 
 	/* Disconnect from PHY and MDIO bus */
-	phy_disconnect(priv->phydev);
-	mdiobus_unregister(priv->mdio_bus);
-	mdiobus_free(priv->mdio_bus);
+	phy_disconnect(hde->phydev);
+	mdiobus_unregister(hde->mdio_bus);
+	mdiobus_free(hde->mdio_bus);
+
+	iounmap(hde->ext_pio_base);
+	iounmap(hde->etho_base);
+	iounmap(hde->ethi_base);
+	iounmap(hde->tse_mac_base);
 
 	platform_set_drvdata(pdev, NULL);
-	unregister_netdev(dev);
 	free_netdev(dev);
 
 	return 0;
@@ -982,7 +1096,7 @@ static int __devexit hdoip_ether_remove(struct platform_device *pdev)
 
 static struct platform_driver hdoip_ether_driver = {
 	.driver = {
-		.name	= HDOIP_ETHER_NAME,
+		.name	= DRV_NAME,
 		.owner	= THIS_MODULE,
 		.pm	= NULL,
 	},
@@ -991,8 +1105,8 @@ static struct platform_driver hdoip_ether_driver = {
 
 static int __init hdoip_ether_init(void)
 {
-	printk(KERN_INFO "%s Ethernet Driver, Version %s\n",
-	       HDOIP_ETHER_NAME, HDOIP_ETHER_VERSION);
+	printk(KERN_INFO "%s Ethernet Driver, Version %s\n", DRV_NAME,
+	       DRV_VERSION);
 
 	register_inetaddr_notifier(&hdoip_ether_notifier);
 	return platform_driver_probe(&hdoip_ether_driver, hdoip_ether_probe);
@@ -1009,5 +1123,5 @@ module_exit(hdoip_ether_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("HD over IP Ethernet driver");
-MODULE_AUTHOR("Tobias Klauser");
-MODULE_ALIAS("platfrom:" HDOIP_ETHER_NAME);
+MODULE_AUTHOR("Tobias Klauser <klto@zhaw.ch>");
+MODULE_ALIAS("platfrom:" DRV_NAME);
