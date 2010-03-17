@@ -338,6 +338,7 @@ static int hdoip_ether_check_link(struct hdoip_ether *hde)
 }
 
 /* XXX: For debugging only */
+#ifdef DEBUG
 static void hdoip_ether_print_status(struct hdoip_ether *hde)
 {
 	u32 regval;
@@ -360,8 +361,13 @@ static void hdoip_ether_print_status(struct hdoip_ether *hde)
 	pr_debug(" PHY specific status register   : %04x\n\n", regval);
 	pr_debug(" Jabber (real time)             : %s\n", regval & 0x0001 ? "jabber" : "no jabber");
 	pr_debug(" Polarity (real time)           : %s\n", regval & 0x0002 ? "reversed" : "normal");
+	pr_debug(" Receive Pause                  : %s\n", regval & 0x0004 ? "enabled" : "disabled");
+	pr_debug(" Transmit Pause                 : %s\n", regval & 0x0008 ? "enabled" : "disabled");
+	pr_debug(" Copper Energy Detect Status    : %s\n", regval & 0x0010 ? "sleep" : "active");
+	pr_debug(" Downshift Status               : %s\n", regval & 0x0020 ? "downshift" : "no downshift");
 	pr_debug(" Link (real time)               : %s\n", regval & 0x0400 ? "up" : "down");
 	pr_debug(" Speed and duplex resolved      : %s\n", regval & 0x0800 ? "resolved" : "not resolved");
+	pr_debug(" Page received                  : %s\n", regval & 0x1000 ? "received" : "not received");
 	pr_debug(" Duplex                         : %s\n", regval & 0x2000 ? "full" : "half");
 
 	pr_debug(" Speed                          : ");
@@ -401,7 +407,14 @@ static void hdoip_ether_print_status(struct hdoip_ether *hde)
 	pr_cont("\n");
 	pr_debug(" Fiber/copper resolution       : %s\n", regval & 0x2000 ? "fiber" : "copper");
 	pr_debug(" Fiber/copper auto selection   : %s\n", regval & 0x8000 ? "disabled" : "enabled");
+
+	pr_debug("Link: %08x\n", hdoip_ether_check_link(hde));
 }
+#else
+static void hdoip_ether_print_status(struct hdoip_ether *hde)
+{
+}
+#endif
 
 static void hdoip_ether_get_drvinfo(struct net_device *dev,
                                     struct ethtool_drvinfo *info)
@@ -511,14 +524,66 @@ static int hdoip_ether_set_mac_address(struct net_device *dev, void *addr)
  */
 static int hdoip_ether_change_mtu(struct net_device *dev, int mtu)
 {
-	/* Changing MTU not supported atm */
+	/* Changing MTU not supported yet */
 	return 0;
 }
 
 static void hdoip_ether_adjust_link(struct net_device *dev)
 {
-	mark_entry();
-	mark_leave();
+	struct hdoip_ether *hde = netdev_priv(dev);
+	struct phy_device *phydev = hde->phydev;
+	u32 regval;
+	bool new_state = false;
+
+	if (phydev->link) {
+		regval = hdoip_mac_read(hde, TSE_MAC_COMMAND_CONFIG);
+
+		if (phydev->duplex != hde->old_duplex) {
+			new_state = true;
+
+			if (!phydev->duplex)
+				regval |= TSE_CMD_HD_EN;
+			else
+				regval &= ~TSE_CMD_HD_EN;
+
+			pr_debug("%s: Link duplex = 0x%x\n", dev->name, phydev->duplex);
+
+			hde->old_duplex = phydev->duplex;
+		}
+
+		if (phydev->speed != hde->old_speed) {
+			new_state = true;
+
+			switch (phydev->speed) {
+			case 1000:
+				regval |= TSE_CMD_ETH_SPEED;
+				regval &= ~TSE_CMD_ENA_10;
+				break;
+			case 100:
+				regval &= ~TSE_CMD_ETH_SPEED;
+				regval &= ~TSE_CMD_ENA_10;
+				break;
+			case 10:
+				regval &= ~TSE_CMD_ETH_SPEED;
+				regval |= TSE_CMD_ENA_10;
+				break;
+			default:
+				printk(KERN_WARNING "%s: Invalid speed value: %d\n", dev->name, phydev->speed);
+				break;
+			}
+
+			hde->old_speed = phydev->speed;
+		}
+
+		/* Only write if something has changed */
+		if (new_state)
+			hdoip_mac_write(hde, TSE_MAC_COMMAND_CONFIG, regval);
+
+		netif_carrier_on(dev);
+	}
+
+	if (new_state)
+		phy_print_status(phydev);
 }
 
 /*
@@ -609,6 +674,8 @@ static void hdoip_ether_rx(struct net_device *dev)
 		return;
 	}
 
+	/* TODO */
+
 	spin_unlock_irqrestore(&hde->rx_lock, flags);
 }
 
@@ -670,33 +737,38 @@ static int hdoip_ether_mac_init(struct net_device *dev)
 
 	/* Set FIFO thresholds */
 	hdoip_mac_write(hde, TSE_MAC_RX_SECTION_EMPTY, TSE_MAC_RX_FIFO_DEPTH - 16);
-	hdoip_mac_write(hde, TSE_MAC_RX_SECTION_FULL, 16);	/* XXX: This is 0 in the test software, why? */
+	hdoip_mac_write(hde, TSE_MAC_RX_SECTION_FULL, 0);	/* XXX: This is 0 in the test software, but should be 16 according to datasheet, why? */
 	hdoip_mac_write(hde, TSE_MAC_TX_SECTION_EMPTY, TSE_MAC_TX_FIFO_DEPTH - 16);
 	hdoip_mac_write(hde, TSE_MAC_TX_SECTION_FULL, 16);
 	hdoip_mac_write(hde, TSE_MAC_RX_ALMOST_EMPTY, 8);
 	hdoip_mac_write(hde, TSE_MAC_RX_ALMOST_FULL, 8);
 	hdoip_mac_write(hde, TSE_MAC_TX_ALMOST_EMPTY, 8);
-	hdoip_mac_write(hde, TSE_MAC_TX_ALMOST_FULL, 8);	/* XXX: This is 3 in the test software and altera_tse.c, why? */
+	hdoip_mac_write(hde, TSE_MAC_TX_ALMOST_FULL, 3);	/* XXX: This is 3 in the test software and altera_tse.c, why? */
 
-	/* Enable CRC insertion and IP payload alignment in TX.
+	/*
+	 * Enable CRC insertion and IP payload alignment in TX.
 	 *
 	 * "Align packet header to 32-bit boundary" must be enabled for the TSE
 	 * MAC in SOPC Builder. Otherwise the driver won't work.
 	 */
-	regval = TSE_TX_CMD_STAT_TX_SHIFT16 & ~TSE_TX_CMD_STAT_OMIT_CRC;
+	regval = hdoip_mac_read(hde, TSE_MAC_TX_CMD_STAT);
+	regval |= TSE_TX_CMD_STAT_TX_SHIFT16;
+	regval &= ~TSE_TX_CMD_STAT_OMIT_CRC;
 	hdoip_mac_write(hde, TSE_MAC_TX_CMD_STAT, regval);
 
-	/* Enable IP payload alignment in RX.
+	/*
+	 * Enable IP payload alignment in RX.
 	 *
 	 * "Align packet header to 32-bit boundary" must be enabled for the TSE
 	 * MAC in SOPC Builder. Otherwise the driver won't work.
 	 */
-	hdoip_mac_write(hde, TSE_MAC_RX_CMD_STAT, TSE_RX_CMD_STAT_RX_SHIFT16);
+	regval = hdoip_mac_read(hde, TSE_MAC_RX_CMD_STAT);
+	hdoip_mac_write(hde, TSE_MAC_RX_CMD_STAT, regval | TSE_RX_CMD_STAT_RX_SHIFT16);
 
 	/* Set command_config register */
 	regval = hdoip_mac_read(hde, TSE_MAC_COMMAND_CONFIG);
 	regval = regval & (~TSE_CMD_CRC_FWD)		/* don't forward CRC */
-	                & (~TSE_CMD_LOOP_ENA)		/* no loopback */
+	                & (~TSE_CMD_LOOP_EN)		/* no loopback */
 	                & (~TSE_CMD_TX_ADDR_INS)	/* don't set MAC address on TX */
 	                & (~TSE_CMD_RX_ERR_DISC)	/* don't discard erroneous frames */
 	                & (~TSE_CMD_NO_LENGTH_CHECK);	/* check payload length against length/type field on RX */
@@ -781,8 +853,9 @@ static int hdoip_ether_open(struct net_device *dev)
 	/* Enable TX/RX on MAC */
 	regval = hdoip_mac_read(hde, TSE_MAC_COMMAND_CONFIG);
 	hdoip_mac_write(hde, TSE_MAC_COMMAND_CONFIG,
-	                regval | TSE_CMD_TX_ENA | TSE_CMD_RX_ENA);
+	                regval | TSE_CMD_TX_EN | TSE_CMD_RX_EN);
 
+	phy_start(hde->phydev);
 	hdoip_ethi_start(hde);
 	netif_start_queue(dev);
 
@@ -803,7 +876,7 @@ static int hdoip_ether_close(struct net_device *dev)
 	/* Disable TX/RX on MAC */
 	regval = hdoip_mac_read(hde, TSE_MAC_COMMAND_CONFIG);
 	hdoip_mac_write(hde, TSE_MAC_COMMAND_CONFIG,
-	                regval & ~(TSE_CMD_TX_ENA | TSE_CMD_RX_ENA));
+	                regval & ~(TSE_CMD_TX_EN | TSE_CMD_RX_EN));
 
 #if 0
 	/* Disable TX on PHY */
@@ -873,7 +946,7 @@ static struct notifier_block hdoip_ether_notifier = {
 static int __init hdoip_ether_phy_init(struct net_device *dev)
 {
 	struct phy_device *phydev;
-	struct hdoip_ether *priv = netdev_priv(dev);
+	struct hdoip_ether *hde = netdev_priv(dev);
 	char mii_id[MII_BUS_ID_SIZE];
 	char phy_id[MII_BUS_ID_SIZE+3];
 	int regval;
@@ -881,19 +954,23 @@ static int __init hdoip_ether_phy_init(struct net_device *dev)
 	snprintf(mii_id, MII_BUS_ID_SIZE, "%x", HDOIP_MII_ID);
 	snprintf(phy_id, MII_BUS_ID_SIZE + 3, PHY_ID_FMT, mii_id, HDOIP_PHY_ID);
 
+	hde->old_speed = 0;
+	hde->old_duplex = -1;
+
 	phydev = phy_connect(dev, phy_id, &hdoip_ether_adjust_link, 0,
-	                     PHY_INTERFACE_MODE_RGMII_ID);
+	                     PHY_INTERFACE_MODE_RGMII);
 	if (IS_ERR(phydev)) {
 		printk(KERN_ERR "%s: Failed to attach to PHY at %s\n",
 		       DRV_NAME, phy_id);
 		return PTR_ERR(phydev);
 	}
 
-	priv->phydev = phydev;
 	phydev->autoneg = AUTONEG_ENABLE;
 	/* Only Gbit supported */
 	phydev->supported = SUPPORTED_1000baseT_Full;
 	phydev->advertising = phydev->supported;
+
+	hde->phydev = phydev;
 
 #if 0
 	regval = phy_read(phydev, 20);

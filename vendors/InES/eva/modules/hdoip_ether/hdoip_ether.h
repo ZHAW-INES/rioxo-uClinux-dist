@@ -39,8 +39,8 @@
 #define TSE_MAC_RX_CMD_STAT		0x00ec
 
 /* Bitmasks for the command_config register */
-#define TSE_CMD_TX_ENA			0x00000001
-#define TSE_CMD_RX_ENA			0x00000002
+#define TSE_CMD_TX_EN			0x00000001
+#define TSE_CMD_RX_EN			0x00000002
 #define TSE_CMD_XON_GEN			0x00000004
 #define TSE_CMD_ETH_SPEED		0x00000008
 #define TSE_CMD_PROMIS_EN		0x00000010
@@ -49,14 +49,15 @@
 #define TSE_CMD_PAUSE_FWD		0x00000080
 #define TSE_CMD_PAUSE_IGNORE		0x00000100
 #define TSE_CMD_TX_ADDR_INS		0x00000200
+#define TSE_CMD_HD_EN			0x00000400
 #define TSE_CMD_EXCESS_COL		0x00000800
 #define TSE_CMD_LATE_COL		0x00001000
 #define TSE_CMD_SW_RESET		0x00002000
 #define TSE_CMD_MHASH_SEL		0x00004000
-#define TSE_CMD_LOOP_ENA		0x00008000
+#define TSE_CMD_LOOP_EN			0x00008000
 /* bits 18-16: TX_ADDR_SEL */
 #define TSE_CMD_TX_ADDR_SEL_MASK	0x00070000
-#define TSE_CMD_MAGIC_ENA		0x00080000
+#define TSE_CMD_MAGIC_EN		0x00080000
 #define TSE_CMD_SLEEP			0x00100000
 #define TSE_CMD_WAKEUP			0x00200000
 #define TSE_CMD_NO_LENGTH_CHECK		0x01000000
@@ -89,6 +90,8 @@ struct hdoip_ether {
 	/* PHY */
 	struct phy_device *phydev;
 	struct mii_bus *mdio_bus;
+	int old_duplex;
+	int old_speed;
 
 	/* Locks */
 	spinlock_t rx_lock;
