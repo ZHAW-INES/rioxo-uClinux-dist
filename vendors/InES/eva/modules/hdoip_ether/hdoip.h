@@ -16,6 +16,12 @@
 #ifndef ACB_ETH_IN_BASE
 # define ACB_ETH_IN_BASE		na_acb_eth_in
 #endif
+#ifndef ACB_VID_ST_OUT_BASE
+# define ACB_VID_ST_OUT_BASE		na_acb_vid_st_out
+#endif
+#ifndef ACB_VID_ST_IN_BASE
+# define ACB_VID_ST_IN_BASE		na_acb_vid_st_in
+#endif
 #ifndef EXT_RESET_PIO_BASE
 # define EXT_RESET_PIO_BASE		na_ext_reset_pio
 #endif
@@ -25,10 +31,12 @@
 # define ACB_ETH_IN_IRQ			na_acb_eth_in_irq
 #endif
 
-/* Register area sizes */
+/* Register area sizes (XXX: recheck these) */
 #define TSE_MAC_SIZE			0x400
 #define ACB_ETH_OUT_SIZE		0x54
 #define ACB_ETH_IN_SIZE			0x8C
+#define ACB_VID_ST_OUT_SIZE		0x170
+#define ACB_VID_ST_IN_SIZE		0x80
 
 /* Generic offsets into eth_st_in/eth_st_out configuration register regions */
 #define ETHIO_CONFIG			0x00
@@ -39,12 +47,12 @@
 #define ETHIO_CPU_READ_DESC		0x1C
 #define ETHIO_VID_START_DESC		0x20
 #define ETHIO_VID_STOP_DESC		0x24
-#define ETHIO_VID_WRITE_DESC		0x28
 #define ETHIO_AUD_START_DESC		0x30
 #define ETHIO_AUD_STOP_DESC		0x34
-#define ETHIO_AUD_WRITE_DESC		0x38
 
 /* Offsets into eth_st_in specific configuration register region */
+#define ETHI_VID_WRITE_DESC		0x28
+#define ETHI_AUD_WRITE_DESC		0x38
 #define ETHI_IP_FILTER			0x40
 #define ETHI_IP_FILTER_SRC		0x44
 #define ETHI_VID_FILTER			0x48
@@ -65,6 +73,8 @@
 #define ETHI_DISC_PACKET_COUNT		0x84
 
 /* Offsets into eth_st_out specific configuration register region */
+#define ETHO_VID_READ_DESC		0x2C
+#define ETHO_AUD_READ_DESC		0x3C
 #define ETHO_DMA_CONFIG			0x50
 
 /* Bitmasks for the eth_st_in config register */
@@ -93,7 +103,7 @@
 #define ETHO_CONFIG_DMA_FIFO_THRESH_INDEX	18
 
 /* Avalon will not perform higher bursts as allowed by the Clock Crossing Bridge */
-#define ETHIO_DMA_BURST_SIZE			64
+#define ETHIO_DMA_BURST_SIZE			16	/* 64 */
 
 #define ETHO_DMA_FIFO_THRESH			400
 

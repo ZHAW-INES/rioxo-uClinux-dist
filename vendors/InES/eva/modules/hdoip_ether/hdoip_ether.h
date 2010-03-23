@@ -90,6 +90,7 @@ struct hdoip_ether {
 	/* PHY */
 	struct phy_device *phydev;
 	struct mii_bus *mdio_bus;
+	int old_link;
 	int old_duplex;
 	int old_speed;
 
@@ -97,10 +98,10 @@ struct hdoip_ether {
 	spinlock_t rx_lock;
 	spinlock_t tx_lock;
 
-	/* MAC registers base */
+	/* MAC register base */
 	void __iomem *tse_mac_base;
 
-	/* Ethernet in/out registers base */
+	/* Ethernet in/out register base */
 	void __iomem *ethi_base;
 	void __iomem *etho_base;
 
@@ -111,8 +112,8 @@ struct hdoip_ether {
 	dma_addr_t rx_buf_dma;
 
 	/* Ringbuffer descriptors */
-	struct hdoip_descriptor tx_desc;
-	struct hdoip_descriptor rx_desc;
+	struct hdoip_descriptors tx_desc;
+	struct hdoip_descriptors rx_desc;
 
 	/* External I/O (PHY reset) */
 	void __iomem *ext_pio_base;
