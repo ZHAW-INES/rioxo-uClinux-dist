@@ -25,6 +25,7 @@
 #include <linux/platform_device.h>
 
 #include <asm/io.h>
+#include <asm/cacheflush.h>
 
 #include "hdoip.h"
 #include "hdoip_ether.h"
@@ -43,6 +44,21 @@ static const u8 mac_addr_default[ETH_ALEN] =
 	{ 0x00, 0x15, 0x12, 0x00, 0x00, 0x42 };
 
 /*
+ * HD over IP board specific: Perform a hardware reset.
+ */
+static int hdoip_ether_board_reset(struct hdoip_ether *hde)
+{
+	u32 regval = ioread32(hde->ext_pio_base);
+
+	iowrite32(regval & 0xFE, hde->ext_pio_base);
+	udelay(50000);
+	iowrite32(regval | 0x01, hde->ext_pio_base);
+	udelay(50000);
+
+	return 0;
+}
+
+/*
  * Read from a TSE MAC register.
  */
 static inline u32 hdoip_mac_read(struct hdoip_ether *hde, unsigned int reg)
@@ -57,23 +73,6 @@ static inline void hdoip_mac_write(struct hdoip_ether *hde, unsigned int reg, u3
 {
 	iowrite32(value, hde->tse_mac_base + reg);
 }
-
-#ifdef DEBUG
-static void dump_desc(struct hdoip_ether *hde)
-{
-	pr_debug("TX CPU:\n");
-	pr_debug("  start: 0x%08x\n", hde->tx_desc.cpu.start);
-	pr_debug("  stop:  0x%08x\n", hde->tx_desc.cpu.stop);
-	pr_debug("  write: 0x%08x\n", hde->tx_desc.cpu.write);
-	pr_debug("  read:  0x%08x\n", hde->tx_desc.cpu.read);
-
-	pr_debug("RX CPU:\n");
-	pr_debug("  start: 0x%08x\n", hde->rx_desc.cpu.start);
-	pr_debug("  stop:  0x%08x\n", hde->rx_desc.cpu.stop);
-	pr_debug("  write: 0x%08x\n", hde->rx_desc.cpu.write);
-	pr_debug("  read:  0x%08x\n", hde->rx_desc.cpu.read);
-}
-#endif
 
 /*
  * Check whether writing len bytes to descriptor desc would be a valid
@@ -264,7 +263,8 @@ static inline void hdoip_etho_start(struct hdoip_ether *hde)
 {
 	u32 regval = hdoip_etho_read(hde, ETHIO_CONFIG);
 
-	regval |= ETHO_CONFIG_RUN | ETHO_CONFIG_PRIO;
+	regval |= ETHO_CONFIG_RUN; // | ETHO_CONFIG_PRIO;
+	regval &= ~ETHO_CONFIG_PRIO;
 	hdoip_etho_write(hde, ETHIO_CONFIG, regval);
 }
 
@@ -275,7 +275,7 @@ static inline void hdoip_etho_stop(struct hdoip_ether *hde)
 {
 	u32 regval = hdoip_etho_read(hde, ETHIO_CONFIG);
 
-	regval &= ~(ETHO_CONFIG_RUN | ETHO_CONFIG_PRIO);
+	regval &= ~(ETHO_CONFIG_RUN); //| ETHO_CONFIG_PRIO);
 	hdoip_etho_write(hde, ETHIO_CONFIG, regval);
 }
 
@@ -286,10 +286,10 @@ static inline void hdoip_etho_stop(struct hdoip_ether *hde)
 static inline void hdoip_etho_desc_get_cpu(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	desc->start = hdoip_etho_read(hde, ETHIO_CPU_START_DESC);
-	desc->stop = hdoip_etho_read(hde, ETHIO_CPU_STOP_DESC);
-	desc->write = hdoip_etho_read(hde, ETHIO_CPU_WRITE_DESC);
-	desc->read = hdoip_etho_read(hde, ETHIO_CPU_READ_DESC);
+	desc->start = hdoip_etho_read(hde, ETHIO_CPU_START_DESC) << 2;
+	desc->stop = hdoip_etho_read(hde, ETHIO_CPU_STOP_DESC) << 2;
+	desc->write = hdoip_etho_read(hde, ETHIO_CPU_WRITE_DESC) << 2;
+	desc->read = hdoip_etho_read(hde, ETHIO_CPU_READ_DESC) << 2;
 }
 
 /*
@@ -299,10 +299,10 @@ static inline void hdoip_etho_desc_get_cpu(struct hdoip_ether *hde,
 static inline void hdoip_etho_desc_set_cpu(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	hdoip_etho_write(hde, ETHIO_CPU_START_DESC, desc->start);
-	hdoip_etho_write(hde, ETHIO_CPU_STOP_DESC, desc->stop);
-	hdoip_etho_write(hde, ETHIO_CPU_WRITE_DESC, desc->write);
-	hdoip_etho_write(hde, ETHIO_CPU_READ_DESC, desc->read);
+	hdoip_etho_write(hde, ETHIO_CPU_START_DESC, desc->start >> 2);
+	hdoip_etho_write(hde, ETHIO_CPU_STOP_DESC, desc->stop >> 2);
+	hdoip_etho_write(hde, ETHIO_CPU_WRITE_DESC, desc->write >> 2);
+	hdoip_etho_write(hde, ETHIO_CPU_READ_DESC, desc->read >> 2);
 }
 
 /*
@@ -376,35 +376,17 @@ static inline void hdoip_etho_init(struct hdoip_ether *hde,
 	/* Setup DMA... */
 	regval = hdoip_etho_read(hde, ETHO_DMA_CONFIG);
 	/* ...burst size */
+	regval &= ~ETHO_CONFIG_DMA_BURST_SIZE_MASK;
 	regval |= (dma_burst_size << ETHO_CONFIG_DMA_BURST_SIZE_INDEX)
 	          & ETHO_CONFIG_DMA_BURST_SIZE_MASK;
 	/* ...FIFO threshold */
+	regval &= ~ETHO_CONFIG_DMA_FIFO_THRESH_MASK;
 	regval |= (dma_fifo_thresh << ETHO_CONFIG_DMA_FIFO_THRESH_INDEX)
 	          & ETHO_CONFIG_DMA_FIFO_THRESH_MASK;
-
 	hdoip_etho_write(hde, ETHO_DMA_CONFIG, regval);
-}
 
-#ifdef DEBUG
-static void show_etho_status(struct hdoip_ether *hde)
-{
-	u8 status;
-	u8 config;
-
-	config = hdoip_etho_read(hde, ETHIO_CONFIG);
-	pr_debug(" ETHO config bits: %x\n", config);
-	status = hdoip_etho_read(hde, ETHIO_STATUS);
-	pr_debug(" ETHO status bits: %x\n", status);
-	if (status & ETHO_STATUS_RUN)
-		pr_debug("  Main FSM running\n");
-	else
-		pr_debug("  Main FSM not running\n");
-	if (status & ETHO_STATUS_PRIO)
-		pr_debug("  Prio FSM running\n");
-	else
-		pr_debug("  Prio FSM not running\n");
+	regval = hdoip_etho_read(hde, ETHO_DMA_CONFIG);
 }
-#endif
 
 /*
  * Read from a MDIO register.
@@ -452,12 +434,8 @@ static int hdoip_ether_mdio_write(struct mii_bus *mii, int mii_id, int reg, u16 
 static int hdoip_ether_mdio_reset(struct mii_bus *mii)
 {
 	struct hdoip_ether *hde = mii->priv;
-	u32 regval = ioread32(hde->ext_pio_base);
 
-	iowrite32(regval & 0xFE, hde->ext_pio_base);
-	udelay(500);
-	iowrite32(regval | 0x01, hde->ext_pio_base);
-	udelay(500);
+	hdoip_ether_board_reset(hde);
 
 	return 0;
 }
@@ -710,6 +688,33 @@ static void hdoip_ether_adjust_link(struct net_device *dev)
 		phy_print_status(phydev);
 }
 
+static inline void hdoip_ether_write_frame(volatile u32 *dest, volatile u32 *src, size_t n)
+{
+	while (n) {
+		iowrite32(cpu_to_be32(*src++), dest++);
+		n--;
+	}
+}
+
+#ifdef DEBUG
+static void dump_desc(struct hdoip_ether *hde)
+{
+	pr_debug("TX CPU:\n");
+	pr_debug("  start: 0x%08x\n", hdoip_etho_read(hde, ETHIO_CPU_START_DESC) << 2);
+	pr_debug("  stop:  0x%08x\n", hdoip_etho_read(hde, ETHIO_CPU_STOP_DESC) << 2);
+	pr_debug("  write: 0x%08x\n", hdoip_etho_read(hde, ETHIO_CPU_WRITE_DESC) << 2);
+	pr_debug("  read:  0x%08x\n", hdoip_etho_read(hde, ETHIO_CPU_READ_DESC) << 2);
+
+#if 0
+	pr_debug("RX CPU:\n");
+	pr_debug("  start: 0x%08x\n", hde->rx_desc.cpu.start);
+	pr_debug("  stop:  0x%08x\n", hde->rx_desc.cpu.stop);
+	pr_debug("  write: 0x%08x\n", hde->rx_desc.cpu.write);
+	pr_debug("  read:  0x%08x\n", hde->rx_desc.cpu.read);
+#endif
+}
+#endif
+
 /*
  * Transmit a packet.
  *
@@ -722,6 +727,8 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	unsigned long flags;
 	u32 *tx_buf;
 	u32 len = skb->len;
+	u32 newlen;
+	int i;
 
 	mark_entry();
 
@@ -734,12 +741,31 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	}
 
 	/* pad short packets */
-	if (len < ETH_ZLEN) {
-		if (skb_padto(skb, ETH_ZLEN)) {
+	if (len < ETH_ZLEN + 4) {
+		if (skb_padto(skb, ETH_ZLEN + 4)) {
 			printk(KERN_ERR "%s: Packet padding failed\n", dev->name);
 			return NETDEV_TX_OK;
 		}
-		len = ETH_ZLEN;
+		len = ETH_ZLEN + 4;
+	}
+
+	/* align frame data to 32bit boundaries */
+	if ((unsigned long) skb->data & 0x2) {
+		pr_debug("skb->data not aligned\n");
+		skb_push(skb, 2);
+		len = skb->len;
+	}
+
+	/* pad packet to multiple of 32 bits */
+	newlen = len + 3;
+	newlen &= ~3UL;
+	if (newlen != len) {
+		pr_debug("padding to multiple of 32bit (len = %lu, newlen = %lu)\n", len, newlen);
+		if (skb_padto(skb, newlen)) {
+			printk(KERN_ERR "%s: Packet padding failed\n", dev->name);
+			return NETDEV_TX_OK;
+		}
+		len = newlen;
 	}
 
 	spin_lock_irqsave(&hde->tx_lock, flags);
@@ -760,12 +786,22 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	dump_desc(hde);
 	tx_buf = (u32 *) tx_desc->write;
 	/* First 32 bits of the ringbuffer entry hold the frame size */
-	*tx_buf = len;
-	/* XXX: Optimize for 32-bit transfers? */
-	memcpy(tx_buf + 1, skb->data, len);
+	iowrite32(cpu_to_le32(len), tx_buf);
+	hdoip_ether_write_frame(tx_buf + 1, (u32 *) skb->data, len / sizeof(u32));
+	/* Make sure everything gets written to memory */
+	flush_dcache_range((unsigned long) tx_buf, (unsigned long) (((u8 *) tx_buf) + len));
+
+#if 0
+	tx_buf = (u32 *) ((unsigned long) tx_buf | 0x80000000);
+	for (i = 0; i < (len + 4) / sizeof(u32); i++) {
+		printk(" %08x", tx_buf[i]);
+		if (i && i % 16 == 0)
+			printk("\n");
+	}
+#endif
 
 	/* Update write pointer (with wrap around) */
-	tx_desc->write += len;
+	tx_desc->write += len + sizeof(u32);
 	if (tx_desc->write > tx_desc->stop)
 		tx_desc->write = tx_desc->start;
 
@@ -931,8 +967,6 @@ static int hdoip_ether_open(struct net_device *dev)
 	int ret = 0;
 	u32 regval;
 
-	mark_entry();
-
 	/* Check and hard set the MAC address, in case the user has changed it */
 	if (!is_valid_ether_addr(dev->dev_addr))
 		return -EADDRNOTAVAIL;
@@ -973,15 +1007,27 @@ static int hdoip_ether_open(struct net_device *dev)
 	hde->rx_desc.cpu.read = (u32) hde->rx_desc.cpu.start;
 
 	/* XXX: Initalize the audio/video descriptors */
-	hde->tx_desc.vid.start = (u32) 0x00420000;
-	hde->tx_desc.vid.stop = (u32) 0x00420000 + 0x4000;
-	hde->tx_desc.vid.write = (u32) 0x00420000;
-	hde->tx_desc.vid.read = (u32) 0x00420000;
+	hde->tx_desc.vid.start = (u32) 0;
+	hde->tx_desc.vid.stop = (u32) 0+ 0x4000;
+	hde->tx_desc.vid.write = (u32) 0;
+	hde->tx_desc.vid.read = (u32) 0;
+	iowrite32(hde->tx_desc.vid.start, ACB_VID_ST_IN_BASE + 0x40);
 
-	hde->tx_desc.aud.start = (u32) 0x00420000;
-	hde->tx_desc.aud.stop = (u32) 0x00420000 + 0x4000;
-	hde->tx_desc.aud.write = (u32) 0x00420000;
-	hde->tx_desc.aud.read = (u32) 0x00420000;
+	hde->tx_desc.aud.start = (u32) 0;
+	hde->tx_desc.aud.stop = (u32) 0 + 0x4000;
+	hde->tx_desc.aud.write = (u32) 0;
+	hde->tx_desc.aud.read = (u32) 0;
+	iowrite32(hde->tx_desc.aud.start, 0x80000000 + ACB_AUD_ST_IN_BASE + 0x94);
+
+	hde->rx_desc.vid.start = (u32) 0;
+	hde->rx_desc.vid.stop = (u32) 0x00440000 + 0x4000;
+	hde->rx_desc.vid.write = (u32) 0x00440000;
+	hde->rx_desc.vid.read = (u32) 0x00440000;
+
+	hde->rx_desc.aud.start = (u32) 0x00450000;
+	hde->rx_desc.aud.stop = (u32) 0x00450000 + 0x4000;
+	hde->rx_desc.aud.write = (u32) 0x00450000;
+	hde->rx_desc.aud.read = (u32) 0x00450000;
 
 	/* Initialize ethernet in/out blocks */
 	hdoip_etho_init(hde, ETHIO_DMA_BURST_SIZE, ETHO_DMA_FIFO_THRESH);
@@ -996,8 +1042,6 @@ static int hdoip_ether_open(struct net_device *dev)
 	hdoip_etho_start(hde);
 	hdoip_ethi_start(hde);
 	netif_start_queue(dev);
-
-	mark_leave();
 
 	return 0;
 }
@@ -1053,11 +1097,11 @@ static int hdoip_ether_inetaddr_event(struct notifier_block *nb,
 
 	switch (event) {
 	case NETDEV_UP:
-		printk(KERN_INFO "IP address %pI4 set\n", &ifa->ifa_address);
+		//printk(KERN_INFO "IP address %pI4 set\n", &ifa->ifa_address);
 		//hdoip_ethi_write(hde, ETHI_IP_FILTER, ifa->ifa_address);
 		break;
 	case NETDEV_DOWN:
-		printk(KERN_INFO "IP address %pI4 unset\n", &ifa->ifa_address);
+		//printk(KERN_INFO "IP address %pI4 unset\n", &ifa->ifa_address);
 		//hdoip_ethi_write(hde, ETHI_IP_FILTER, 0);
 		break;
 	}
@@ -1082,11 +1126,12 @@ static int __init hdoip_ether_phy_init(struct net_device *dev)
 	snprintf(mii_id, MII_BUS_ID_SIZE, "%x", HDOIP_MII_ID);
 	snprintf(phy_id, MII_BUS_ID_SIZE + 3, PHY_ID_FMT, mii_id, HDOIP_PHY_ID);
 
+	hde->old_link = 0;
 	hde->old_speed = 0;
 	hde->old_duplex = -1;
 
 	phydev = phy_connect(dev, phy_id, &hdoip_ether_adjust_link, 0,
-	                     PHY_INTERFACE_MODE_RGMII);
+	                     PHY_INTERFACE_MODE_RGMII_TXID);
 	if (IS_ERR(phydev)) {
 		printk(KERN_ERR "%s: Failed to attach to PHY at %s\n",
 		       DRV_NAME, phy_id);
@@ -1141,14 +1186,6 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 	struct net_device *dev;
 	struct hdoip_ether *hde;
 	int ret;
-	u32 regval;
-
-	/* HD over IP board specific: Perform a PHY hardware reset */
-	regval = ioread32(EXT_RESET_PIO_BASE);
-	iowrite32(regval & 0xFE, EXT_RESET_PIO_BASE);
-	udelay(500);
-	iowrite32(regval | 0x01, EXT_RESET_PIO_BASE);
-	udelay(500);
 
 	dev = alloc_etherdev(sizeof(struct hdoip_ether));
 	if (!dev) {
@@ -1172,6 +1209,9 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 	hde->ext_pio_base = ioremap_nocache(EXT_RESET_PIO_BASE, 4);
 	if (!hde->ext_pio_base)
 		goto out_unmap_etho;
+
+	/* Perform a hardware reset */
+	hdoip_ether_board_reset(hde);
 
 	/* Probe the MII bus */
 	ret = hdoip_mii_probe(dev);
@@ -1278,8 +1318,8 @@ static struct platform_driver hdoip_ether_driver = {
 
 static int __init hdoip_ether_init(void)
 {
-	printk(KERN_INFO "%s Ethernet Driver, Version %s\n", DRV_NAME,
-	       DRV_VERSION);
+	printk(KERN_INFO "%s Ethernet Driver, Version %s\n",
+	       DRV_NAME, DRV_VERSION);
 
 	register_inetaddr_notifier(&hdoip_ether_notifier);
 	return platform_driver_probe(&hdoip_ether_driver, hdoip_ether_probe);

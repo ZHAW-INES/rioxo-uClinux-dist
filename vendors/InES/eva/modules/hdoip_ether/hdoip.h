@@ -22,6 +22,9 @@
 #ifndef ACB_VID_ST_IN_BASE
 # define ACB_VID_ST_IN_BASE		na_acb_vid_st_in
 #endif
+#ifndef ACB_AUD_ST_IN_BASE
+# define ACB_AUD_ST_IN_BASE		na_acb_aud_st_in
+#endif
 #ifndef EXT_RESET_PIO_BASE
 # define EXT_RESET_PIO_BASE		na_ext_reset_pio
 #endif
@@ -103,7 +106,7 @@
 #define ETHO_CONFIG_DMA_FIFO_THRESH_INDEX	18
 
 /* Avalon will not perform higher bursts as allowed by the Clock Crossing Bridge */
-#define ETHIO_DMA_BURST_SIZE			16	/* 64 */
+#define ETHIO_DMA_BURST_SIZE			4	/* 64 */
 
 #define ETHO_DMA_FIFO_THRESH			400
 
