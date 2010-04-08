@@ -111,9 +111,11 @@ struct hdoip_ether {
 	dma_addr_t tx_buf_dma;
 	dma_addr_t rx_buf_dma;
 
+#if 0
 	/* Ringbuffer descriptors */
 	struct hdoip_descriptors tx_desc;
 	struct hdoip_descriptors rx_desc;
+#endif
 
 	/* External I/O (PHY reset) */
 	void __iomem *ext_pio_base;

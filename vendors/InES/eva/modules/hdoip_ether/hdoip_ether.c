@@ -75,23 +75,6 @@ static inline void hdoip_mac_write(struct hdoip_ether *hde, unsigned int reg, u3
 }
 
 /*
- * Check whether writing len bytes to descriptor desc would be a valid
- * operation.
- */
-static inline bool hdoip_desc_accepts(struct hdoip_descriptor *desc, u32 len)
-{
-	u32 new_write = desc->write + len;
-
-	if (desc->write < desc->read && new_write < desc->read)
-		return true;
-	if (desc->write >= desc->read && new_write >= desc->read
-	    && !(desc->read == desc->start && new_write > desc->stop))
-		return true;
-
-	return false;
-}
-
-/*
  * Read from eth_st_in register.
  */
 static inline u32 hdoip_ethi_read(struct hdoip_ether *hde, unsigned int reg)
@@ -137,10 +120,10 @@ static inline void hdoip_ethi_stop(struct hdoip_ether *hde)
 static inline void hdoip_ethi_desc_get_cpu(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	desc->start = hdoip_ethi_read(hde, ETHIO_CPU_START_DESC);
-	desc->stop = hdoip_ethi_read(hde, ETHIO_CPU_STOP_DESC);
-	desc->write = hdoip_ethi_read(hde, ETHIO_CPU_WRITE_DESC);
-	desc->read = hdoip_ethi_read(hde, ETHIO_CPU_READ_DESC);
+	desc->start = DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_START_DESC));
+	desc->stop = DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_STOP_DESC));
+	desc->write = DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_WRITE_DESC));
+	desc->read = DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_READ_DESC));
 }
 
 /*
@@ -150,10 +133,10 @@ static inline void hdoip_ethi_desc_get_cpu(struct hdoip_ether *hde,
 static inline void hdoip_ethi_desc_set_cpu(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	hdoip_ethi_write(hde, ETHIO_CPU_START_DESC, desc->start);
-	hdoip_ethi_write(hde, ETHIO_CPU_STOP_DESC, desc->stop);
-	hdoip_ethi_write(hde, ETHIO_CPU_WRITE_DESC, desc->write);
-	hdoip_ethi_write(hde, ETHIO_CPU_READ_DESC, desc->read);
+	hdoip_ethi_write(hde, ETHIO_CPU_START_DESC, CPU_TO_DESC(desc->start));
+	hdoip_ethi_write(hde, ETHIO_CPU_STOP_DESC, CPU_TO_DESC(desc->stop));
+	hdoip_ethi_write(hde, ETHIO_CPU_WRITE_DESC, CPU_TO_DESC(desc->write));
+	hdoip_ethi_write(hde, ETHIO_CPU_READ_DESC, CPU_TO_DESC(desc->read));
 }
 
 /*
@@ -163,9 +146,9 @@ static inline void hdoip_ethi_desc_set_cpu(struct hdoip_ether *hde,
 static inline void hdoip_ethi_desc_get_vid(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	desc->start = hdoip_ethi_read(hde, ETHIO_VID_START_DESC);
-	desc->stop = hdoip_ethi_read(hde, ETHIO_VID_STOP_DESC);
-	desc->write = hdoip_ethi_read(hde, ETHI_VID_WRITE_DESC);
+	desc->start = DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_VID_START_DESC));
+	desc->stop = DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_VID_STOP_DESC));
+	desc->write = DESC_TO_CPU(hdoip_ethi_read(hde, ETHI_VID_WRITE_DESC));
 }
 
 /*
@@ -175,9 +158,9 @@ static inline void hdoip_ethi_desc_get_vid(struct hdoip_ether *hde,
 static inline void hdoip_ethi_desc_set_vid(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	hdoip_ethi_write(hde, ETHIO_VID_START_DESC, desc->start);
-	hdoip_ethi_write(hde, ETHIO_VID_STOP_DESC, desc->stop);
-	hdoip_ethi_write(hde, ETHI_VID_WRITE_DESC, desc->write);
+	hdoip_ethi_write(hde, ETHIO_VID_START_DESC, CPU_TO_DESC(desc->start));
+	hdoip_ethi_write(hde, ETHIO_VID_STOP_DESC, CPU_TO_DESC(desc->stop));
+	hdoip_ethi_write(hde, ETHI_VID_WRITE_DESC, CPU_TO_DESC(desc->write));
 }
 
 /*
@@ -187,9 +170,9 @@ static inline void hdoip_ethi_desc_set_vid(struct hdoip_ether *hde,
 static inline void hdoip_ethi_desc_get_aud(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	desc->start = hdoip_ethi_read(hde, ETHIO_AUD_START_DESC);
-	desc->stop = hdoip_ethi_read(hde, ETHIO_AUD_STOP_DESC);
-	desc->write = hdoip_ethi_read(hde, ETHI_AUD_WRITE_DESC);
+	desc->start = DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_AUD_START_DESC));
+	desc->stop = DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_AUD_STOP_DESC));
+	desc->write = DESC_TO_CPU(hdoip_ethi_read(hde, ETHI_AUD_WRITE_DESC));
 }
 
 /*
@@ -199,9 +182,9 @@ static inline void hdoip_ethi_desc_get_aud(struct hdoip_ether *hde,
 static inline void hdoip_ethi_desc_set_aud(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	hdoip_ethi_write(hde, ETHIO_AUD_START_DESC, desc->start);
-	hdoip_ethi_write(hde, ETHIO_AUD_STOP_DESC, desc->stop);
-	hdoip_ethi_write(hde, ETHI_AUD_WRITE_DESC, desc->write);
+	hdoip_ethi_write(hde, ETHIO_AUD_START_DESC, CPU_TO_DESC(desc->start));
+	hdoip_ethi_write(hde, ETHIO_AUD_STOP_DESC, CPU_TO_DESC(desc->stop));
+	hdoip_ethi_write(hde, ETHI_AUD_WRITE_DESC, CPU_TO_DESC(desc->write));
 }
 
 /*
@@ -213,19 +196,11 @@ static inline void hdoip_ethi_init(struct hdoip_ether *hde,
 {
 	u32 regval;
 
-	/* Stop the state machines */
-	hdoip_ethi_stop(hde);
-
 	/* Reset IRQ and statistics register */
 	regval = hdoip_ethi_read(hde, ETHIO_CONFIG);
 	regval &= ~ETHI_CONFIG_IRQ1_RESET;
 	regval |= ETHI_CONFIG_STATS_RESET;
 	hdoip_ethi_write(hde, ETHIO_CONFIG, regval);
-
-	/* Setup descriptors */
-	hdoip_ethi_desc_set_cpu(hde, &hde->rx_desc.cpu);
-	hdoip_ethi_desc_set_vid(hde, &hde->rx_desc.vid);
-	hdoip_ethi_desc_set_aud(hde, &hde->rx_desc.aud);
 
 	/* Setup DMA... */
 	regval = hdoip_ethi_read(hde, ETHI_DMA_CONFIG);
@@ -286,10 +261,10 @@ static inline void hdoip_etho_stop(struct hdoip_ether *hde)
 static inline void hdoip_etho_desc_get_cpu(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	desc->start = hdoip_etho_read(hde, ETHIO_CPU_START_DESC) << 2;
-	desc->stop = hdoip_etho_read(hde, ETHIO_CPU_STOP_DESC) << 2;
-	desc->write = hdoip_etho_read(hde, ETHIO_CPU_WRITE_DESC) << 2;
-	desc->read = hdoip_etho_read(hde, ETHIO_CPU_READ_DESC) << 2;
+	desc->start = DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_START_DESC));
+	desc->stop = DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_STOP_DESC));
+	desc->write = DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_WRITE_DESC));
+	desc->read = DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_READ_DESC));
 }
 
 /*
@@ -299,10 +274,10 @@ static inline void hdoip_etho_desc_get_cpu(struct hdoip_ether *hde,
 static inline void hdoip_etho_desc_set_cpu(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	hdoip_etho_write(hde, ETHIO_CPU_START_DESC, desc->start >> 2);
-	hdoip_etho_write(hde, ETHIO_CPU_STOP_DESC, desc->stop >> 2);
-	hdoip_etho_write(hde, ETHIO_CPU_WRITE_DESC, desc->write >> 2);
-	hdoip_etho_write(hde, ETHIO_CPU_READ_DESC, desc->read >> 2);
+	hdoip_etho_write(hde, ETHIO_CPU_START_DESC, CPU_TO_DESC(desc->start));
+	hdoip_etho_write(hde, ETHIO_CPU_STOP_DESC, CPU_TO_DESC(desc->stop));
+	hdoip_etho_write(hde, ETHIO_CPU_WRITE_DESC, CPU_TO_DESC(desc->write));
+	hdoip_etho_write(hde, ETHIO_CPU_READ_DESC, CPU_TO_DESC(desc->read));
 }
 
 /*
@@ -312,9 +287,11 @@ static inline void hdoip_etho_desc_set_cpu(struct hdoip_ether *hde,
 static inline void hdoip_etho_desc_get_vid(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	desc->start = hdoip_etho_read(hde, ETHIO_VID_START_DESC);
-	desc->stop = hdoip_etho_read(hde, ETHIO_VID_STOP_DESC);
-	desc->read = hdoip_etho_read(hde, ETHO_VID_READ_DESC);
+	desc->start = DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_VID_START_DESC));
+	desc->stop = DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_VID_STOP_DESC));
+	desc->read = DESC_TO_CPU(hdoip_etho_read(hde, ETHO_VID_READ_DESC));
+	/* XXX */
+	desc->write = DESC_TO_CPU(ioread32(ACB_VID_ST_IN_BASE + 0x40));
 }
 
 /*
@@ -324,9 +301,11 @@ static inline void hdoip_etho_desc_get_vid(struct hdoip_ether *hde,
 static inline void hdoip_etho_desc_set_vid(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	hdoip_etho_write(hde, ETHIO_VID_START_DESC, desc->start);
-	hdoip_etho_write(hde, ETHIO_VID_STOP_DESC, desc->stop);
-	hdoip_etho_write(hde, ETHO_VID_READ_DESC, desc->read);
+	hdoip_etho_write(hde, ETHIO_VID_START_DESC, CPU_TO_DESC(desc->start));
+	hdoip_etho_write(hde, ETHIO_VID_STOP_DESC, CPU_TO_DESC(desc->stop));
+	hdoip_etho_write(hde, ETHO_VID_READ_DESC, CPU_TO_DESC(desc->read));
+	/* XXX */
+	iowrite32(CPU_TO_DESC(desc->write), ACB_VID_ST_IN_BASE + 0x40);
 }
 
 /*
@@ -336,9 +315,11 @@ static inline void hdoip_etho_desc_set_vid(struct hdoip_ether *hde,
 static inline void hdoip_etho_desc_get_aud(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	desc->start = hdoip_etho_read(hde, ETHIO_AUD_START_DESC);
-	desc->stop = hdoip_etho_read(hde, ETHIO_AUD_STOP_DESC);
-	desc->read = hdoip_etho_read(hde, ETHO_AUD_READ_DESC);
+	desc->start = DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_AUD_START_DESC));
+	desc->stop = DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_AUD_STOP_DESC));
+	desc->read = DESC_TO_CPU(hdoip_etho_read(hde, ETHO_AUD_READ_DESC));
+	/* XXX */
+	desc->write = DESC_TO_CPU(ioread32(ACB_AUD_ST_IN_BASE + 0x94));
 }
 
 /*
@@ -348,9 +329,11 @@ static inline void hdoip_etho_desc_get_aud(struct hdoip_ether *hde,
 static inline void hdoip_etho_desc_set_aud(struct hdoip_ether *hde,
                                            struct hdoip_descriptor *desc)
 {
-	hdoip_etho_write(hde, ETHIO_AUD_START_DESC, desc->start);
-	hdoip_etho_write(hde, ETHIO_AUD_STOP_DESC, desc->stop);
-	hdoip_etho_write(hde, ETHO_AUD_READ_DESC, desc->read);
+	hdoip_etho_write(hde, ETHIO_AUD_START_DESC, CPU_TO_DESC(desc->start));
+	hdoip_etho_write(hde, ETHIO_AUD_STOP_DESC, CPU_TO_DESC(desc->stop));
+	hdoip_etho_write(hde, ETHO_AUD_READ_DESC, CPU_TO_DESC(desc->read));
+	/* XXX */
+	iowrite32(CPU_TO_DESC(desc->write), ACB_AUD_ST_IN_BASE + 0x94);
 }
 
 /*
@@ -365,14 +348,6 @@ static inline void hdoip_etho_init(struct hdoip_ether *hde,
 {
 	u32 regval;
 
-	/* Stop the state machines */
-	hdoip_etho_stop(hde);
-
-	/* Setup descriptors */
-	hdoip_etho_desc_set_cpu(hde, &hde->tx_desc.cpu);
-	hdoip_etho_desc_set_vid(hde, &hde->tx_desc.vid);
-	hdoip_etho_desc_set_aud(hde, &hde->tx_desc.aud);
-
 	/* Setup DMA... */
 	regval = hdoip_etho_read(hde, ETHO_DMA_CONFIG);
 	/* ...burst size */
@@ -386,6 +361,26 @@ static inline void hdoip_etho_init(struct hdoip_ether *hde,
 	hdoip_etho_write(hde, ETHO_DMA_CONFIG, regval);
 
 	regval = hdoip_etho_read(hde, ETHO_DMA_CONFIG);
+}
+
+/*
+ * Check whether writing len bytes to CPU ringbuffer would be a valid operation.
+ */
+static inline bool hdoip_etho_accepts_cpu_write(struct hdoip_ether *hde, u32 len)
+{
+	struct hdoip_descriptor desc;
+	u32 new_write;
+
+	hdoip_etho_desc_get_cpu(hde, &desc);
+	new_write = desc.write + len;
+
+	if (desc.write < desc.read && new_write < desc.read)
+		return true;
+	if (desc.write >= desc.read && new_write >= desc.read
+	    && !(desc.read == desc.start && new_write > desc.stop))
+		return true;
+
+	return false;
 }
 
 /*
@@ -697,21 +692,23 @@ static inline void hdoip_ether_write_frame(volatile u32 *dest, volatile u32 *src
 }
 
 #ifdef DEBUG
-static void dump_desc(struct hdoip_ether *hde)
+static void dump_desc_tx(struct hdoip_ether *hde)
 {
 	pr_debug("TX CPU:\n");
-	pr_debug("  start: 0x%08x\n", hdoip_etho_read(hde, ETHIO_CPU_START_DESC) << 2);
-	pr_debug("  stop:  0x%08x\n", hdoip_etho_read(hde, ETHIO_CPU_STOP_DESC) << 2);
-	pr_debug("  write: 0x%08x\n", hdoip_etho_read(hde, ETHIO_CPU_WRITE_DESC) << 2);
-	pr_debug("  read:  0x%08x\n", hdoip_etho_read(hde, ETHIO_CPU_READ_DESC) << 2);
+	pr_debug("  start: 0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_START_DESC)));
+	pr_debug("  stop:  0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_STOP_DESC)));
+	pr_debug("  write: 0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_WRITE_DESC)));
+	pr_debug("  read:  0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_READ_DESC)));
 
-#if 0
+}
+
+static void dump_desc_rx(struct hdoip_ether *hde)
+{
 	pr_debug("RX CPU:\n");
-	pr_debug("  start: 0x%08x\n", hde->rx_desc.cpu.start);
-	pr_debug("  stop:  0x%08x\n", hde->rx_desc.cpu.stop);
-	pr_debug("  write: 0x%08x\n", hde->rx_desc.cpu.write);
-	pr_debug("  read:  0x%08x\n", hde->rx_desc.cpu.read);
-#endif
+	pr_debug("  start: 0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_START_DESC)));
+	pr_debug("  stop:  0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_STOP_DESC)));
+	pr_debug("  write: 0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_WRITE_DESC)));
+	pr_debug("  read:  0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_READ_DESC)));
 }
 #endif
 
@@ -723,12 +720,11 @@ static void dump_desc(struct hdoip_ether *hde)
 static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
-	struct hdoip_descriptor *tx_desc = &hde->tx_desc.cpu;
+	struct hdoip_descriptor tx_desc;
 	unsigned long flags;
 	u32 *tx_buf;
 	u32 len = skb->len;
 	u32 newlen;
-	int i;
 
 	mark_entry();
 
@@ -760,7 +756,8 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	newlen = len + 3;
 	newlen &= ~3UL;
 	if (newlen != len) {
-		pr_debug("padding to multiple of 32bit (len = %lu, newlen = %lu)\n", len, newlen);
+		pr_debug("padding to multiple of 32bit (len = %u, newlen = %u)\n",
+		         len, newlen);
 		if (skb_padto(skb, newlen)) {
 			printk(KERN_ERR "%s: Packet padding failed\n", dev->name);
 			return NETDEV_TX_OK;
@@ -771,7 +768,7 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	spin_lock_irqsave(&hde->tx_lock, flags);
 
 	/* Is there space in the ringbuffer? */
-	if (!hdoip_desc_accepts(tx_desc, len)) {
+	if (!hdoip_etho_accepts_cpu_write(hde, len)) {
 		/* The ringbuffer is full */
 		netif_stop_queue(dev);
 		spin_unlock_irqrestore(&hde->tx_lock, flags);
@@ -782,34 +779,29 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	dev->stats.tx_packets++;
 	dev->stats.tx_bytes += len;
 
+	/* Get current descriptor values */
+	hdoip_etho_desc_get_cpu(hde, &tx_desc);
+
 	pr_debug("before:\n");
-	dump_desc(hde);
-	tx_buf = (u32 *) tx_desc->write;
+	dump_desc_tx(hde);
+
+	tx_buf = (u32 *) tx_desc.write;
 	/* First 32 bits of the ringbuffer entry hold the frame size */
 	iowrite32(cpu_to_le32(len), tx_buf);
 	hdoip_ether_write_frame(tx_buf + 1, (u32 *) skb->data, len / sizeof(u32));
 	/* Make sure everything gets written to memory */
 	flush_dcache_range((unsigned long) tx_buf, (unsigned long) (((u8 *) tx_buf) + len));
 
-#if 0
-	tx_buf = (u32 *) ((unsigned long) tx_buf | 0x80000000);
-	for (i = 0; i < (len + 4) / sizeof(u32); i++) {
-		printk(" %08x", tx_buf[i]);
-		if (i && i % 16 == 0)
-			printk("\n");
-	}
-#endif
-
 	/* Update write pointer (with wrap around) */
-	tx_desc->write += len + sizeof(u32);
-	if (tx_desc->write > tx_desc->stop)
-		tx_desc->write = tx_desc->start;
+	tx_desc.write += len + sizeof(u32);
+	if (tx_desc.write > tx_desc.stop)
+		tx_desc.write = tx_desc.start;
 
 	/* Write descriptors */
-	hdoip_etho_desc_set_cpu(hde, tx_desc);
+	hdoip_etho_desc_set_cpu(hde, &tx_desc);
 
 	pr_debug("after:\n");
-	dump_desc(hde);
+	dump_desc_tx(hde);
 	spin_unlock_irqrestore(&hde->tx_lock, flags);
 
 	dev->trans_start = jiffies;
@@ -827,6 +819,7 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 static void hdoip_ether_rx(struct net_device *dev)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
+	struct hdoip_descriptor rx_desc;
 	struct sk_buff *skb;
 	unsigned int len;
 	unsigned long flags;
@@ -834,10 +827,10 @@ static void hdoip_ether_rx(struct net_device *dev)
 	spin_lock_irqsave(&hde->rx_lock, flags);
 
 	/* Update the RX descriptor struct */
-	hdoip_ethi_desc_get_cpu(hde, &hde->rx_desc.cpu);
+	hdoip_ethi_desc_get_cpu(hde, &rx_desc);
 
 	/* Get the frame length (first byte) */
-	len = ioread32(hde->rx_desc.cpu.read);
+	len = ioread32(rx_desc.read);
 	pr_debug("RX frame: %d bytes\n", len);
 
 	skb = dev_alloc_skb(len + 2);
@@ -964,6 +957,7 @@ static int hdoip_ether_mac_init(struct net_device *dev)
 static int hdoip_ether_open(struct net_device *dev)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
+	struct hdoip_descriptor desc;
 	int ret = 0;
 	u32 regval;
 
@@ -991,43 +985,31 @@ static int hdoip_ether_open(struct net_device *dev)
 		return -ENOMEM;
 	}
 
+	/* Stop the state machines */
+	hdoip_etho_stop(hde);
+	hdoip_ethi_stop(hde);
+
 	/* Setup CPU descriptors */
-	hde->tx_desc.cpu.start = (u32) hde->tx_buf_dma;
-	hde->tx_desc.cpu.stop = (u32) (hde->tx_buf_dma
-	                               + (TX_RING_ENTRIES * MAX_PKTBUF_SIZE)
-	                               - MAX_PKT_SIZE);
-	hde->tx_desc.cpu.write = hde->tx_desc.cpu.start;
-	hde->tx_desc.cpu.read = hde->tx_desc.cpu.start;
+	hdoip_descriptor_init(&desc, (u32) hde->tx_buf_dma,
+	                      (TX_RING_ENTRIES * MAX_PKTBUF_SIZE) - MAX_PKT_SIZE);
+	hdoip_etho_desc_set_cpu(hde, &desc);
 
-	hde->rx_desc.cpu.start = (u32) hde->rx_buf_dma;
-	hde->rx_desc.cpu.stop = (u32) (hde->rx_buf_dma
-	                               + (RX_RING_ENTRIES * MAX_PKTBUF_SIZE)
-	                               - MAX_PKT_SIZE);
-	hde->rx_desc.cpu.write = (u32) hde->rx_desc.cpu.start;
-	hde->rx_desc.cpu.read = (u32) hde->rx_desc.cpu.start;
+	hdoip_descriptor_init(&desc, (u32) hde->rx_buf_dma,
+	                      (RX_RING_ENTRIES * MAX_PKTBUF_SIZE) - MAX_PKT_SIZE);
+	hdoip_ethi_desc_set_cpu(hde, &desc);
 
-	/* XXX: Initalize the audio/video descriptors */
-	hde->tx_desc.vid.start = (u32) 0;
-	hde->tx_desc.vid.stop = (u32) 0+ 0x4000;
-	hde->tx_desc.vid.write = (u32) 0;
-	hde->tx_desc.vid.read = (u32) 0;
-	iowrite32(hde->tx_desc.vid.start, ACB_VID_ST_IN_BASE + 0x40);
+	/* Setup video descriptors */
+	hdoip_descriptor_init(&desc, 0, 0x4000);
+	hdoip_etho_desc_set_vid(hde, &desc);
 
-	hde->tx_desc.aud.start = (u32) 0;
-	hde->tx_desc.aud.stop = (u32) 0 + 0x4000;
-	hde->tx_desc.aud.write = (u32) 0;
-	hde->tx_desc.aud.read = (u32) 0;
-	iowrite32(hde->tx_desc.aud.start, 0x80000000 + ACB_AUD_ST_IN_BASE + 0x94);
+	hdoip_descriptor_init(&desc, 0, 0x4000);
+	hdoip_ethi_desc_set_vid(hde, &desc);
 
-	hde->rx_desc.vid.start = (u32) 0;
-	hde->rx_desc.vid.stop = (u32) 0x00440000 + 0x4000;
-	hde->rx_desc.vid.write = (u32) 0x00440000;
-	hde->rx_desc.vid.read = (u32) 0x00440000;
+	hdoip_descriptor_init(&desc, 0, 0x4000);
+	hdoip_etho_desc_set_aud(hde, &desc);
 
-	hde->rx_desc.aud.start = (u32) 0x00450000;
-	hde->rx_desc.aud.stop = (u32) 0x00450000 + 0x4000;
-	hde->rx_desc.aud.write = (u32) 0x00450000;
-	hde->rx_desc.aud.read = (u32) 0x00450000;
+	hdoip_descriptor_init(&desc, 0, 0x4000);
+	hdoip_ethi_desc_set_aud(hde, &desc);
 
 	/* Initialize ethernet in/out blocks */
 	hdoip_etho_init(hde, ETHIO_DMA_BURST_SIZE, ETHO_DMA_FIFO_THRESH);
@@ -1039,6 +1021,8 @@ static int hdoip_ether_open(struct net_device *dev)
 	                regval | TSE_CMD_TX_EN | TSE_CMD_RX_EN);
 
 	phy_start(hde->phydev);
+
+	/* Start state machines and go... */
 	hdoip_etho_start(hde);
 	hdoip_ethi_start(hde);
 	netif_start_queue(dev);

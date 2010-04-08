@@ -119,6 +119,11 @@
 #define TX_RING_ENTRIES		8
 #define RX_RING_ENTRIES		8
 
+/* Values in registers are word addresses */
+#define DESC_SHIFT		2
+#define DESC_TO_CPU(x)		((x) << DESC_SHIFT)
+#define CPU_TO_DESC(x)		((x) >> DESC_SHIFT)
+
 struct hdoip_descriptor {
 	u32 start;
 	u32 stop;
@@ -126,6 +131,16 @@ struct hdoip_descriptor {
 	u32 read;
 };
 
+static inline void hdoip_descriptor_init(struct hdoip_descriptor *desc,
+                                         u32 start, u32 len)
+{
+	desc->start = start;
+	desc->stop = start + len;
+	desc->read = start;
+	desc->write = start;
+}
+
+#if 0
 struct hdoip_descriptors {
 	/* CPU descriptors */
 	struct hdoip_descriptor cpu;
@@ -134,5 +149,6 @@ struct hdoip_descriptors {
 	/* Audio stream descriptors */
 	struct hdoip_descriptor aud;
 };
+#endif
 
 #endif /* _HDOIP_H_ */
