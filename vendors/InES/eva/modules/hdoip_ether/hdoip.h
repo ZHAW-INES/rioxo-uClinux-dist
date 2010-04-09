@@ -116,13 +116,18 @@
 #define MAX_PKT_SIZE				(MAX_PKTBUF_SIZE - 4)
 
 /* Size for the TX/RX ringbuffers */
-#define TX_RING_ENTRIES		8
-#define RX_RING_ENTRIES		8
+#define TX_RING_ENTRIES			8
+#define RX_RING_ENTRIES			8
+
+/* Length of the frame size preceeding transmitted/received frames */
+#define FRAME_SIZE_LENGTH		sizeof(u32)
+/* Length of the timestamp preceeding received frames */
+#define RX_TIMESTAMP_LENGTH		sizeof(u32)
 
 /* Values in registers are word addresses */
-#define DESC_SHIFT		2
-#define DESC_TO_CPU(x)		((x) << DESC_SHIFT)
-#define CPU_TO_DESC(x)		((x) >> DESC_SHIFT)
+#define DESC_SHIFT			2
+#define DESC_TO_CPU(x)			((x) << DESC_SHIFT)
+#define CPU_TO_DESC(x)			((x) >> DESC_SHIFT)
 
 struct hdoip_descriptor {
 	u32 start;

@@ -435,83 +435,6 @@ static int hdoip_ether_mdio_reset(struct mii_bus *mii)
 	return 0;
 }
 
-/* XXX: For debugging only */
-#ifdef DEBUG
-static void hdoip_ether_print_status(struct hdoip_ether *hde)
-{
-	u32 regval;
-
-	pr_debug("%s PHY register status\n", DRV_NAME);
-	regval = hdoip_mac_read(hde, 0x204);
-	pr_debug(" Status register                : %04x\n\n", regval);
-	pr_debug(" Jabber condition               : %s\n", regval & 0x0002 ? "detected" : "not detected");
-	pr_debug(" Copper link status             : %s\n", regval & 0x0004 ? "up" : "down");
-	pr_debug(" Copper remote fault condition  : %s\n", regval & 0x0010 ? "detected" : "not detected");
-	pr_debug(" Autonegotiation process        : %s\n", regval & 0x0020 ? "completed" : "not completed");
-	pr_debug(" 10 Mbps Half-Duplex            : %s\n", regval & 0x0800 ? "available" : "not available");
-	pr_debug(" 10 Mbps Full-Duplex            : %s\n", regval & 0x1000 ? "available" : "not available");
-	pr_debug(" 100 Mbps Half-Duplex           : %s\n", regval & 0x2000 ? "available" : "not available");
-	pr_debug(" 100 Mbps Full-Duplex           : %s\n", regval & 0x4000 ? "available" : "not available");
-
-	pr_debug("\n===\n\n");
-
-	regval = hdoip_mac_read(hde, 0x244);
-	pr_debug(" PHY specific status register   : %04x\n\n", regval);
-	pr_debug(" Jabber (real time)             : %s\n", regval & 0x0001 ? "jabber" : "no jabber");
-	pr_debug(" Polarity (real time)           : %s\n", regval & 0x0002 ? "reversed" : "normal");
-	pr_debug(" Receive Pause                  : %s\n", regval & 0x0004 ? "enabled" : "disabled");
-	pr_debug(" Transmit Pause                 : %s\n", regval & 0x0008 ? "enabled" : "disabled");
-	pr_debug(" Copper Energy Detect Status    : %s\n", regval & 0x0010 ? "sleep" : "active");
-	pr_debug(" Downshift Status               : %s\n", regval & 0x0020 ? "downshift" : "no downshift");
-	pr_debug(" Link (real time)               : %s\n", regval & 0x0400 ? "up" : "down");
-	pr_debug(" Speed and duplex resolved      : %s\n", regval & 0x0800 ? "resolved" : "not resolved");
-	pr_debug(" Page received                  : %s\n", regval & 0x1000 ? "received" : "not received");
-	pr_debug(" Duplex                         : %s\n", regval & 0x2000 ? "full" : "half");
-
-	pr_debug(" Speed                          : ");
-	switch (regval & 0xC000 >> 14) {
-	case 0:
-		pr_cont("10 Mbps\n");
-		break;
-	case 1:
-		pr_cont("100 Mbps\n");
-		break;
-	case 2:
-		pr_cont("1000 Mbps\n");
-		break;
-	default:
-		pr_cont("reserved\n");
-		break;
-	}
-
-	pr_debug("\n===\n\n");
-
-	regval = hdoip_mac_read(hde, 0x26C);
-	pr_debug(" Extended PHY specific status  : %04x\n", regval);
-	pr_debug(" HWCFG_MODE                    : ");
-	switch (regval & 0xF) {
-		case 0xF:
-			pr_cont("GMII to copper");
-			break;
-		case 0xB:
-			pr_cont("RGMII/Modified MII to Copper");
-			break;
-		case 0x7:
-			pr_cont("GMII to Fiber");
-		default:
-			pr_cont("reserved");
-			break;
-	}
-	pr_cont("\n");
-	pr_debug(" Fiber/copper resolution       : %s\n", regval & 0x2000 ? "fiber" : "copper");
-	pr_debug(" Fiber/copper auto selection   : %s\n", regval & 0x8000 ? "disabled" : "enabled");
-}
-#else
-static void hdoip_ether_print_status(struct hdoip_ether *hde)
-{
-}
-#endif
-
 static void hdoip_ether_get_drvinfo(struct net_device *dev,
                                     struct ethtool_drvinfo *info)
 {
@@ -624,6 +547,9 @@ static int hdoip_ether_change_mtu(struct net_device *dev, int mtu)
 	return 0;
 }
 
+/*
+ * Propagate changes of link, duplex and speed. Called by the PHY subystem.
+ */
 static void hdoip_ether_adjust_link(struct net_device *dev)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
@@ -683,15 +609,29 @@ static void hdoip_ether_adjust_link(struct net_device *dev)
 		phy_print_status(phydev);
 }
 
-static inline void hdoip_ether_write_frame(volatile u32 *dest, volatile u32 *src, size_t n)
+static inline void hdoip_ether_write_frame(volatile u32 *dest, volatile u32 *src,
+                                           const size_t n)
 {
-	while (n) {
+	size_t count = n >> 2;
+
+	while (count) {
 		iowrite32(cpu_to_be32(*src++), dest++);
-		n--;
+		count--;
 	}
 }
 
-#ifdef DEBUG
+static inline void hdoip_ether_read_frame(volatile u32 *dest, volatile u32 *src,
+                                          const size_t n)
+{
+	size_t count = n >> 2;
+
+	while (count) {
+		*dest++ = be32_to_cpu(ioread32(src++));
+		count--;
+	}
+}
+
+#if 0
 static void dump_desc_tx(struct hdoip_ether *hde)
 {
 	pr_debug("TX CPU:\n");
@@ -726,8 +666,6 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	u32 len = skb->len;
 	u32 newlen;
 
-	mark_entry();
-
 	/* check oversized frames */
 	if (unlikely(len > MAX_PKT_SIZE)) {
 		dev->stats.tx_dropped++;
@@ -747,7 +685,6 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	/* align frame data to 32bit boundaries */
 	if ((unsigned long) skb->data & 0x2) {
-		pr_debug("skb->data not aligned\n");
 		skb_push(skb, 2);
 		len = skb->len;
 	}
@@ -782,31 +719,24 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	/* Get current descriptor values */
 	hdoip_etho_desc_get_cpu(hde, &tx_desc);
 
-	pr_debug("before:\n");
-	dump_desc_tx(hde);
-
 	tx_buf = (u32 *) tx_desc.write;
 	/* First 32 bits of the ringbuffer entry hold the frame size */
 	iowrite32(cpu_to_le32(len), tx_buf);
-	hdoip_ether_write_frame(tx_buf + 1, (u32 *) skb->data, len / sizeof(u32));
+	hdoip_ether_write_frame(tx_buf + 1, (u32 *) skb->data, len);
 	/* Make sure everything gets written to memory */
 	flush_dcache_range((unsigned long) tx_buf, (unsigned long) (((u8 *) tx_buf) + len));
 
 	/* Update write pointer (with wrap around) */
-	tx_desc.write += len + sizeof(u32);
+	tx_desc.write += len + FRAME_SIZE_LENGTH;
 	if (tx_desc.write > tx_desc.stop)
 		tx_desc.write = tx_desc.start;
 
-	/* Write descriptors */
-	hdoip_etho_desc_set_cpu(hde, &tx_desc);
+	/* Set write descriptor */
+	hdoip_etho_write(hde, ETHIO_CPU_WRITE_DESC, CPU_TO_DESC(tx_desc.write));
 
-	pr_debug("after:\n");
-	dump_desc_tx(hde);
 	spin_unlock_irqrestore(&hde->tx_lock, flags);
 
 	dev->trans_start = jiffies;
-
-	mark_leave();
 
 	return NETDEV_TX_OK;
 }
@@ -823,25 +753,63 @@ static void hdoip_ether_rx(struct net_device *dev)
 	struct sk_buff *skb;
 	unsigned int len;
 	unsigned long flags;
+	u32 *rx_buf, *data;
 
 	spin_lock_irqsave(&hde->rx_lock, flags);
 
-	/* Update the RX descriptor struct */
+	/* Get the current descriptor values */
 	hdoip_ethi_desc_get_cpu(hde, &rx_desc);
 
-	/* Get the frame length (first byte) */
-	len = ioread32(rx_desc.read);
-	pr_debug("RX frame: %d bytes\n", len);
+	if (rx_desc.read == rx_desc.write) {
+		printk(KERN_NOTICE "%s: RX ring buffer full, dropping packet.\n", dev->name);
+		return;
+	}
 
-	skb = dev_alloc_skb(len + 2);
+	rx_buf = (u32 *) rx_desc.read;
+
+	/* Get the frame length (first byte) */
+	len = ioread32(rx_buf);
+	if (len < ETH_ZLEN + 4) {
+		printk(KERN_WARNING "%s: Received undersized frame (%u), dropping packet\n", dev->name, len);
+		return;
+	}
+
+	len -= RX_TIMESTAMP_LENGTH;
+	rx_buf = rx_buf + (RX_TIMESTAMP_LENGTH / sizeof(u32));
+
+	skb = dev_alloc_skb(len + NET_IP_ALIGN);
 	if (!skb) {
 		spin_unlock_irqrestore(&hde->rx_lock, flags);
 		dev->stats.rx_dropped++;
 		printk(KERN_NOTICE "%s: Memory squeeze, dropping packet.\n", dev->name);
-		return;
+		goto out;
 	}
 
-	/* TODO */
+	skb_reserve(skb, NET_IP_ALIGN);
+	data = (u32 *) skb_put(skb, len);
+
+	/* Read the frame data */
+	hdoip_ether_read_frame(data, rx_buf + 1, len);
+
+	skb->dev = dev;
+	/* Hardware already verified the checksum */
+	skb->ip_summed = CHECKSUM_UNNECESSARY;
+	skb->protocol = eth_type_trans(skb, dev);
+
+	netif_rx(skb);
+
+	dev->last_rx = jiffies;
+	dev->stats.rx_packets++;
+	dev->stats.rx_bytes += len;
+
+out:
+	/* Update the descriptors (with wrap around) */
+	rx_desc.read += len + FRAME_SIZE_LENGTH + RX_TIMESTAMP_LENGTH;
+	if (rx_desc.read > rx_desc.stop)
+		rx_desc.read = rx_desc.start;
+
+	/* Set read descriptor */
+	hdoip_ethi_write(hde, ETHIO_CPU_READ_DESC, CPU_TO_DESC(rx_desc.read));
 
 	spin_unlock_irqrestore(&hde->rx_lock, flags);
 }
@@ -853,21 +821,18 @@ static irqreturn_t hdoip_ether_interrupt(int irq, void *dev_id)
 {
 	struct net_device *dev = dev_id;
 	struct hdoip_ether *hde = netdev_priv(dev);
-	u32 status;
-
-	pr_debug("Got an interrupt\n");
+	u32 status, config;
 
 	status = hdoip_ethi_read(hde, ETHIO_STATUS);
 	/* Check the status register for the IRQ */
 	if (!(status & ETHI_STATUS_IRQ1_FLAG))
 		return IRQ_HANDLED;
 
-	/* Reset IRQ */
-	hdoip_ethi_write(hde, ETHIO_STATUS, status | ETHI_CONFIG_IRQ1_RESET);
-
-	pr_debug("There was really an interrupt\n");
-
 	hdoip_ether_rx(dev);
+
+	/* Reset IRQ */
+	config = hdoip_ethi_read(hde, ETHIO_CONFIG);
+	hdoip_ethi_write(hde, ETHIO_CONFIG, config & ~ETHI_CONFIG_IRQ1_RESET);
 
 	return IRQ_HANDLED;
 }
@@ -1082,11 +1047,11 @@ static int hdoip_ether_inetaddr_event(struct notifier_block *nb,
 	switch (event) {
 	case NETDEV_UP:
 		//printk(KERN_INFO "IP address %pI4 set\n", &ifa->ifa_address);
-		//hdoip_ethi_write(hde, ETHI_IP_FILTER, ifa->ifa_address);
+		hdoip_ethi_write(hde, ETHI_IP_FILTER, ifa->ifa_address);
 		break;
 	case NETDEV_DOWN:
 		//printk(KERN_INFO "IP address %pI4 unset\n", &ifa->ifa_address);
-		//hdoip_ethi_write(hde, ETHI_IP_FILTER, 0);
+		hdoip_ethi_write(hde, ETHI_IP_FILTER, 0);
 		break;
 	}
 
@@ -1132,6 +1097,41 @@ static int __init hdoip_ether_phy_init(struct net_device *dev)
 	return 0;
 }
 
+static int hdoip_mdio_irqs[] = {
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+	PHY_POLL,
+};
+
 static int __init hdoip_mii_probe(struct net_device *dev)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
@@ -1149,6 +1149,7 @@ static int __init hdoip_mii_probe(struct net_device *dev)
 	snprintf(mdio_bus->id, MII_BUS_ID_SIZE, "%x", HDOIP_MII_ID);
 
 	mdio_bus->priv = hde;
+	mdio_bus->irq = hdoip_mdio_irqs;
 
 	ret = mdiobus_register(mdio_bus);
 	if (ret) {
@@ -1208,7 +1209,9 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 		goto out_mii_remove;
 
 	/* Register interrupt handler */
-	if (request_irq(ACB_ETH_IN_IRQ, hdoip_ether_interrupt, 0, dev->name, dev)) {
+	if (request_irq(ACB_ETH_IN_IRQ, hdoip_ether_interrupt,
+	                IRQF_TRIGGER_FALLING|IRQF_DISABLED|IRQF_SAMPLE_RANDOM|IRQF_NOBALANCING,
+	                dev->name, dev)) {
 		ret = -EBUSY;
 		goto out_phy_disconnect;
 	}
