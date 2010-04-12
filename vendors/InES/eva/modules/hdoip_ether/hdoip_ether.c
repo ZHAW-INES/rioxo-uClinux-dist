@@ -435,8 +435,8 @@ static int hdoip_ether_mdio_reset(struct mii_bus *mii)
 	return 0;
 }
 
-static void hdoip_ether_ethtool_get_settings(struct net_device *dev,
-                                             struct ethtool_cmd *cmd)
+static int hdoip_ether_ethtool_get_settings(struct net_device *dev,
+                                            struct ethtool_cmd *cmd)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
 
@@ -446,8 +446,8 @@ static void hdoip_ether_ethtool_get_settings(struct net_device *dev,
 	return phy_ethtool_gset(hde->phydev, cmd);
 }
 
-static void hdoip_ether_ethtool_set_settings(struct net_device *dev,
-                                             struct ethtool_cmd *cmd)
+static int hdoip_ether_ethtool_set_settings(struct net_device *dev,
+                                            struct ethtool_cmd *cmd)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
 
@@ -481,18 +481,58 @@ static struct net_device_stats *hdoip_ether_get_stats(struct net_device *dev)
 	struct net_device_stats *stats = &dev->stats;
 
 	if (netif_running(dev)) {
+		/* Read statistic registers of ethi */
 		stats->rx_packets = hdoip_ethi_read(hde, ETHI_CPU_PACKET_COUNT);
 		stats->rx_bytes	= hdoip_ethi_read(hde, ETHI_CPU_DATA_COUNT);
 		stats->rx_crc_errors = hdoip_ethi_read(hde, ETHI_CPU_CRC_ERR_COUNT);
+
+		/* Read TSE MAC statistic registers */
+		stats->multicast = hdoip_mac_read(hde, TSE_MAC_IF_IN_MULTICAST_PKTS);
 	}
 
 	return stats;
+}
+
+/*
+ * Set multicast MAC addresses in MAC hash lookup table
+ */
+static void hdoip_ether_mac_set_mcast_hash(struct hdoip_ether *hde,
+                                           struct dev_mc_list *addrs)
+{
+	struct dev_mc_list *cur;
+
+	for (cur = addrs; cur; cur = cur->next) {
+		unsigned int hash = 0;
+		int i;
+		u8 octet, xor_bit;
+
+		if (!is_multicast_ether_addr(cur->dmi_addr))
+			continue;
+
+		/* Triple Speed Ethernet User Guide p. 4-6 */
+		for (i = 5; i >= 0; i--) {
+			xor_bit = 0;
+			octet = cur->dmi_addr[i];
+			xor_bit = ((octet >> 0) ^
+			           (octet >> 1) ^
+				   (octet >> 2) ^
+				   (octet >> 3) ^
+				   (octet >> 4) ^
+				   (octet >> 5) ^
+				   (octet >> 6) ^
+				   (octet >> 7)) & 0x01;
+			hash = (hash << 1) | xor_bit;
+		}
+
+		hdoip_mac_write(hde, TSE_MAC_MCAST_HASH_TABLE + ((hash % 0x3f) * 4), 1);
+	}
 }
 
 static void hdoip_ether_set_multicast_list(struct net_device *dev)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
 	u32 value;
+	unsigned int off;
 
 	/* Promiscuous mode */
 	value = hdoip_mac_read(hde, TSE_MAC_COMMAND_CONFIG);
@@ -501,6 +541,20 @@ static void hdoip_ether_set_multicast_list(struct net_device *dev)
 	else
 		value &= ~TSE_CMD_PROMIS_EN;
 	hdoip_mac_write(hde, TSE_MAC_COMMAND_CONFIG, value);
+
+	/* Multicast */
+	if (dev->flags & IFF_ALLMULTI) {
+		/* Accept all multicast */
+		for (off = 0; off < TSE_MAC_MCAST_HASH_TABLE_SIZE; off += 4)
+			hdoip_mac_write(hde, TSE_MAC_MCAST_HASH_TABLE + off, 1);
+	} else {
+		/* Clear all entries */
+		for (off = 0; off < TSE_MAC_MCAST_HASH_TABLE_SIZE; off += 4)
+			hdoip_mac_write(hde, TSE_MAC_MCAST_HASH_TABLE + off, 0);
+
+		if (dev->mc_count > 0)
+			hdoip_ether_mac_set_mcast_hash(hde, dev->mc_list);
+	}
 }
 
 /*
@@ -703,6 +757,8 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	u32 len = skb->len;
 	u32 newlen;
 
+	pr_debug("TX\n");
+
 	/* check oversized frames */
 	if (unlikely(len > MAX_PKT_SIZE)) {
 		dev->stats.tx_dropped++;
@@ -730,8 +786,6 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	newlen = len + 3;
 	newlen &= ~3UL;
 	if (newlen != len) {
-		pr_debug("padding to multiple of 32bit (len = %u, newlen = %u)\n",
-		         len, newlen);
 		if (skb_padto(skb, newlen)) {
 			printk(KERN_ERR "%s: Packet padding failed\n", dev->name);
 			return NETDEV_TX_OK;
@@ -791,6 +845,7 @@ static void hdoip_ether_rx(struct net_device *dev)
 	unsigned int len;
 	unsigned long flags;
 	u32 *rx_buf;
+	struct ethhdr *h;
 
 	spin_lock_irqsave(&hde->rx_lock, flags);
 
@@ -798,6 +853,7 @@ static void hdoip_ether_rx(struct net_device *dev)
 	hdoip_ethi_desc_get_cpu(hde, &rx_desc);
 
 	if (rx_desc.read == rx_desc.write) {
+		spin_unlock_irqrestore(&hde->rx_lock, flags);
 		printk(KERN_NOTICE "%s: RX ring buffer full, dropping packet.\n", dev->name);
 		return;
 	}
@@ -807,6 +863,7 @@ static void hdoip_ether_rx(struct net_device *dev)
 	/* Get the frame length (first byte) */
 	len = ioread32(rx_buf);
 	if (len < ETH_ZLEN + 4) {
+		spin_unlock_irqrestore(&hde->rx_lock, flags);
 		printk(KERN_WARNING "%s: Received undersized frame (%u), dropping packet\n", dev->name, len);
 		return;
 	}
@@ -816,7 +873,6 @@ static void hdoip_ether_rx(struct net_device *dev)
 
 	skb = dev_alloc_skb(len + NET_IP_ALIGN);
 	if (!skb) {
-		spin_unlock_irqrestore(&hde->rx_lock, flags);
 		dev->stats.rx_dropped++;
 		printk(KERN_NOTICE "%s: Memory squeeze, dropping packet.\n", dev->name);
 		goto out;
@@ -831,6 +887,9 @@ static void hdoip_ether_rx(struct net_device *dev)
 	/* Hardware already verified the checksum */
 	skb->ip_summed = CHECKSUM_UNNECESSARY;
 	skb->protocol = eth_type_trans(skb, dev);
+
+	h = eth_hdr(skb);
+	pr_debug("RX: dest = %pM\n", h->h_dest);
 
 	netif_rx(skb);
 
@@ -937,6 +996,7 @@ static int hdoip_ether_mac_init(struct net_device *dev)
 	regval = hdoip_mac_read(hde, TSE_MAC_COMMAND_CONFIG);
 	regval = regval & (~TSE_CMD_CRC_FWD)		/* don't forward CRC */
 	                & (~TSE_CMD_LOOP_EN)		/* no loopback */
+			& (~TSE_CMD_MHASH_SEL)		/* use 48bit address for multicast hash */
 	                & (~TSE_CMD_TX_ADDR_INS)	/* don't set MAC address on TX */
 	                & (~TSE_CMD_RX_ERR_DISC)	/* don't discard erroneous frames */
 	                & (~TSE_CMD_NO_LENGTH_CHECK);	/* check payload length against length/type field on RX */
