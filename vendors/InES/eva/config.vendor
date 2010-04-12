@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Dist builder
-# Fri Apr  9 10:41:10 2010
+# Mon Apr 12 08:24:06 2010
 #
 CONFIG_DISTVERSION="4.0"
 
@@ -228,7 +228,10 @@ CONFIG_USER_OTHER_SH=y
 # CONFIG_USER_BIND_BIND is not set
 # CONFIG_USER_FNORD_HTTPD is not set
 # CONFIG_USER_FNORD_PAM is not set
-# CONFIG_USER_BOA_SRC_BOA is not set
+CONFIG_USER_BOA_SRC_BOA=y
+# CONFIG_USER_BOA_WITH_SSL is not set
+# CONFIG_USER_BOA_EMERG is not set
+# CONFIG_USER_BOA_LOGGING is not set
 # CONFIG_USER_BPALOGIN_BPALOGIN is not set
 # CONFIG_USER_BR2684CTL_BR2684CTL is not set
 # CONFIG_USER_BRCFG_BRCFG is not set
