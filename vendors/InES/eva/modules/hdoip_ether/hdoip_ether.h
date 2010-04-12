@@ -74,14 +74,19 @@
 /* Bitmask for the rx_cmd_stat register */
 #define TSE_RX_CMD_STAT_RX_SHIFT16	0x02000000
 
+/* MTU */
+#define HDOIP_MAX_MTU			1500
+#define HDOIP_MIN_MTU			64	/* 60? */
+
 /* Default values for MAC registers */
-#define HDOIP_DEFAULT_MTU		1500
+#define HDOIP_DEFAULT_MTU		HDOIP_MAX_MTU
 #define HDOIP_MII_ID			0
 #define HDOIP_PHY_ID			0x12
 
 /* Default values for TSE MAC parameters */
 #define TSE_MAC_RX_FIFO_DEPTH		1024
 #define TSE_MAC_TX_FIFO_DEPTH		1024
+#define TSE_MAC_FIFO_WIDTH		4
 
 /* Various constants */
 #define TSE_WDOG_COUNT_RESET		10000

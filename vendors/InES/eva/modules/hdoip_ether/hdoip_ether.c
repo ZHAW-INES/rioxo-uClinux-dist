@@ -435,8 +435,33 @@ static int hdoip_ether_mdio_reset(struct mii_bus *mii)
 	return 0;
 }
 
-static void hdoip_ether_get_drvinfo(struct net_device *dev,
-                                    struct ethtool_drvinfo *info)
+static void hdoip_ether_ethtool_get_settings(struct net_device *dev,
+                                             struct ethtool_cmd *cmd)
+{
+	struct hdoip_ether *hde = netdev_priv(dev);
+
+	if (!hde->phydev)
+		return -EINVAL;
+
+	return phy_ethtool_gset(hde->phydev, cmd);
+}
+
+static void hdoip_ether_ethtool_set_settings(struct net_device *dev,
+                                             struct ethtool_cmd *cmd)
+{
+	struct hdoip_ether *hde = netdev_priv(dev);
+
+	if (!capable(CAP_NET_ADMIN))
+		return -EPERM;
+
+	if (!hde->phydev)
+		return -EINVAL;
+
+	return phy_ethtool_sset(hde->phydev, cmd);
+}
+
+static void hdoip_ether_ethtool_get_drvinfo(struct net_device *dev,
+                                            struct ethtool_drvinfo *info)
 {
 	strlcpy(info->driver, DRV_NAME, sizeof(info->driver));
 	strlcpy(info->version, DRV_VERSION, sizeof(info->version));
@@ -444,7 +469,10 @@ static void hdoip_ether_get_drvinfo(struct net_device *dev,
 }
 
 static const struct ethtool_ops hdoip_ether_ethtool_ops = {
-	.get_drvinfo	= hdoip_ether_get_drvinfo,
+	.get_settings	= hdoip_ether_ethtool_get_settings,
+	.set_settings	= hdoip_ether_ethtool_set_settings,
+	.get_link	= ethtool_op_get_link,
+	.get_drvinfo	= hdoip_ether_ethtool_get_drvinfo,
 };
 
 static struct net_device_stats *hdoip_ether_get_stats(struct net_device *dev)
@@ -543,7 +571,14 @@ static int hdoip_ether_set_mac_address(struct net_device *dev, void *addr)
  */
 static int hdoip_ether_change_mtu(struct net_device *dev, int mtu)
 {
-	/* Changing MTU not supported yet */
+	struct hdoip_ether *hde = netdev_priv(dev);
+
+	if (mtu < HDOIP_MIN_MTU || mtu > min(HDOIP_MAX_MTU, MAX_PKT_SIZE))
+		return -EINVAL;
+
+	dev->mtu = mtu;
+	hdoip_mac_write(hde, TSE_MAC_MTU, mtu);
+
 	return 0;
 }
 
@@ -609,6 +644,7 @@ static void hdoip_ether_adjust_link(struct net_device *dev)
 		phy_print_status(phydev);
 }
 
+/* ring buffer frame RAM write, optimized for 32bit write */
 static inline void hdoip_ether_write_frame(volatile u32 *dest, volatile u32 *src,
                                            const size_t n)
 {
@@ -620,6 +656,7 @@ static inline void hdoip_ether_write_frame(volatile u32 *dest, volatile u32 *src
 	}
 }
 
+/* ring buffer frame RAM read, optimized for 32bit read */
 static inline void hdoip_ether_read_frame(volatile u32 *dest, volatile u32 *src,
                                           const size_t n)
 {
@@ -753,7 +790,7 @@ static void hdoip_ether_rx(struct net_device *dev)
 	struct sk_buff *skb;
 	unsigned int len;
 	unsigned long flags;
-	u32 *rx_buf, *data;
+	u32 *rx_buf;
 
 	spin_lock_irqsave(&hde->rx_lock, flags);
 
@@ -786,10 +823,9 @@ static void hdoip_ether_rx(struct net_device *dev)
 	}
 
 	skb_reserve(skb, NET_IP_ALIGN);
-	data = (u32 *) skb_put(skb, len);
 
 	/* Read the frame data */
-	hdoip_ether_read_frame(data, rx_buf + 1, len);
+	hdoip_ether_read_frame((u32 *) skb_put(skb, len), rx_buf + 1, len);
 
 	skb->dev = dev;
 	/* Hardware already verified the checksum */
@@ -1000,8 +1036,13 @@ static int hdoip_ether_close(struct net_device *dev)
 	struct hdoip_ether *hde = netdev_priv(dev);
 	u32 regval;
 
-	/* Start the eth_st_in DMA controller */
+	netif_stop_queue(dev);
+
+	/* Stop DMA controller state machines */
 	hdoip_ethi_stop(hde);
+	hdoip_etho_stop(hde);
+
+	phy_stop(hde->phydev);
 
 	/* Disable TX/RX on MAC */
 	regval = hdoip_mac_read(hde, TSE_MAC_COMMAND_CONFIG);
@@ -1013,8 +1054,6 @@ static int hdoip_ether_close(struct net_device *dev)
 	                  hde->tx_buf, hde->tx_buf_dma);
 	dma_free_coherent(&dev->dev, RX_RING_ENTRIES * MAX_PKTBUF_SIZE,
 	                  hde->rx_buf, hde->rx_buf_dma);
-
-	netif_stop_queue(dev);
 
 	return 0;
 }
