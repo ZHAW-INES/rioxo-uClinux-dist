@@ -1,3 +1,5 @@
+#!/bin/sh
+
 /bin/hostname hdoip
 
 # Mount filesystems
@@ -18,7 +20,5 @@ echo 8 > /proc/sys/kernel/printk
 /sbin/ifconfig eth0 192.168.1.200 netmask 255.255.255.0 up
 # ethtool -s eth0 msglvl 0xffff
 # dhcpcd -p -a eth0 &
-
-#/bin/boa -d &
 
 /bin/cat /etc/motd

@@ -1,3 +1,3 @@
 #inet:unknown:/sbin/inetd -fe
-#boa:unknown:/bin/boa
+boa:unknown:/bin/boa -d
 #udhcpd:unknown:/sbin/udhcpd -f
