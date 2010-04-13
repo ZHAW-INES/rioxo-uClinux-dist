@@ -757,8 +757,6 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	u32 len = skb->len;
 	u32 newlen;
 
-	pr_debug("TX\n");
-
 	/* check oversized frames */
 	if (unlikely(len > MAX_PKT_SIZE)) {
 		dev->stats.tx_dropped++;
@@ -845,7 +843,6 @@ static void hdoip_ether_rx(struct net_device *dev)
 	unsigned int len;
 	unsigned long flags;
 	u32 *rx_buf;
-	struct ethhdr *h;
 
 	spin_lock_irqsave(&hde->rx_lock, flags);
 
@@ -887,9 +884,6 @@ static void hdoip_ether_rx(struct net_device *dev)
 	/* Hardware already verified the checksum */
 	skb->ip_summed = CHECKSUM_UNNECESSARY;
 	skb->protocol = eth_type_trans(skb, dev);
-
-	h = eth_hdr(skb);
-	pr_debug("RX: dest = %pM\n", h->h_dest);
 
 	netif_rx(skb);
 
