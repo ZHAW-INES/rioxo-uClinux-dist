@@ -51,9 +51,9 @@ static int hdoip_ether_board_reset(struct hdoip_ether *hde)
 	u32 regval = ioread32(hde->ext_pio_base);
 
 	iowrite32(regval & 0xFE, hde->ext_pio_base);
-	udelay(50000);
+	udelay(5000);
 	iowrite32(regval | 0x01, hde->ext_pio_base);
-	udelay(50000);
+	udelay(5000);
 
 	return 0;
 }
@@ -439,25 +439,27 @@ static int hdoip_ether_ethtool_get_settings(struct net_device *dev,
                                             struct ethtool_cmd *cmd)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
+	struct phydev *phy = hde->phydev;
 
-	if (!hde->phydev)
+	if (!phy)
 		return -EINVAL;
 
-	return phy_ethtool_gset(hde->phydev, cmd);
+	return phy_ethtool_gset(phy, cmd);
 }
 
 static int hdoip_ether_ethtool_set_settings(struct net_device *dev,
                                             struct ethtool_cmd *cmd)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
+	struct phydev *phy = hde->phydev;
 
 	if (!capable(CAP_NET_ADMIN))
 		return -EPERM;
 
-	if (!hde->phydev)
+	if (!phy)
 		return -EINVAL;
 
-	return phy_ethtool_sset(hde->phydev, cmd);
+	return phy_ethtool_sset(phy, cmd);
 }
 
 static void hdoip_ether_ethtool_get_drvinfo(struct net_device *dev,
@@ -482,8 +484,10 @@ static struct net_device_stats *hdoip_ether_get_stats(struct net_device *dev)
 
 	if (netif_running(dev)) {
 		/* Read statistic registers of ethi */
+#if 0
 		stats->rx_packets = hdoip_ethi_read(hde, ETHI_CPU_PACKET_COUNT);
 		stats->rx_bytes	= hdoip_ethi_read(hde, ETHI_CPU_DATA_COUNT);
+#endif
 		stats->rx_crc_errors = hdoip_ethi_read(hde, ETHI_CPU_CRC_ERR_COUNT);
 
 		/* Read TSE MAC statistic registers */
@@ -810,7 +814,7 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	tx_buf = (u32 *) tx_desc.write;
 	/* First 32 bits of the ringbuffer entry hold the frame size */
-	iowrite32(cpu_to_le32(len), tx_buf);
+	iowrite32(len, tx_buf);
 	hdoip_ether_write_frame(tx_buf + 1, (u32 *) skb->data, len);
 	/* Make sure everything gets written to memory */
 	flush_dcache_range((unsigned long) tx_buf, (unsigned long) (((u8 *) tx_buf) + len));
@@ -827,6 +831,7 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	dev->trans_start = jiffies;
 
+	dev_kfree_skb(skb);
 	return NETDEV_TX_OK;
 }
 
@@ -851,18 +856,20 @@ static void hdoip_ether_rx(struct net_device *dev)
 
 	if (rx_desc.read == rx_desc.write) {
 		spin_unlock_irqrestore(&hde->rx_lock, flags);
+		netif_stop_queue(dev);
 		printk(KERN_NOTICE "%s: RX ring buffer full, dropping packet.\n", dev->name);
 		return;
 	}
 
+again:
 	rx_buf = (u32 *) rx_desc.read;
 
 	/* Get the frame length (first byte) */
 	len = ioread32(rx_buf);
 	if (len < ETH_ZLEN + 4) {
-		spin_unlock_irqrestore(&hde->rx_lock, flags);
+		dev->stats.rx_dropped++;
 		printk(KERN_WARNING "%s: Received undersized frame (%u), dropping packet\n", dev->name, len);
-		return;
+		goto out;
 	}
 
 	len -= RX_TIMESTAMP_LENGTH;
@@ -896,6 +903,9 @@ out:
 	rx_desc.read += len + FRAME_SIZE_LENGTH + RX_TIMESTAMP_LENGTH;
 	if (rx_desc.read > rx_desc.stop)
 		rx_desc.read = rx_desc.start;
+
+	if (rx_desc.read != rx_desc.write)
+		goto again;
 
 	/* Set read descriptor */
 	hdoip_ethi_write(hde, ETHIO_CPU_READ_DESC, CPU_TO_DESC(rx_desc.read));
@@ -989,13 +999,13 @@ static int hdoip_ether_mac_init(struct net_device *dev)
 	/* Set command_config register */
 	regval = hdoip_mac_read(hde, TSE_MAC_COMMAND_CONFIG);
 	regval = regval & (~TSE_CMD_CRC_FWD)		/* don't forward CRC */
+	                & (~TSE_CMD_PROMIS_EN)		/* promiscous disable */
 	                & (~TSE_CMD_LOOP_EN)		/* no loopback */
 			& (~TSE_CMD_MHASH_SEL)		/* use 48bit address for multicast hash */
 	                & (~TSE_CMD_TX_ADDR_INS)	/* don't set MAC address on TX */
 	                & (~TSE_CMD_RX_ERR_DISC)	/* don't discard erroneous frames */
 	                & (~TSE_CMD_NO_LENGTH_CHECK);	/* check payload length against length/type field on RX */
 	regval = regval | TSE_CMD_ETH_SPEED		/* enable Gigabit ethernet operation */
-	                | TSE_CMD_PROMIS_EN		/* promiscous enable */
 	                | TSE_CMD_PAD_EN;		/* enable padding removal */
 	hdoip_mac_write(hde, TSE_MAC_COMMAND_CONFIG, regval);
 
@@ -1173,7 +1183,7 @@ static int __init hdoip_ether_phy_init(struct net_device *dev)
 	hde->old_duplex = -1;
 
 	phydev = phy_connect(dev, phy_id, &hdoip_ether_adjust_link, 0,
-	                     PHY_INTERFACE_MODE_RGMII_TXID);
+	                     PHY_INTERFACE_MODE_RGMII);
 	if (IS_ERR(phydev)) {
 		printk(KERN_ERR "%s: Failed to attach to PHY at %s\n",
 		       DRV_NAME, phy_id);

@@ -106,7 +106,7 @@
 #define ETHO_CONFIG_DMA_FIFO_THRESH_INDEX	18
 
 /* Avalon will not perform higher bursts as allowed by the Clock Crossing Bridge */
-#define ETHIO_DMA_BURST_SIZE			4	/* 64 */
+#define ETHIO_DMA_BURST_SIZE			8	/* 64 */
 
 #define ETHO_DMA_FIFO_THRESH			400
 
