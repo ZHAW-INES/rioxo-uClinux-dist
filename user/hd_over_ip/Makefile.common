@@ -1,0 +1,20 @@
+# Include this in your programs makefile after setting $EXEC to the name of your
+# binary and $OBJS to the objects making up $EXEC. $BINDIR can be set to the
+# directory where you want to install the binary in romfs.
+
+CFLAGS += -W -Wall
+
+ifndef BINDIR
+BINDIR = /bin
+endif
+
+all: $(EXEC)
+
+$(EXEC): $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(EXTRALIBS) $(LDLIBS)
+
+romfs:
+	$(ROMFSINST) $(BINDIR)/$(EXEC)
+
+clean:
+	-rm -f *.o *.gdb *.elf $(EXEC)

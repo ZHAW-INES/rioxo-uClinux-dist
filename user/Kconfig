@@ -4543,3 +4543,16 @@ config LIB_LIBCCMALLOC
 endmenu
 
 #############################################################################
+
+menu "HD over IP"
+
+config USER_HDOIP_HDOIPD
+	bool "HD over IP daemon"
+	help
+	  The HD over IP daemon is responsible for correctly configuring the,
+	  hardware, sending RTCP messages etc.
+
+config USER_HDOIP_RTPTESTS
+	bool "Test programs using oRTP"
+
+endmenu

@@ -1,0 +1,2 @@
+dir_$(CONFIG_USER_HDOIP_HDOIPD)             += hd_over_ip/hdoipd
+dir_$(CONFIG_USER_HDOIP_RTPTESTS)           += hd_over_ip/rtptests
