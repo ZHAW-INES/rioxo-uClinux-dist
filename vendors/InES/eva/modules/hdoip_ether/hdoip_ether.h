@@ -96,7 +96,7 @@
 #define TSE_RX_CMD_STAT_RX_SHIFT16	0x02000000
 
 /* MTU */
-#define HDOIP_MAX_MTU			1500
+#define HDOIP_MAX_MTU			1518
 #define HDOIP_MIN_MTU			64	/* 60? */
 
 /* Default values for MAC registers */
@@ -136,12 +136,6 @@ struct hdoip_ether {
 	void __iomem *rx_buf;
 	dma_addr_t tx_buf_dma;
 	dma_addr_t rx_buf_dma;
-
-#if 0
-	/* Ringbuffer descriptors */
-	struct hdoip_descriptors tx_desc;
-	struct hdoip_descriptors rx_desc;
-#endif
 
 	/* External I/O (PHY reset) */
 	void __iomem *ext_pio_base;

@@ -210,8 +210,8 @@ static inline void hdoip_ethi_init(struct hdoip_ether *hde,
 	hdoip_ethi_write(hde, ETHI_DMA_CONFIG, regval);
 
 	/* Setup IP Src and Dest filter */
-	hdoip_ethi_write(hde, ETHI_IP_FILTER, 0xc0a801c8);
-	hdoip_ethi_write(hde, ETHI_IP_FILTER_SRC, 0xc0a80165);
+	hdoip_ethi_write(hde, ETHI_IP_FILTER, 0);
+	hdoip_ethi_write(hde, ETHI_IP_FILTER_SRC, 0);
 }
 
 /*
@@ -439,7 +439,7 @@ static int hdoip_ether_ethtool_get_settings(struct net_device *dev,
                                             struct ethtool_cmd *cmd)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
-	struct phydev *phy = hde->phydev;
+	struct phy_device *phy = hde->phydev;
 
 	if (!phy)
 		return -EINVAL;
@@ -451,7 +451,7 @@ static int hdoip_ether_ethtool_set_settings(struct net_device *dev,
                                             struct ethtool_cmd *cmd)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
-	struct phydev *phy = hde->phydev;
+	struct phy_device *phy = hde->phydev;
 
 	if (!capable(CAP_NET_ADMIN))
 		return -EPERM;
@@ -764,16 +764,15 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	/* check oversized frames */
 	if (unlikely(len > MAX_PKT_SIZE)) {
 		dev->stats.tx_dropped++;
-		dev_kfree_skb(skb);
 		printk(KERN_ERR "%s: Packet too large\n", dev->name);
-		return NETDEV_TX_OK;
+		goto out_free;
 	}
 
 	/* pad short packets */
 	if (len < ETH_ZLEN + 4) {
 		if (skb_padto(skb, ETH_ZLEN + 4)) {
 			printk(KERN_ERR "%s: Packet padding failed\n", dev->name);
-			return NETDEV_TX_OK;
+			goto out_free;
 		}
 		len = ETH_ZLEN + 4;
 	}
@@ -789,8 +788,9 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	newlen &= ~3UL;
 	if (newlen != len) {
 		if (skb_padto(skb, newlen)) {
+			dev->stats.tx_dropped++;
 			printk(KERN_ERR "%s: Packet padding failed\n", dev->name);
-			return NETDEV_TX_OK;
+			goto out_free;
 		}
 		len = newlen;
 	}
@@ -799,8 +799,7 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	/* Is there space in the ringbuffer? */
 	if (!hdoip_etho_accepts_cpu_write(hde, len)) {
-		/* The ringbuffer is full */
-		netif_stop_queue(dev);
+		/* TODO: Stop netif queue */
 		spin_unlock_irqrestore(&hde->tx_lock, flags);
 		printk(KERN_ERR "%s: TX Ringbuffer is full\n", dev->name);
 		return NETDEV_TX_BUSY;
@@ -812,7 +811,13 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	/* Get current descriptor values */
 	hdoip_etho_desc_get_cpu(hde, &tx_desc);
 
-	tx_buf = (u32 *) tx_desc.write;
+	tx_buf = (u32 *) ioremap_nocache(tx_desc.write, tx_desc.stop - tx_desc.write);
+	if (!tx_buf) {
+		dev->stats.tx_dropped++;
+		printk(KERN_ERR "%s: Failed to remap TX ringbuffer memory.\n", dev->name);
+		goto out_unlock;
+	}
+
 	/* First 32 bits of the ringbuffer entry hold the frame size */
 	iowrite32(len, tx_buf);
 	hdoip_ether_write_frame(tx_buf + 1, (u32 *) skb->data, len);
@@ -827,10 +832,11 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	/* Set write descriptor */
 	hdoip_etho_write(hde, ETHIO_CPU_WRITE_DESC, CPU_TO_DESC(tx_desc.write));
 
-	spin_unlock_irqrestore(&hde->tx_lock, flags);
-
 	dev->trans_start = jiffies;
 
+out_unlock:
+	spin_unlock_irqrestore(&hde->tx_lock, flags);
+out_free:
 	dev_kfree_skb(skb);
 	return NETDEV_TX_OK;
 }
@@ -855,17 +861,29 @@ static void hdoip_ether_rx(struct net_device *dev)
 	hdoip_ethi_desc_get_cpu(hde, &rx_desc);
 
 	if (rx_desc.read == rx_desc.write) {
+		/* TODO: Stop netif queue */
 		spin_unlock_irqrestore(&hde->rx_lock, flags);
-		netif_stop_queue(dev);
-		printk(KERN_NOTICE "%s: RX ring buffer full, dropping packet.\n", dev->name);
+		printk(KERN_NOTICE "%s: RX ring buffer full.\n", dev->name);
 		return;
 	}
 
 again:
-	rx_buf = (u32 *) rx_desc.read;
+	rx_buf = (u32 *) ioremap_nocache(rx_desc.read, rx_desc.stop - rx_desc.read);
+	if (!rx_buf) {
+		spin_unlock_irqrestore(&hde->rx_lock, flags);
+		printk(KERN_ERR "%s: Failed to remap RX ringbuffer memory.\n", dev->name);
+		return;
+	}
 
 	/* Get the frame length (first byte) */
 	len = ioread32(rx_buf);
+
+	if (len > HDOIP_MAX_MTU + 4) {
+		dev->stats.rx_dropped++;
+		printk(KERN_WARNING "%s: Read size larger than MTU: %u\n", dev->name, len);
+		goto out;
+	}
+
 	if (len < ETH_ZLEN + 4) {
 		dev->stats.rx_dropped++;
 		printk(KERN_WARNING "%s: Received undersized frame (%u), dropping packet\n", dev->name, len);
@@ -892,11 +910,11 @@ again:
 	skb->ip_summed = CHECKSUM_UNNECESSARY;
 	skb->protocol = eth_type_trans(skb, dev);
 
-	netif_rx(skb);
-
 	dev->last_rx = jiffies;
 	dev->stats.rx_packets++;
 	dev->stats.rx_bytes += len;
+
+	netif_rx(skb);
 
 out:
 	/* Update the descriptors (with wrap around) */

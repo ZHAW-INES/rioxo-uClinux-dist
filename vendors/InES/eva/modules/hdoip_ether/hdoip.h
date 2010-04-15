@@ -116,8 +116,8 @@
 #define MAX_PKT_SIZE				(MAX_PKTBUF_SIZE - 4)
 
 /* Size for the TX/RX ringbuffers */
-#define TX_RING_ENTRIES				8
-#define RX_RING_ENTRIES				8
+#define TX_RING_ENTRIES				16
+#define RX_RING_ENTRIES				16
 
 /* Length of the frame size preceeding transmitted/received frames */
 #define FRAME_SIZE_LENGTH			sizeof(u32)
