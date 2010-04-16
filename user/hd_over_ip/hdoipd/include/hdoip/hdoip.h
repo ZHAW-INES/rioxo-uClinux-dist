@@ -6,6 +6,7 @@
 
 #include <hdoip/compiler.h>
 #include <hdoip/endianess.h>
+#include <hdoip/list.h>
 
 #define err(fmt, args...)	fprintf(stderr, "Error: " fmt, ##args)
 #define warn(fmt, args...)	fprintf(stderr, "Warning: " fmt, ##args)

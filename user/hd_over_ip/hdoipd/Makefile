@@ -1,5 +1,7 @@
+# Makefile for hdoipd
 #
-#
+# Copyright (c) 2010, Zurich University of Applied Sciences
+#                     Institute of Embedded Systems
 
 P = hdoipd
 
@@ -45,7 +47,7 @@ cscope:
 	@cscope -R -b
 
 clean:
-	@rm -f *.o *.dep $(P)
+	@rm -f *.o *.dep *.gdb $(P)
 
 mrproper: clean
 	@rm -f cscope.out

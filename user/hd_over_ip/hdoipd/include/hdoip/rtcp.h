@@ -3,6 +3,8 @@
 
 #include <hdoip/hdoip.h>
 
+#define RTCP_VERSION	2
+
 enum {
 	RTCP_SR		= 200,
 	RTCP_RR		= 201,
@@ -25,12 +27,34 @@ struct rtcp_header {
 #endif
 	uint16_t length;
 	uint32_t ssrc;
-#define csrc	ssrc;
 } __packed;
+
+/* Some RTCP header field have different meanings depending on packet type */
+#define subtype	rc
+#define sc	rc
+#define csrc	ssrc;
+
+static inline void rtcp_header_set_default_header(struct rtcp_header *h)
+{
+	memset(h, 0, sizeof(struct rtcp_header));
+	h->version = RTCP_VERSION;
+}
+
+static inline void rtcp_header_set_packet_type(struct rtcp_header *h,
+                                               uint8_t packet_type)
+{
+	h->packet_type = packet_type;
+}
+
+static inline void rtcp_header_set_ssrc(struct rtcp_header *h,
+                                        uint32_t ssrc)
+{
+	h->ssrc = ssrc;
+}
 
 /* SR or RR packet */
 
-struct rtcp_sr_rr_sender_info {
+struct rtcp_sender_info {
 	uint32_t ntp_ts_msw;
 	uint32_t ntp_ts_lsw;
 	uint32_t rtp_ts;
@@ -38,7 +62,10 @@ struct rtcp_sr_rr_sender_info {
 	uint32_t sender_octet_count;
 } __packed;
 
-struct rtcp_sr_rr_report_block {
+#define rtcp_sr_get_sender_info(buf) \
+	((struct rtcp_sender_info *) (buf + sizeof(struct rtcp_header)))
+
+struct rtcp_report_block {
 	uint32_t ssrc;
 	uint8_t fraction_lost;
 	uint32_t cum_num_packet_lost:24;
@@ -47,6 +74,23 @@ struct rtcp_sr_rr_report_block {
 	uint32_t last_sr;
 	uint32_t delay_since_last_sr;
 } __packed;
+
+#define rtcp_sr_get_report_block(buf) \
+	((struct rtcp_report_block *) (buf + sizeof(struct rtcp_header) + \
+	                               sizeof(struct rtcp_sender_info)))
+
+static inline void rtcp_sr_set_length(struct rtcp_header *h, unsigned int n_rb)
+{
+	h->length = htons(sizeof(struct rtcp_header)
+	                  + sizeof(struct rtcp_report_block)
+	                  + n_rb * sizeof(struct rtcp_report_block) - 4);
+}
+
+static inline void rtcp_rr_set_length(struct rtcp_header *h, unsigned int n_rb)
+{
+	h->length = htons(sizeof(struct rtcp_header
+	                  + sizeof(struct rtcp_report_block)
+}
 
 /* SDES packet */
 
@@ -70,8 +114,5 @@ struct rtcp_bye_reason {
 } __packed;
 
 /* APP packet */
-
-/* The RC field in the RTCP header is used as subtype in APP packets */
-#define subtype		rc
 
 #endif /* _RTCP_H_ */

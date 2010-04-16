@@ -4,11 +4,13 @@
 #ifdef __GNUC__
 # define __packed	__attribute__ ((packed))
 # define __unused	__attribute__ ((unused))
+# define __noreturn	__attribute__ ((noreturn))
 # define likely		__builtin_expect(!!(x), 1)
 # define unlikely	__builtin_expect(!!(x), 0)
 #else
 # define __packed
 # define __unused
+# define __noreturn
 # define likely(x)	(x)
 # define unlikely(x)	(x)
 #endif /* __GNUC__ */
