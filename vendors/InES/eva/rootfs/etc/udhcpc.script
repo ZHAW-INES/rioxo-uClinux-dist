@@ -25,11 +25,16 @@ case "$1" in
 			echo "$me: not all necessary options specified. exiting."
 			exit 0
 		fi
+
 		/sbin/ifconfig eth0 $ip netmask $subnet up
-		echo > /etc/resolv.conf
-		for d in $dns ; do
-			echo $d >> /etc/resolv.conf
-		done
+
+		if [ ! -z "$dns" ]; then
+			rm /etc/resolv.conf; touch /etc/resolv.conf
+			for d in $dns ; do
+				echo $d >> /etc/resolv.conf
+			done
+		fi
+
 		/bin/ntpdate $ntpsrv
 		;;
 esac
