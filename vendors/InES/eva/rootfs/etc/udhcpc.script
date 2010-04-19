@@ -29,7 +29,7 @@ case "$1" in
 		/sbin/ifconfig eth0 $ip netmask $subnet up
 
 		if [ ! -z "$dns" ]; then
-			rm /etc/resolv.conf; touch /etc/resolv.conf
+			echo -n > /etc/resolv.conf
 			for d in $dns ; do
 				echo $d >> /etc/resolv.conf
 			done
