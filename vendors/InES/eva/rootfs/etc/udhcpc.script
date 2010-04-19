@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# udhcpc script to start ntpclient in case the DHCP server supplied us with the
+# ntpsrv option
+
+me="udhcpc"
+
+echo "=== $0 called: $1 ==="
+
+if [ -z "$1" ]; then
+	echo "$me: no action specified. exiting."
+	exit 1
+fi
+
+if [ -z "$interface" ]; then
+	echo "$me: no interface specified. exiting."
+	exit 2
+fi
+
+case "$1" in
+	deconfig)
+		;;
+	renew|bound)
+		if [ -z "$ntpsrv" -o -z "$ip" -o -z "$subnet" ]; then
+			echo "$me: not all necessary options specified. exiting."
+			exit 0
+		fi
+		/sbin/ifconfig eth0 $ip netmask $subnet up
+		echo > /etc/resolv.conf
+		for d in $dns ; do
+			echo $d >> /etc/resolv.conf
+		done
+		/bin/ntpdate $ntpsrv
+		;;
+esac
+
+exit 0
