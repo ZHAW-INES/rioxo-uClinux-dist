@@ -170,7 +170,7 @@ void send_packet(int usd)
 		fprintf(stderr,"size error\n");
 		return;
 	}
-	bzero((char *) data,sizeof(data));
+	memset((char *) data, 0, sizeof(data));
 	data[0] = htonl (
 		( LI << 30 ) | ( VN << 27 ) | ( MODE << 24 ) |
 		( STRATUM << 16) | ( POLL << 8 ) | ( PREC & 0xff ) );
@@ -342,7 +342,7 @@ void stuff_net_addr(struct in_addr *p, char *hostname)
 void setup_receive(int usd, unsigned int interface, short port)
 {
 	struct sockaddr_in sa_rcvr;
-	bzero((char *) &sa_rcvr, sizeof(sa_rcvr));
+	memset((char *) &sa_rcvr, 0, sizeof(sa_rcvr));
 	sa_rcvr.sin_family=AF_INET;
 	sa_rcvr.sin_addr.s_addr=htonl(interface);
 	sa_rcvr.sin_port=htons(port);
@@ -357,7 +357,7 @@ void setup_receive(int usd, unsigned int interface, short port)
 void setup_transmit(int usd, char *host, short port)
 {
 	struct sockaddr_in sa_dest;
-	bzero((char *) &sa_dest, sizeof(sa_dest));
+	memset((char *) &sa_dest, 0, sizeof(sa_dest));
 	sa_dest.sin_family=AF_INET;
 	stuff_net_addr(&(sa_dest.sin_addr),host);
 	sa_dest.sin_port=htons(port);
