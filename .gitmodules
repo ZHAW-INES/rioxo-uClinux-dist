@@ -1,0 +1,3 @@
+[submodule "user/hd_over_ip/hdoipd"]
+	path = user/hd_over_ip/hdoipd
+	url = gitosis@srv-lab-t-001:hd-over-ip/hdoipd.git
