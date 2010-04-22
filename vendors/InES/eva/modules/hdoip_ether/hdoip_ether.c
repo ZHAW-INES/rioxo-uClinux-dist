@@ -12,6 +12,7 @@
 #define DEBUG
 
 #include <linux/kernel.h>
+#include <linux/module.h>
 #include <linux/init.h>
 #include <linux/spinlock.h>
 #include <linux/dma-mapping.h>
@@ -69,7 +70,8 @@ static inline u32 hdoip_mac_read(struct hdoip_ether *hde, unsigned int reg)
 /*
  * Write to a TSE MAC register.
  */
-static inline void hdoip_mac_write(struct hdoip_ether *hde, unsigned int reg, u32 value)
+static inline void hdoip_mac_write(struct hdoip_ether *hde, unsigned int reg,
+                                   u32 value)
 {
 	iowrite32(value, hde->tse_mac_base + reg);
 }
@@ -1366,6 +1368,8 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 	SET_NETDEV_DEV(dev, &pdev->dev);
 	platform_set_drvdata(pdev, dev);
 
+	register_inetaddr_notifier(&hdoip_ether_notifier);
+
 	printk(KERN_INFO "%s: HD over IP Ethernet at 0x%08x, irq=%d\n",
 	       dev->name, (unsigned int) dev->base_addr, dev->irq);
 
@@ -1395,6 +1399,8 @@ static int __devexit hdoip_ether_remove(struct platform_device *pdev)
 {
 	struct net_device *dev = platform_get_drvdata(pdev);
 	struct hdoip_ether *hde = netdev_priv(dev);
+
+	unregister_inetaddr_notifier(&hdoip_ether_notifier);
 
 	unregister_netdev(dev);
 	free_irq(dev->irq, dev);
@@ -1426,17 +1432,12 @@ static struct platform_driver hdoip_ether_driver = {
 
 static int __init hdoip_ether_init(void)
 {
-	printk(KERN_INFO "%s Ethernet Driver, Version %s\n",
-	       DRV_NAME, DRV_VERSION);
-
-	register_inetaddr_notifier(&hdoip_ether_notifier);
 	return platform_driver_probe(&hdoip_ether_driver, hdoip_ether_probe);
 }
 
 static void __exit hdoip_ether_exit(void)
 {
 	platform_driver_unregister(&hdoip_ether_driver);
-	unregister_inetaddr_notifier(&hdoip_ether_notifier);
 }
 
 module_init(hdoip_ether_init);
