@@ -940,18 +940,18 @@ static irqreturn_t hdoip_ether_interrupt(int irq, void *dev_id)
 {
 	struct net_device *dev = dev_id;
 	struct hdoip_ether *hde = netdev_priv(dev);
-	u32 status, config;
+	u32 regval;
 
-	status = hdoip_ethi_read(hde, ETHIO_STATUS);
+	regval = hdoip_ethi_read(hde, ETHIO_STATUS);
 	/* Check the status register for the IRQ */
-	if (!(status & ETHI_STATUS_IRQ1_FLAG))
+	if (!(regval & ETHI_STATUS_IRQ1_FLAG))
 		return IRQ_HANDLED;
 
 	hdoip_ether_rx(dev);
 
 	/* Reset IRQ */
-	config = hdoip_ethi_read(hde, ETHIO_CONFIG);
-	hdoip_ethi_write(hde, ETHIO_CONFIG, config & ~ETHI_CONFIG_IRQ1_RESET);
+	regval = hdoip_ethi_read(hde, ETHIO_CONFIG);
+	hdoip_ethi_write(hde, ETHIO_CONFIG, regval & ~ETHI_CONFIG_IRQ1_RESET);
 
 	return IRQ_HANDLED;
 }
