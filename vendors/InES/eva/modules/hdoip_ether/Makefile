@@ -1,4 +1,4 @@
-EXTRA_CFLAGS += -O0
+EXTRA_CFLAGS += -O0 -I$(SRCROOT)/../include
 
 obj-m += hdoip_ether.o
 
