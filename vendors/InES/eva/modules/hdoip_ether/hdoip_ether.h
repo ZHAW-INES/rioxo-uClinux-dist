@@ -102,7 +102,7 @@
 /* Default values for MAC registers */
 #define HDOIP_DEFAULT_MTU		HDOIP_MAX_MTU
 #define HDOIP_MII_ID			0
-#define HDOIP_PHY_ID			0x12
+#define HDOIP_PHY_ID			0x14
 
 /* Default values for TSE MAC parameters */
 #define TSE_MAC_RX_FIFO_DEPTH		1024

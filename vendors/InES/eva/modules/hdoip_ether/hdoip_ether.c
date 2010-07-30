@@ -52,9 +52,9 @@ static int hdoip_ether_board_reset(struct hdoip_ether *hde)
 	u32 regval = ioread32(hde->ext_pio_base);
 
 	iowrite32(regval & 0xFE, hde->ext_pio_base);
-	udelay(5000);
+	udelay(15000);
 	iowrite32(regval | 0x01, hde->ext_pio_base);
-	udelay(5000);
+	udelay(15000);
 
 	return 0;
 }
@@ -1202,6 +1202,7 @@ static int __init hdoip_ether_phy_init(struct net_device *dev)
 	hde->old_speed = 0;
 	hde->old_duplex = -1;
 
+	printk("Connecting to PHY... ");
 	phydev = phy_connect(dev, phy_id, &hdoip_ether_adjust_link, 0,
 	                     PHY_INTERFACE_MODE_RGMII);
 	if (IS_ERR(phydev)) {
@@ -1209,6 +1210,7 @@ static int __init hdoip_ether_phy_init(struct net_device *dev)
 		       DRV_NAME, phy_id);
 		return PTR_ERR(phydev);
 	}
+	printk("OK\n");
 
 	phydev->autoneg = AUTONEG_ENABLE;
 	/* Only Gbit supported */

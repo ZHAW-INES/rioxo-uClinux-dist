@@ -16,13 +16,13 @@ echo 8 > /proc/sys/kernel/printk
 # Network setup
 /sbin/ifconfig lo 127.0.0.1
 /sbin/route add -net 127.0.0.0 netmask 255.0.0.0 lo
-/sbin/modprobe hdoip_ether
+#/sbin/modprobe hdoip_ether
 # /sbin/ifconfig eth0 192.168.1.200 netmask 255.255.255.0 up
-/sbin/ifconfig eth0 up
+#/sbin/ifconfig eth0 up
 # ethtool -s eth0 msglvl 0xffff
-udhcpc -i eth0 -s /etc/udhcpc.script
+#udhcpc -i eth0 -s /etc/udhcpc.script
 # Add route entry for multicast
-/sbin/route add -net 224.0.0.0 netmask 224.0.0.0 dev eth0
+#/sbin/route add -net 224.0.0.0 netmask 224.0.0.0 dev eth0
 # Allow multicast/broadcast ping
 echo 0 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
 
