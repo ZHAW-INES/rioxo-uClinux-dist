@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Dist builder
-# Mon Apr 12 08:24:06 2010
+# Thu Jul 29 16:25:13 2010
 #
 CONFIG_DISTVERSION="4.0"
 
@@ -1244,3 +1244,9 @@ CONFIG_USER_NIOS2IO_NIOS2IO=y
 # Debug libraries
 #
 # CONFIG_LIB_LIBCCMALLOC is not set
+
+#
+# HD over IP
+#
+# CONFIG_USER_HDOIP_HDOIPD is not set
+# CONFIG_USER_HDOIP_RTPTESTS is not set
