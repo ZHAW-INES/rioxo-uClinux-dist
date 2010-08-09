@@ -9,7 +9,8 @@
  * Copyright (c) 2010, Tobias Klauser <klto@zhaw.ch>
  */
 
-#define DEBUG
+/* #define DEBUG 1 */
+#undef DEBUG
 
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -52,9 +53,9 @@ static int hdoip_ether_board_reset(struct hdoip_ether *hde)
 	u32 regval = ioread32(hde->ext_pio_base);
 
 	iowrite32(regval & 0xFE, hde->ext_pio_base);
-	udelay(15000);
+	mdelay(15);
 	iowrite32(regval | 0x01, hde->ext_pio_base);
-	udelay(15000);
+	mdelay(15);
 
 	return 0;
 }
@@ -1083,7 +1084,8 @@ static int hdoip_ether_open(struct net_device *dev)
 	                      (RX_RING_ENTRIES * MAX_PKTBUF_SIZE) - MAX_PKT_SIZE);
 	hdoip_ethi_desc_set_cpu(hde, &desc);
 
-	/* Setup video descriptors */
+#if 0
+	/* Setup video/audio descriptors */
 	hdoip_descriptor_init(&desc, 0, 0x4000);
 	hdoip_etho_desc_set_vid(hde, &desc);
 
@@ -1095,6 +1097,7 @@ static int hdoip_ether_open(struct net_device *dev)
 
 	hdoip_descriptor_init(&desc, 0, 0x4000);
 	hdoip_ethi_desc_set_aud(hde, &desc);
+#endif
 
 	/* Initialize ethernet in/out blocks */
 	hdoip_etho_init(hde, ETHIO_DMA_BURST_SIZE, ETHO_DMA_FIFO_THRESH);
@@ -1202,7 +1205,6 @@ static int __init hdoip_ether_phy_init(struct net_device *dev)
 	hde->old_speed = 0;
 	hde->old_duplex = -1;
 
-	printk("Connecting to PHY... ");
 	phydev = phy_connect(dev, phy_id, &hdoip_ether_adjust_link, 0,
 	                     PHY_INTERFACE_MODE_RGMII);
 	if (IS_ERR(phydev)) {
@@ -1210,12 +1212,11 @@ static int __init hdoip_ether_phy_init(struct net_device *dev)
 		       DRV_NAME, phy_id);
 		return PTR_ERR(phydev);
 	}
-	printk("OK\n");
 
 	phydev->autoneg = AUTONEG_ENABLE;
 	/* Only Gbit supported */
-	phydev->supported = SUPPORTED_1000baseT_Full;
-	phydev->advertising = phydev->supported;
+	phydev->supported = SUPPORTED_1000baseT_Full | SUPPORTED_Autoneg;
+	phydev->advertising = ADVERTISED_1000baseT_Full | ADVERTISED_Autoneg;
 
 	hde->phydev = phydev;
 
