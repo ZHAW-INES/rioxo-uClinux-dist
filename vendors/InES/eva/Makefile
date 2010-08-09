@@ -6,7 +6,11 @@ KERNELZ = $(IMAGEDIR)/zImage
 ROOT_TEMPLATE_DIR = rootfs
 
 ROMFS_DIRS = bin sbin dev etc home lib mnt proc usr var sys tmp root \
-	home/httpd home/httpd/cgi-bin usr/bin usr/sbin usr/share etc/init.d
+	etc/init.d \
+	home/httpd home/httpd/cgi-bin \
+	mnt/config \
+	usr/bin usr/sbin usr/share \
+	var/lock var/log var/run var/tmp
 
 EXTRAMODULES = hdoip_ether
 
