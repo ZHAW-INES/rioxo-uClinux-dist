@@ -5,6 +5,7 @@
 # Mount filesystems
 /bin/mount -t proc proc /proc -o noexec,nosuid,nodev
 /bin/mount -t sysfs sysfs /sys -o noexec,nosuid,nodev
+/bin/mount -t jffs2 /dev/mtdblock1 /mnt/config
 
 # For debugging: make kernel messages appear at the console
 echo 8 > /proc/sys/kernel/printk
