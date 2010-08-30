@@ -31,7 +31,7 @@ romfs: vendor_modules
 	for i in $(ROMFS_DIRS); do \
 		[ -d $(ROMFSDIR)/$$i ] || mkdir -p $(ROMFSDIR)/$$i; \
 	done
-	$(ROMFSINST) -s /sbin/init /init
+	$(ROMFSINST) -s /bin/init /init
 	cd $(ROOT_TEMPLATE_DIR); $(ROMFSINST) -v . /
 	echo "$(VERSIONSTR) -- " `date` > $(ROMFSDIR)/etc/version
 
