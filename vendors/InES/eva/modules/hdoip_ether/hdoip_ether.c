@@ -116,6 +116,17 @@ static inline void hdoip_ethi_stop(struct hdoip_ether *hde)
 	hdoip_ethi_write(hde, ETHIO_CONFIG, regval);
 }
 
+#ifdef DEBUG
+static void dump_desc_rx(struct hdoip_ether *hde)
+{
+	pr_debug("RX CPU:\n");
+	pr_debug("  start: 0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_START_DESC)));
+	pr_debug("  stop:  0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_STOP_DESC)));
+	pr_debug("  write: 0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_WRITE_DESC)));
+	pr_debug("  read:  0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_READ_DESC)));
+}
+#endif
+
 /*
  * Update eth_st_in descriptor struct with values from the CPU descriptor
  * registers.
@@ -256,6 +267,18 @@ static inline void hdoip_etho_stop(struct hdoip_ether *hde)
 	regval &= ~(ETHO_CONFIG_RUN); //| ETHO_CONFIG_PRIO);
 	hdoip_etho_write(hde, ETHIO_CONFIG, regval);
 }
+
+#ifdef DEBUG
+static void dump_desc_tx(struct hdoip_ether *hde)
+{
+	pr_debug("TX CPU:\n");
+	pr_debug("  start: 0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_START_DESC)));
+	pr_debug("  stop:  0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_STOP_DESC)));
+	pr_debug("  write: 0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_WRITE_DESC)));
+	pr_debug("  read:  0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_READ_DESC)));
+
+}
+#endif
 
 /*
  * Update eth_st_out descriptor struct with values from the CPU descriptor
@@ -729,27 +752,6 @@ static inline void hdoip_ether_read_frame(volatile u32 *dest, volatile u32 *src,
 	}
 }
 
-#if 0
-static void dump_desc_tx(struct hdoip_ether *hde)
-{
-	pr_debug("TX CPU:\n");
-	pr_debug("  start: 0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_START_DESC)));
-	pr_debug("  stop:  0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_STOP_DESC)));
-	pr_debug("  write: 0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_WRITE_DESC)));
-	pr_debug("  read:  0x%08x\n", DESC_TO_CPU(hdoip_etho_read(hde, ETHIO_CPU_READ_DESC)));
-
-}
-
-static void dump_desc_rx(struct hdoip_ether *hde)
-{
-	pr_debug("RX CPU:\n");
-	pr_debug("  start: 0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_START_DESC)));
-	pr_debug("  stop:  0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_STOP_DESC)));
-	pr_debug("  write: 0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_WRITE_DESC)));
-	pr_debug("  read:  0x%08x\n", DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_READ_DESC)));
-}
-#endif
-
 /*
  * Transmit a packet.
  *
@@ -802,9 +804,14 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	/* Is there space in the ringbuffer? */
 	if (!hdoip_etho_accepts_cpu_write(hde, len)) {
-		/* TODO: Stop netif queue */
+		struct hdoip_descriptor desc;
+
+		hdoip_etho_desc_get_cpu(hde, &desc);
+
 		spin_unlock_irqrestore(&hde->tx_lock, flags);
-		printk(KERN_ERR "%s: TX Ringbuffer is full\n", dev->name);
+		printk(KERN_ERR "%s: TX Ringbuffer is full (start: %08x stop: %08x read: %08x write: %08x)\n",
+			dev->name, desc.start, desc.stop, desc.read, desc.write);
+		/* TODO: Stop netif queue */
 		return NETDEV_TX_BUSY;
 	}
 
@@ -1297,6 +1304,7 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 	struct net_device *dev;
 	struct hdoip_ether *hde;
 	int ret;
+	u32 regval;
 
 	dev = alloc_etherdev(sizeof(struct hdoip_ether));
 	if (!dev) {
@@ -1320,6 +1328,12 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 	hde->ext_pio_base = ioremap_nocache(EXT_RESET_PIO_BASE, 4);
 	if (!hde->ext_pio_base)
 		goto out_unmap_etho;
+
+	/* Activate nios_reset_n */
+	regval = ioread32(hde->ext_pio_base);
+	iowrite32(regval & ~0x02, hde->ext_pio_base);
+	mdelay(5);
+	iowrite32(regval | 0x02, hde->ext_pio_base);
 
 	/* Perform a hardware reset */
 	hdoip_ether_board_reset(hde);
@@ -1373,8 +1387,9 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 
 	register_inetaddr_notifier(&hdoip_ether_notifier);
 
-	printk(KERN_INFO "%s: HD over IP Ethernet at 0x%08x, irq=%d\n",
-	       dev->name, (unsigned int) dev->base_addr, dev->irq);
+	printk(KERN_INFO "%s: HD over IP Ethernet at 0x%08x (0x%08x/0x%08x), irq=%d\n",
+	       dev->name, (unsigned int) dev->base_addr, (unsigned int) hde->ethi_base,
+	       (unsigned int) hde->etho_base, dev->irq);
 
 	return 0;
 
