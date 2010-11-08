@@ -7,8 +7,19 @@
 /bin/mount -t sysfs sysfs /sys -o noexec,nosuid,nodev
 /bin/mount -t jffs2 /dev/mtdblock1 /mnt/config
 
+mkdir -p /dev/pts
+mount -t devpts devpts /dev/pts -o noexec,nosuid
+
 # For debugging: make kernel messages appear at the console
 echo 8 > /proc/sys/kernel/printk
+
+# the default calculated values for these kernel controls are too small for
+# an embedded nommu system, so override them.  For more info check out
+# - ./Documentation/sysctl/vm.txt
+# - ./Documentation/filesystems/proc.txt
+#
+echo 4096 > /proc/sys/vm/min_free_kbytes
+echo 300  > /proc/sys/vm/vfs_cache_pressure
 
 # Network setup
 /sbin/ifconfig lo 127.0.0.1
