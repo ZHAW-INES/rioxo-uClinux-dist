@@ -17,4 +17,4 @@ romfs:
 	$(ROMFSINST) $(BINDIR)/$(EXEC)
 
 clean:
-	-rm -f *.o *.gdb *.elf $(EXEC)
+	-rm -f *.o *.gdb *.elf $(EXEC) $(OBJS)

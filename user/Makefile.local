@@ -1,2 +1,2 @@
-dir_$(CONFIG_USER_HDOIP_HDOIPD)             += hd_over_ip/hdoipd
-dir_$(CONFIG_USER_HDOIP_RTPTESTS)           += hd_over_ip/rtptests
+dir_$(CONFIG_USER_HDOIP_APP)		    += hd_over_ip/hdoip_app
+dir_$(CONFIG_USER_HDOIP_DAEMON)		    += hd_over_ip/hdoip_daemon

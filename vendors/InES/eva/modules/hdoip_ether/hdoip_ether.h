@@ -96,7 +96,7 @@
 #define TSE_RX_CMD_STAT_RX_SHIFT16	0x02000000
 
 /* MTU */
-#define HDOIP_MAX_MTU			1518
+#define HDOIP_MAX_MTU			1500
 #define HDOIP_MIN_MTU			64	/* 60? */
 
 /* Default values for MAC registers */

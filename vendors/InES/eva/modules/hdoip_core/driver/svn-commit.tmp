@@ -1,0 +1,5 @@
+Changed VSI_STATUS_ACTIVE to VSI_STATUS_IDLE
+--This line, and those below, will be ignored--
+
+M    vsi/vsi_drv_cfg.h
+M    vsi/vsi_drv.c

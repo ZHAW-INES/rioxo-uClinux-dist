@@ -1,9 +1,9 @@
 #############################################################################
-
+#
 #
 #	Kconfig - user applications and library configuration
 #
-
+#
 #############################################################################
 
 menu "Core Applications"
@@ -4511,7 +4511,7 @@ config LIB_DEBUG
 	bool "build debugable libraries"
 	help
 	  Build all libraries with debug symbols and reduced optimisations.
-	  See also debug build option in core applications.  Without this option
+	  
 	  debug symbols are still included, however the optimisation level is
 	  increased and this can lead to problematic debugging.
 
@@ -4546,13 +4546,16 @@ endmenu
 
 menu "HD over IP"
 
-config USER_HDOIP_HDOIPD
+config USER_HDOIP_DAEMON
 	bool "HD over IP daemon"
 	help
 	  The HD over IP daemon is responsible for correctly configuring the,
 	  hardware, sending RTCP messages etc.
 
-config USER_HDOIP_RTPTESTS
-	bool "Test programs using oRTP"
+config USER_HDOIP_APP
+	bool "HD over IP application"
 
 endmenu
+
+#############################################################################
+

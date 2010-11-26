@@ -167,3 +167,5 @@ nod /dev/mmcblk0 666 0 0 b 179 0
 nod /dev/mmcblk0p1 666 0 0 b 179 1
 nod /dev/mmcblk0p2 666 0 0 b 179 2
 nod /dev/mmcblk0p3 666 0 0 b 179 3
+nod /dev/hdoip_core 666 0 0 c 123 0
+nod /dev/stth_core 666 0 0 c 130 0

@@ -783,15 +783,20 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	}
 
 	/* align frame data to 32bit boundaries */
-	if ((unsigned long) skb->data & 0x2) {
+	if (((unsigned long) skb->data) & 0x2) {
 		skb_push(skb, 2);
 		len = skb->len;
-	}
+	} else {
+        pr_info("NO PUSH ");
+    }
+
+  //  pr_cont("%u ", len);
 
 	/* pad packet to multiple of 32 bits */
 	newlen = len + 3;
 	newlen &= ~3UL;
 	if (newlen != len) {
+ //       pr_info("padding ");
 		if (skb_padto(skb, newlen)) {
 			dev->stats.tx_dropped++;
 			printk(KERN_ERR "%s: Packet padding failed\n", dev->name);
@@ -799,6 +804,8 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 		}
 		len = newlen;
 	}
+
+//    pr_cont("%u\n", len);
 
 	spin_lock_irqsave(&hde->tx_lock, flags);
 
@@ -814,9 +821,6 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 		/* TODO: Stop netif queue */
 		return NETDEV_TX_BUSY;
 	}
-
-	dev->stats.tx_packets++;
-	dev->stats.tx_bytes += len;
 
 	/* Get current descriptor values */
 	hdoip_etho_desc_get_cpu(hde, &tx_desc);
@@ -842,12 +846,15 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	/* Set write descriptor */
 	hdoip_etho_write(hde, ETHIO_CPU_WRITE_DESC, CPU_TO_DESC(tx_desc.write));
 
-	dev->trans_start = jiffies;
-
 out_unlock:
 	spin_unlock_irqrestore(&hde->tx_lock, flags);
 out_free:
 	dev_kfree_skb(skb);
+
+	dev->trans_start = jiffies;
+    dev->stats.tx_packets++;
+	dev->stats.tx_bytes += len;
+
 	return NETDEV_TX_OK;
 }
 
@@ -903,7 +910,7 @@ again:
 	len -= RX_TIMESTAMP_LENGTH;
 	rx_buf = rx_buf + (RX_TIMESTAMP_LENGTH / sizeof(u32));
 
-	skb = dev_alloc_skb(len + NET_IP_ALIGN);
+    skb = netdev_alloc_skb(dev, len + NET_IP_ALIGN);
 	if (!skb) {
 		dev->stats.rx_dropped++;
 		printk(KERN_NOTICE "%s: Memory squeeze, dropping packet.\n", dev->name);
@@ -913,11 +920,11 @@ again:
 	skb_reserve(skb, NET_IP_ALIGN);
 
 	/* Read the frame data */
-	hdoip_ether_read_frame((u32 *) skb_put(skb, len), rx_buf + 1, len);
+    skb_put(skb, len);
+	hdoip_ether_read_frame((u32 *) skb->data, rx_buf + 1, len);
 
-	skb->dev = dev;
 	/* Hardware already verified the checksum */
-	skb->ip_summed = CHECKSUM_UNNECESSARY;
+	skb->ip_summed = CHECKSUM_NONE;
 	skb->protocol = eth_type_trans(skb, dev);
 
 	dev->last_rx = jiffies;

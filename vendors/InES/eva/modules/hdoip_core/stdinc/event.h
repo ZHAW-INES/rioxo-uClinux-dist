@@ -1,0 +1,65 @@
+
+#ifndef EVENT_H_
+#define EVENT_H_
+
+#define E_CNT                   (E_HOI_CNT+E_ADV7441A_CNT+E_VSI_CNT)
+
+/* internal events */
+#define E_HOI_ID                (0xff000000)
+#define E_HOI_CNT               1
+#define E_FORCE_TO_READY        (E_HOI_ID + 1)
+
+/* ADV7441A events */
+#define E_ADV7441A_ID		    (0x10000000) /* ADV7441A event ID */
+#define E_ADV7441A_CNT          6
+#define E_ADV7441A_NC		    (E_ADV7441A_ID + 0x00000001)  /* no HDMI connected */
+#define E_ADV7441A_NEW_RES      (E_ADV7441A_ID + 0x00000002)	/* Resolution change */
+#define E_ADV7441A_NEW_AUDIO    (E_ADV7441A_ID + 0x00000003)  /* new audio content received */ 
+#define E_ADV7441A_NO_AUDIO     (E_ADV7441A_ID + 0x00000004)  /* no audio avaible */
+#define E_ADV7441A_HDCP         (E_ADV7441A_ID + 0x00000005)  /* HDCP encrypted content */
+#define E_ADV7441A_NO_HDCP      (E_ADV7441A_ID + 0x00000006)  /* no HDCP encrypted content */
+
+/* VSI events */
+#define E_VSI_ID		        (0x20000000)
+#define E_VSI_CNT		        2
+#define E_VSI_FIFO2_FULL	    (E_VSI_ID + 0x00000001)
+#define E_VSI_CDFIFO_FULL	    (E_VSI_ID + 0x00000002)
+
+/* VSO events */
+#define E_VSO_ID    	        (0x40000000)
+#define E_VSO_CNT               4
+#define E_VSO_CHOKED            (E_VSO_ID + 0x00000001)
+#define E_VSO_PAYLOAD_EMPTY     (E_VSO_ID + 0x00000002)
+#define E_VSO_PAYLOAD_MTIMEOUT  (E_VSO_ID + 0x00000003)
+#define E_VSO_TIMESTAMP_ERROR   (E_VSO_ID + 0x00000004)
+
+/* ASI events */
+#define E_ASI_ID                (0x50000000)
+#define E_ASI_CNT               1
+#define E_ASI_RBF_ERROR         (E_ASI_ID + 0x00000001)
+
+/* ASO events */
+#define E_ASO_ID                (0x60000000)
+#define E_ASO_CNT               4
+#define E_ASO_SIZE_ERROR        (E_ASI_ID + 0x00000001)
+#define E_ASO_FIFO_EMPTY        (E_ASI_ID + 0x00000002)
+#define E_ASO_FIFO_FULL         (E_ASI_ID + 0x00000003)
+#define E_ASO_RAM_FULL          (E_ASI_ID + 0x00000004)
+
+
+/* VIO events */
+#define E_VIO_ID                (0x30000000)
+#define E_VIO_CNT               15
+#define E_VIO_JD0ENC_OOS        (E_VIO_ID + 1)
+#define E_VIO_JD1ENC_OOS        (E_VIO_ID + 2)
+#define E_VIO_JD2ENC_OOS        (E_VIO_ID + 3)
+#define E_VIO_JD3ENC_OOS        (E_VIO_ID + 4)
+#define E_VIO_PLL_OOS           (E_VIO_ID + 5)
+#define E_VIO_PLL_SNC           (E_VIO_ID + 6)
+#define E_VIO_RES_CHANGE        (E_VIO_ID + 7)
+// 4x for each ADV (0,1,2,3) [8..15]
+#define E_VIO_ADV212_CFERR      (E_VIO_ID + 8)
+#define E_VIO_ADV212_CFTH       (E_VIO_ID + 12)
+
+#endif /* EVENT_H_ */ 
+
