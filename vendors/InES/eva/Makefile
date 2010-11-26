@@ -12,7 +12,7 @@ ROMFS_DIRS = bin sbin dev etc home lib mnt proc usr var sys tmp root \
 	usr/bin usr/sbin usr/share \
 	var/lock var/log var/run var/tmp
 
-EXTRAMODULES = hdoip_ether
+EXTRAMODULES = hdoip_ether hdoip_core
 
 all:
 	dirs=$(DIRS) ; \
