@@ -785,18 +785,13 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	/* align frame data to 32bit boundaries */
 	if (((unsigned long) skb->data) & 0x2) {
 		skb_push(skb, 2);
-		len = skb->len;
-	} else {
-        pr_info("NO PUSH ");
-    }
-
-  //  pr_cont("%u ", len);
+		len += 2;
+	}
 
 	/* pad packet to multiple of 32 bits */
 	newlen = len + 3;
 	newlen &= ~3UL;
 	if (newlen != len) {
- //       pr_info("padding ");
 		if (skb_padto(skb, newlen)) {
 			dev->stats.tx_dropped++;
 			printk(KERN_ERR "%s: Packet padding failed\n", dev->name);
@@ -804,8 +799,6 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 		}
 		len = newlen;
 	}
-
-//    pr_cont("%u\n", len);
 
 	spin_lock_irqsave(&hde->tx_lock, flags);
 
