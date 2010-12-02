@@ -15,6 +15,6 @@
 #include "hoi_msg.h"
 
 int hoi_res_fps(t_video_timing* p_vt);
-t_video_timing* hoi_res_timing(char* s, uint32_t width, uint32_t height, uint32_t fps);
+t_video_timing* hoi_res_timing(uint32_t width, uint32_t height, uint32_t fps);
 
 #endif /* HOI_RES_H_ */

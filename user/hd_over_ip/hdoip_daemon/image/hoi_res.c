@@ -83,9 +83,8 @@ int hoi_res_fps(t_video_timing* p_vt)
  *
  * ex.: "640x480", "800x600p60"
  */
-t_video_timing* hoi_res_timing(char* s, uint32_t width, uint32_t height, uint32_t fps)
+t_video_timing* hoi_res_timing(uint32_t width, uint32_t height, uint32_t fps)
 {
-    char* rs = s;
     bool bfps = false;
     t_video_timing* ret = 0;
 

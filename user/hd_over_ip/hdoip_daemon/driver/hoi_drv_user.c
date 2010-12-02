@@ -43,6 +43,32 @@ int hoi_drv_ldrv(int f, uint32_t drivers, pid_t pid)
     return hoi_msg(f, &msg);
 }
 
+int hoi_drv_buf(int f, void* ar, size_t arl, void* vr, size_t vrl, void* at, size_t atl, void* vt, size_t vtl)
+{
+    t_hoi_msg_buf msg;
+
+    hoi_msg_buf_init(&msg);
+    msg.aud_rx_buf = ar; msg.aud_rx_len = arl;
+    msg.vid_rx_buf = vr; msg.vid_rx_len = vrl;
+    msg.aud_tx_buf = at; msg.aud_tx_len = atl;
+    msg.vid_tx_buf = vt; msg.vid_tx_len = vtl;
+
+    return hoi_msg(f, &msg);
+}
+
+int hoi_drv_eti(int f, uint32_t addr_dst, uint32_t addr_src, uint32_t vid, uint32_t aud)
+{
+    t_hoi_msg_eti msg;
+
+    hoi_msg_eti_init(&msg);
+    msg.ip_address_dst = addr_dst;
+    msg.ip_address_src = addr_src;
+    msg.udp_port_aud = aud;
+    msg.udp_port_vid = vid;
+
+    return hoi_msg(f, &msg);
+
+}
 
 //------------------------------------------------------------------------------
 // setup/read video format for input/output
@@ -99,6 +125,34 @@ int hoi_drv_getstate(int f, uint32_t* p)
 
 //------------------------------------------------------------------------------
 // capture/show image command
+
+int hoi_drv_vsi(int f, bool compress, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt)
+{
+    int ret;
+    t_hoi_msg_vsi msg;
+
+    msg.bandwidth = bandwidth;
+    msg.compress = compress;
+    memcpy(&msg.eth, eth, sizeof(hdoip_eth_params));
+    ret = hoi_msg(f, &msg);
+    memcpy(timing, &msg.timing, sizeof(t_video_timing));
+    *advcnt = msg.advcnt;
+
+    return ret;
+}
+
+int hoi_drv_vso(int f, bool compress, t_video_timing* timing, uint32_t advcnt)
+{
+    int ret;
+    t_hoi_msg_vso msg;
+
+    msg.compress = compress;
+    msg.advcnt = advcnt;
+    memcpy(&msg.timing, timing, sizeof(t_video_timing));
+    ret = hoi_msg(f, &msg);
+
+    return ret;
+}
 
 int hoi_drv_capture(int f, bool compress, void* buffer, size_t size, t_video_timing* timing, uint32_t* advcnt)
 {
