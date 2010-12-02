@@ -87,6 +87,34 @@ int hdoip_cli_loop(int fd, char** argv, int argc)
     return 0;
 }
 
+int hdoip_cli_vtb(int fd, char** argv, int argc)
+{
+    printf("hdoip_cli_vtb\n");
+
+    hoic_vtb(fd);
+
+    return 0;
+}
+
+int hdoip_cli_vrb_setup(int fd, char** argv, int argc)
+{
+    printf("hdoip_cli_vrb_setup\n");
+
+    hoic_vrb_setup(fd, argv[0]);
+
+    return 0;
+}
+
+int hdoip_cli_vrb_play(int fd, char** argv, int argc)
+{
+    printf("hdoip_cli_vrb_play\n");
+
+    hoic_vrb_play(fd);
+
+    return 0;
+}
+
+
 int hdoip_cli_fmt(int fd, char** argv, int argc)
 {
     int fmt = 0;
@@ -159,7 +187,7 @@ int hdoip_cli_dummy2(int fd, char** argv, int argc)
 
 
 /* Command definitions */
-const int cmd_cnt = 7;
+const int cmd_cnt = 10;
 const t_hdoip_cli_cmd_arr cmd_arr[] = {
         { "help",       0, hdoip_cli_help,      ""},
         { "canvas",     1, hdoip_cli_canvas,    "Resolution"},
@@ -168,6 +196,9 @@ const t_hdoip_cli_cmd_arr cmd_arr[] = {
         { "loop",       0, hdoip_cli_loop,      ""},
         { "osd",        1, hdoip_cli_osd,       "{on|off}"},
         { "fmt",       -1, hdoip_cli_fmt,       "{in|out} *{fmts}"},
+        { "vtb",        0, hdoip_cli_vtb,       ""},
+        { "vrb",        1, hdoip_cli_vrb_setup, "uri"},
+        { "play",       0, hdoip_cli_vrb_play,  ""},
 
         { "dummy",      0, hdoip_cli_dummy,     ""},
         { "dummy2",     2, hdoip_cli_dummy2,    "arg1 arg2"}

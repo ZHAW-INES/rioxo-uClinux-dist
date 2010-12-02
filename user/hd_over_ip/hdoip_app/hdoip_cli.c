@@ -12,7 +12,9 @@
 
 #include "hdoip_cli.h"
 
-#define FIFO_NODE        "/tmp/hdoipd0"
+#define FIFO_NODEC       "/tmp/hdoipd0.cmd"
+#define FIFO_NODER       "/tmp/hdoipd0.rsp"
+
 
 
 int main(int argc, char **argv)
@@ -25,9 +27,10 @@ int main(int argc, char **argv)
         goto out;
     }
 
-    fd = open(FIFO_NODE, O_RDWR, 0600);                                                     /* open character device */
+    fd = open(FIFO_NODEC, O_RDWR, 0600);                                                     /* open character device */
+    open(FIFO_NODER, O_RDWR, 0600);                                                     /* open character device */
     if(fd < 0) {
-        err(1, "Failed to open %s: %s \n", FIFO_NODE, strerror(errno)); 
+        err(1, "Failed to open %s: %s \n", FIFO_NODEC, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
