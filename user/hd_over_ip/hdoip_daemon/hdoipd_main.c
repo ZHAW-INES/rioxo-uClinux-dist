@@ -139,11 +139,11 @@ int main(int argc, char **argv)
 {
     pthread_t* th = malloc(sizeof(pthread_t)* (argc-1));
 
-    if (!(report_fd = fopen("tmp/hdoipd.log", "w"))) {
+    if (!(report_fd = fopen("/tmp/hdoipd.log", "w"))) {
         return 0;
     }
 
-    report("tmp/hdoipd.log started");
+    report("/tmp/hdoipd.log started");
 
 
     pthread_mutex_init(&handle.mutex, NULL);
