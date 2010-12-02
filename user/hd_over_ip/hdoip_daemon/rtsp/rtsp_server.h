@@ -13,6 +13,7 @@
 #include "rtsp_error.h"
 #include "rtsp_media.h"
 #include "rtsp_connection.h"
+#include "rtsp_net.h"
 
 typedef struct {
     pthread_t           th;             //!< Server Connection thread

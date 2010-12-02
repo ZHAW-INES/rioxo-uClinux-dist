@@ -8,6 +8,7 @@
 #include "rtsp.h"
 #include "rtsp_error.h"
 #include "rtsp_connection.h"
+#include "rtsp_net.h"
 
 bool rtsp_receive_crlf(char** s, char* eol)
 {
