@@ -839,14 +839,14 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	/* Set write descriptor */
 	hdoip_etho_write(hde, ETHIO_CPU_WRITE_DESC, CPU_TO_DESC(tx_desc.write));
 
+	dev->trans_start = jiffies;
+	dev->stats.tx_packets++;
+	dev->stats.tx_bytes += len;
+
 out_unlock:
 	spin_unlock_irqrestore(&hde->tx_lock, flags);
 out_free:
 	dev_kfree_skb(skb);
-
-	dev->trans_start = jiffies;
-    dev->stats.tx_packets++;
-	dev->stats.tx_bytes += len;
 
 	return NETDEV_TX_OK;
 }
@@ -863,12 +863,17 @@ static void hdoip_ether_rx(struct net_device *dev)
 	struct sk_buff *skb;
 	unsigned int len;
 	unsigned long flags;
+	u32 regval;
 	u32 *rx_buf;
 
 	spin_lock_irqsave(&hde->rx_lock, flags);
 
 	/* Get the current descriptor values */
 	hdoip_ethi_desc_get_cpu(hde, &rx_desc);
+
+	/* Reset IRQ */
+	regval = hdoip_ethi_read(hde, ETHIO_CONFIG);
+	hdoip_ethi_write(hde, ETHIO_CONFIG, regval & ~ETHI_CONFIG_IRQ1_RESET);
 
 	if (rx_desc.read == rx_desc.write) {
 		/* TODO: Stop netif queue */
@@ -903,7 +908,7 @@ again:
 	len -= RX_TIMESTAMP_LENGTH;
 	rx_buf = rx_buf + (RX_TIMESTAMP_LENGTH / sizeof(u32));
 
-    skb = netdev_alloc_skb(dev, len + NET_IP_ALIGN);
+	skb = netdev_alloc_skb(dev, len + NET_IP_ALIGN);
 	if (!skb) {
 		dev->stats.rx_dropped++;
 		printk(KERN_NOTICE "%s: Memory squeeze, dropping packet.\n", dev->name);
@@ -913,18 +918,18 @@ again:
 	skb_reserve(skb, NET_IP_ALIGN);
 
 	/* Read the frame data */
-    skb_put(skb, len);
+	skb_put(skb, len);
 	hdoip_ether_read_frame((u32 *) skb->data, rx_buf + 1, len);
 
 	/* Hardware already verified the checksum */
 	skb->ip_summed = CHECKSUM_NONE;
 	skb->protocol = eth_type_trans(skb, dev);
 
+	netif_rx(skb);
+
 	dev->last_rx = jiffies;
 	dev->stats.rx_packets++;
 	dev->stats.rx_bytes += len;
-
-	netif_rx(skb);
 
 out:
 	/* Update the descriptors (with wrap around) */
@@ -956,10 +961,6 @@ static irqreturn_t hdoip_ether_interrupt(int irq, void *dev_id)
 		return IRQ_HANDLED;
 
 	hdoip_ether_rx(dev);
-
-	/* Reset IRQ */
-	regval = hdoip_ethi_read(hde, ETHIO_CONFIG);
-	hdoip_ethi_write(hde, ETHIO_CONFIG, regval & ~ETHI_CONFIG_IRQ1_RESET);
 
 	return IRQ_HANDLED;
 }
