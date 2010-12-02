@@ -21,7 +21,6 @@ INCLUDE += hal/vio
 INCLUDE += hal/vid
   FILES += hal/vid/stdvid.o
   FILES += hal/vid/vid_color.o
-  FILES += hal/vid/vid_timing.o
   FILES += hal/vid/vid_font0.o
 INCLUDE += hal/vsi
   FILES += hal/vsi/vsi_hal.o

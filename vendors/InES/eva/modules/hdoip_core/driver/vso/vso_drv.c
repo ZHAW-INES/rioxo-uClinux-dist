@@ -52,7 +52,7 @@ int vso_drv_stop(t_vso* handle)
  * @param scomm5_delay_ns SCOMM5 signla delay in nanoseconds
  * @return error code
  */
-int vso_drv_init(t_vso* handle, void* p_vso, uint32_t packet_timeout_ns, t_video_timing* vid_timing, uint32_t vs_delay_us, uint32_t vsync_delay_ns, uint32_t scomm5_delay_ns) 
+int vso_drv_init(t_vso* handle, void* p_vso) 
 {
     REPORT(INFO, "+--------------------------------------------------+");
     REPORT(INFO, "| VSO-Driver: Initialize video stream out          |");
@@ -66,8 +66,6 @@ int vso_drv_init(t_vso* handle, void* p_vso, uint32_t packet_timeout_ns, t_video
 
  	vso_set_dma_burst_size(p_vso, VSO_DRV_DMA_BURST_SIZE);
 	vso_set_dma_almost_full(p_vso, VSO_DRV_DMA_ALMOST_FULL);
-
-	vso_drv_set_timing(handle, vid_timing, vs_delay_us, vsync_delay_ns, scomm5_delay_ns, packet_timeout_ns);
 
 	return ERR_VSO_SUCCESS;
 }
@@ -111,37 +109,12 @@ int vso_drv_get_delays(t_vso* handle, uint32_t* vs_delay_us, uint32_t* vsync_del
 int vso_drv_update(t_vso* handle, t_video_timing* vid_timing, uint32_t vs_delay_us, uint32_t vsync_delay_ns, uint32_t scomm5_delay_ns, uint32_t packet_timeout_ns) 
 {
     uint32_t activ = handle->status & VSO_DRV_STATUS_ACTIV;
-    uint32_t err;
+    uint32_t duration_us, duration_ns; 
+	uint32_t p_vso = (uint32_t) handle->p_vso;
 
     if(activ != 0) {
         vso_drv_stop(handle);
     }
-
-    err = vso_drv_set_timing(handle, vid_timing, vs_delay_us, vsync_delay_ns, scomm5_delay_ns, packet_timeout_ns);
-    if(err != ERR_VSO_SUCCESS) {
-        return err;
-    }
-
-    if(activ != 0) {
-        vso_drv_start(handle);
-    }
-    return ERR_VSO_SUCCESS;
-}
-
-/** Sets all needed video timing parameters (vso must be stoped)
- *
- * @param handle pointer to the vso handle 
- * @param vid_timing pointer to video timing structure
- * @param vs_delay_us video stream delay value in microseconds
- * @param vsync_delay_ns VSYNC signal delay value in nanoseconds
- * @param scomm5_delay_ns SCOMM5 signal delay value in nanoseconds
- * @param packet_timeout_ns packet timeout value in nanoseconds
- * @return error code
- */
-int vso_drv_set_timing(t_vso* handle, t_video_timing* vid_timing, uint32_t vs_delay_us, uint32_t vsync_delay_ns, uint32_t scomm5_delay_ns, uint32_t packet_timeout_ns) 
-{
-	uint32_t duration_us, duration_ns; 
-	uint32_t p_vso = (uint32_t) handle->p_vso;
 	
 	/* set video timing */
 	duration_us = vid_duration_in_us(vid_timing); 
@@ -163,7 +136,10 @@ int vso_drv_set_timing(t_vso* handle, t_video_timing* vid_timing, uint32_t vs_de
 
     vso_report_timing(handle->p_vso);
 
-	return ERR_VSO_SUCCESS;
+    if(activ != 0) {
+        vso_drv_start(handle);
+    }
+    return ERR_VSO_SUCCESS;
 }
 
 static int vso_drv_put_event(t_vso* handle, t_queue* event_queue, uint32_t status, uint32_t mask, uint32_t statusbit, uint32_t event_true, uint32_t event_false)

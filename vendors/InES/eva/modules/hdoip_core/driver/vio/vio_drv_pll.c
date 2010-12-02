@@ -1,6 +1,6 @@
 #include "vio_drv.h"
 
-
+/*
 // Constants
 // vio_phase[in][out]
 static const int vio_phase[2][4] = {
@@ -8,6 +8,7 @@ static const int vio_phase[2][4] = {
         {       0,      0,      0,      0},   // 75 MHz internal
         {       0,  -4000,  -4000,      0}    // external
     };
+*/
 
 int vio_drv_pll_setup(void* p, t_vio_pll* pll, int in, int out, int rel, int mode)
 {
@@ -105,10 +106,10 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, int in, int out, int rel, int mod
     // output set
     pll->fsys       = SFREQ;
     pll->fvco       = fvco;
-    pll->phase[0]   = vio_phase[in][0];
+    /*pll->phase[0]   = vio_phase[in][0];
     pll->phase[1]   = vio_phase[in][1];
     pll->phase[2]   = vio_phase[in][2];
-    pll->phase[3]   = vio_phase[in][3];    
+    pll->phase[3]   = vio_phase[in][3];*/
     pll->n          = n;
     pll->m          = m;
     pll->c[0]       = c0;

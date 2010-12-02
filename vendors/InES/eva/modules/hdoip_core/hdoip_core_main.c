@@ -20,7 +20,6 @@
 MODULE_LICENSE("abc");
 
 #define DRV_NAME        "hdoip_core"
-#define PROC_NAME       "hdoip_core"
 #define DRV_VERSION     "0.0"
 
 /* Major and minor number for the device file */
@@ -90,7 +89,6 @@ static ssize_t hdoip_core_write(struct file *filp, const char __user *buf, size_
 		return ret;
 
 	vio_drv_osd_write(&hdev->hoi.vio, buf, count);
-	vio_drv_set_osd(&hdev->hoi.vio, true);
 
 	ret = count;
 
@@ -114,8 +112,6 @@ static int hdoip_core_ioctl(struct inode *inop, struct file *filp,
             return -EFAULT;
         }
 
-        REPORT(INFO, "[%08x:%d] received", msg.id, msg.size);
-
         if (msg.size > 1024) {
             return -EFAULT;
         }
@@ -132,7 +128,6 @@ static int hdoip_core_ioctl(struct inode *inop, struct file *filp,
             return -EFAULT;
         }
 
-        REPORT(INFO, "[%08x:%d] finished", msg.id, msg.size);
     } else {
         //... TODO
     }
@@ -146,42 +141,6 @@ static struct file_operations hdoip_core_fops = {
     .ioctl      = hdoip_core_ioctl,
 	.write		= hdoip_core_write
 };
-
-
-//------------------------------------------------------------------------------
-// /proc read function
-int hdoip_proc_read (char *buf, char **start, off_t offset, int count, int *eof, void *data) 
-{
-    int len = 0;
-    struct hdoip_eth_params eth_params;
-
-    // VSI
-    vsi_drv_get_eth_params(&hdev->hoi.vsi, &eth_params);
-    len += sprintf(buf + len, "vsi config:%08x\n", vsi_get_ctrl(hdev->hoi.vsi.p_vsi,0xFFFFFFFF));
-    len += sprintf(buf + len, "vsi status:%08x\n", vsi_get_status(hdev->hoi.vsi.p_vsi,0xFFFFFFFF));
-    len += sprintf(buf + len, "vsi dst ip:%08x\n", eth_params.ipv4_dst_ip);
-    len += sprintf(buf + len, "vsi dst port:%04x\n", eth_params.udp_dst_port);
-
-    // VSO
-    len += sprintf(buf + len, "vso config:%08x\n",vso_get_ctrl(hdev->hoi.vso.p_vso,0xFFFFFFFF));
-    len += sprintf(buf + len, "vso status:%08x\n",vso_get_status(hdev->hoi.vso.p_vso,0xFFFFFFFF));
-
-    // ASI
-    asi_drv_get_eth_params(&hdev->hoi.asi, &eth_params);
-
-    len += sprintf(buf + len, "asi config:%08x\n", asi_get_ctrl(hdev->hoi.asi.p_asi,0xFFFFFFFF));
-    len += sprintf(buf + len, "asi status:%08x\n", asi_get_status(hdev->hoi.asi.p_asi,0xFFFFFFFF));
-    len += sprintf(buf + len, "asi dst ip:%08x\n", eth_params.ipv4_dst_ip);
-    len += sprintf(buf + len, "asi dst port:%04x\n", eth_params.udp_dst_port);
-
-    // ASO
-    len += sprintf(buf + len, "aso config:%08x\n", aso_get_ctrl(hdev->hoi.aso.p_aso,0xFFFFFFFF));
-    len += sprintf(buf + len, "aso status:%08x\n", aso_get_status(hdev->hoi.aso.p_aso,0xFFFFFFFF));
-
-    *eof = 1;
-
-    return len;    
-}
 
 
 //------------------------------------------------------------------------------
@@ -223,16 +182,12 @@ static int hdoip_init(void)
 
 	hoi_drv_init(&hdev->hoi);
 
-    // init proc device
-    create_proc_read_entry(PROC_NAME, 0, NULL, hdoip_proc_read, NULL);
-
 	return 0;
 }
 
 static void hdoip_exit(void)
 {
 	unregister_chrdev_region(hdev->devno, 1);
-    remove_proc_entry(PROC_NAME, NULL);
 
 	printk(KERN_ALERT "Goodbye, cruel world\n");
 }

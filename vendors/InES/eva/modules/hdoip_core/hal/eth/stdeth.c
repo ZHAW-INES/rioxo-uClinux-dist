@@ -1,5 +1,6 @@
 
 #include "stdeth.h"
+#include "std.h"
 
 static void eth_val_to_arr(uint8_t* arr, uint16_t upper16, uint32_t lower32) 
 {

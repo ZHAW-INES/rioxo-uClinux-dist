@@ -13,6 +13,7 @@
 #define EXT_IRQ_USB_INT1		(0x100)
 #define EXT_IRQ_USB_INT2		(0x200)
 
+#define EXT_IRQ_POLARITY        (EXT_IRQ_HDMI_RX_INT1|EXT_IRQ_HDMI_RX_INT2)
 
 /** Macros
  */

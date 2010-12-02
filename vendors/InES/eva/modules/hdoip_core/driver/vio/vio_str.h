@@ -110,10 +110,10 @@ DBG( \
 
 #define VIO_REPORT_PLL(p) { \
     REPORT(INFO, "<Setup PLL> In: %d Hz - Out: %d Hz - Sys: %d Hz", (p)->fin[(p)->insel], (p)->fout[0], (p)->fsys); \
-    REPORT(INFO, "  [0] = %d Hz, %d ns, c = %d", (p)->fout[0], (p)->phase[0], (p)->c[0]) \
-    REPORT(INFO, "  [1] = %d Hz, %d ns, c = %d", (p)->fout[1], (p)->phase[1], (p)->c[1]) \
-    REPORT(INFO, "  [2] = %d Hz, %d ns, c = %d", (p)->fout[2], (p)->phase[2], (p)->c[2]) \
-    REPORT(INFO, "  [3] = %d Hz, %d ns, c = %d", (p)->fout[3], (p)->phase[3], (p)->c[3]) \
+    REPORT(INFO, "  [0] = %d Hz, c = %d", (p)->fout[0], (p)->c[0]) \
+    REPORT(INFO, "  [1] = %d Hz, c = %d", (p)->fout[1], (p)->c[1]) \
+    REPORT(INFO, "  [2] = %d Hz, c = %d", (p)->fout[2], (p)->c[2]) \
+    REPORT(INFO, "  [3] = %d Hz, c = %d", (p)->fout[3], (p)->c[3]) \
     REPORT(INFO, "  VCO = IN * %d / %d = %d Hz", (p)->m, (p)->n, (p)->fvco); \
 }
 

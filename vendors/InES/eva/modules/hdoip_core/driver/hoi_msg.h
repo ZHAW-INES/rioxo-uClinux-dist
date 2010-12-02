@@ -12,19 +12,7 @@
 
 #include <linux/types.h>
 #include "../hal/vid/stdvid.h"
-
-// State
-typedef enum {
-    HOI_IDLE = 0,
-    HOI_ERROR,
-    HOI_READY,
-
-    HOI_SHOW,           //!< output an image
-    HOI_DEBUG,          //!< output text only
-
-    HOI_AVRX,           //!< output video from ethernet in
-    HOI_AVTX            //!< input video to ethernet out
-} t_hoi_state;
+#include "../hal/eth/stdeth.h"
 
 // linux message
 #define HDOIP_IOCTL_MAGIC           ('h')
@@ -53,6 +41,10 @@ typedef enum {
 #define HOI_MSG_LOOP                (0x70000014)
 #define HOI_MSG_OSDON               (0x70000015)
 #define HOI_MSG_OSDOFF              (0x70000016)
+#define HOI_MSG_BUF                 (0x70000017)
+#define HOI_MSG_VSI                 (0x70000018)
+#define HOI_MSG_VSO                 (0x70000019)
+#define HOI_MSG_ETI                 (0x7000001a)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
@@ -83,7 +75,7 @@ typedef struct {
 typedef struct {
     hoi_msg_extends;
     uint32_t            drivers;        //!< (wr) Driver Bitmap for active drivers
-    pid_t               pid;            //!< (wr) PID of calling process
+    int                 pid;            //!< (wr) PID of calling process
 } __attribute__ ((__packed__)) t_hoi_msg_ldrv;
 
 #define hoi_msg_ldrv_init(p) hoi_msg_init(p, HOI_MSG_LDRV, t_hoi_msg_ldrv)
@@ -101,6 +93,59 @@ typedef struct {
 
 #define hoi_msg_cfg_init(p) hoi_msg_init(p, HOI_MSG_CFG, t_hoi_msg_cfg)
 
+
+//------------------------------------------------------------------------------
+// setup buffer
+
+typedef struct {
+    hoi_msg_extends;
+    void*               vid_tx_buf;     //! < physical address
+    size_t              vid_tx_len;     //! < buffer size
+    void*               vid_rx_buf;     //! < physical address
+    size_t              vid_rx_len;     //! < buffer size
+    void*               aud_tx_buf;     //! < physical address
+    size_t              aud_tx_len;     //! < buffer size
+    void*               aud_rx_buf;     //! < physical address
+    size_t              aud_rx_len;     //! < buffer size
+} __attribute__ ((__packed__)) t_hoi_msg_buf;
+
+#define hoi_msg_buf_init(p) hoi_msg_init(p, HOI_MSG_BUF, t_hoi_msg_buf)
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t            udp_port_vid;
+    uint32_t            udp_port_aud;
+    uint32_t            ip_address_dst;
+    uint32_t            ip_address_src;
+} __attribute__ ((__packed__)) t_hoi_msg_eti;
+
+#define hoi_msg_eti_init(p) hoi_msg_init(p, HOI_MSG_ETI, t_hoi_msg_buf)
+
+
+//------------------------------------------------------------------------------
+// setup buffer
+
+typedef struct {
+    hoi_msg_extends;
+    hdoip_eth_params    eth;        //!< (wr) ethernet parameter
+    uint32_t            compress;   //!< (wr) use jpeg2000 compressor
+    uint32_t            bandwidth;  //!< (wr) bandwidth
+    t_video_timing      timing;     //!< (rd) timing of video
+    uint32_t            advcnt;     //!< (rd) adv count when compression = true
+} __attribute__ ((__packed__)) t_hoi_msg_vsi;
+
+#define hoi_msg_vsi_init(p) hoi_msg_init(p, HOI_MSG_VSI, t_hoi_msg_vsi)
+
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t            compress;   //!< use jpeg2000 compressor
+    t_video_timing      timing;     //!< timing of video
+    uint32_t            advcnt;     //!< adv count when compression = true
+    uint32_t            port;
+} __attribute__ ((__packed__)) t_hoi_msg_vso;
+
+#define hoi_msg_vso_init(p) hoi_msg_init(p, HOI_MSG_VSO, t_hoi_msg_vso)
 
 //------------------------------------------------------------------------------
 // setup/read video format for input/output

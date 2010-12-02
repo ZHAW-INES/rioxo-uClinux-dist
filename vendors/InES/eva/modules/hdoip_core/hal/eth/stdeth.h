@@ -8,9 +8,9 @@
 #ifndef STDETH_H_
 #define STDETH_H_
 
-#include "std.h"
+#include <linux/types.h>
 
-struct hdoip_eth_params {
+typedef struct hdoip_eth_params {
     uint16_t    packet_length;          /* in 32 bit words (total ethernet packet size) */
     uint16_t    dst_mac_upper16;
     uint32_t    dst_mac_lower32;
@@ -23,7 +23,7 @@ struct hdoip_eth_params {
     uint16_t    udp_src_port;
     uint16_t    udp_dst_port;
     uint32_t    rtp_ssrc;
-} __attribute__((packed));
+} __attribute__((packed)) hdoip_eth_params;
 
 int eth_report_params(struct hdoip_eth_params* eth_params);
 

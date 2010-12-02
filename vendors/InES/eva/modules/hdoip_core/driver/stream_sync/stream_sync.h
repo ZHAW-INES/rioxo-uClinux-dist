@@ -31,11 +31,12 @@ typedef struct {
     //t_arith_mean means;
     t_arith_mean* rises;
     //t_arith_mean rises;
+    void* ptr_act;
     void* ptr_aso;
     void* ptr_vso;
     void* ptr_tmr;
-    uint32_t totzeit;
-    int32_t mean_alt;
+    uint32_t dead_time;
+    int32_t mean_old;
     int32_t kp;
     int32_t ki;
     int64_t diff3_sum;
@@ -73,7 +74,7 @@ static inline uint32_t stream_sync_am_get_cnt(t_arith_mean* am)
     return am->cnt;
 }
 
-void stream_sync_init(t_sync_means* sm, uint32_t size_means, uint32_t size_rises, void*  ptr_stat, void* ptr_tmr, uint32_t totzeit, uint32_t kp, uint32_t ki, uint32_t inc_ppm);
+void stream_sync_init(t_sync_means* sm, uint32_t size_means, uint32_t size_rises, void*  ptr_act, void*  ptr_aso, void*  ptr_vso, void* ptr_tmr, uint32_t dead_time, uint32_t kp, uint32_t ki, uint32_t inc_ppm);
 void stream_sync(t_sync_means* sm);
 void stream_sync_set_diff(t_sync_means* sm, int32_t diff_rx_tx);
 

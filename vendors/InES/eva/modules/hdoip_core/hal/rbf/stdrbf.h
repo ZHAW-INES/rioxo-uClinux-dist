@@ -18,6 +18,14 @@ typedef struct {
 #define RBF_GET_REG(p, o)		(HOI_RD32((p), (o)) << 2)
 #define RBF_SET_REG(p, o, v)	(HOI_WR32((p), (o), ((v) >> 2)))
 
+static inline void rbf_dsc(t_rbf_dsc* dsc, void* b, size_t s)
+{
+    dsc->start = b;
+    dsc->stop = OFFSET(b, s - 4);
+    dsc->write = b;
+    dsc->read = b;
+}
+
 int rbf_init_dsc(t_rbf_dsc* dsc, uint32_t start_addr, size_t size);
 void rbf_report_dsc(void* p, uint32_t o);
 void rbf_set_dsc(void* p, uint32_t o, t_rbf_dsc* dsc);

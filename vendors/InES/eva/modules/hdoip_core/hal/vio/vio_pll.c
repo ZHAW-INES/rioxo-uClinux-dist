@@ -9,7 +9,7 @@ void vio_pll_write(void* p, int o, int v);
 int  vio_pll_read(void* p, int o);
 void vio_pll_counter(void* p, int cnt, int v);
 void vio_pll_reconfig(void* p);
-void vio_pll_shift(void* p, int sel, int phase, int64_t fvco);
+//void vio_pll_shift(void* p, int sel, int phase, int64_t fvco);
 void vio_pll_drift(void* p, int ppm, int64_t fvco);
 
 /** functions
@@ -97,7 +97,7 @@ void vio_pll_reconfig(void* p)
  * @param sel select clock output
  * @param n relative shift in [ps]
  */
-void vio_pll_shift(void* p, int sel, int phase, int64_t fvco)
+/*void vio_pll_shift(void* p, int sel, int phase, int64_t fvco)
 {
     uint32_t v;
     int n = (-(int32_t)(((int64_t)phase * fvco * 8 + (int64_t)5.0e11) / (int64_t)1.0e12));
@@ -112,7 +112,7 @@ void vio_pll_shift(void* p, int sel, int phase, int64_t fvco)
 
     HOI_WR32(p, VIO_OFF_PLL_SHIFT, v|VIO_PLL_SHIFT_EN);
     HOI_WR32(p, VIO_OFF_PLL_SHIFT, v);
-}
+}*/
 
 /** Set the maximum pll frequency drift expressed in ppm.
  * 
@@ -186,10 +186,12 @@ void vio_pll_update(void* p, t_vio_pll* pll)
     
     vio_pll_reconfig(p);
     
+    /*
     vio_pll_shift(p, VIO_PLL_TYPE_C0, pll->phase[0], pll->fvco);
     vio_pll_shift(p, VIO_PLL_TYPE_C0, pll->phase[1], pll->fvco);
     vio_pll_shift(p, VIO_PLL_TYPE_C0, pll->phase[2], pll->fvco);
     vio_pll_shift(p, VIO_PLL_TYPE_C0, pll->phase[3], pll->fvco);
+     */
 
     // set pll control mode
     vio_set_pllc(p, pll->mode);
