@@ -2,6 +2,9 @@ EXEC = hdoipd
 OBJS = hdoipd_main.o
 
 CFLAGS += -I.
+CFLAGS += -Ilib
+OBJS   +=   lib/bstree.o
+OBJS   +=   lib/bstmap.o
 CFLAGS += -Idriver
 OBJS   +=   driver/hoi_drv_user.o
 CFLAGS += -Ifsm
@@ -29,7 +32,9 @@ OBJS   +=   osd/hdoipd_osd.o
 CFLAGS += -Imedia
 OBJS   +=   media/vrb_video.o
 OBJS   +=   media/vtb_video.o
-
+CFLAGS += -Iconfig
+OBJS   +=   config/hoi_cfg.o
+OBJS   +=   config/hoi_cfg_default.o
 
 # we need the ioctl defines from hdoip_types.h
 CFLAGS += -I../../../vendors/InES/eva/modules/hdoip_core/driver

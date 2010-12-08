@@ -104,7 +104,7 @@ int rmc_option(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 int rmc_setup(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 {
     int ret = RTSP_SUCCESS;
-printf("rmc_setup\n");
+
     ret = media->setup(media, msg, rsp);
 
     if (ret == RTSP_SUCCESS) {

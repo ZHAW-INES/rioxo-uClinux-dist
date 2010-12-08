@@ -11,8 +11,9 @@
 #include "hdoipd.h"
 
 
-void hdoipd_request(t_hdoipd* handle, uint32_t* cmd, int rsp);
-void hdoipd_event(t_hdoipd* handle, uint32_t event);
-void hdoipd_handler(t_hdoipd* handle);
+void hdoipd_request(uint32_t* cmd, int rsp);
+void hdoipd_event(uint32_t event);
+void hdoipd_handler();
+bool hdoipd_init(int drv);
 
 #endif /* HDOIPD_FSM_H_ */

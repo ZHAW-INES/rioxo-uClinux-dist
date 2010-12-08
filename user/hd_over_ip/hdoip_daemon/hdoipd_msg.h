@@ -15,6 +15,8 @@
 #include <linux/types.h>
 #include <stdint.h>
 #include <string.h>
+#include <err.h>
+#include <errno.h>
 
 
 //------------------------------------------------------------------------------
@@ -41,6 +43,11 @@
 #define HOIC_FMT_OUT            (0x34000008)
 #define HOIC_FMT_PROC           (0x34000009)
 
+// Switches
+#define HOIC_PARAM_GET          (0x3800000a)
+#define HOIC_PARAM_SET          (0x3800000b)
+
+
 
 //------------------------------------------------------------------------------
 //
@@ -59,6 +66,27 @@
     t tmp; tmp.msgid = l; tmp.msgsize = sizeof(t) + (s)
 #define hoic_write(t) \
     write(fd, &tmp, sizeof(t))
+#define hoic_response(t) \
+    t rsp; hoic_rdpipe(fdr, (void*)&rsp, sizeof(t))
+
+//------------------------------------------------------------------------------
+// read
+
+static inline ssize_t hoic_rdpipe(int rsp, uint8_t *buf, size_t size)
+{
+    ssize_t ret;
+    size_t offset = 0;
+
+    while ((offset<size)&&rsp) {
+        ret = read(rsp, buf+offset, size-offset);
+        if (ret <= 0) {
+            return ret;
+        }
+        offset = offset + ret;
+    };
+
+    return ret;
+}
 
 
 //------------------------------------------------------------------------------
@@ -72,7 +100,6 @@ static inline void hoic_sw(int fd, uint32_t id)
 {
     hoic_setup(t_hoic_cmd, id);
     hoic_write(t_hoic_cmd);
-    fflush(fd);
 }
 
 #define hoic_loop(fd) hoic_sw(fd, HOIC_LOOP)
@@ -95,7 +122,6 @@ static inline void hoic_wr(int fd, uint32_t a, uint32_t v)
     hoic_setup(t_hoic_param, a);
     tmp.value = v;
     hoic_write(t_hoic_param);
-    fflush(fd);
 }
 
 #define hoic_fmt_in(fd, v) hoic_wr(fd, HOIC_FMT_IN, v)
@@ -116,7 +142,6 @@ static inline void hoic_canvas(int fd, uint32_t width, uint32_t height, uint32_t
     hoic_setup(t_hoic_canvas, HOIC_CANVAS);
     tmp.width = width; tmp.height = height; tmp.fps = fps;
     hoic_write(t_hoic_canvas);
-    fflush(fd);
 }
 
 
@@ -134,7 +159,6 @@ static inline void hoic_load(int fd, char* filename)
     hoic_setupx(t_hoic_load, HOIC_LOAD, length);
     hoic_write(t_hoic_load);
     write(fd, filename, length);
-    fflush(fd);
 }
 
 static inline void hoic_vrb_setup(int fd, char* uri)
@@ -143,7 +167,51 @@ static inline void hoic_vrb_setup(int fd, char* uri)
     hoic_setupx(t_hoic_load, HOIC_VRB_SETUP, length);
     hoic_write(t_hoic_load);
     write(fd, uri, length);
-    fflush(fd);
+}
+
+
+
+//------------------------------------------------------------------------------
+// parameter
+
+typedef struct {
+    uint32_t            msgid, msgsize;
+    size_t              offset;
+    char                str[];
+} __attribute__ ((__packed__)) t_hoic_kvparam;
+
+static inline void hoic_set_param(int fd, char* name, char* value)
+{
+    size_t length1 = strlen(name) + 1;
+    size_t length2 = strlen(value) + 1;
+    hoic_setupx(t_hoic_kvparam, HOIC_PARAM_SET, length1+length2);
+    tmp.offset = length1;
+    hoic_write(t_hoic_kvparam);
+    write(fd, name, length1);
+    write(fd, value, length2);
+}
+
+static inline char* hoic_get_param(int fd, int fdr, char* name)
+{
+    size_t length1 = strlen(name) + 1;
+    hoic_setupx(t_hoic_kvparam, HOIC_PARAM_GET, length1);
+    tmp.offset = length1;
+    hoic_write(t_hoic_kvparam);
+    write(fd, name, length1);
+
+    hoic_response(t_hoic_kvparam);
+    char* ret = malloc(rsp.offset);
+    hoic_rdpipe(fdr, ret, rsp.offset);
+    return ret;
+}
+
+static inline void hoic_ret_param(int fd, char* value)
+{
+    size_t length1 = strlen(value) + 1;
+    hoic_setupx(t_hoic_kvparam, HOIC_PARAM_GET, length1);
+    tmp.offset = length1;
+    hoic_write(t_hoic_kvparam);
+    write(fd, value, length1);
 }
 
 
@@ -165,7 +233,6 @@ static inline void hoic_capture(int fd, uint32_t compress, uint32_t size, char* 
     tmp.size = size;
     hoic_write(t_hoic_capture);
     write(fd, filename, length);
-    fflush(fd);
 }
 
 

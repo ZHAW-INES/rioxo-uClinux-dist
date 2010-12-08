@@ -11,14 +11,13 @@
 #include <stdio.h>
 #include "hdoipd.h"
 
-void hdoipd_osd_init(t_hdoipd* handle);
-void hdoipd_osd_activate(t_hdoipd* handle);
+void hdoipd_osd_init();
+void hdoipd_osd_activate();
 
-#define hdoipd_report(h, ...) \
+#define osd_printf(...) \
 { \
-    t_hdoipd* _h_ = (h); \
-    hdoipd_osd_activate(_h_); \
-    fprintf(_h_->drv, __VA_ARGS__); \
+    hdoipd_osd_activate(); \
+    fprintf(handle.drv, __VA_ARGS__); \
 }
 
 

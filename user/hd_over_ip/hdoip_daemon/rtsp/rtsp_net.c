@@ -5,6 +5,9 @@
  *      Author: alda
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "rtsp_net.h"
 #include "rtsp_error.h"
 
@@ -48,7 +51,7 @@ int net_get_local_addr(int sock, char* ifn, uint32_t* addr)
         return RTSP_ERRORNO;
     }
 
-    *addr = *(uint32_t*)req.ifr_hwaddr.sa_data;
+    *addr = ((struct sockaddr_in*)&req.ifr_addr)->sin_addr.s_addr;
 
     return RTSP_SUCCESS;
 }

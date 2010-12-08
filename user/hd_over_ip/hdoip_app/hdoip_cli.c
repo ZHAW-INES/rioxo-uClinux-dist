@@ -20,7 +20,7 @@
 int main(int argc, char **argv)
 {
     int i, cmd_found = 0;
-    int fd = -1;
+    int fd = -1, fdr = -1;
 
     if(argc < 2)  {                                                                         /* No command */
         hdoip_cli_help(fd, argv, argc);
@@ -28,11 +28,18 @@ int main(int argc, char **argv)
     }
 
     fd = open(FIFO_NODEC, O_RDWR, 0600);                                                     /* open character device */
-    open(FIFO_NODER, O_RDWR, 0600);                                                     /* open character device */
+    fdr = open(FIFO_NODER, O_RDWR, 0600);                                                     /* open character device */
     if(fd < 0) {
         err(1, "Failed to open %s: %s \n", FIFO_NODEC, strerror(errno));
         exit(EXIT_FAILURE);
     }
+
+    if(fd < 0) {
+        err(1, "Failed to open %s: %s \n", FIFO_NODER, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+
 
     for(i=0 ; i<cmd_cnt ; i++) {
          if(strcmp(argv[1], (cmd_arr[i]).cmd_str) == 0) {
@@ -45,7 +52,7 @@ int main(int argc, char **argv)
                     argv = argv+2;
                 }
                 printf("calling %s\n", cmd_arr[i].cmd_str);
-                (cmd_arr[i].fnc_ptr)(fd, argv, argc-2);
+                (cmd_arr[i].fnc_ptr)(fd, fdr, argv, argc-2);
                 break;
             } else {
                 printf("argument error! Usage:\n");                                         /* Argument error */

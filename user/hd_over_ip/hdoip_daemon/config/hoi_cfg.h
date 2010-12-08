@@ -30,14 +30,6 @@
 
 typedef struct {
     char                file_location[60];
-    uint32_t            version;
-    uint8_t             dev_mac[6];
-    uint32_t            dev_ip;
-    uint32_t            dev_mode;
-    uint32_t            aud_ip;
-    uint16_t            aud_udp_port;
-    uint32_t            vid_ip;
-    uint16_t            vid_udp_port;
 } t_hoi_cfg;
 
 

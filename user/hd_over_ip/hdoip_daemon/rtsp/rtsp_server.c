@@ -9,6 +9,7 @@
 #include "rtsp_net.h"
 #include "rtsp_server.h"
 #include "rtsp_string.h"
+#include "hdoipd.h"
 
 int rtsp_server_init(t_rtsp_server* handle, int fd, uint32_t addr)
 {
@@ -76,7 +77,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
         }
 
         // TODO: receive body
-
+        lock();
 
         // find appropriate session
         if (*session) {
@@ -92,6 +93,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
             return n;
         }
 
+        unlock();
 
     }
 

@@ -6,6 +6,7 @@
  */
 
 #include "rtsp.h"
+#include "rtsp_net.h"
 #include "rtsp_command.h"
 
 void rtsp_response_line(t_rtsp_connection* msg, int code, char* reason)
@@ -60,15 +61,15 @@ void rtsp_header_transport(t_rtsp_connection* msg, t_rtsp_transport* t)
 {
     msgprintf(msg, "Transport: RTP/AVP;%s;", rtsp_str_multicast(t->multicast));
     if (t->port) msgprintf(msg, "port=%d-%d;", PORT_RANGE_START(t->port), PORT_RANGE_STOP(t->port));
-    if (t->client_port) msgprintf(msg, "client_port=%d-%d;", PORT_RANGE_START(t->client_port), PORT_RANGE_STOP(t->client_port));
-    if (t->server_port) msgprintf(msg, "server_port=%d-%d;", PORT_RANGE_START(t->server_port), PORT_RANGE_STOP(t->server_port));
+    if (t->client_port) msgprintf(msg, "client_port=%d-%d;", ntohs(PORT_RANGE_START(t->client_port)), ntohs(PORT_RANGE_STOP(t->client_port)));
+    if (t->server_port) msgprintf(msg, "server_port=%d-%d;", ntohs(PORT_RANGE_START(t->server_port)), ntohs(PORT_RANGE_STOP(t->server_port)));
     msgprintf(msg, "mode=\"PLAY\"\r\n");
 }
 
 void rtsp_header_timing(t_rtsp_connection* msg, t_video_timing* timing)
 {
     // Timing: pfreq width fp p bp pol height fp p bp pol
-    msgprintf(msg, "Timing: %d %d %d %d %d %s %d %d %d %d %s",
+    msgprintf(msg, "Timing: %d %d %d %d %d %s %d %d %d %d %s\r\n",
             timing->pfreq, timing->width, timing->hfront, timing->hpulse, timing->hback,
             (timing->hpolarity ? "P " : "N "),
             timing->height, timing->vfront, timing->vpulse, timing->vback,
@@ -79,9 +80,9 @@ void rtsp_header_rtp_format(t_rtsp_connection* msg, t_rtsp_rtp_format* p)
 {
     // RTP-Format: compress[ value] rtptime
     if (p->compress == FORMAT_JPEG2000) {
-        msgprintf(msg, "RTP-Format: jp2k %d %d", p->value, p->rtptime);
+        msgprintf(msg, "RTP-Format: jp2k %d %d\r\n", p->value, p->rtptime);
     } else {
-        msgprintf(msg, "RTP-Format: plain %d", p->rtptime);
+        msgprintf(msg, "RTP-Format: plain %d\r\n", p->rtptime);
     }
 
 }

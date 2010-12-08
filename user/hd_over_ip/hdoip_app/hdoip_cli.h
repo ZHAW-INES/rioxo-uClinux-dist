@@ -17,7 +17,7 @@
 typedef struct {
     char*       cmd_str;
     int         arg_cnt;
-    int         (*fnc_ptr)(int fd, char**, int);
+    int         (*fnc_ptr)(int fd, int fdr, char**, int);
     char*       usage_str;
 } t_hdoip_cli_cmd_arr;
 

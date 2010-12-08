@@ -14,7 +14,7 @@
  * @param argc 
  * @return error code
  */
-int hdoip_cli_help(int fd, char** argv, int argc)
+int hdoip_cli_help(int fd, int fdr, char** argv, int argc)
 {
     int i;
     printf("General:\n");
@@ -26,7 +26,7 @@ int hdoip_cli_help(int fd, char** argv, int argc)
     return 0;
 }
 
-int hdoip_cli_canvas(int fd, char** argv, int argc)
+int hdoip_cli_canvas(int fd, int fdr, char** argv, int argc)
 {
     uint32_t width, height, fps;
     printf("hdoip_cli_canvas\n");
@@ -40,7 +40,7 @@ int hdoip_cli_canvas(int fd, char** argv, int argc)
     return 0;
 }
 
-int hdoip_cli_capture(int fd, char** argv, int argc)
+int hdoip_cli_capture(int fd, int fdr, char** argv, int argc)
 {
     printf("hdoip_cli_capture\n");
 
@@ -55,7 +55,7 @@ int hdoip_cli_capture(int fd, char** argv, int argc)
     return 0;
 }
 
-int hdoip_cli_osd(int fd, char** argv, int argc)
+int hdoip_cli_osd(int fd, int fdr, char** argv, int argc)
 {
     printf("hdoip_cli_capture\n");
 
@@ -70,7 +70,7 @@ int hdoip_cli_osd(int fd, char** argv, int argc)
     return 0;
 }
 
-int hdoip_cli_load(int fd, char** argv, int argc)
+int hdoip_cli_load(int fd, int fdr, char** argv, int argc)
 {
     printf("hdoip_cli_load\n");
 
@@ -78,7 +78,7 @@ int hdoip_cli_load(int fd, char** argv, int argc)
     return 0;
 }
 
-int hdoip_cli_loop(int fd, char** argv, int argc)
+int hdoip_cli_loop(int fd, int fdr, char** argv, int argc)
 {
     printf("hdoip_cli_loop\n");
 
@@ -87,7 +87,7 @@ int hdoip_cli_loop(int fd, char** argv, int argc)
     return 0;
 }
 
-int hdoip_cli_vtb(int fd, char** argv, int argc)
+int hdoip_cli_vtb(int fd, int fdr, char** argv, int argc)
 {
     printf("hdoip_cli_vtb\n");
 
@@ -96,7 +96,7 @@ int hdoip_cli_vtb(int fd, char** argv, int argc)
     return 0;
 }
 
-int hdoip_cli_vrb_setup(int fd, char** argv, int argc)
+int hdoip_cli_vrb_setup(int fd, int fdr, char** argv, int argc)
 {
     printf("hdoip_cli_vrb_setup\n");
 
@@ -105,7 +105,7 @@ int hdoip_cli_vrb_setup(int fd, char** argv, int argc)
     return 0;
 }
 
-int hdoip_cli_vrb_play(int fd, char** argv, int argc)
+int hdoip_cli_vrb_play(int fd, int fdr, char** argv, int argc)
 {
     printf("hdoip_cli_vrb_play\n");
 
@@ -115,7 +115,7 @@ int hdoip_cli_vrb_play(int fd, char** argv, int argc)
 }
 
 
-int hdoip_cli_fmt(int fd, char** argv, int argc)
+int hdoip_cli_fmt(int fd, int fdr, char** argv, int argc)
 {
     int fmt = 0;
     printf("hdoip_cli_fmt\n");
@@ -149,6 +149,23 @@ int hdoip_cli_fmt(int fd, char** argv, int argc)
     return 0;
 }
 
+hdoip_cli_get(int fd, int fdr, char** argv, int argc)
+{
+    char *ret;
+    ret = hoic_get_param(fd, fdr, argv[0]); 
+
+    printf("response : %s\n", ret);
+
+    return 0; 
+}
+
+hdoip_cli_set(int fd, int fdr, char** argv, int argc)
+{
+    hoic_set_param(fd, argv[0], argv[1]);
+    return 0; 
+}
+
+
 /* Dummy function, just show text 
  *
  * @param fd
@@ -156,7 +173,7 @@ int hdoip_cli_fmt(int fd, char** argv, int argc)
  * @param argc
  * @return error code
  */
-int hdoip_cli_dummy(int fd, char** argv, int argc)
+int hdoip_cli_dummy(int fd, int fdr, char** argv, int argc)
 {
     printf("hdoip_cli_dummy with no parameters\n");
     return 0;
@@ -169,7 +186,7 @@ int hdoip_cli_dummy(int fd, char** argv, int argc)
  * @param argc
  * @return error code
  */
-int hdoip_cli_dummy2(int fd, char** argv, int argc) 
+int hdoip_cli_dummy2(int fd, int fdr, char** argv, int argc) 
 {
     int ret;
     int arg1, arg2;
@@ -187,7 +204,7 @@ int hdoip_cli_dummy2(int fd, char** argv, int argc)
 
 
 /* Command definitions */
-const int cmd_cnt = 10;
+const int cmd_cnt = 12;
 const t_hdoip_cli_cmd_arr cmd_arr[] = {
         { "help",       0, hdoip_cli_help,      ""},
         { "canvas",     1, hdoip_cli_canvas,    "Resolution"},
@@ -199,6 +216,8 @@ const t_hdoip_cli_cmd_arr cmd_arr[] = {
         { "vtb",        0, hdoip_cli_vtb,       ""},
         { "vrb",        1, hdoip_cli_vrb_setup, "uri"},
         { "play",       0, hdoip_cli_vrb_play,  ""},
+        { "set",        2, hdoip_cli_set,       "key value"},
+        { "get",        1, hdoip_cli_get,       "key"},
 
         { "dummy",      0, hdoip_cli_dummy,     ""},
         { "dummy2",     2, hdoip_cli_dummy2,    "arg1 arg2"}

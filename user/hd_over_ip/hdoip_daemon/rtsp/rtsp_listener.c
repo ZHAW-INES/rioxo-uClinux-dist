@@ -6,6 +6,7 @@
  */
 
 #include "rtsp.h"
+#include "rtsp_net.h"
 #include "rtsp_listener.h"
 #include "rtsp_server.h"
 #include "rtsp_net.h"

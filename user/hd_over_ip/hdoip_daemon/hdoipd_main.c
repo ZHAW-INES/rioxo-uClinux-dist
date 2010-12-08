@@ -25,11 +25,14 @@
 
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
+#include "bstmap.h"
 
 #define DEV_NODE        "/dev/hdoip_core"
 
-t_hdoipd handle;
-int report_fd;
+t_hdoipd hdoipd;
+
+FILE* report_fd;
+FILE* rtsp_fd;
 
 typedef struct {
     int in, out;
@@ -39,14 +42,14 @@ typedef struct {
 
 ssize_t pipe_read(t_pipe* p, uint8_t *buf, size_t size)
 {
-    ssize_t ret;
+    ssize_t ret = 0;
     size_t offset = 0;
 
     while ((offset<size)&&p->in) {
         ret = read(p->in, buf+offset, size-offset);
         if (ret == 0) {
-            close(p->in);
             close(p->out);
+            close(p->in);
             if (!(p->in = open(p->cfifo, O_RDONLY))) {
                 perrno(" open(%s) failed: %s", p->cfifo);
                 return 0;
@@ -55,7 +58,6 @@ ssize_t pipe_read(t_pipe* p, uint8_t *buf, size_t size)
                 perrno(" open(%s) failed: %s", p->rfifo);
                 return 0;
             }
-            report("reopen <%s | %s>", p->cfifo, p->rfifo);
         } else if (ret < 0) {
             return ret;
         } else {
@@ -63,7 +65,6 @@ ssize_t pipe_read(t_pipe* p, uint8_t *buf, size_t size)
             printf("\n");
         }
         offset = offset + ret;
-        printf("%d|%d\n", offset, size);
     };
 
     return ret;
@@ -77,8 +78,10 @@ void* pipe_read_thread(void* arg)
     uint32_t buf[256];
     int l = strlen(arg) + 5;
 
-    pipe.cfifo = malloc(l); snprintf(pipe.cfifo, l, "%s.cmd", arg);
-    pipe.rfifo = malloc(l); snprintf(pipe.rfifo, l, "%s.rsp", arg);
+    pipe.cfifo = malloc(l); snprintf(pipe.cfifo, l, "%s.cmd", (char*)arg);
+    pipe.rfifo = malloc(l); snprintf(pipe.rfifo, l, "%s.rsp", (char*)arg);
+
+    report("open <%s | %s>", pipe.cfifo, pipe.rfifo);
 
     if (mkfifo(pipe.cfifo, 0770) == -1) {
         perrno(" mkfifo(%s) failed", pipe.cfifo);
@@ -99,15 +102,13 @@ void* pipe_read_thread(void* arg)
 
     if (pipe.in && pipe.out) {
 
-        report("open <%s | %s>", pipe.cfifo, pipe.rfifo);
-
         do {
             // read type/size
             pipe_read(&pipe, buf, 8);
             // read rest of message
             pipe_read(&pipe, buf+2, buf[1]-8);
 
-            pthread_mutex_lock(&handle.mutex);
+            lock();
 
             report(" < %x: %d Bytes", buf[0], buf[1]);
 
@@ -115,16 +116,17 @@ void* pipe_read_thread(void* arg)
                     // close
                     run = false;
                 } else {
-                    hdoipd_request(&handle, buf, pipe.out);
+                    hdoipd_request(buf, pipe.out);
                 }
 
-            pthread_mutex_unlock(&handle.mutex);
+            unlock();
+
         } while (run);
 
-        report("close <%s>", arg);
+        report("close <%s | %s>", pipe.cfifo, pipe.rfifo);
 
-        close(pipe.in);
         close(pipe.out);
+        close(pipe.in);
         unlink(pipe.cfifo);
         unlink(pipe.rfifo);
 
@@ -137,43 +139,50 @@ void* pipe_read_thread(void* arg)
 
 int main(int argc, char **argv)
 {
+    int drv;
     pthread_t* th = malloc(sizeof(pthread_t)* (argc-1));
 
     if (!(report_fd = fopen("/tmp/hdoipd.log", "w"))) {
         return 0;
     }
 
+    if (!(rtsp_fd = fopen("/tmp/rtsp.log", "w"))) {
+        return 0;
+    }
+
     report("/tmp/hdoipd.log started");
 
+    if ((drv = open(DEV_NODE, O_RDWR))) {
 
-    pthread_mutex_init(&handle.mutex, NULL);
+        if (hdoipd_init(drv)) {
 
-    if ((handle.drv = open(DEV_NODE, O_RDWR))) {
+            report("hdoipd started");
 
-        hdoipd_init(&handle);
+            for (int i=1; i<argc; i++) {
+                report(" [%d] open named pipe <%s>",i,argv[i]);
+                pthread_create(&th[i-1], NULL, pipe_read_thread, argv[i]);
+            }
 
-        report("hdoipd started");
+            for (int i=1; i<argc; i++) {
+                pthread_join(th[i-1], NULL);
+            }
 
-        for (int i=1; i<argc; i++) {
-            report(" [%d] open named pipe <%s>",i,argv[i]);
-            pthread_create(&th[i-1], NULL, pipe_read_thread, argv[i]);
+            close(hdoipd.drv);
+
+            report("hdoipd closed");
+
+        } else {
+            report("hdoipd init failed");
         }
-
-        for (int i=1; i<argc; i++) {
-            pthread_join(th[i-1], NULL);
-        }
-
-        close(handle.drv);
-
-        report("hdoipd closed");
 
     } else {
         printf("could not open <%s>\n", DEV_NODE);
     }
 
-    close(report_fd);
+    fclose(report_fd);
+    fclose(rtsp_fd);
 
-    pthread_mutex_destroy(&handle.mutex);
+    pthread_mutex_destroy(&hdoipd.mutex);
 
     return 0;
 }

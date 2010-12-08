@@ -34,7 +34,7 @@ int rtsp_client_close(t_rtsp_client* client);
 
 // returns response code
 int rtsp_client_setup(t_rtsp_client* client, t_rtsp_transport* transport);
-int rtsp_client_play(t_rtsp_client* client);
+int rtsp_client_play(t_rtsp_client* client, t_rtsp_rtp_format* fmt);
 int rtsp_client_teardown(t_rtsp_client* client);
 
 #endif /* RTSP_CLIENT_H_ */

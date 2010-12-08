@@ -10,6 +10,12 @@
 
 #include "rtsp_connection.h"
 
+#define rtsp_err_server(x)          rtsp_response_error(x, 400, "Server error")
+#define rtsp_err_busy(x)            rtsp_response_error(x, 404, "Busy")
+#define rtsp_err_retry(x)           rtsp_response_error(x, 300, "Please retry later")
+#define rtsp_err_no_source(x)       rtsp_response_error(x, 404, "No Video Input")
+
+
 void rtsp_response_line(t_rtsp_connection* msg, int code, char* reason);
 void rtsp_response_error(t_rtsp_connection* msg, int code, char* reason);
 void rtsp_request_line(t_rtsp_connection* msg, char* method, char* uri);

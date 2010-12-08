@@ -11,7 +11,7 @@
 #include "hdoipd_fsm.h"
 #include "hoi_image.h"
 
-void hdoipd_osd_init(t_hdoipd* handle)
+void hdoipd_osd_init()
 {
     t_hoic_canvas cmd;
 
@@ -19,13 +19,13 @@ void hdoipd_osd_init(t_hdoipd* handle)
     cmd.height = 480;
     cmd.fps = 60;
 
-    hdoipd_canvas(handle, &cmd);
+    hdoipd_canvas(&cmd);
 }
 
-void hdoipd_osd_activate(t_hdoipd* handle)
+void hdoipd_osd_activate()
 {
-    if (!(handle->rsc_state & RSC_OSD)) {
-        hoi_drv_osdon(handle->drv);
-        handle->rsc_state |= RSC_OSD;
+    if (!(hdoipd.rsc_state & RSC_OSD)) {
+        hoi_drv_osdon(hdoipd.drv);
+        hdoipd.rsc_state |= RSC_OSD;
     }
 }

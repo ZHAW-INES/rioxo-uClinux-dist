@@ -10,6 +10,7 @@
 
 #include "map.h"
 #include "rtsp.h"
+#include "rtsp_net.h"
 #include "rtsp_error.h"
 #include "rtsp_media.h"
 #include "rtsp_connection.h"

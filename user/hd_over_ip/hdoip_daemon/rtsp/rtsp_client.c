@@ -48,7 +48,7 @@ int rtsp_client_open(t_rtsp_client* client, t_rtsp_media *media, char* address)
         port = htons(554);
     }
 
-    printf("Name: %s - %s:%d\n", host->h_name, inet_ntoa(addr), port);
+    printf("Name: %s - %s:%d\n", host->h_name, inet_ntoa(addr), ntohs(port));
 
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         printf("server socket error: %s\n", strerror(errno));
@@ -78,6 +78,8 @@ int rtsp_client_open(t_rtsp_client* client, t_rtsp_media *media, char* address)
 int rtsp_client_close(t_rtsp_client* client)
 {
     close(client->con.fd);
+
+    return RTSP_SUCCESS;
 }
 
 // returns response code
@@ -88,10 +90,10 @@ int rtsp_client_setup(t_rtsp_client* client, t_rtsp_transport* transport)
     rtsp_request_setup(&client->con, client->uri, transport);
 
     rtsp_default_response_setup(&client->rsp.setup);
-printf("rtsp_client_setup 1\n");
+
     // response
     n = rtsp_parse_response(&client->con, tab_response_setup, &client->rsp, 0);
-printf("rtsp_client_setup 2\n");
+
     if (n == RTSP_SUCCESS) {
         // TODO:
         memcpy(client->media->sessionid, client->rsp.setup.session, strlen(client->rsp.setup.session));
@@ -101,13 +103,15 @@ printf("rtsp_client_setup 2\n");
     } else {
         printf("internal failure (%d)\n", n);
     }
+
+    return RTSP_SUCCESS;
 }
 
-int rtsp_client_play(t_rtsp_client* client)
+int rtsp_client_play(t_rtsp_client* client, t_rtsp_rtp_format* fmt)
 {
     int n;
 
-    rtsp_request_play(&client->con, client->uri, client->media->sessionid);
+    rtsp_request_play(&client->con, client->uri, client->media->sessionid, fmt);
 
     rtsp_default_response_play(&client->rsp.play);
 
@@ -120,6 +124,8 @@ int rtsp_client_play(t_rtsp_client* client)
     } else {
         printf("internal failure (%d)\n", n);
     }
+
+    return RTSP_SUCCESS;
 }
 
 int rtsp_client_teardown(t_rtsp_client* client)
@@ -130,4 +136,6 @@ int rtsp_client_teardown(t_rtsp_client* client)
     rmc_teardown(client->media, &client->rsp, &client->con);
 
     rtsp_client_close(client);
+
+    return RTSP_SUCCESS;
 }

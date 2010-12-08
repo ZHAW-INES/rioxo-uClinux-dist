@@ -14,16 +14,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <errno.h>
 
+#include "hdoipd.h"
 #include "hoi_drv_user.h"
 
-
-inline int hoi_msg(int f, void* param)
+int hoi_msg(int f, void* param)
 {
     int ret;
     if ((ret = ioctl(f, HDOIP_IOCPARAM, param))) {
-        printf("hoi_msg failed. (error code = %d)", ret);
+        perrno("hoi_msg(%d, %08x:%d Byte) failed = %d", f, *(uint32_t*)param, ((uint32_t*)param)[1], ret);
     }
     return ret;
 }
@@ -121,7 +120,15 @@ int hoi_drv_getstate(int f, uint32_t* p)
     return hoi_drv_read(f, HOI_MSG_GETSTATE, p);
 }
 
+int hoi_drv_set_mtime(int f, uint32_t p)
+{
+    return 0;//hoi_drv_write(f, HOI_MSG_SETMTIME, p);
+}
 
+int hoi_drv_get_mtime(int f, uint32_t* p)
+{
+    return 0;//hoi_drv_read(f, HOI_MSG_GETMTIME, p);
+}
 
 //------------------------------------------------------------------------------
 // capture/show image command
@@ -131,9 +138,10 @@ int hoi_drv_vsi(int f, bool compress, int bandwidth, hdoip_eth_params* eth, t_vi
     int ret;
     t_hoi_msg_vsi msg;
 
+    hoi_msg_vsi_init(&msg);
     msg.bandwidth = bandwidth;
     msg.compress = compress;
-    memcpy(&msg.eth, eth, sizeof(hdoip_eth_params));
+    memcpy(&msg.eth, eth, sizeof(struct hdoip_eth_params));
     ret = hoi_msg(f, &msg);
     memcpy(timing, &msg.timing, sizeof(t_video_timing));
     *advcnt = msg.advcnt;
@@ -146,6 +154,7 @@ int hoi_drv_vso(int f, bool compress, t_video_timing* timing, uint32_t advcnt)
     int ret;
     t_hoi_msg_vso msg;
 
+    hoi_msg_vso_init(&msg);
     msg.compress = compress;
     msg.advcnt = advcnt;
     memcpy(&msg.timing, timing, sizeof(t_video_timing));

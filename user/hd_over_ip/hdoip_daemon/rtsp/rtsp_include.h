@@ -14,5 +14,6 @@
 #include "rtsp_media.h"
 #include "rtsp_listener.h"
 #include "rtsp_client.h"
+#include "rtsp_command.h"
 
 #endif /* RTSP_INCLUDE_H_ */

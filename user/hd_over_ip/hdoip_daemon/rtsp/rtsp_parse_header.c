@@ -28,9 +28,9 @@ int rtsp_parse_port(char* str, uint32_t* p)
     char* s2;
 
     if ((s2 = str_next_token(&str, "-"))) {
-        *p = PORT_RANGE(atoi(s2), atoi(str));
+        *p = PORT_RANGE(htons(atoi(s2)), htons(atoi(str)));
     } else {
-        *p = atoi(str);
+        *p = htons(atoi(str));
     }
 
     return RTSP_SUCCESS;

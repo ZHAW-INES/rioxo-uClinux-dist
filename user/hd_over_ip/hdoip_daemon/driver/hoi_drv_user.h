@@ -36,5 +36,10 @@ int hoi_drv_wrvidtag(int f, void* buffer);
 int hoi_drv_rdaudtag(int f, void* buffer, bool* available);
 int hoi_drv_wraudtag(int f, void* buffer);
 int hoi_drv_getevent(int f, uint32_t* event);
+int hoi_drv_set_mtime(int f, uint32_t p);
+int hoi_drv_get_mtime(int f, uint32_t* p);
+int hoi_drv_osdon(int f);
+int hoi_drv_osdoff(int f);
+int hoi_drv_loop(int f);
 
 #endif /* HOI_DRV_USER_H_ */

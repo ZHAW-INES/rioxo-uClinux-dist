@@ -14,7 +14,11 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include "bstmap.h"
 #include "rtsp_include.h"
+#include "hoi_cfg.h"
+
+typedef void (f_task)(void* value);
 
 enum {
     HOID_IDLE,              // No drivers loaded
@@ -55,7 +59,15 @@ typedef struct {
 } t_hdoip_eth;
 
 typedef struct {
-    int                 drv;            // used driver handle
+    f_task*             fnc;
+    void*               value;
+} t_task;
+
+typedef struct {
+    t_bstmap*           registry;       // name=value
+    t_bstmap*           reg_listener;   // listen for write
+    t_node*             tasklet;        // will be executed
+    int                 drv;            // used driver hdoipd
     int                 capabilities;   // reported capabilities
     int                 state;          // daemon state
     int                 rsc_state;      // bitmap: resource input states
@@ -69,9 +81,43 @@ typedef struct {
     t_rtsp_client       client;
     int                 fd;
     t_hdoip_eth         local;
+    t_hoi_cfg           config;
 } t_hdoipd;
 
-extern int report_fd;
+
+//------------------------------------------------------------------------------
+//
+
+extern t_hdoipd hdoipd;
+
+#define lock()                  pthread_mutex_lock(&hdoipd.mutex)
+#define unlock()                pthread_mutex_unlock(&hdoipd.mutex)
+
+#define reg_print(n)            bstmap_print(hdoipd.registry, (n))
+#define reg_set(n, v)           bstmap_set(&hdoipd.registry, (n), (v))
+#define reg_get(n)              bstmap_get(hdoipd.registry, (n))
+#define reg_get_all(a, i)       bstmap_get_all(hdoipd.registry, (a), (i))
+#define reg_cnt(c)              bstmap_cnt_elements(hdoipd.registry, (c))
+#define reg_listener(n, f)      bstmap_setp(&hdoipd.reg_listener, (n), (f))
+#define reg_call(n, k) \
+{ \
+    f_task* f = bstmap_get(&hdoipd.reg_listener, (n)); \
+    if (f) f(k); \
+}
+
+#define task_add(f, v) \
+{ \
+    t_task* t= malloc(sizeof(t_task)); \
+    t->fnc = f; t->value = v; \
+    queue_put(&hdoipd.tasklet, t); \
+}
+
+
+//------------------------------------------------------------------------------
+//
+
+extern FILE* report_fd;
+extern FILE* rtsp_fd;
 
 #define report(...) { \
     fprintf(report_fd, __VA_ARGS__); \

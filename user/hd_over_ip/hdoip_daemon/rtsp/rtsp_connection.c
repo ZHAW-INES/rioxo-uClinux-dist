@@ -6,9 +6,12 @@
  */
 
 #include "rtsp.h"
+#include "rtsp_net.h"
 #include "rtsp_error.h"
 #include "rtsp_connection.h"
 #include "rtsp_net.h"
+
+#include "hdoipd.h"
 
 bool rtsp_receive_crlf(char** s, char* eol)
 {
@@ -75,7 +78,8 @@ int rtsp_receive(t_rtsp_connection* con, char** line)
     *line = sol;
 
     struct in_addr addr = { .s_addr = con->address };
-    printf("[%15s] < %s\n", inet_ntoa(addr), *line);
+    fprintf(rtsp_fd, "[%15s] < %s\n", inet_ntoa(addr), *line);
+    fflush(rtsp_fd);
 
     return RTSP_SUCCESS;
 }
@@ -87,9 +91,9 @@ void rtsp_send(t_rtsp_connection* con)
     struct in_addr addr = { .s_addr = con->address };
     char* sol = con->out.buf;
     while (*sol) {
-        printf("[%15s] > %s\n", inet_ntoa(addr), str_next_token(&sol, "%:\r\n;%0"));
+        fprintf(rtsp_fd, "[%15s] > %s\n", inet_ntoa(addr), str_next_token(&sol, "%:\r\n;%0"));
     }
-
+    fflush(rtsp_fd);
     con->out.eol = con->out.buf;
 }
 
