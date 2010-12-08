@@ -35,4 +35,4 @@ echo 0 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
 
 /bin/cat /etc/motd
 
-/bin/hdoipd /tmp/hdoipd0 /tmp/web_to /tmp/web_from &
+/bin/hdoipd /tmp/hdoipd0 /tmp/web &
