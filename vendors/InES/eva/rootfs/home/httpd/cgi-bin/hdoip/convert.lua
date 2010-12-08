@@ -29,3 +29,25 @@ function Str2HexFile(str)
     return hex
 end
 
+function bin2hex(str, size)
+    len = 0
+    ret = ""
+
+    while(size ~= len) do
+        ret = ret .. string.format("%02x", string.byte(str,len+1))
+        len = len + 1 
+    end 
+    return ret
+end
+
+function bin2dec(str, size)
+    len = 0
+    ret = 0
+    while(size ~= len) do
+        tmp = string.byte(str, len+1)
+        ret = ret + (tmp * 16^(2*len))
+        len = len + 1
+    end
+    return ret
+end
+

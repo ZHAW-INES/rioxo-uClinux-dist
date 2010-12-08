@@ -1,13 +1,38 @@
 #!/usr/bin/lua
 module (..., package.seeall)
 require("hdoip.html")
-require("hdoip.network")
+require("hdoip.pipe")
+
+local REG_DEV_IP = "dev_ip"
+local REG_DEV_MAC = "dev_mac"
+local REG_DEV_MODE = "dev_mode"
+local REG_AUD_IP = "aud_ip"
+local REG_AUD_PORT = "aud_port"
+local REG_VID_IP = "vid_ip"
+local REG_VID_PORT = "vid_port"
+
+
 
 local t_rx_tx = {[0] = "Receiver (Source)"; [1] =  "Transmitter (Monitor)";}
-local dev_ip0, dev_ip1, dev_ip2, dev_ip3 =  hdoip.network.getDevIp()
-local t_eth = {dev_ip0 = 0; dev_ip1 = 0; dev_ip2 = 0; dev_ip3 = 0; rx_tx = "0"; 
-            vid_ip0 = 0; vid_ip1 = 0; vid_ip2 = 0; vid_ip3 = 0; vid_port = 0;
-            aud_ip0 = 0; aud_ip1 = 0; aud_ip2 = 0; aud_ip3 = 0; aud_port = 0;}
+
+local function text2IpValues(str)
+    local t = {}
+    local pos_start = 0
+    local pos_end
+
+    for i = 0, 3, 1 do 
+        pos_end = string.find(str, '.', pos_start, true)
+        if(pos_end == nil) then
+            t[i] = string.sub(str, pos_start, string.len(str))
+            break;
+        end
+        t[i] = string.sub(str, pos_start, pos_end-1)
+        pos_start = pos_end + 1 
+    end
+
+    return t[0], t[1], t[2], t[3]
+end
+
 
 function redirect(url) 
     local str = "<meta http-equiv=\"refresh\" content=\"5; url=" .. url .. "\">\n"
@@ -15,34 +40,27 @@ function redirect(url)
     hdoip.html.Bottom("") 
 end
 
-function status(t, proc)
+function status(t)
+    t.dev_ip = hdoip.pipe.getParam(REG_DEV_IP)
+    t.rx_tx = hdoip.pipe.getParam(REG_DEV_MODE)
+    t.vid_port = hdoip.pipe.getParam(REG_VID_PORT)
+    t.vid_ip = hdoip.pipe.getParam(REG_VID_IP)
+
     hdoip.html.Header(html_side_name .. "Status", t.page)
     hdoip.html.Title("Status")
-    hdoip.html.TableHeader(2)
-    hdoip.html.Text("Video stream out status");                                 hdoip.html.TableInsElement(1);
-    hdoip.html.Text("0x" .. tostring(proc["vso status"]));                      hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Video stream in status");                                  hdoip.html.TableInsElement(1);
-    hdoip.html.Text("0x" .. tostring(proc["vsi status"]));                      hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Audio stream out status");                                 hdoip.html.TableInsElement(1);
-    hdoip.html.Text("0x" .. tostring(proc["aso status"]));                      hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Audio stream in status");                                  hdoip.html.TableInsElement(1);
-    hdoip.html.Text("0x" .. tostring(proc["asi status"]));                      hdoip.html.TableInsElement(1);
-
-    hdoip.html.TableBottom()
+    hdoip.html.Text(t.vid_port .. "<br>")
+    hdoip.html.Text(t.dev_ip .. "<br>")
+    hdoip.html.Text(t.rx_tx .. "<br>")
+    hdoip.html.Text(t.vid_ip .. "<br>")
     hdoip.html.Bottom(t.err)
 end
 
 function eth(t)
     
     if(t.submit == nil) then
-        local page = t.page
-        local err = t.err
-        t = t_eth   
-        t.page = page
-        t.err = err
-        t.dev_ip0, t.dev_ip1, t.dev_ip2, t.dev_ip3 = hdoip.network.getDevIp() 
-    else
-        err = hdoip.network.setDevIp(t.dev_ip0, t.dev_ip1, t.dev_ip2, t.dev_ip3)
+        str = hdoip.pipe.getParam(REG_DEV_IP)
+        t.dev_ip0, t.dev_ip1, t.dev_ip2, t.dev_ip3 = text2IpValues(str)
+        
     end
 
     hdoip.html.Header(html_side_name .. "Device configuration", t.page)
@@ -60,11 +78,10 @@ end
 function streaming(t)
     
     if(t.submit == nil) then
-        local page = t.page
-        local err = t.err
-        t = t_eth   
-        t.err = err
-        t.page = page 
+        t.rx_tx = hdoip.pipe.getParam(REG_DEV_MODE)
+        t.vid_port = hdoip.pipe.getParam(REG_VID_PORT)
+        str = hdoip.pipe.getParam(REG_AUD_IP)
+        t.vid_ip0, t.vid_ip1, t.vid_ip2, t.vid_ip3 = text2IpValues(str)
     end
 
     hdoip.html.Header(html_side_name .. "Streaming", t.page)

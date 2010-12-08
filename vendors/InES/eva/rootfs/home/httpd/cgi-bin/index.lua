@@ -1,8 +1,7 @@
 #!/usr/bin/lua
 require("hdoip.pages")
-require("hdoip.network")
 require("hdoip.html")
-require("hdoip.command")
+require("hdoip.pipe")
 
 html_side_name = "HD over IP : "
 html_menu_item_cnt = 3
@@ -24,37 +23,19 @@ else
     query.page = 0
 end
 
-query.err = ""
+query.err = "" 
 
-fd = io.open("/proc/hdoip_core", "r")
-if(fd == nil) then
-    query.err = tostring(query.err .. "could not open \"/proc/hdoip_core\"<br>");
-    proc.cnt = 0
-else
-
-    local pos = 0, 0
-    local name, value = "", ""
-    line = fd:read("*l");
-    
-    while line ~= nil do
-        pos = string.find(line, ":") 
-        proc[string.sub(line, 0, pos-1)] = string.sub(line, pos+1, string.len(line))
-        line = fd:read("*l")
-    end
-    proc.cnt = line_cnt
-end
+query.err = query.err .. hdoip.pipe.open()
 
 if(query.page == 0) then
-    hdoip.pages.status(query, proc)
+    hdoip.pages.status(query)
 elseif(query.page == 1) then
     hdoip.pages.eth(query)
 elseif(query.page == 2) then
     hdoip.pages.streaming(query)
 else 
-    hdoip.pages.status(query, proc)
+    hdoip.pages.status(query)
 end
 
---hdoip.command.setDebug()
 
---os.exit()
-
+hdoip.pipe.close()
