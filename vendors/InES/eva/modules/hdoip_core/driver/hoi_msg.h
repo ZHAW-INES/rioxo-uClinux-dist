@@ -45,6 +45,8 @@
 #define HOI_MSG_VSI                 (0x70000018)
 #define HOI_MSG_VSO                 (0x70000019)
 #define HOI_MSG_ETI                 (0x7000001a)
+#define HOI_MSG_SETMTIME            (0x7000001b)
+#define HOI_MSG_GETMTIME            (0x7000001c)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)

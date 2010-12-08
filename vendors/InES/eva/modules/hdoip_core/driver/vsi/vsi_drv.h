@@ -10,10 +10,12 @@
 
 #include "std.h"
 #include "vsi_hal.h"
+#include "vsi_str.h"
 #include "vsi_drv_cfg.h"
 #include "vsi_str.h"
 #include "stdeth.h"
 
+int vsi_drv_go(t_vsi* handle, struct hdoip_eth_params* eth_params);
 int vsi_drv_init(t_vsi* handle, void* p_vsi);
 int vsi_drv_update(t_vsi* handle, struct hdoip_eth_params* eth_params);
 int vsi_drv_handler(t_vsi* handle, t_queue* event_queue);

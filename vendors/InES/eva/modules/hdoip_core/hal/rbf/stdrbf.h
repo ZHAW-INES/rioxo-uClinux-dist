@@ -20,10 +20,10 @@ typedef struct {
 
 static inline void rbf_dsc(t_rbf_dsc* dsc, void* b, size_t s)
 {
-    dsc->start = b;
-    dsc->stop = OFFSET(b, s - 4);
-    dsc->write = b;
-    dsc->read = b;
+    dsc->start = (uint32_t)b;
+    dsc->stop = (uint32_t)OFFSET(b, s - 4);
+    dsc->write = (uint32_t)b;
+    dsc->read = (uint32_t)b;
 }
 
 int rbf_init_dsc(t_rbf_dsc* dsc, uint32_t start_addr, size_t size);

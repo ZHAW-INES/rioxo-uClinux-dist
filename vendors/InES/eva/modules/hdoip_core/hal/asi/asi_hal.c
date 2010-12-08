@@ -1,54 +1,44 @@
 
 #include "asi_hal.h"
 
-/** Sets the destination MAC address
- *
- * @param p pointer to the ACB registers
- * @param upper16 the upper 16 bits of the MAC address (01:02:03:04:05:06 => 0x0102)
- * @param lower32 the lower 32 bits of the MAC address (01:02:03:04:05:06 => 0x03040506)
- */
-void asi_set_dst_mac(void* p, uint16_t upper16, uint32_t lower32)
+void asi_set_dst_mac(void* p, uint8_t* mac)
 {
-    HOI_WR32(p, ASI_OFF_DST_MAC_FIRST2, upper16);
-    HOI_WR32(p, ASI_OFF_DST_MAC_LAST4, lower32);
+    HOI_WR8(p, ASI_OFF_DST_MAC_0, mac[0]);
+    HOI_WR8(p, ASI_OFF_DST_MAC_1, mac[1]);
+    HOI_WR8(p, ASI_OFF_DST_MAC_2, mac[2]);
+    HOI_WR8(p, ASI_OFF_DST_MAC_3, mac[3]);
+    HOI_WR8(p, ASI_OFF_DST_MAC_4, mac[4]);
+    HOI_WR8(p, ASI_OFF_DST_MAC_5, mac[5]);
 }
 
-/** Reads the destination MAC address
- *
- * @param p pointer to the ACB registers
- * @param pointer to the upper 16 bits of the MAC address (01:02:03:04:05:06 => 0x0102)
- * @param pointer to the lower 32 bits of the MAC address (01:02:03:04:05:06 => 0x03040506)
- */
-void asi_get_dst_mac(void* p, uint16_t* upper16, uint32_t* lower32) 
+void asi_get_dst_mac(void* p, uint8_t* mac)
 {
-    *upper16 = HOI_RD32(p, ASI_OFF_DST_MAC_FIRST2);
-    *lower32 = HOI_RD32(p, ASI_OFF_DST_MAC_LAST4); 
+    mac[0] = HOI_RD8(p, ASI_OFF_DST_MAC_0);
+    mac[1] = HOI_RD8(p, ASI_OFF_DST_MAC_1);
+    mac[2] = HOI_RD8(p, ASI_OFF_DST_MAC_2);
+    mac[3] = HOI_RD8(p, ASI_OFF_DST_MAC_3);
+    mac[4] = HOI_RD8(p, ASI_OFF_DST_MAC_4);
+    mac[5] = HOI_RD8(p, ASI_OFF_DST_MAC_5);
 }
 
-/** Sets the source MAC address
- *
- * @param p pointer to the ACB registers
- * @param upper16 the upper 16 bits of the MAC address (01:02:03:04:05:06 => 0x0102)
- * @param lower32 the lower 32 bits of the MAC address (01:02:03:04:05:06 => 0x03040506)
- */
-void asi_set_src_mac(void* p, uint16_t upper16, uint32_t lower32)
+void asi_set_src_mac(void* p, uint8_t* mac)
 {
-    HOI_WR32(p, ASI_OFF_SRC_MAC_FIRST4, (upper16 << 16) | (lower32 >> 16));
-    HOI_WR32(p, ASI_OFF_SRC_MAC_LAST2, lower32 & 0xFFFF);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_0, mac[0]);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_1, mac[1]);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_2, mac[2]);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_3, mac[3]);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_4, mac[4]);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_5, mac[5]);
 }
 
-/** Reads the source MAC address
- *
- * @param p pointer to the ACB registers
- * @param pointer to the upper 16 bits of the MAC address (01:02:03:04:05:06 => 0x0102)
- * @param pointer to the lower 32 bits of the MAC address (01:02:03:04:05:06 => 0x03040506)
- */
-void asi_get_src_mac(void* p, uint16_t* upper16, uint32_t* lower32)
+void asi_get_src_mac(void* p, uint8_t* mac)
 {
-    uint32_t tmp;
-    tmp = HOI_RD32(p, ASI_OFF_SRC_MAC_FIRST4);
-    *upper16 = tmp >> 16;
-    *lower32 = ((tmp & 0xFFFF) << 16) | HOI_RD32(p, ASI_OFF_SRC_MAC_LAST2);
+    mac[0] = HOI_RD8(p, ASI_OFF_SRC_MAC_0);
+    mac[1] = HOI_RD8(p, ASI_OFF_SRC_MAC_1);
+    mac[2] = HOI_RD8(p, ASI_OFF_SRC_MAC_2);
+    mac[3] = HOI_RD8(p, ASI_OFF_SRC_MAC_3);
+    mac[4] = HOI_RD8(p, ASI_OFF_SRC_MAC_4);
+    mac[5] = HOI_RD8(p, ASI_OFF_SRC_MAC_5);
 }
 
 /** Sets the time to live (TTL) parameter of the IPv4 header
@@ -135,8 +125,8 @@ void asi_get_aud_params(void* p, struct hdoip_aud_params* aud_params)
 void asi_set_eth_params(void* p, struct hdoip_eth_params* eth_params)
 {
 
-    asi_set_dst_mac(p, eth_params->dst_mac_upper16, eth_params->dst_mac_lower32);
-    asi_set_src_mac(p, eth_params->src_mac_upper16, eth_params->src_mac_lower32);
+    asi_set_dst_mac(p, eth_params->dst_mac);
+    asi_set_src_mac(p, eth_params->src_mac);
     asi_set_ttl_tos(p, eth_params->ipv4_ttl, eth_params->ipv4_tos);
 
     asi_set_src_ip(p, eth_params->ipv4_src_ip);
@@ -153,11 +143,11 @@ void asi_set_eth_params(void* p, struct hdoip_eth_params* eth_params)
  */ 
 void asi_get_eth_params(void* p, struct hdoip_eth_params* eth_params)
 {
-    asi_get_dst_mac(p, &(eth_params->dst_mac_upper16), &(eth_params->dst_mac_lower32));
-    asi_get_src_mac(p, &(eth_params->src_mac_upper16), &(eth_params->src_mac_lower32));
+    asi_get_dst_mac(p, eth_params->dst_mac);
+    asi_get_src_mac(p, eth_params->src_mac);
     asi_get_ttl_tos(p, &(eth_params->ipv4_ttl), &(eth_params->ipv4_tos));
 
-    eth_params->packet_length = asi_get_frame_size(p);
+    eth_params->packet_size = asi_get_frame_size(p) * 4;
     eth_params->ipv4_src_ip = asi_get_src_ip(p);
     eth_params->ipv4_dst_ip = asi_get_dst_ip(p);
     eth_params->udp_src_port = asi_get_src_port(p);

@@ -20,8 +20,11 @@
 #include "vio_drv.h"
 #include "vsi_drv.h"
 #include "vso_drv.h"
+#include "asi_drv.h"
+#include "aso_drv.h"
 #include "vrp_drv.h"
 #include "tag_drv.h"
+#include "tmr_hal.h"
 
 
 #define HANDLER_TIMER_INTERVAL      (HZ/20)
@@ -41,6 +44,7 @@ typedef struct {
     void                *p_aso;
     void                *p_adv212;
     void                *p_vrp;
+    void                *p_tmr;
 
     t_i2c               i2c_tx;
     t_i2c               i2c_rx;

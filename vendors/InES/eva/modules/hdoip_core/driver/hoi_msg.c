@@ -8,7 +8,7 @@
 #include "std.h"
 #include "hoi_drv.h"
 
-#include "adv7441a_drv_edid.h" // TODO no edid for init
+//#include "adv7441a_drv_edid.h" // TODO no edid for init
 
 // TODO: remove:
 #include "hdoip.h"
@@ -33,9 +33,9 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
     if (lddrv & DRV_ADV9889) {
         adv9889_drv_init(&handle->adv9889, &handle->i2c_tx);
     }
-    if (lddrv & DRV_ADV7441) {
+/*    if (lddrv & DRV_ADV7441) {
         adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, adv7441a_edid_table);
-    }
+    }*/
 
     handle->drivers = msg->drivers & DRV_ALL;
     handle->owner = msg->pid;
@@ -58,28 +58,41 @@ int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
     HOI_WR32(handle->p_eso, 0, co&~1);
 
     if (msg->vid_rx_buf) {
-        rbf_dsc(&tmp, msg->vid_rx_buf, msg->vid_rx_len);
+        rbf_dsc(&tmp, msg->vid_rx_buf, msg->vid_rx_len - MAX_FRAME_LENGTH);
         rbf_set_dsc_wc(handle->p_esi, ETHIO_VID_START_DESC, &tmp);
         rbf_set_dsc_r(handle->p_vso, VSO_OFF_DSC_START_RO, &tmp);
     }
 
     if (msg->aud_rx_buf) {
-        rbf_dsc(&tmp, msg->aud_rx_buf, msg->aud_rx_len);
-//        rbf_set_dsc_wc(handle->p_esi, ETHIO_AUD_START_DESC, &tmp);
-//        rbf_set_dsc_r(handle->p_aso, ASO_OFF_DSC_START_RO, &tmp);
+        rbf_dsc(&tmp, msg->aud_rx_buf, msg->aud_rx_len - MAX_FRAME_LENGTH);
+        rbf_set_dsc_wc(handle->p_esi, ETHIO_AUD_START_DESC, &tmp);
+        rbf_set_dsc_r(handle->p_aso, ASO_OFF_DSC_START_RO, &tmp);
     }
 
     if (msg->vid_tx_buf) {
-        rbf_dsc(&tmp, msg->vid_tx_buf, msg->vid_tx_len);
+        rbf_dsc(&tmp, msg->vid_tx_buf, msg->vid_tx_len - MAX_FRAME_LENGTH);
         rbf_set_dsc_rc(handle->p_eso, ETHIO_VID_START_DESC, &tmp);
         rbf_set_dsc_w(handle->p_vsi, VSI_OFF_DSC_START_RD, &tmp);
     }
 
     if (msg->aud_tx_buf) {
-        rbf_dsc(&tmp, msg->aud_tx_buf, msg->aud_tx_len);
-//        rbf_set_dsc_rc(handle->p_eso, ETHIO_AUD_START_DESC, &tmp);
-//        rbf_set_dsc_w(handle->p_asi, ASI_OFF_DSC_START_RO, &tmp);
+        rbf_dsc(&tmp, msg->aud_tx_buf, msg->aud_tx_len - MAX_FRAME_LENGTH);
+        rbf_set_dsc_rc(handle->p_eso, ETHIO_AUD_START_DESC, &tmp);
+        rbf_set_dsc_w(handle->p_asi, ASI_OFF_DSC_START_RO, &tmp);
     }
+
+    REPORT(INFO, " --- ESI:  CPU  ---");
+    rbf_report_dsc(handle->p_esi, ETHIO_CPU_START_DESC);
+    REPORT(INFO, " --- ESI: Audio ---");
+    rbf_report_dsc(handle->p_esi, ETHIO_AUD_START_DESC);
+    REPORT(INFO, " --- ESI: Video ---");
+    rbf_report_dsc(handle->p_esi, ETHIO_VID_START_DESC);
+    REPORT(INFO, " --- ESO:  CPU  ---");
+    rbf_report_dsc(handle->p_eso, ETHIO_CPU_START_DESC);
+    REPORT(INFO, " --- ESO: Audio ---");
+    rbf_report_dsc(handle->p_eso, ETHIO_AUD_START_DESC);
+    REPORT(INFO, " --- ESO: Video ---");
+    rbf_report_dsc(handle->p_eso, ETHIO_VID_START_DESC);
 
     HOI_WR32(handle->p_esi, 0, ci);
     HOI_WR32(handle->p_eso, 0, co);
@@ -92,10 +105,10 @@ int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
 int hoi_drv_msg_eti(t_hoi* handle, t_hoi_msg_eti* msg)
 {
     // setup filter
-    HOI_WR32(handle->p_esi, ETHI_IP_FILTER, msg->ip_address_dst);
-    HOI_WR32(handle->p_esi, ETHI_IP_FILTER_SRC, msg->ip_address_src);
-    HOI_WR32(handle->p_esi, ETHI_VID_FILTER, msg->udp_port_vid);
-    HOI_WR32(handle->p_esi, ETHI_AUD_FILTER, msg->udp_port_aud);
+    HOI_WR32(handle->p_esi, ETHI_IP_FILTER, swap32(msg->ip_address_dst));
+    HOI_WR32(handle->p_esi, ETHI_IP_FILTER_SRC, swap32(msg->ip_address_src));
+    HOI_WR32(handle->p_esi, ETHI_VID_FILTER, swap16(msg->udp_port_vid));
+    HOI_WR32(handle->p_esi, ETHI_AUD_FILTER, swap16(msg->udp_port_aud));
 
     return SUCCESS;
 }
@@ -105,13 +118,10 @@ int hoi_drv_msg_eti(t_hoi* handle, t_hoi_msg_eti* msg)
 
 int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 {
-    hdoip_eth_params eth;
-
     hoi_drv_stop(handle);
 
     // setup vsi
-    vsi_drv_update(&handle->vsi, &msg->eth);
-    vsi_drv_start(&handle->vsi);
+    vsi_drv_go(&handle->vsi, &msg->eth);
 
     // setup vio
     if (msg->compress) {
@@ -140,7 +150,8 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
 
     // setup vso (100ms delay, 80ms scomm5 delay, 1ms packet timeout)
     vso_drv_update(&handle->vso, &msg->timing, 100000, 0, 80000000, 1000000);
-    vso_drv_start(&handle->vsi);
+    vso_drv_start(&handle->vso);
+    vso_report_timing(&handle->vso);
 
     return SUCCESS;
 }
@@ -291,6 +302,17 @@ int hoi_drv_msg_getstate(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
+int hoi_drv_msg_get_mtime(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    msg->value = tmr_get_master(handle->p_tmr);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_set_mtime(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    tmr_set_master(handle->p_tmr, msg->value);
+    return SUCCESS;
+}
 
 
 //------------------------------------------------------------------------------
@@ -325,6 +347,10 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         case HOI_MSG_LOOP: ret = hoi_drv_msg_loop(handle); break;
         case HOI_MSG_OSDON: ret = hoi_drv_msg_osdon(handle); break;
         case HOI_MSG_OSDOFF: ret = hoi_drv_msg_osdoff(handle); break;
+
+        case HOI_MSG_GETMTIME: ret = hoi_drv_msg_get_mtime(handle, msg); break;
+        case HOI_MSG_SETMTIME: ret = hoi_drv_msg_set_mtime(handle, msg); break;
+
         default: ret = ERR_HOI_CMD_NOT_SUPPORTED; break;
     }
 

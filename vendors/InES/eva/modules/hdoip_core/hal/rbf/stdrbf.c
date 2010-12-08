@@ -1,22 +1,5 @@
 #include "stdrbf.h"
 
-/** Initialize t_rbf_dsc structure
- *
- * @param dsc pointer to the descriptor structure
- * @param start_addr start address of ringbuffer
- * @param size size in bytes of ringbuffer
- * @return error code (0=success)
- */
-int rbf_init_dsc(t_rbf_dsc* dsc, uint32_t start_addr, size_t size) 
-{
-	start_addr = start_addr >> 2;
-	size = (size >> 2) - 1;
-    dsc->start = start_addr;
-    dsc->stop = start_addr + size - 1;
-    dsc->read = start_addr;
-    dsc->write = start_addr;
-	return 0;
-}
 
 /** print the descriptor values to the console
  *

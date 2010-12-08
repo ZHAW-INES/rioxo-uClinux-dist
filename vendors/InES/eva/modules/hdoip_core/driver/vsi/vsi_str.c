@@ -1,4 +1,5 @@
 #include "vsi_str.h"
+#include "vsi_drv.h"
 #include "stdeth.h"
 
 char* vsi_str_err(int err)
@@ -15,6 +16,11 @@ char* vsi_str_err(int err)
 
 void vsi_report_eth(t_vsi* handle) 
 {
-   eth_report_params(&(handle->eth_params)); 
+    struct hdoip_eth_params eth;
+    vsi_drv_get_eth_params(handle, &eth);
+
+    REPORT(INFO, "ctrl:   %8x", vsi_get_ctrl(handle->p_vsi, 0xffffffff));
+    REPORT(INFO, "status: %8x", vsi_get_status(handle->p_vsi, 0xffffffff));
+    eth_report_params(&eth);
 }
 

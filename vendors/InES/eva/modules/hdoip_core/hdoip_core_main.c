@@ -104,7 +104,9 @@ static int hdoip_core_ioctl(struct inode *inop, struct file *filp,
     uint32_t tmp[256]; // 1KiB maximum size
     int ret = 0;
 
+
     if (cmd == HDOIP_IOCPARAM) {
+
         // the message is copied to an local buffer,
         // processed and then copied back to userspace
         if (copy_from_user(&msg, (void __user *)arg, sizeof(t_hoi_msg)) != 0) {
@@ -113,6 +115,7 @@ static int hdoip_core_ioctl(struct inode *inop, struct file *filp,
         }
 
         if (msg.size > 1024) {
+            REPORT(WARNING, "size too big");
             return -EFAULT;
         }
 

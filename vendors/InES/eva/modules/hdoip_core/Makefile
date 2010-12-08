@@ -7,6 +7,8 @@ INCLUDE += stdinc
 INCLUDE += stdinc
 INCLUDE += hal
 INCLUDE += hal/include
+INCLUDE += hal/tmr
+  FILES += hal/tmr/tmr_hal.o
 INCLUDE += hal/rbf
   FILES += hal/rbf/stdrbf.o
 INCLUDE += hal/eth
@@ -102,5 +104,6 @@ default:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
 clean:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
+	rm -f *.o */*.o */*/*.o *.ko *.mod.c Module.symvers modules.order .*.cmd
+ #	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
 

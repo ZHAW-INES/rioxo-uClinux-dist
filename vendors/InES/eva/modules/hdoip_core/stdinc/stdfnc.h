@@ -19,4 +19,20 @@
 #define TIMEOUT(x)          ( ((x) - jiffies) & 0x80000000 )
 
 
+static inline uint32_t swap32(uint32_t x)
+{
+    x = ((x>>24)&0x000000ff) |
+        ((x>> 8)&0x0000ff00) |
+        ((x<< 8)&0x00ff0000) |
+        ((x<<24)&0xff000000);
+    return x;
+}
+
+static inline uint16_t swap16(uint16_t x)
+{
+    x = ((x>> 8)&0x00ff) |
+        ((x<< 8)&0xff00);
+    return x;
+}
+
 #endif /*STDFNC_*/

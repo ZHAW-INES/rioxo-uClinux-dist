@@ -73,6 +73,22 @@ int vsi_drv_update(t_vsi* handle, struct hdoip_eth_params* eth_params)
     return ERR_VSI_SUCCESS;
 }
 
+int vsi_drv_go(t_vsi* handle, struct hdoip_eth_params* eth)
+{
+    int n;
+
+    eth_report_params(eth);
+
+    n = vsi_drv_update(handle, eth);
+    REPORT(INFO, "vsi_drv_update: %s", vsi_str_err(n));
+    n = vsi_drv_start(handle);
+    REPORT(INFO, "vsi_drv_start: %s", vsi_str_err(n));
+
+    vsi_report_eth(handle);
+
+    return n;
+}
+
 /** Read all network parameters from registers in VSI. Parameters are written in handle (t_vsi)
  *
  * @param handle pointer to the vsi handle
@@ -80,11 +96,7 @@ int vsi_drv_update(t_vsi* handle, struct hdoip_eth_params* eth_params)
  */
 int vsi_drv_get_eth_params(t_vsi* handle, struct hdoip_eth_params* eth_params)
 {
-    if((handle->status & VSI_DRV_STATUS_ETH_PARAMS_SET) == 0) { 
-        return ERR_VSI_ETH_PARAMS_NOT_SET;
-    }
-
-    vsi_get_eth_params(handle->p_vsi, eth_params);
+    vsi_get_eth_params(handle->p_vsi, &(handle->eth_params));
     
     memcpy(eth_params, &(handle->eth_params), sizeof(struct hdoip_eth_params));
 
@@ -102,7 +114,7 @@ int vsi_drv_set_eth_params(t_vsi* handle, struct hdoip_eth_params* eth_params)
         return ERR_VSI_RUNNING;
     }
    
-    if((handle->eth_params.packet_length < VSI_DRV_MIN_PACKET_LEN) || (handle->eth_params.packet_length > VSI_DRV_MAX_PACKET_LEN)) {
+    if((eth_params->packet_size < VSI_DRV_MIN_PACKET_LEN) || (eth_params->packet_size > VSI_DRV_MAX_PACKET_LEN)) {
         return ERR_VSI_PACKET_LENGTH_ERR;
     }
 
@@ -110,9 +122,6 @@ int vsi_drv_set_eth_params(t_vsi* handle, struct hdoip_eth_params* eth_params)
 	
     memcpy(&(handle->eth_params), eth_params, sizeof(struct hdoip_eth_params));
     handle->status = handle->status | VSI_DRV_STATUS_ETH_PARAMS_SET;
-
-    REPORT(INFO, "VSI network parameters set:");
-    vsi_report_eth(handle);
 
 	return ERR_VSI_SUCCESS;
 }

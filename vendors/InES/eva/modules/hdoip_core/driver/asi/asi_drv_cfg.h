@@ -14,8 +14,8 @@
 
 /* config values */
 #define ASI_DRV_DMA_BURST_SIZE          (16)    /* in 32 bit words */
-#define ASI_DRV_MIN_FRAME_SIZE          (10)    /* in 32 bit words */
-#define ASI_DRV_MAX_FRAME_SIZE          (380)   /* in 32 bit words */
+#define ASI_DRV_MIN_FRAME_SIZE          (40)    // bytes
+#define ASI_DRV_MAX_FRAME_SIZE          (1520)  // bytes
 #define ASI_DRV_MIN_CH_CNT              (1)     /* minimum amount of audio channels */
 #define ASI_DRV_MAX_CH_CNT              (8)     /* maximum amount of audio channels */
 

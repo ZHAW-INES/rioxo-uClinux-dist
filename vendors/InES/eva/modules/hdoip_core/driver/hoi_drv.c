@@ -10,6 +10,7 @@
 
 // TODO: remove:
 #include "hdoip.h"
+#include "adv7441a_drv_edid.h"
 
 // timer prototype
 static int hoi_drv_timer(unsigned long data);
@@ -27,13 +28,13 @@ void hoi_drv_init(t_hoi* handle)
     handle->p_vio     = ioremap(BASE_VIO,         0xffffffff);
     handle->p_vsi     = ioremap(BASE_VSI,         0xffffffff);
     handle->p_vso     = ioremap(BASE_VSO,         0xffffffff);
+    handle->p_aso     = ioremap(BASE_ASO,         0xffffffff);
+    handle->p_asi     = ioremap(BASE_ASI,         0xffffffff);
     handle->p_adv212  = ioremap(BASE_ADV212,      0xffffffff);
     handle->p_vrp     = ioremap(BASE_VRP,         0xffffffff);
+    handle->p_tmr     = ioremap(BASE_TIMER,       0xffffffff);
     handle->p_reset   = ioremap(BASE_RESET,       0xffffffff);
     handle->p_irq     = ioremap(BASE_EXT_IRQ,     0xffffffff);
-    // TODO: proper ethernet
-    //handle->p_esi     = ioremap(BASE_ESI,         0xffffffff);
-    //handle->p_eso     = ioremap(BASE_ESO,         0xffffffff);
     handle->p_esi     = ioremap(ACB_ETH_IN_BASE,  0xffffffff);
     handle->p_eso     = ioremap(ACB_ETH_OUT_BASE, 0xffffffff);
 
@@ -53,6 +54,9 @@ void hoi_drv_init(t_hoi* handle)
     // init i2c with 400kHz
     i2c_drv_init(&handle->i2c_tx, handle->p_tx, 400000);
     i2c_drv_init(&handle->i2c_rx, handle->p_rx, 400000);
+
+    // init adv7441a
+    adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, adv7441a_edid_table); 
 
     // init
     vio_drv_init(&handle->vio, handle->p_vio, handle->p_adv212);
@@ -88,6 +92,7 @@ void hoi_drv_user_event(t_hoi* handle, uint32_t event)
     //kill(handle->owner, POLL_MSG);
 }
 
+uint32_t irq_old = 0;
 void hoi_drv_interrupt(t_hoi* handle)
 {
     uint32_t irq = HOI_RD32(handle->p_irq, 0);
@@ -100,7 +105,6 @@ void hoi_drv_interrupt(t_hoi* handle)
     if (irq & EXT_IRQ_HDMI_RX_INT2) {
         adv7441a_irq2_handler(&handle->adv7441a, handle->event);
     }
-
     if (irq & EXT_IRQ_J2K_CODEC_0) {
         vio_drv_irq_adv212(&handle->vio, 0, handle->event);
     }

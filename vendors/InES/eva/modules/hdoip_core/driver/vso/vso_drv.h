@@ -10,6 +10,7 @@
 
 #include "std.h"
 #include "stdvid.h"
+#include "vso_str.h"
 #include "vso_hal.h"
 #include "vso_drv_cfg.h"
 #include "vso_str.h"

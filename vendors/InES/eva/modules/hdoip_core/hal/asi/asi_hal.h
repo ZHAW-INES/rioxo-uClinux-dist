@@ -51,10 +51,10 @@
 #define asi_get_i2s_size                HOI_RD32((p), AIS_OFF_SIZE_RO)
 
 /* function prototypes */
-void asi_set_dst_mac(void* p, uint16_t upper16, uint32_t lower32);
-void asi_get_dst_mac(void* p, uint16_t* upper16, uint32_t* lower32);
-void asi_set_src_mac(void* p, uint16_t upper16, uint32_t lower32);
-void asi_get_src_mac(void* p, uint16_t* upper16, uint32_t* lower32);
+void asi_set_dst_mac(void* p, uint8_t* mac);
+void asi_get_dst_mac(void* p, uint8_t* mac);
+void asi_set_src_mac(void* p, uint8_t* mac);
+void asi_get_src_mac(void* p, uint8_t* mac);
 void asi_set_ttl_tos(void* p, uint8_t ttl, uint8_t tos);
 void asi_get_ttl_tos(void* p, uint8_t* ttl, uint8_t* tos);
 void asi_set_ttl(void* p, uint8_t ttl);

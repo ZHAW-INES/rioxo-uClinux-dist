@@ -17,9 +17,12 @@
 #define OSC_TOL             (50.0e-6)
 // Working tolerance (min. 2*OSC_TOL)
 #define SYS_TOL             (200.0e-6)
+// maximum frame size
+#define MAX_FRAME_LENGTH    (2048)
 
 // Base address
 #define BASE_RESET          (na_ext_reset_pio)
+#define BASE_TIMER          (na_acb_timer)
 #define BASE_VRP            (na_acb_vrp)
 #define BASE_VIO            (na_acb_video_process)
 #define BASE_ADV212	        (na_hdata_bus)
