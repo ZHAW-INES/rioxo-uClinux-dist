@@ -657,7 +657,10 @@ static int hdoip_ether_change_mtu(struct net_device *dev, int mtu)
 {
 	struct hdoip_ether *hde = netdev_priv(dev);
 
-	if (mtu < HDOIP_MIN_MTU || mtu > min(HDOIP_MAX_MTU, MAX_PKT_SIZE))
+	if (netif_running(dev))
+		return -EBUSY;
+
+	if (mtu < HDOIP_MIN_MTU || mtu > MAX_PKT_SIZE)
 		return -EINVAL;
 
 	dev->mtu = mtu;
@@ -871,6 +874,7 @@ static void hdoip_ether_rx(struct net_device *dev)
 	/* Get the current descriptor values */
 	hdoip_ethi_desc_get_cpu(hde, &rx_desc);
 
+again:
 	/* Reset IRQ */
 	regval = hdoip_ethi_read(hde, ETHIO_CONFIG);
 	hdoip_ethi_write(hde, ETHIO_CONFIG, regval & ~ETHI_CONFIG_IRQ1_RESET);
@@ -882,7 +886,6 @@ static void hdoip_ether_rx(struct net_device *dev)
 		return;
 	}
 
-again:
 	rx_buf = (u32 *) ioremap_nocache(rx_desc.read, rx_desc.stop - rx_desc.read);
 	if (!rx_buf) {
 		spin_unlock_irqrestore(&hde->rx_lock, flags);
@@ -893,20 +896,16 @@ again:
 	/* Get the frame length (first byte) */
 	len = ioread32(rx_buf);
 
-	if (len > HDOIP_MAX_MTU + 4) {
-		dev->stats.rx_dropped++;
-		printk(KERN_WARNING "%s: Read size larger than MTU: %u\n", dev->name, len);
-		goto out;
-	}
-
-	if (len < ETH_ZLEN + 4) {
-		dev->stats.rx_dropped++;
-		printk(KERN_WARNING "%s: Received undersized frame (%u), dropping packet\n", dev->name, len);
-		goto out;
-	}
-
 	len -= RX_TIMESTAMP_LENGTH;
 	rx_buf = rx_buf + (RX_TIMESTAMP_LENGTH / sizeof(u32));
+
+#if 0
+	if (len > dev->mtu)
+		pr_warning("%s: Frame size larger than MTU: %u\n", dev->name, len);
+
+	if (len < ETH_ZLEN + 4)
+		pr_warning("%s: Received undersized frame of %u bytes\n", dev->name, len);
+#endif
 
 	skb = netdev_alloc_skb(dev, len + NET_IP_ALIGN);
 	if (!skb) {
@@ -937,11 +936,13 @@ out:
 	if (rx_desc.read > rx_desc.stop)
 		rx_desc.read = rx_desc.start;
 
-	if (rx_desc.read != rx_desc.write)
-		goto again;
-
 	/* Set read descriptor */
 	hdoip_ethi_write(hde, ETHIO_CPU_READ_DESC, CPU_TO_DESC(rx_desc.read));
+	/* Read write descriptor again (XXX: this might be a bit of a hack) */
+	rx_desc.write = DESC_TO_CPU(hdoip_ethi_read(hde, ETHIO_CPU_WRITE_DESC));
+
+	if (rx_desc.read != rx_desc.write)
+		goto again;
 
 	spin_unlock_irqrestore(&hde->rx_lock, flags);
 }
@@ -992,8 +993,7 @@ static int hdoip_ether_mac_init(struct net_device *dev)
 	}
 
 	/* Set default MTU */
-	dev->mtu = HDOIP_DEFAULT_MTU;
-	hdoip_mac_write(hde, TSE_MAC_MTU, HDOIP_DEFAULT_MTU);
+	hdoip_mac_write(hde, TSE_MAC_MTU, dev->mtu);
 
 	/* Set FIFO thresholds */
 	hdoip_mac_write(hde, TSE_MAC_RX_SECTION_EMPTY, TSE_MAC_RX_FIFO_DEPTH - 16);
@@ -1378,6 +1378,8 @@ static int __init hdoip_ether_probe(struct platform_device *pdev)
 	ether_setup(dev);
 	dev->netdev_ops = &hdoip_ether_netdev_ops;
 	SET_ETHTOOL_OPS(dev, &hdoip_ether_ethtool_ops);
+
+	dev->mtu = HDOIP_DEFAULT_MTU;
 
 	ret = register_netdev(dev);
 	if (ret)
