@@ -25,7 +25,7 @@ function show(t)
     local firmware_image = "/tmp/web.tmp"
     local reboot = 0
 
-    if(t.length ~= nil) then
+    if(t.length ~= nil)then
         hdoip.post.readHeader(t)
         hdoip.post.readData(t, firmware_image)
 
@@ -35,13 +35,15 @@ function show(t)
         if(fd ~= nil) then
             local hdr = fd:read(IMAGE_HDR_SIZE)
             fd:close()
-            if(string.sub(hdr, 1, 4) ~= IMAGE_HDR_ID) then
-                t.err = t.err .. "This file is not an firmware image<br>\n"
-                os.execute("/bin/busybox rm "..firmware_image)
-            else
-                rebooting(t)
-                hdoip.pipe.remote_update(firmware_image)
-                return
+            if(hdr ~= nil) then
+                if(string.sub(hdr, 1, 4) ~= IMAGE_HDR_ID) then
+                    t.err = t.err .. "This file is not an firmware image<br>\n"
+                    os.execute("/bin/busybox rm "..firmware_image)
+                else
+                    rebooting(t)
+                    hdoip.pipe.remote_update(firmware_image)
+                    return
+                end
             end
         else
             t.err = t.err .. "Could not open "..firmware_image.."<br>\n"
