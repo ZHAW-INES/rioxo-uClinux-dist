@@ -29,8 +29,13 @@
 #define aso_enable(p)                       aso_set_ctrl((p), ASO_CFG_RUN)
 #define aso_disable(p)                      aso_clr_ctrl((p), ASO_CFG_RUN)
 
-#define aso_set_dsc(p, dsc)                 rbf_set_dsc_r((p), ASO_OFF_DSC_START_RO)
-#define aso_get_dsc(p, dsc)                 rbf_get_dsc((p), ASO_OFF_DSC_START_RO)
+#define aso_set_dsc(p, d)                   rbf_set_dsc_r((p), ASO_OFF_DSC_START_RO, (d))
+#define aso_set_read_dsc(p, v)              RBF_SET_REG((p), ASO_OFF_DSC_READ, (v))
+#define aso_get_dsc(p, d)                   rbf_get_dsc((p), ASO_OFF_DSC_START_RO, (d))
+#define aso_get_start_dsc(p)                RBF_GET_REG((p), ASO_OFF_DSC_START_RO)
+#define aso_get_stop_dsc(p)                 RBF_GET_REG((p), ASO_OFF_DSC_STOP_RO)
+#define aso_get_write_dsc(p)                RBF_GET_REG((p), ASO_OFF_DSC_WRITE_RO)
+#define aso_get_read_dsc(p)                 RBF_GET_REG((p), ASO_OFF_DSC_READ)
 
 #define aso_set_aud_delay(p, v)             HOI_WR32((p), ASO_OFF_AUD_DELAY, (v))
 #define aso_get_aud_delay(p)                HOI_RD32((p), ASO_OFF_AUD_DELAY)

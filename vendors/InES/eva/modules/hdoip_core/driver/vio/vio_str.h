@@ -33,7 +33,6 @@ DBG( \
 
 #define VIO_REPORT_TRANSFORM(p, s) { \
 DBG( \
-	uint16_t *_p_ = (p); \
 	REPORT(INFO, "<Transform %s> format is 3.13", s); \
 	REPORT(INFO, "  Downsampling: %s - reverse order: %s", DBGSTA(HOI_RD32(p, VIO_OFF_PP_CFG)&VIO_PP_DOWN), DBGSTA(HOI_RD32(p, VIO_OFF_PP_CFG)&VIO_PP_DFIRST) );\
 	REPORT(INFO, "  Upsampling  : %s - reverse order: %s", DBGSTA(HOI_RD32(p, VIO_OFF_PP_CFG)&VIO_PP_UP), DBGSTA(HOI_RD32(p, VIO_OFF_PP_CFG)&VIO_PP_UFIRST) );\
@@ -67,8 +66,8 @@ DBG( \
 
 #define VIO_REPORT_BASE(p) { \
 	REPORT(INFO, "<VIO Handle>"); \
-	REPORT(INFO, "  video i/o base address    = 0x%08x", (p)->p_vio); \
-	REPORT(INFO, "  adv212 hdata base address = 0x%08x", (p)->p_adv); \
+	REPORT(INFO, "  video i/o base address    = 0x%08x", (uint32_t)(p)->p_vio); \
+	REPORT(INFO, "  adv212 hdata base address = 0x%08x", (uint32_t)(p)->p_adv); \
 }
 
 #define VIO_REPORT_MUX(p) { \
@@ -106,6 +105,7 @@ DBG( \
     REPORT(INFO, "  wait VSync: %s", \
         DBGSTA(vio_get_cfg(p,VIO_CFG_WAITVS)) \
     ) \
+    REPORT(INFO, "  hsplit: %d", vio_get_hsplit(p)); \
 }
 
 #define VIO_REPORT_PLL(p) { \

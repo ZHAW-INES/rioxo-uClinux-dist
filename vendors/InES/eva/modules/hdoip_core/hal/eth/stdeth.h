@@ -15,8 +15,8 @@ typedef struct hdoip_eth_params {
     uint32_t    packet_size;          // in bytes
     uint32_t    ipv4_src_ip;
     uint32_t    ipv4_dst_ip;
-    uint32_t    ipv4_ttl;
-    uint32_t    ipv4_tos;
+    uint8_t     ipv4_ttl;
+    uint8_t     ipv4_tos;
     uint32_t    udp_src_port;
     uint32_t    udp_dst_port;
     uint32_t    rtp_ssrc;

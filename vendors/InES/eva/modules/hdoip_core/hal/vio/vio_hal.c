@@ -24,6 +24,9 @@ void vio_set_timing(void* p, t_video_timing* p_vt)
     // Active Video (Vertical)
     vio_set_rng(p, VIO_OFF_TG_VAVID, p_vt->vpulse + p_vt->vback, p_vt->vpulse + p_vt->vback + p_vt->height);
 
+    // Half horizontal pixel count
+    vio_set_hsplit(p, (p_vt->width / 2) - 1);
+
     // Frame Length
     HOI_WR32(p, VIO_OFF_TG_DURATION, (h * v) / 2 - 1);
 }
@@ -94,18 +97,13 @@ void vio_get_timing(void* p, t_video_timing* p_vt)
 void vio_set_control(void* p, t_video_timing* p_vt, int ppm, int sel)
 {
 	int32_t h, v, s, t;
-
-    if (sel != VIO_MUX_PLLC_FREE) {
-        // activate control logic
-        vio_set_cfg(p, VIO_CFG_PLL_CTRL);
-    }
     
     if (sel == VIO_MUX_PLLC_TG) {
         h = p_vt->hfront + p_vt->hpulse + p_vt->hback + p_vt->width;
         v = p_vt->vfront + p_vt->vpulse + p_vt->vback + p_vt->height;
         
         // select control source
-        vio_set_mux(p, VIO_MUX_PLLC_MASK, sel);
+        vio_set_pllc(p, sel);
         
         // Control tolerance (24 bit fractional)
         s = (int32_t)((int64_t)(1<<(24+VIO_PLL_CTRL_WIDTH)) / VIO_PLL_CTRL_DIV / ((int64_t)ppm * (int64_t)h * (int64_t)v / 1000000));
@@ -114,6 +112,11 @@ void vio_set_control(void* p, t_video_timing* p_vt, int ppm, int sel)
         
         HOI_WR32(p, VIO_OFF_TG_THRESHOLD, t);
         HOI_WR32(p, VIO_OFF_TG_SCALE, s);
+    }
+
+    if (sel != VIO_MUX_PLLC_FREE) {
+        // activate control logic
+        vio_set_cfg(p, VIO_CFG_PLL_CTRL);
     }
     
 }
@@ -210,7 +213,7 @@ int32_t vio_get_pll_error(void* p)
  */
 void vio_set_transform(void* p, uint32_t o, t_color_transform m, uint32_t cfg, bool vpol, bool hpol)
 {
-    if (!m) { m = xyz_one; }
+    if (!m) { m = (void*)xyz_one; }
     
     p = OFFSET(p, o);
     

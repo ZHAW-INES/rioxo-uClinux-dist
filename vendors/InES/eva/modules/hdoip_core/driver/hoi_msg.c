@@ -8,10 +8,18 @@
 #include "std.h"
 #include "hoi_drv.h"
 
-//#include "adv7441a_drv_edid.h" // TODO no edid for init
+#include "adv7441a_drv_edid.h" // TODO no edid for init
 
-// TODO: remove:
-#include "hdoip.h"
+// demo workaround:
+#include <linux/types.h>
+#include <linux/init.h>
+#include <linux/kernel.h>
+#include <linux/kernel_stat.h>
+#include <linux/interrupt.h>
+#include <linux/irq.h>
+#include <linux/seq_file.h>
+#include <asm/system.h>
+#include <asm/traps.h>
 
 //------------------------------------------------------------------------------
 // Load driver
@@ -33,14 +41,11 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
     if (lddrv & DRV_ADV9889) {
         adv9889_drv_init(&handle->adv9889, &handle->i2c_tx);
     }
-/*    if (lddrv & DRV_ADV7441) {
-        adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, adv7441a_edid_table);
-    }*/
+    if (lddrv & DRV_ADV7441) {
+        adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, (char*)adv7441a_edid_table);
+    }
 
     handle->drivers = msg->drivers & DRV_ALL;
-    handle->owner = msg->pid;
-
-    queue_put(handle->event, E_FORCE_TO_READY);
 
     return SUCCESS;
 }
@@ -48,55 +53,16 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
 
 int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
 {
-    t_rbf_dsc tmp;
+    // ringbuffer
+    eti_drv_set_vid_buf(&handle->eti, msg->vid_rx_buf, msg->vid_rx_len - MAX_FRAME_LENGTH);
+    eti_drv_set_aud_buf(&handle->eti, msg->aud_rx_buf, msg->aud_rx_len - MAX_FRAME_LENGTH);
+    eto_drv_set_vid_buf(&handle->eto, msg->vid_tx_buf, msg->vid_tx_len - MAX_FRAME_LENGTH);
+    eto_drv_set_aud_buf(&handle->eto, msg->aud_tx_buf, msg->aud_tx_len - MAX_FRAME_LENGTH);
 
-    // TODO: proper ethernet
-
-    uint32_t ci = HOI_RD32(handle->p_esi, 0);
-    uint32_t co = HOI_RD32(handle->p_eso, 0);
-    HOI_WR32(handle->p_esi, 0, ci&~1);
-    HOI_WR32(handle->p_eso, 0, co&~1);
-
-    if (msg->vid_rx_buf) {
-        rbf_dsc(&tmp, msg->vid_rx_buf, msg->vid_rx_len - MAX_FRAME_LENGTH);
-        rbf_set_dsc_wc(handle->p_esi, ETHIO_VID_START_DESC, &tmp);
-        rbf_set_dsc_r(handle->p_vso, VSO_OFF_DSC_START_RO, &tmp);
-    }
-
-    if (msg->aud_rx_buf) {
-        rbf_dsc(&tmp, msg->aud_rx_buf, msg->aud_rx_len - MAX_FRAME_LENGTH);
-        rbf_set_dsc_wc(handle->p_esi, ETHIO_AUD_START_DESC, &tmp);
-        rbf_set_dsc_r(handle->p_aso, ASO_OFF_DSC_START_RO, &tmp);
-    }
-
-    if (msg->vid_tx_buf) {
-        rbf_dsc(&tmp, msg->vid_tx_buf, msg->vid_tx_len - MAX_FRAME_LENGTH);
-        rbf_set_dsc_rc(handle->p_eso, ETHIO_VID_START_DESC, &tmp);
-        rbf_set_dsc_w(handle->p_vsi, VSI_OFF_DSC_START_RD, &tmp);
-    }
-
-    if (msg->aud_tx_buf) {
-        rbf_dsc(&tmp, msg->aud_tx_buf, msg->aud_tx_len - MAX_FRAME_LENGTH);
-        rbf_set_dsc_rc(handle->p_eso, ETHIO_AUD_START_DESC, &tmp);
-        rbf_set_dsc_w(handle->p_asi, ASI_OFF_DSC_START_RO, &tmp);
-    }
-
-    REPORT(INFO, " --- ESI:  CPU  ---");
-    rbf_report_dsc(handle->p_esi, ETHIO_CPU_START_DESC);
-    REPORT(INFO, " --- ESI: Audio ---");
-    rbf_report_dsc(handle->p_esi, ETHIO_AUD_START_DESC);
-    REPORT(INFO, " --- ESI: Video ---");
-    rbf_report_dsc(handle->p_esi, ETHIO_VID_START_DESC);
-    REPORT(INFO, " --- ESO:  CPU  ---");
-    rbf_report_dsc(handle->p_eso, ETHIO_CPU_START_DESC);
-    REPORT(INFO, " --- ESO: Audio ---");
-    rbf_report_dsc(handle->p_eso, ETHIO_AUD_START_DESC);
-    REPORT(INFO, " --- ESO: Video ---");
-    rbf_report_dsc(handle->p_eso, ETHIO_VID_START_DESC);
-
-    HOI_WR32(handle->p_esi, 0, ci);
-    HOI_WR32(handle->p_eso, 0, co);
-
+    vsi_drv_flush_buf(&handle->vsi);
+    vso_drv_flush_buf(&handle->vso);
+    asi_drv_flush_buf(&handle->asi);
+    aso_drv_flush_buf(&handle->aso);
 
     return SUCCESS;
 }
@@ -104,12 +70,90 @@ int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
 
 int hoi_drv_msg_eti(t_hoi* handle, t_hoi_msg_eti* msg)
 {
-    // setup filter
-    HOI_WR32(handle->p_esi, ETHI_IP_FILTER, swap32(msg->ip_address_dst));
-    HOI_WR32(handle->p_esi, ETHI_IP_FILTER_SRC, swap32(msg->ip_address_src));
-    HOI_WR32(handle->p_esi, ETHI_VID_FILTER, swap16(msg->udp_port_vid));
-    HOI_WR32(handle->p_esi, ETHI_AUD_FILTER, swap16(msg->udp_port_aud));
+    // when port = 0 not active!
 
+    // load filter...
+    eti_drv_set_filter(&handle->eti,
+            msg->ip_address_dst, msg->ip_address_src, msg->ip_address_src,
+            msg->udp_port_aud, msg->udp_port_vid);
+
+    // activate ethernet input
+    if (msg->udp_port_vid) eti_drv_start_vid(&handle->eti);
+    if (msg->udp_port_aud) eti_drv_start_aud(&handle->eti);
+
+    return SUCCESS;
+}
+
+
+int hoi_drv_msg_stsync(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    
+    if (msg->value & DRV_ST_VIDEO) {
+        stream_sync_chg_source(&handle->sync, SYNC_SOURCE_VIDEO);
+    } else if (msg->value & DRV_ST_AUDIO) {
+        stream_sync_chg_source(&handle->sync, SYNC_SOURCE_AUDIO);
+    }
+    stream_sync_start(&handle->sync);
+    
+    return SUCCESS;
+}
+
+
+int hoi_drv_msg_syncdelay(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    msg->value = stream_sync_get_delay(&handle->sync);
+
+    return SUCCESS;
+}
+
+
+//------------------------------------------------------------------------------
+// Status
+
+int hoi_drv_msg_ethstat(t_hoi* handle, t_hoi_msg_ethstat* msg)
+{
+    msg->rx_cpu_cnt = eti_get_cpu_packet_cnt(handle->p_esi);
+    msg->rx_aud_cnt = eti_get_aud_packet_cnt(handle->p_esi);
+    msg->rx_vid_cnt = eti_get_vid_packet_cnt(handle->p_esi);
+    msg->rx_inv_cnt = eti_get_inv_packet_cnt(handle->p_esi);
+    msg->debug = eti_get_debug_reg(handle->p_esi);
+
+    msg->tx_cpu_cnt = eto_get_cpu_packet_cnt(handle->p_eso);
+    msg->tx_aud_cnt = eto_get_aud_packet_cnt(handle->p_eso);
+    msg->tx_vid_cnt = eto_get_vid_packet_cnt(handle->p_eso);
+    msg->tx_inv_cnt = eto_get_inv_packet_cnt(handle->p_eso);
+
+    return SUCCESS;
+}
+
+
+int hoi_drv_msg_vsostat(t_hoi* handle, t_hoi_msg_vsostat* msg)
+{
+    msg->vframe_skip = vso_get_vframe_lost(handle->p_vso);
+    msg->vframe_cnt = vso_get_vframe_cnt(handle->p_vso);
+    msg->packet_cnt = vso_get_packet_cnt(handle->p_vso);
+    msg->packet_lost = vso_get_packet_lost(handle->p_vso);
+    msg->packet_in_cnt = vso_get_packet_in_cnt(handle->p_vso);
+    msg->status = vso_get_status(handle->p_vso, VSO_ST_MSK);
+    return SUCCESS;
+}
+
+
+int hoi_drv_msg_viostat(t_hoi* handle, t_hoi_msg_viostat* msg)
+{
+    msg->fin = vio_get_fin(handle->p_vio);
+    msg->fout = vio_get_fout(handle->p_vio);
+    msg->tgerr = vio_get_tg_error(handle->p_vio);
+    msg->pllerr = vio_get_pll_error(handle->p_vio);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_getversion(t_hoi* handle, t_hoi_msg_version* msg)
+{
+    msg->fpga_date      = ver_get_fpga_date(handle->p_ver);
+    msg->fpga_svn       = ver_get_fpga_svn(handle->p_ver);
+    msg->sysid_date     = ver_get_sopc_date(handle->p_sysid);
+    msg->sysid_id       = ver_get_sopc_id(handle->p_sysid);
     return SUCCESS;
 }
 
@@ -118,14 +162,15 @@ int hoi_drv_msg_eti(t_hoi* handle, t_hoi_msg_eti* msg)
 
 int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 {
-    hoi_drv_stop(handle);
+    // activate ethernet output
+    eto_drv_start_vid(&handle->eto);
 
     // setup vsi
     vsi_drv_go(&handle->vsi, &msg->eth);
 
     // setup vio
     if (msg->compress) {
-        vio_drv_encodex(&handle->vio, msg->bandwidth, 0);
+        vio_drv_encodex(&handle->vio, msg->bandwidth, msg->advcnt);
     } else {
         vio_drv_plainin(&handle->vio);
     }
@@ -139,20 +184,133 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 
 int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
 {
-    hoi_drv_stop(handle);
+    int n;
+    int delay, scomm5, vid, vsd;
 
     // setup vio
-    if (msg->compress) {
-        vio_drv_decodex(&handle->vio, &msg->timing, msg->advcnt);
+    if (msg->compress & DRV_CODEC) {
+        n = vio_drv_decodex(&handle->vio, &msg->timing, msg->advcnt);
     } else {
-        vio_drv_plainout(&handle->vio);
+        n = vio_drv_plainoutx(&handle->vio, &msg->timing);
     }
 
-    // setup vso (100ms delay, 80ms scomm5 delay, 1ms packet timeout)
-    vso_drv_update(&handle->vso, &msg->timing, 100000, 0, 80000000, 1000000);
-    vso_drv_start(&handle->vso);
-    vso_report_timing(&handle->vso);
+    if (n) {
+        REPORT(INFO, "vio_drv_(output) failed: %s", vio_str_err(n));
+    }
 
+    // setup vso (20ms delay, 15ms scomm5 delay, 1ms packet timeout)
+    vid = vid_duration_in_us(&msg->timing);
+    delay = msg->delay_ms * 1000 + 2 * vid;
+    scomm5 = vid * 1500;
+    vsd = vid * 800;
+    if ((n = vso_drv_update(&handle->vso, &msg->timing, delay, vsd, scomm5, 1000000))) {
+        REPORT(INFO, "vso_drv_update failed: %s", vso_str_err(n));
+        return n;
+    }
+
+    // sync...
+    vso_drv_stop(&handle->vso);
+
+    // !!! workaround !!!
+    // ADV212 chips are sensitive to timing
+    // switch of all nios2-irq
+    uint32_t ien = __builtin_rdctl(3);
+    __builtin_wrctl(3, 0);
+
+    if ((n = vso_drv_start(&handle->vso))) {
+        __builtin_wrctl(3, ien);
+        REPORT(INFO, "vso_drv_start failed: %s", vso_str_err(n));
+        return n;
+    }
+
+    // sync all needed ADV212
+    if ((n = vio_drv_decode_sync(&handle->vio))) {
+        __builtin_wrctl(3, ien);
+        REPORT(INFO, "vio_drv_decode_sync failed: %s", vio_str_err(n));
+        return n;
+    }
+
+    __builtin_wrctl(3, ien);
+    // !!! back to normal !!!
+
+    if (msg->compress & DRV_STREAM_SYNC) {
+        stream_sync_chg_source(&handle->sync, SYNC_SOURCE_VIDEO);
+        stream_sync_start(&handle->sync);
+    }
+
+    return SUCCESS;
+}
+
+int hoi_drv_msg_vso_repaire(t_hoi* handle)
+{
+    int n;
+
+    // stop/flush vso
+    vso_drv_stop(&handle->vso);
+    vso_drv_flush_buf(&handle->vso);
+
+    vio_drv_decode(&handle->vio);
+
+    vso_drv_stop(&handle->vso);
+
+    // !!! workaround !!!
+    // ADV212 chips are sensitive to timing
+    // switch of all nios2-irq
+    uint32_t ien = __builtin_rdctl(3);
+    __builtin_wrctl(3, 0);
+
+    if ((n = vso_drv_start(&handle->vso))) {
+        __builtin_wrctl(3, ien);
+        REPORT(INFO, "vso_drv_start failed: %s", vso_str_err(n));
+        return n;
+    }
+
+    // sync all needed ADV212
+    if ((n = vio_drv_decode_sync(&handle->vio))) {
+        __builtin_wrctl(3, ien);
+        REPORT(INFO, "vio_drv_decode_sync failed: %s", vio_str_err(n));
+        return n;
+    }
+
+    __builtin_wrctl(3, ien);
+    // !!! back to normal !!!
+
+    return SUCCESS;
+}
+
+int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
+{
+    // activate ethernet output
+    eto_drv_start_aud(&handle->eto);
+    // setup asi
+    struct hdoip_aud_params aud_params;
+    aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
+    aud_params.ch_cnt_right = msg->channel_cnt - aud_params.ch_cnt_left;
+    aud_params.fs = msg->fs;
+    aud_params.sample_width = msg->width;
+    asi_drv_update(&handle->asi, &msg->eth, &aud_params);
+    asi_drv_start(&handle->asi);
+
+    return SUCCESS;
+}
+
+
+int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
+{
+    // setup aso ()
+    struct hdoip_aud_params aud_params;
+    aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
+    aud_params.ch_cnt_right = msg->channel_cnt - aud_params.ch_cnt_left;
+    aud_params.fs = msg->fs;
+    aud_params.sample_width = msg->width;
+    aso_drv_update(&handle->aso, &aud_params, msg->delay_ms*1000);
+    aso_drv_start(&handle->aso);
+/*
+    if (msg->cfg & DRV_STREAM_SYNC) {
+        stream_sync_chg_source(&handle->sync, SYNC_SOURCE_AUDIO);
+        stream_sync_start(&handle->sync);
+    }
+*/
     return SUCCESS;
 }
 
@@ -163,8 +321,6 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
 int hoi_drv_msg_capture(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
-
-    hoi_drv_stop(handle);
 
     // TODO: access userspace buffer properly
     // TODO: proper bandwidth/size
@@ -185,8 +341,6 @@ int hoi_drv_msg_show(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
-    hoi_drv_stop(handle);
-
     if (msg->compress) {
         ret = vrp_drv_show_jpeg2000(&handle->vrp, msg->buffer, &msg->timing, msg->advcnt);
     } else {
@@ -196,14 +350,26 @@ int hoi_drv_msg_show(t_hoi* handle, t_hoi_msg_image* msg)
     return ret;
 }
 
+int hoi_drv_msg_debug(t_hoi* handle, t_hoi_msg_image* msg)
+{
+    uint32_t ret = SUCCESS;
+
+    vio_drv_debugx(&handle->vio, &msg->timing);
+
+    return ret;
+}
+
+int hoi_drv_msg_bw(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    vio_drv_set_bandwidth(&handle->vio, msg->value);
+    return SUCCESS;
+}
 
 //------------------------------------------------------------------------------
 // Command
 
 int hoi_drv_msg_loop(t_hoi* handle)
 {
-    hoi_drv_stop(handle);
-
     vio_drv_loop(&handle->vio);
     return SUCCESS;
 }
@@ -217,6 +383,18 @@ int hoi_drv_msg_osdon(t_hoi* handle)
 int hoi_drv_msg_osdoff(t_hoi* handle)
 {
     vio_drv_set_osd(&handle->vio, false);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_hpdon(t_hoi* handle)
+{
+    vio_drv_set_hpd(&handle->vio, true);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_hpdoff(t_hoi* handle)
+{
+    vio_drv_set_hpd(&handle->vio, false);
     return SUCCESS;
 }
 
@@ -256,19 +434,54 @@ int hoi_drv_msg_wraudtag(t_hoi* handle, t_hoi_msg_tag* msg)
     return tag_drv_write(&handle->atag);
 }
 
+int hoi_drv_msg_rdedid(t_hoi* handle, t_hoi_msg_edid* msg)
+{
+    if (handle->drivers & DRV_ADV9889) {
+        adv9889_drv_get_edid(&handle->adv9889, msg->edid);
+    } else {
+        REPORT(INFO, "rdedid: no driver loaded");
+        // return NO_DRIVER_LOADED
+    }
+    return SUCCESS;
+}
+
+int hoi_drv_msg_wredid(t_hoi* handle, t_hoi_msg_edid* msg)
+{
+    if (handle->drivers & DRV_ADV7441) {
+        adv7441a_set_edid(&handle->adv7441a, msg->edid);
+    } else {
+        REPORT(INFO, "wredid: no driver loaded");
+        // return NO_DRIVER_LOADED
+    }
+    return SUCCESS;
+}
 
 //------------------------------------------------------------------------------
 // info
 
 int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
 {
-    vio_drv_get_timing(&handle->vio, &msg->timing);
+    int min = 0;
+    // read video input timing
+    vio_get_timing(handle->p_vio, &msg->timing);
+    adv212_drv_advcnt(&msg->timing, &min);
+    if (msg->advcnt < min) msg->advcnt = min;
+    // read audio input timing (from video board) [ch: 0..15]
+    msg->audio_fs[0] = 44100;
+    msg->audio_width[0] = 16;
+    // read audio input timing (from audio board) [ch: 16..31]
     return SUCCESS;
 }
 
 
 //------------------------------------------------------------------------------
 // param read/write
+
+int hoi_drv_msg_off(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    hoi_drv_reset(handle, msg->value);
+    return SUCCESS;
+}
 
 int hoi_drv_msg_ifmt(t_hoi* handle, t_hoi_msg_param* msg)
 {
@@ -290,27 +503,49 @@ int hoi_drv_msg_pfmt(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
-int hoi_drv_msg_getevent(t_hoi* handle, t_hoi_msg_param* msg)
-{
-    msg->value = queue_get(handle->response);
-    return SUCCESS;
-}
-
-int hoi_drv_msg_getstate(t_hoi* handle, t_hoi_msg_param* msg)
-{
-    msg->value = handle->state;
-    return SUCCESS;
-}
-
 int hoi_drv_msg_get_mtime(t_hoi* handle, t_hoi_msg_param* msg)
 {
     msg->value = tmr_get_master(handle->p_tmr);
+    REPORT(INFO, "Get Master-Timer: %u", msg->value);
     return SUCCESS;
 }
 
 int hoi_drv_msg_set_mtime(t_hoi* handle, t_hoi_msg_param* msg)
 {
     tmr_set_master(handle->p_tmr, msg->value);
+    REPORT(INFO, "Set Master-Timer: %u", msg->value);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_get_stime(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    msg->value = tmr_get_slave(handle->p_tmr);
+    REPORT(INFO, "Get Slave-Timer: %u", msg->value);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_set_stime(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    tmr_set_slave(handle->p_tmr, msg->value);
+    REPORT(INFO, "Set Slave-Timer: %u", msg->value);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_tmr(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    tmr_set_mux(handle->p_tmr, msg->value);
+    return SUCCESS;
+}
+
+
+int hoi_drv_msg_poll(t_hoi* handle)
+{
+    hoi_drv_timer(handle);
+
+    if (!queue_empty(handle->event)) {
+        wake_up_interruptible(&handle->eq);
+    }
+
     return SUCCESS;
 }
 
@@ -318,43 +553,64 @@ int hoi_drv_msg_set_mtime(t_hoi* handle, t_hoi_msg_param* msg)
 //------------------------------------------------------------------------------
 // message
 
+#define call(x, f) case x: ret = f(handle, (void*)msg); break
+#define callsw(x, f) case x: ret = f(handle); break
 int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
 {
     uint32_t ret;
-    hoi_drv_lock(handle);
 
     switch (msg->id) {
-        case HOI_MSG_LDRV: ret = hoi_drv_msg_ldrv(handle, msg); break;
-        case HOI_MSG_CAPTURE: ret = hoi_drv_msg_capture(handle, msg); break;
-        case HOI_MSG_SHOW: ret = hoi_drv_msg_show(handle, msg); break;
-        case HOI_MSG_RDVIDTAG: ret = hoi_drv_msg_rdvidtag(handle, msg); break;
-        case HOI_MSG_RDAUDTAG: ret = hoi_drv_msg_rdaudtag(handle, msg); break;
-        case HOI_MSG_WRVIDTAG: ret = hoi_drv_msg_wrvidtag(handle, msg); break;
-        case HOI_MSG_WRAUDTAG: ret = hoi_drv_msg_wraudtag(handle, msg); break;
-        case HOI_MSG_INFO: ret = hoi_drv_msg_info(handle, msg); break;
+        call(HOI_MSG_LDRV,      hoi_drv_msg_ldrv);
+        call(HOI_MSG_BUF,       hoi_drv_msg_buf);
+        call(HOI_MSG_ETI,       hoi_drv_msg_eti);
 
-        case HOI_MSG_VSI: ret = hoi_drv_msg_vsi(handle, msg); break;
-        case HOI_MSG_VSO: ret = hoi_drv_msg_vso(handle, msg); break;
+        call(HOI_MSG_INFO,      hoi_drv_msg_info);
 
-        // Set Param
-        case HOI_MSG_BUF: ret = hoi_drv_msg_buf(handle, msg); break;
-        case HOI_MSG_IFMT: ret = hoi_drv_msg_ifmt(handle, msg); break;
-        case HOI_MSG_OFMT: ret = hoi_drv_msg_ofmt(handle, msg); break;
-        case HOI_MSG_PFMT: ret = hoi_drv_msg_pfmt(handle, msg); break;
-        case HOI_MSG_GETEVENT: ret = hoi_drv_msg_getevent(handle, msg); break;
-        case HOI_MSG_GETSTATE: ret = hoi_drv_msg_getstate(handle, msg); break;
+        call(HOI_MSG_CAPTURE,   hoi_drv_msg_capture);
+        call(HOI_MSG_SHOW,      hoi_drv_msg_show);
+        call(HOI_MSG_DEBUG,     hoi_drv_msg_debug);
+        call(HOI_MSG_VSI,       hoi_drv_msg_vsi);
+        call(HOI_MSG_VSO,       hoi_drv_msg_vso);
+        call(HOI_MSG_ASI,       hoi_drv_msg_asi);
+        call(HOI_MSG_ASO,       hoi_drv_msg_aso);
+        call(HOI_MSG_BW,        hoi_drv_msg_bw);
 
-        case HOI_MSG_LOOP: ret = hoi_drv_msg_loop(handle); break;
-        case HOI_MSG_OSDON: ret = hoi_drv_msg_osdon(handle); break;
-        case HOI_MSG_OSDOFF: ret = hoi_drv_msg_osdoff(handle); break;
+        call(HOI_MSG_OFF,       hoi_drv_msg_off);
+        call(HOI_MSG_IFMT,      hoi_drv_msg_ifmt);
+        call(HOI_MSG_OFMT,      hoi_drv_msg_ofmt);
+        call(HOI_MSG_PFMT,      hoi_drv_msg_pfmt);
+        call(HOI_MSG_RDVIDTAG,  hoi_drv_msg_rdvidtag);
+        call(HOI_MSG_RDAUDTAG,  hoi_drv_msg_rdaudtag);
+        call(HOI_MSG_WRVIDTAG,  hoi_drv_msg_wrvidtag);
+        call(HOI_MSG_WRAUDTAG,  hoi_drv_msg_wraudtag);
+        call(HOI_MSG_RDEDID,    hoi_drv_msg_rdedid);
+        call(HOI_MSG_WREDID,    hoi_drv_msg_wredid);
 
-        case HOI_MSG_GETMTIME: ret = hoi_drv_msg_get_mtime(handle, msg); break;
-        case HOI_MSG_SETMTIME: ret = hoi_drv_msg_set_mtime(handle, msg); break;
+        call(HOI_MSG_GETMTIME,  hoi_drv_msg_get_mtime);
+        call(HOI_MSG_SETMTIME,  hoi_drv_msg_set_mtime);
+        call(HOI_MSG_GETSTIME,  hoi_drv_msg_get_stime);
+        call(HOI_MSG_SETSTIME,  hoi_drv_msg_set_stime);
+        call(HOI_MSG_TIMER,     hoi_drv_msg_tmr);
+        call(HOI_MSG_STSYNC,    hoi_drv_msg_stsync);
+        call(HOI_MSG_SYNCDELAY, hoi_drv_msg_syncdelay);
+
+        call(HOI_MSG_ETHSTAT,   hoi_drv_msg_ethstat);
+        call(HOI_MSG_VSOSTAT,   hoi_drv_msg_vsostat);
+        call(HOI_MSG_VIOSTAT,   hoi_drv_msg_viostat);
+
+        call(HOI_MSG_GETVERSION,hoi_drv_msg_getversion);
+
+        callsw(HOI_MSG_LOOP,    hoi_drv_msg_loop);
+        callsw(HOI_MSG_OSDON,   hoi_drv_msg_osdon);
+        callsw(HOI_MSG_OSDOFF,  hoi_drv_msg_osdoff);
+        callsw(HOI_MSG_REPAIR,  hoi_drv_msg_vso_repaire);
+        callsw(HOI_MSG_HPDON,   hoi_drv_msg_hpdon);
+        callsw(HOI_MSG_HPDOFF,  hoi_drv_msg_hpdoff);
+
+        callsw(HOI_MSG_POLL,    hoi_drv_msg_poll);
 
         default: ret = ERR_HOI_CMD_NOT_SUPPORTED; break;
     }
-
-    hoi_drv_unlock(handle);
 
     return ret;
 }

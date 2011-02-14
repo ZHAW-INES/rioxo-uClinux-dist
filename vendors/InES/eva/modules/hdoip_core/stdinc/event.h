@@ -4,11 +4,6 @@
 
 #define E_CNT                   (E_HOI_CNT+E_ADV7441A_CNT+E_VSI_CNT)
 
-/* internal events */
-#define E_HOI_ID                (0xff000000)
-#define E_HOI_CNT               1
-#define E_FORCE_TO_READY        (E_HOI_ID + 1)
-
 /* ADV7441A events */
 #define E_ADV7441A_ID		    (0x10000000) /* ADV7441A event ID */
 #define E_ADV7441A_CNT          6
@@ -19,6 +14,13 @@
 #define E_ADV7441A_HDCP         (E_ADV7441A_ID + 0x00000005)  /* HDCP encrypted content */
 #define E_ADV7441A_NO_HDCP      (E_ADV7441A_ID + 0x00000006)  /* no HDCP encrypted content */
 
+/* ETO events */
+#define E_ADV9889_ID            (0x90000000)
+#define E_ADV9889_CNT           2
+#define E_ADV9889_CABLE_ON      (E_ADV9889_ID + 0x00000001)  /* HDMI connected */
+#define E_ADV9889_CABLE_OFF     (E_ADV9889_ID + 0x00000002)  /* no HDMI connected */
+#define E_ADV9889_NEXT_EDID     (E_ADV9889_ID + 0x00000003)  /* next edid segment ready */
+
 /* VSI events */
 #define E_VSI_ID		        (0x20000000)
 #define E_VSI_CNT		        2
@@ -27,11 +29,12 @@
 
 /* VSO events */
 #define E_VSO_ID    	        (0x40000000)
-#define E_VSO_CNT               4
+#define E_VSO_CNT               5
 #define E_VSO_CHOKED            (E_VSO_ID + 0x00000001)
 #define E_VSO_PAYLOAD_EMPTY     (E_VSO_ID + 0x00000002)
 #define E_VSO_PAYLOAD_MTIMEOUT  (E_VSO_ID + 0x00000003)
 #define E_VSO_TIMESTAMP_ERROR   (E_VSO_ID + 0x00000004)
+#define E_VSO_ST_ACTIVE         (E_VSO_ID + 0x00000005)
 
 /* ASI events */
 #define E_ASI_ID                (0x50000000)
@@ -41,10 +44,22 @@
 /* ASO events */
 #define E_ASO_ID                (0x60000000)
 #define E_ASO_CNT               4
-#define E_ASO_SIZE_ERROR        (E_ASI_ID + 0x00000001)
-#define E_ASO_FIFO_EMPTY        (E_ASI_ID + 0x00000002)
-#define E_ASO_FIFO_FULL         (E_ASI_ID + 0x00000003)
-#define E_ASO_RAM_FULL          (E_ASI_ID + 0x00000004)
+#define E_ASO_SIZE_ERROR        (E_ASO_ID + 0x00000001)
+#define E_ASO_FIFO_EMPTY        (E_ASO_ID + 0x00000002)
+#define E_ASO_FIFO_FULL         (E_ASO_ID + 0x00000003)
+#define E_ASO_RAM_FULL          (E_ASO_ID + 0x00000004)
+
+/* ETI events */
+#define E_ETI_ID                (0x70000000)
+#define E_ETI_CNT               2
+#define E_ETI_LINK_UP           (E_ETI_ID + 0x00000001)
+#define E_ETI_LINK_DOWN         (E_ETI_ID + 0x00000002)
+
+/* ETO events */
+#define E_ETO_ID                (0x80000000)
+#define E_ETO_CNT               2
+#define E_ETO_LINK_UP           (E_ETO_ID + 0x00000001)
+#define E_ETO_LINK_DOWN         (E_ETO_ID + 0x00000002)
 
 
 /* VIO events */

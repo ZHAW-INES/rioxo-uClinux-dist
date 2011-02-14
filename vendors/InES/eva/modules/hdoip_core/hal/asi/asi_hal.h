@@ -24,7 +24,12 @@
 #define asi_disable(p)                  asi_clr_ctrl((p), ASI_CTRL_RUN)
 
 #define asi_set_dsc(p, dsc)             rbf_set_dsc_w((p), ASI_OFF_DSC_START_RO, (dsc))
+#define asi_set_write_dsc(p, v)         RBF_SET_REG((p), ASI_OFF_DSC_WRITE_RW, (v))
 #define asi_get_dsc(p, dsc)             rbf_get_dsc((p), ASI_OFF_DSC_START_RO, (dsc))
+#define asi_get_start_dsc(p)            RBF_GET_REG((p), ASI_OFF_DSC_START_RO)
+#define asi_get_stop_dsc(p)             RBF_GET_REG((p), ASI_OFF_DSC_STOP_RO)
+#define asi_get_write_dsc(p)            RBF_GET_REG((p), ASI_OFF_DSC_WRITE_RW)
+#define asi_get_read_dsc(p)             RBF_GET_REG((p), ASI_OFF_DSC_READ_RO)
 
 #define asi_set_dma_burst_size(p, v)    HOI_WR32((p), ASI_OFF_DMA_BURST_SIZE_RW, (v))
 #define asi_get_dma_burst_size(p)       HOI_RD32((p), ASI_OFF_DMA_BURST_SIZE_RW)

@@ -5,7 +5,9 @@
 /** register byte offset 
  * 
  */
+
 #define VSO_BASE_STATISTIC          (0x0080)
+#define VSO_ADDR_SPACE              (VSO_BASE_STATISTIC + 0x0C)
 
 #define VSO_OFF_CTRL			    (0x0000)
 #define VSO_OFF_STATUS			    (0x0004)

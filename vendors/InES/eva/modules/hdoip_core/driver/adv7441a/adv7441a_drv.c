@@ -414,6 +414,7 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
 			queue_put(event_queue, E_ADV7441A_NO_HDCP);
 		}
 	}
+
 	return ERR_ADV7441A_SUCCESS;
 }
 

@@ -5,6 +5,8 @@
 /** register byte offset
  * 
  */
+#define VSI_ADDR_SPACE                  (0x0058)
+
 #define VSI_OFF_STATUS_RD               (0x0000)
 #define VSI_OFF_STATUS_CLR              (0x0004)
 #define VSI_OFF_CONTROL_WR              (0x0008)

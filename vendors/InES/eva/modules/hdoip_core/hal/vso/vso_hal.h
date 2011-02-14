@@ -16,6 +16,14 @@
 #define vso_start_clear(p)              vso_set_ctrl(p, VSO_CTRL_CLEAR) 
 #define vso_stop_clear(p)               vso_clr_ctrl(p, VSO_CTRL_CLEAR)
 
+#define vso_set_dsc(p, d)               rbf_set_dsc_r((p), VSO_OFF_DSC_START_RO, (d))
+#define vso_set_read_dsc(p, v)          RBF_SET_REG((p), VSO_OFF_DSC_READ, (v))
+#define vso_get_dsc(p, d)               rbf_get_dsc((p), VSO_OFF_DSC_START_RO, (d))
+#define vso_get_start_dsc(p)            RBF_GET_REG((p), VSO_OFF_DSC_START_RO)
+#define vso_get_stop_dsc(p)             RBF_GET_REG((p), VSO_OFF_DSC_STOP_RO)
+#define vso_get_write_dsc(p)            RBF_GET_REG((p), VSO_OFF_DSC_WRITE_RO)
+#define vso_get_read_dsc(p)             RBF_GET_REG((p), VSO_OFF_DSC_READ)
+
 #define vso_get_timestamp(p)            HOI_RD32(p, VSO_OFF_TIMESTAMP_RO)
 #define vso_get_marker_timeout(p)       HOI_RD32(p, VSO_OFF_MARKER_TIMEOUT)
 #define vso_set_marker_timeout(p, v)    HOI_WR32(p, VSO_OFF_MARKER_TIMEOUT, v)

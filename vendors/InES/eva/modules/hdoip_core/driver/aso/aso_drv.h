@@ -15,6 +15,8 @@
 #include "aso_str.h"
 
 int aso_drv_init(t_aso* handle, void* p_aso);
+int aso_drv_set_buf(t_aso* handle, void* start_ptr, size_t size);
+int aso_drv_flush_buf(t_aso* handle);
 int aso_drv_handler(t_aso* handle, t_queue* event_queue);
 int aso_drv_update(t_aso* handle, struct hdoip_aud_params* aud_params, uint32_t aud_delay_us);
 int aso_drv_start(t_aso* handle);

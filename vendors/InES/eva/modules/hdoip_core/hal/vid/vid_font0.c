@@ -133,7 +133,7 @@ const uint16_t font[] = {
 
 
 const t_osd_font vid_font_8x13 = {
-        8, 13, 0, 223, font
+        8, 13, 0, 223, (uint16_t*)font
     };
 
 

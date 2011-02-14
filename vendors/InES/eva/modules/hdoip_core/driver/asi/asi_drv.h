@@ -15,6 +15,8 @@
 
 /* function prototypes */
 int asi_drv_init(t_asi* handle, void* p_asi);
+int asi_drv_set_buf(t_asi* handle, void* start_ptr, size_t size);
+int asi_drv_flush_buf(t_asi* handle);
 int asi_drv_handler(t_asi* handle, t_queue* event_queue);
 int asi_drv_update(t_asi* handle, struct hdoip_eth_params* eth_params, struct hdoip_aud_params* aud_params);
 int asi_drv_start(t_asi* handle);

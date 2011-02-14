@@ -17,6 +17,8 @@
 #include "adv7441a_drv.h"
 #include "adv9889_drv.h"
 #include "adv212_drv.h"
+#include "eti_drv.h"
+#include "eto_drv.h"
 #include "vio_drv.h"
 #include "vsi_drv.h"
 #include "vso_drv.h"
@@ -25,6 +27,8 @@
 #include "vrp_drv.h"
 #include "tag_drv.h"
 #include "tmr_hal.h"
+#include "ver_hal.h"
+#include "stream_sync.h"
 
 
 #define HANDLER_TIMER_INTERVAL      (HZ/20)
@@ -32,7 +36,6 @@
 
 typedef struct {
     void                *p_irq;
-    void                *p_reset;
     void                *p_tx;
     void                *p_rx;
     void                *p_vio;
@@ -45,6 +48,8 @@ typedef struct {
     void                *p_adv212;
     void                *p_vrp;
     void                *p_tmr;
+    void                *p_ver;
+    void                *p_sysid;
 
     t_i2c               i2c_tx;
     t_i2c               i2c_rx;
@@ -56,41 +61,23 @@ typedef struct {
     t_vrp               vrp;
     t_vsi               vsi;
     t_vso               vso;
+    t_asi               asi;
+    t_aso               aso;
+    t_eto               eto;
+    t_eti               eti;
     t_adv9889           adv9889;
     t_adv7441a          adv7441a;
+    t_sync_means        sync;
 
-    uint32_t            state;
     t_queue             *event;
-    t_queue             *response;
-    pid_t               owner;
-    spinlock_t          sem;            //!<
-    struct timer_list   timer;
+    wait_queue_head_t   eq;
 } t_hoi;
 
 
-static inline void hoi_drv_lock(t_hoi* handle)
-{
-    spin_lock(&handle->sem);
-}
-
-static inline void hoi_drv_unlock(t_hoi* handle)
-{
-    spin_unlock(&handle->sem);
-}
-
-static inline void hoi_drv_state(t_hoi* handle, uint32_t state)
-{
-    handle->state = state;
-}
-
-static inline void hoi_drv_force_state(t_hoi* handle, uint32_t state)
-{
-    handle->state = state;
-    queue_flush(handle->event);
-}
-
 void hoi_drv_init(t_hoi* handle);
 void hoi_drv_stop(t_hoi* handle);
+void hoi_drv_timer(t_hoi* handle);
+void hoi_drv_reset(t_hoi* handle, uint32_t rv);
 int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg);
 
 

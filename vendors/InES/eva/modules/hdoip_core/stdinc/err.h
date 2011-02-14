@@ -64,6 +64,12 @@
 #define ERR_ASO_SAMPLE_WIDTH_ERR                (ERR_ASO+4)
 #define ERR_ASO_CHANNEL_CNT_ERR                 (ERR_ASO+5)
 
+#define ERR_ETO                                 (0xeA000000)
+#define ERR_ETO_SUCCESS                         (ERR_ETO+1)
+
+#define ERR_ETI                                 (0xeB000000)
+#define ERR_ETI_SUCCESS                         (ERR_ETI+1)
+
 #define ERR_HOI                                 (0xe9000000)
 #define ERR_HOI_CMD_NOT_SUPPORTED               (ERR_HOI+1)
 

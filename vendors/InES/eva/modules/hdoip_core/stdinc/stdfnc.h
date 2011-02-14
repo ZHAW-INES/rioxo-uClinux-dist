@@ -35,4 +35,5 @@ static inline uint16_t swap16(uint16_t x)
     return x;
 }
 
+
 #endif /*STDFNC_*/

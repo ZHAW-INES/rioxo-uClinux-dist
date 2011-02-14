@@ -20,4 +20,6 @@ int i2c_drv_init(t_i2c* handle, void* p, int freq)
 	i2c_init(p, I2C_PRESCALE(SFREQ, freq));
 
 	I2C_REPORT(p);
+
+	return 0;
 }

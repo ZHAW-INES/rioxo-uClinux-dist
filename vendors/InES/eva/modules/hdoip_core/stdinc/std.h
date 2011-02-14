@@ -4,6 +4,7 @@
 
 // linux driver module
 #include <linux/kernel.h>
+#include <linux/signal.h>
 #include <linux/jiffies.h>
 #include <linux/sched.h>
 #include <linux/delay.h>
@@ -13,6 +14,7 @@
 
 // platform specific
 #include <asm/io.h>
+#include <asm/signal.h>
 
 // NIOS2 sopc specific
 #include <asm-nios2/nios2.h>
@@ -26,6 +28,5 @@
 #include "stdfnc.h"
 #include "queue.h"
 #include "ext_irq_pio.h"
-#include "ext_reset_pio.h"
 #include "stdrbf.h"
 

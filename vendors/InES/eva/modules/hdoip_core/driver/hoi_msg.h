@@ -13,13 +13,13 @@
 #include <linux/types.h>
 #include "../hal/vid/stdvid.h"
 #include "../hal/eth/stdeth.h"
+#include "../stdinc/event.h"
 
 // linux message
 #define HDOIP_IOCTL_MAGIC           ('h')
 #define HDOIP_IOCPARAM              (_IOWR(HDOIP_IOCTL_MAGIC, 1, t_hoi_msg))
 
 // Message ID
-#define HOI_MSG_GET                 (0x08000000)
 #define HOI_MSG_DRIVER              (0x70000000)
 #define HOI_MSG_LDRV                (0x70000001)
 #define HOI_MSG_CAPTURE             (0x70000002)
@@ -31,8 +31,6 @@
 #define HOI_MSG_RDAUDTAG            (0x7000000a)
 #define HOI_MSG_WRVIDTAG            (0x7000000b)
 #define HOI_MSG_WRAUDTAG            (0x7000000c)
-#define HOI_MSG_GETEVENT            (0x7000000d)
-#define HOI_MSG_GETSTATE            (0x7000000e)
 #define HOI_MSG_CFG                 (0x7000000f)
 #define HOI_MSG_RDCFG               (0x70000010)
 #define HOI_MSG_INFO                (0x70000011)
@@ -47,12 +45,55 @@
 #define HOI_MSG_ETI                 (0x7000001a)
 #define HOI_MSG_SETMTIME            (0x7000001b)
 #define HOI_MSG_GETMTIME            (0x7000001c)
+#define HOI_MSG_OFF                 (0x7000001d)
+#define HOI_MSG_SETSTIME            (0x7000001e)
+#define HOI_MSG_GETSTIME            (0x7000001f)
+#define HOI_MSG_TIMER               (0x70000020)
+#define HOI_MSG_ETHSTAT             (0x70000021)
+#define HOI_MSG_VSOSTAT             (0x70000022)
+#define HOI_MSG_BW                  (0x70000023)
+#define HOI_MSG_DEBUG               (0x70000024)
+#define HOI_MSG_ASI                 (0x70000025)
+#define HOI_MSG_ASO                 (0x70000026)
+#define HOI_MSG_STSYNC              (0x70000027)
+#define HOI_MSG_SYNCDELAY           (0x70000028)
+#define HOI_MSG_VIOSTAT             (0x70000029)
+#define HOI_MSG_GETVERSION          (0x7000002a)
+#define HOI_MSG_REPAIR              (0x7000002b)
+#define HOI_MSG_HPDON               (0x7000002c)
+#define HOI_MSG_HPDOFF              (0x7000002d)
+#define HOI_MSG_POLL                (0x700000ff)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
 #define DRV_ALL                     (0x00000003)
 #define DRV_ADV9889                 (1<<0)
 #define DRV_ADV7441                 (1<<1)
+
+// Reset
+#define DRV_RST                     (0x7f)
+#define DRV_RST_TMR                 (1<<0)
+#define DRV_RST_STSYNC              (1<<1)
+#define DRV_RST_VID_OUT             (1<<2)
+#define DRV_RST_VID_IN              (1<<3)
+#define DRV_RST_AUD_OUT             (1<<4)
+#define DRV_RST_AUD_IN              (1<<5)
+#define DRV_RST_VRP                 (1<<6)
+
+// Timer
+#define DRV_TMR_IN                  (0x00000001)
+#define DRV_TMR_OUT                 (0x00000002)
+#define DRV_TMR_ETH                 (0x00000004)
+
+// Config
+#define DRV_CODEC                   (0x000000ff)
+#define DRV_CODEC_NONE              (0x00000000)
+#define DRV_CODEC_JP2               (0x00000001)
+#define DRV_STREAM_SYNC             (0x00010000)
+
+// Streams
+#define DRV_ST_VIDEO                (1<<0)
+#define DRV_ST_AUDIO                (1<<1)
 
 
 //------------------------------------------------------------------------------
@@ -67,9 +108,15 @@ typedef struct {
     uint32_t            size;
 } __attribute__ ((__packed__)) t_hoi_msg;
 
+#define hoi_msg_switch_init(p, id) hoi_msg_init(p, id, t_hoi_msg)
 #define hoi_msg_loop_init(p) hoi_msg_init(p, HOI_MSG_LOOP, t_hoi_msg)
 #define hoi_msg_osdon_init(p) hoi_msg_init(p, HOI_MSG_OSDON, t_hoi_msg)
 #define hoi_msg_osdoff_init(p) hoi_msg_init(p, HOI_MSG_OSDOFF, t_hoi_msg)
+#define hoi_msg_poll_init(p) hoi_msg_init(p, HOI_MSG_POLL, t_hoi_msg)
+#define hoi_msg_repair_init(p) hoi_msg_init(p, HOI_MSG_REPAIR, t_hoi_msg)
+#define hoi_msg_hpdon_init(p) hoi_msg_init(p, HOI_MSG_HPDON, t_hoi_msg)
+#define hoi_msg_hpdoff_init(p) hoi_msg_init(p, HOI_MSG_HPDOFF, t_hoi_msg)
+
 
 //------------------------------------------------------------------------------
 // additional driver load/unload command
@@ -77,27 +124,13 @@ typedef struct {
 typedef struct {
     hoi_msg_extends;
     uint32_t            drivers;        //!< (wr) Driver Bitmap for active drivers
-    int                 pid;            //!< (wr) PID of calling process
 } __attribute__ ((__packed__)) t_hoi_msg_ldrv;
 
 #define hoi_msg_ldrv_init(p) hoi_msg_init(p, HOI_MSG_LDRV, t_hoi_msg_ldrv)
 
 
 //------------------------------------------------------------------------------
-// general configuration
-
-typedef struct {
-    hoi_msg_extends;
-    uint32_t            set_config;     //!< (wr) Config Bitmap
-    uint32_t            clr_config;     //!< (wr) Config Bitmap
-    uint32_t            new_config;     //!< (rd) Config Bitmap
-} __attribute__ ((__packed__)) t_hoi_msg_cfg;
-
-#define hoi_msg_cfg_init(p) hoi_msg_init(p, HOI_MSG_CFG, t_hoi_msg_cfg)
-
-
-//------------------------------------------------------------------------------
-// setup buffer
+// configuration
 
 typedef struct {
     hoi_msg_extends;
@@ -121,16 +154,54 @@ typedef struct {
     uint32_t            ip_address_src;
 } __attribute__ ((__packed__)) t_hoi_msg_eti;
 
-#define hoi_msg_eti_init(p) hoi_msg_init(p, HOI_MSG_ETI, t_hoi_msg_buf)
+#define hoi_msg_eti_init(p) hoi_msg_init(p, HOI_MSG_ETI, t_hoi_msg_eti)
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t            tx_cpu_cnt;
+    uint32_t            tx_vid_cnt;
+    uint32_t            tx_aud_cnt;
+    uint32_t            tx_inv_cnt;
+    uint32_t            rx_cpu_cnt;
+    uint32_t            rx_vid_cnt;
+    uint32_t            rx_aud_cnt;
+    uint32_t            rx_inv_cnt;
+    uint32_t            debug;
+} __attribute__ ((__packed__)) t_hoi_msg_ethstat;
+
+#define hoi_msg_ethstat_init(p) hoi_msg_init(p, HOI_MSG_ETHSTAT, t_hoi_msg_ethstat)
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t            vframe_cnt;
+    uint32_t            vframe_skip;
+    uint32_t            packet_cnt;
+    uint32_t            packet_lost;
+    uint32_t            packet_in_cnt;
+    uint32_t            status;
+} __attribute__ ((__packed__)) t_hoi_msg_vsostat;
+
+#define hoi_msg_vsostat_init(p) hoi_msg_init(p, HOI_MSG_VSOSTAT, t_hoi_msg_vsostat)
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t            fin;
+    uint32_t            fout;
+    int32_t             tgerr;
+    int32_t             pllerr;
+} __attribute__ ((__packed__)) t_hoi_msg_viostat;
+
+#define hoi_msg_viostat_init(p) hoi_msg_init(p, HOI_MSG_VIOSTAT, t_hoi_msg_viostat)
 
 
 //------------------------------------------------------------------------------
-// setup buffer
+// basic commands
 
 typedef struct {
     hoi_msg_extends;
     hdoip_eth_params    eth;        //!< (wr) ethernet parameter
     uint32_t            compress;   //!< (wr) use jpeg2000 compressor
+    uint32_t            encrypt;    //!< (wr) encryption key or '0'
     uint32_t            bandwidth;  //!< (wr) bandwidth
     t_video_timing      timing;     //!< (rd) timing of video
     uint32_t            advcnt;     //!< (rd) adv count when compression = true
@@ -141,20 +212,48 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
-    uint32_t            compress;   //!< use jpeg2000 compressor
+    uint32_t            compress;   //!< [15:0] use jpeg2000 compressor, [31:16]: cfg
+    uint32_t            encrypt;    //!< (wr) encryption key or '0'
     t_video_timing      timing;     //!< timing of video
     uint32_t            advcnt;     //!< adv count when compression = true
-    uint32_t            port;
+    uint32_t            delay_ms;
 } __attribute__ ((__packed__)) t_hoi_msg_vso;
 
 #define hoi_msg_vso_init(p) hoi_msg_init(p, HOI_MSG_VSO, t_hoi_msg_vso)
 
-//------------------------------------------------------------------------------
-// setup/read video format for input/output
 
 typedef struct {
     hoi_msg_extends;
-    t_video_format      value;
+    uint32_t            cfg;
+    hdoip_eth_params    eth;            //!< (wr) ethernet parameter
+    uint32_t            fs;             //!< (wr) sampel frequency in Hz
+    uint32_t            width;          //!< (wr) sampel bit width
+    uint32_t            channel_cnt;    //!< (wr) number of used audio channels
+    uint8_t             channel[16];    //!< (wr) mapping of input/transport channel
+} __attribute__ ((__packed__)) t_hoi_msg_asi;
+
+#define hoi_msg_asi_init(p) hoi_msg_init(p, HOI_MSG_ASI, t_hoi_msg_asi)
+
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t            delay_ms;       //!< (wr) audio delay
+    uint32_t            fs;             //!< (wr) sampel frequency in Hz
+    uint32_t            fs_tol;         //!< (wr) frequency tolerance (fs +/- fs_tol)
+    uint32_t            width;          //!< (wr) sampel bit width
+    uint32_t            channel_cnt;    //!< (wr) number of used audio channels
+    uint8_t             channel[16];    //!< (wr) mapping of transport/output channel
+} __attribute__ ((__packed__)) t_hoi_msg_aso;
+
+#define hoi_msg_aso_init(p) hoi_msg_init(p, HOI_MSG_ASO, t_hoi_msg_aso)
+
+
+//------------------------------------------------------------------------------
+// read/write single uin32_t command
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t            value;
 } __attribute__ ((__packed__)) t_hoi_msg_param;
 
 #define hoi_msg_read_init(p, a) hoi_msg_init(p, a, t_hoi_msg_param)
@@ -175,6 +274,21 @@ typedef struct {
 
 #define hoi_msg_capture_init(p) hoi_msg_init(p, HOI_MSG_CAPTURE, t_hoi_msg_image)
 #define hoi_msg_show_init(p) hoi_msg_init(p, HOI_MSG_SHOW, t_hoi_msg_image)
+#define hoi_msg_debug_init(p) hoi_msg_init(p, HOI_MSG_DEBUG, t_hoi_msg_image)
+
+
+//------------------------------------------------------------------------------
+// Get version of the firmware 
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t            fpga_date;
+    uint32_t            fpga_svn;
+    uint32_t            sysid_date;
+    uint32_t            sysid_id;
+} __attribute__ ((__packed__)) t_hoi_msg_version;
+
+#define hoi_msg_getversion_init(p) hoi_msg_init(p, HOI_MSG_GETVERSION, t_hoi_msg_version)
 
 
 //------------------------------------------------------------------------------
@@ -182,6 +296,7 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
+    uint32_t            segment;
     uint8_t             edid[256];
 } __attribute__ ((__packed__)) t_hoi_msg_edid;
 
@@ -209,10 +324,14 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
-    t_video_timing      timing;     //!< timing of video
+    t_video_timing      timing;         //!< timing of video
+    uint32_t            advcnt;
+    uint32_t            audio_fs[2];    //!< audio sampling frequency [HZ] (0=off)
+    uint32_t            audio_width[2]; //!< audio sample width [bit]
+    uint32_t            audio_map;      //!< bitmap for active audio channels
 } __attribute__ ((__packed__)) t_hoi_msg_info;
 
-#define hoi_msg_info(p) hoi_msg_init(p, HOI_MSG_INFO, t_hoi_msg_info)
+#define hoi_msg_info_init(p) hoi_msg_init(p, HOI_MSG_INFO, t_hoi_msg_info)
 
 
 //------------------------------------------------------------------------------

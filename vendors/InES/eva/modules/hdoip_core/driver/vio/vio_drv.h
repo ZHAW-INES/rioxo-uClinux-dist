@@ -6,6 +6,7 @@
 #include "vio_drv_pll.h"
 #include "vio_drv_osd.h"
 #include "adv212_drv.h"
+#include "vio_str.h"
 
 /** Handle
  */
@@ -56,6 +57,12 @@ static inline void vio_drv_set_cfg(t_vio* handle, uint32_t cfg)
 	handle->config = handle->config | cfg;
 }
 
+static inline void vio_drv_change_mode(t_vio* handle, uint32_t cfg)
+{
+    handle->config = (handle->config & ~VIO_CONFIG_MODE) | cfg;
+}
+
+
 static inline void vio_drv_clr_cfg(t_vio* handle, uint32_t cfg)
 {
 	handle->config = handle->config & ~cfg;
@@ -73,6 +80,7 @@ int vio_drv_setup_osd(t_vio* handle, t_osd_font* font);
 int vio_drv_reset(t_vio* handle);
 int vio_drv_encode(t_vio* handle);
 int vio_drv_decode(t_vio* handle);
+int vio_drv_decode_sync(t_vio* handle);
 int vio_drv_plainout(t_vio* handle);
 int vio_drv_plainin(t_vio* handle);
 int vio_drv_debug(t_vio* handle);
@@ -88,6 +96,7 @@ int vio_drv_set_format_in(t_vio* handle, t_video_format f);
 int vio_drv_set_format_out(t_vio* handle, t_video_format f);
 int vio_drv_set_format_proc(t_vio* handle, t_video_format f);
 int vio_drv_set_osd(t_vio* handle, bool en);
+int vio_drv_set_hpd(t_vio* handle, bool en);
 
 int vio_drv_set_sync(t_vio* handle);
 

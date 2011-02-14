@@ -34,6 +34,7 @@ typedef struct {
 	bool is_open;
     t_hoi hoi;
 	struct mutex sem;
+	struct timer_list timer;
 } t_hoi_dev;
 
 t_hoi_dev *hdev;
@@ -48,9 +49,7 @@ static int hdoip_core_open(struct inode *inop, struct file *filp)
 
     hdev = container_of(inop->i_cdev, t_hoi_dev, cdev);
 
-    ret = mutex_lock_interruptible(&hdev->sem);
-    if (ret)
-        return ret;
+    if ((ret = mutex_lock_interruptible(&hdev->sem))) return ret;
 
     if (hdev->is_open) {
         ret = -EBUSY;
@@ -67,11 +66,12 @@ err_out:
 
 static int hdoip_core_release(struct inode *inop, struct file *filp)
 {
+    int ret;
     t_hoi_dev *hdev;
 
     hdev = container_of(inop->i_cdev, t_hoi_dev, cdev);
 
-    mutex_lock(&hdev->sem);
+    if ((ret = mutex_lock_interruptible(&hdev->sem))) return ret;
 
     hdev->is_open = false;
 
@@ -84,16 +84,40 @@ static ssize_t hdoip_core_write(struct file *filp, const char __user *buf, size_
     t_hoi_dev *hdev = filp->private_data;
 	ssize_t ret;
 
-	ret = mutex_lock_interruptible(&hdev->sem);
-	if (ret)
-		return ret;
+	if ((ret = mutex_lock_interruptible(&hdev->sem))) return ret;
 
-	vio_drv_osd_write(&hdev->hoi.vio, buf, count);
+	vio_drv_osd_write(&hdev->hoi.vio, (uint8_t*)buf, count);
 
 	ret = count;
 
 	mutex_unlock(&hdev->sem);
 	return ret;
+}
+
+static ssize_t hdoip_core_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
+{
+    t_hoi_dev *hdev = filp->private_data;
+    ssize_t ret;
+
+    if ((ret = mutex_lock_interruptible(&hdev->sem))) return ret;
+
+    if (count != 4) {
+        return -EFAULT;
+    }
+
+    while (queue_empty(hdev->hoi.event)) {
+        // no data -> wait
+        mutex_unlock(&hdev->sem);
+        wait_event_interruptible(hdev->hoi.eq, !queue_empty(hdev->hoi.event));
+        if ((ret = mutex_lock_interruptible(&hdev->sem))) return ret;
+    }
+
+    uint32_t event = queue_get(hdev->hoi.event);
+    copy_to_user(buf, &event, 4);
+
+    mutex_unlock(&hdev->sem);
+
+    return 4;
 }
 
 static int hdoip_core_ioctl(struct inode *inop, struct file *filp,
@@ -103,9 +127,12 @@ static int hdoip_core_ioctl(struct inode *inop, struct file *filp,
     t_hoi_msg msg;
     uint32_t tmp[256]; // 1KiB maximum size
     int ret = 0;
+    //uint32_t t;
 
+    if ((ret = mutex_lock_interruptible(&hdev->sem))) return ret;
 
     if (cmd == HDOIP_IOCPARAM) {
+        //t = jiffies;
 
         // the message is copied to an local buffer,
         // processed and then copied back to userspace
@@ -131,10 +158,13 @@ static int hdoip_core_ioctl(struct inode *inop, struct file *filp,
             return -EFAULT;
         }
 
+        //t = (jiffies - t) * 1000 / HZ;
+        //REPORT(INFO, "execution time: %d ms", t);
     } else {
         //... TODO
     }
 
+    mutex_unlock(&hdev->sem);
     return ret;
 }
 
@@ -142,7 +172,8 @@ static struct file_operations hdoip_core_fops = {
     .open       = hdoip_core_open,
     .release    = hdoip_core_release,
     .ioctl      = hdoip_core_ioctl,
-	.write		= hdoip_core_write
+	.write		= hdoip_core_write,
+	.read       = hdoip_core_read
 };
 
 
@@ -156,12 +187,6 @@ static int hdoip_init(void)
 
 	printk(KERN_ALERT "hdoip driver is starting...\n");
 
-	/*
-	if (alloc_chrdev_region(&devno, 0, 1, "hdoip_osd")) {
-		printk(KERN_ALERT "could not allocate dev_t\n");
-		return -1;
-	}*/
-
     devno = MKDEV(HDOIP_CORE_MAJOR, HDOIP_CORE_MINOR);
     ret = register_chrdev_region(devno, HDOIP_CORE_NUM_DEVICES, DRV_NAME);
 
@@ -173,6 +198,7 @@ static int hdoip_init(void)
 		pr_err( "Failed to allocate device private data\n");
 		return -ENOMEM;
 	}
+	init_waitqueue_head(&hdev->hoi.eq);
 	hdev->devno = devno;
 	mutex_init(&hdev->sem);
 	cdev_init(&hdev->cdev, &hdoip_core_fops);
@@ -183,7 +209,11 @@ static int hdoip_init(void)
 		return -1;
 	}
 
+	if ((ret = mutex_lock_interruptible(&hdev->sem))) return ret;
+
 	hoi_drv_init(&hdev->hoi);
+
+	mutex_unlock(&hdev->sem);
 
 	return 0;
 }
@@ -194,6 +224,7 @@ static void hdoip_exit(void)
 
 	printk(KERN_ALERT "Goodbye, cruel world\n");
 }
+
 
 module_init(hdoip_init);
 module_exit(hdoip_exit);

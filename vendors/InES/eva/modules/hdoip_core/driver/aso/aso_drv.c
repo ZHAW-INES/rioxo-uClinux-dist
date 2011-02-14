@@ -1,4 +1,5 @@
 
+#include "stdrbf.h"
 #include "aso_drv.h"
 
 /** Initialize audio stream out driver 
@@ -28,6 +29,35 @@ int aso_drv_init(t_aso* handle, void* p_aso)
 
     return ERR_ASO_SUCCESS;
 }
+
+/** Initialize the ringbuffer (read pointer)
+ *
+ * @param handle pointer to the aso handle
+ * @param start_ptr start address of the buffer
+ * @param size size of the buffer
+ * @return error code
+ */
+int aso_drv_set_buf(t_aso* handle, void* start_ptr, size_t size) 
+{
+    t_rbf_dsc dsc;
+
+    rbf_dsc(&dsc, start_ptr, size);
+    aso_set_dsc(handle->p_aso, &dsc);
+
+    return ERR_ASO_SUCCESS;
+}
+
+/** Flush the ringbuffer (set read to write pointer)
+ *
+ * @param handle pointer to the aso handle
+ * @return error code
+ */
+int aso_drv_flush_buf(t_aso* handle)
+{
+    aso_set_read_dsc(handle->p_aso, aso_get_write_dsc(handle->p_aso));
+    return ERR_ASO_SUCCESS;
+}
+
 
 /** Starts audio stream out (parameters must be set)
 *
@@ -181,7 +211,7 @@ int aso_drv_set_aud_params(t_aso* handle, struct hdoip_aud_params* aud_params)
 
     /* 64*fs = output frequency. division by 2 because clock signal toggles after division factor */
     div_base = ((uint64_t)(1 << 20) * SFREQ) / (aud_params->fs * 64 * 2); 
-
+    
     /* fixed point multiplied with tolerance */
     div_slow = div_base * ((uint64_t)ASO_DRV_I2S_FREQ_FACT_SLOW * (1 << 20));
     div_slow = div_slow >> 20;

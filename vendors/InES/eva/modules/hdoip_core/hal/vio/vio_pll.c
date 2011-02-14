@@ -147,18 +147,18 @@ void vio_pll_sel(void* p, int sel)
             if (!status) {
                 // switch input
                 vio_set_cfg(p, VIO_CFG_PLL_SW);
-                schedule_timeout(HZ/10+1);
+                msleep(10);
                 vio_clr_cfg(p, VIO_CFG_PLL_SW);
-                schedule_timeout(HZ/10+1);
+                msleep(10);
             }
         break;
         case VIO_SEL_75MHZ:
             if (status) {
                 // switch input
                 vio_set_cfg(p, VIO_CFG_PLL_SW);
-                schedule_timeout(HZ/10+1);
+                msleep(10);
                 vio_clr_cfg(p, VIO_CFG_PLL_SW);
-                schedule_timeout(HZ/10+1);
+                msleep(10);
             }
         break;
     }   
@@ -186,19 +186,5 @@ void vio_pll_update(void* p, t_vio_pll* pll)
     
     vio_pll_reconfig(p);
     
-    /*
-    vio_pll_shift(p, VIO_PLL_TYPE_C0, pll->phase[0], pll->fvco);
-    vio_pll_shift(p, VIO_PLL_TYPE_C0, pll->phase[1], pll->fvco);
-    vio_pll_shift(p, VIO_PLL_TYPE_C0, pll->phase[2], pll->fvco);
-    vio_pll_shift(p, VIO_PLL_TYPE_C0, pll->phase[3], pll->fvco);
-     */
-
-    // set pll control mode
-    vio_set_pllc(p, pll->mode);
-    
-    if (pll->mode != VIO_MUX_PLLC_FREE) {
-        vio_set_cfg(p, VIO_CFG_PLL_CTRL);
-    }
-    
-    schedule_timeout(HZ/10+1);
+    msleep(10);
 }

@@ -8,13 +8,6 @@
 #include "vid_const.h"
 #include "ext_irq_pio.h"
 
-// TODO: remove:
-#include "hdoip.h"
-#include "adv7441a_drv_edid.h"
-
-// timer prototype
-static int hoi_drv_timer(unsigned long data);
-
 
 /* base driver initialization
  *
@@ -33,45 +26,108 @@ void hoi_drv_init(t_hoi* handle)
     handle->p_adv212  = ioremap(BASE_ADV212,      0xffffffff);
     handle->p_vrp     = ioremap(BASE_VRP,         0xffffffff);
     handle->p_tmr     = ioremap(BASE_TIMER,       0xffffffff);
-    handle->p_reset   = ioremap(BASE_RESET,       0xffffffff);
     handle->p_irq     = ioremap(BASE_EXT_IRQ,     0xffffffff);
-    handle->p_esi     = ioremap(ACB_ETH_IN_BASE,  0xffffffff);
-    handle->p_eso     = ioremap(ACB_ETH_OUT_BASE, 0xffffffff);
-
-    // apply reset signal for at least 100ms
-    ext_reset_clear(handle->p_reset, 0);
-    schedule_timeout(HZ/10+1);
-    ext_reset_set(handle->p_reset, 0xf);
-    schedule_timeout(1);
+    handle->p_esi     = ioremap(BASE_ETI,         0xffffffff);
+    handle->p_eso     = ioremap(BASE_ETO,         0xffffffff);
+    handle->p_ver     = ioremap(BASE_VER,         0xffffffff);
+    handle->p_sysid   = ioremap(BASE_SYSID,       0xffffffff);
 
     // init
-    spin_lock_init(&handle->sem);
     handle->event = queue_init(100);
-    handle->response = queue_init(100);
 
     // setup components
+
+    // timer init
+    tmr_init(handle->p_tmr);
 
     // init i2c with 400kHz
     i2c_drv_init(&handle->i2c_tx, handle->p_tx, 400000);
     i2c_drv_init(&handle->i2c_rx, handle->p_rx, 400000);
 
-    // init adv7441a
-    adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, adv7441a_edid_table); 
-
     // init
+    eti_drv_set_ptr(&handle->eti, handle->p_esi);
+    eto_drv_set_ptr(&handle->eto, handle->p_eso);
     vio_drv_init(&handle->vio, handle->p_vio, handle->p_adv212);
     vsi_drv_init(&handle->vsi, handle->p_vsi);
     vso_drv_init(&handle->vso, handle->p_vso);
-    vio_drv_setup_osd(&handle->vio, &vid_font_8x13);
+    asi_drv_init(&handle->asi, handle->p_asi);
+    aso_drv_init(&handle->aso, handle->p_aso);
+    vio_drv_setup_osd(&handle->vio, (t_osd_font*)&vid_font_8x13);
     vrp_drv_init(&handle->vrp, &handle->vio, handle->p_vrp);
+    stream_sync_init(&handle->sync, SIZE_MEANS, SIZE_RISES,
+            handle->p_aso, handle->p_vso, handle->p_tmr,
+            DEAD_TIME, P_GAIN, I_GAIN, INC_PPM);
 
-    /* Init timer for handler function */
-    init_timer(&handle->timer);
-    handle->timer.expires = jiffies + HANDLER_TIMER_INTERVAL;
-    handle->timer.function = hoi_drv_timer;
-    handle->timer.data = handle;
-    add_timer(&handle->timer);
+    hoi_drv_stop(handle);
 }
+
+/** partially reset driver
+ *
+ * @param handle hoi handle
+ * @param reset vectore
+ */
+void hoi_drv_reset(t_hoi* handle, uint32_t rv)
+{
+    // Stop Video I/O
+    if (rv & (DRV_RST_VID_OUT | DRV_RST_VID_IN)) {
+        REPORT(INFO, "reset vio");
+        vio_drv_reset(&handle->vio);
+    }
+
+    // Deactivate VRP
+    if (rv & DRV_RST_VRP) {
+        REPORT(INFO, "reset vrp");
+        vrp_drv_off(&handle->vrp);
+    }
+
+    // Stop Video Output
+    if (rv & DRV_RST_VID_OUT) {
+        REPORT(INFO, "reset vso/eti");
+        vso_drv_stop(&handle->vso);
+        eti_drv_stop_vid(&handle->eti);
+        eti_set_config_video_enc_dis(handle->p_esi);
+        vso_drv_flush_buf(&handle->vso);
+    }
+
+    // Stop Video Input
+    if (rv & DRV_RST_VID_IN) {
+        REPORT(INFO, "reset eto/vsi");
+        eto_drv_stop_vid(&handle->eto);
+        eto_set_config_video_enc_dis(handle->p_eso);
+        vsi_drv_stop(&handle->vsi);
+        vsi_drv_flush_buf(&handle->vsi);
+    }
+
+    // Stop Audio Output
+    if (rv & DRV_RST_AUD_OUT) {
+        REPORT(INFO, "reset aso/eti");
+        aso_drv_stop(&handle->aso);
+        eti_drv_stop_aud(&handle->eti);
+        eti_set_config_audio_enc_dis(handle->p_esi);
+        aso_drv_flush_buf(&handle->aso);
+    }
+
+    // Stop Audio Input
+    if (rv & DRV_RST_AUD_IN) {
+        REPORT(INFO, "reset eto/asi");
+        eto_drv_stop_aud(&handle->eto);
+        eto_set_config_audio_enc_dis(handle->p_eso);
+        asi_drv_stop(&handle->asi);
+        asi_drv_flush_buf(&handle->asi);
+    }
+
+    // Stop stream sync
+    if (rv & DRV_RST_STSYNC) {
+        REPORT(INFO, "reset st-sync");
+        stream_sync_stop(&handle->sync);
+    }
+
+    if (rv & DRV_RST_TMR) {
+        REPORT(INFO, "reset timer");
+        tmr_init(handle->p_tmr);
+    }
+}
+
 
 /** This function force the driver into idle state
  *
@@ -79,32 +135,30 @@ void hoi_drv_init(t_hoi* handle)
  */
 void hoi_drv_stop(t_hoi* handle)
 {
-    vso_drv_stop(&handle->vso);
-    vsi_drv_stop(&handle->vso);
-    vrp_drv_off(&handle->vrp);
-    vio_drv_reset(&handle->vio);
+    hoi_drv_reset(handle, DRV_RST);
 }
 
-void hoi_drv_user_event(t_hoi* handle, uint32_t event)
-{
-    queue_put(handle->response, event);
-
-    //kill(handle->owner, POLL_MSG);
-}
-
-uint32_t irq_old = 0;
 void hoi_drv_interrupt(t_hoi* handle)
 {
     uint32_t irq = HOI_RD32(handle->p_irq, 0);
 
     irq = irq ^ EXT_IRQ_POLARITY;
 
-    if (irq & EXT_IRQ_HDMI_RX_INT1) {
-        adv7441a_irq1_handler(&handle->adv7441a, handle->event);
+    if (handle->drivers & DRV_ADV7441) {
+        if (irq & EXT_IRQ_HDMI_RX_INT1) {
+            adv7441a_irq1_handler(&handle->adv7441a, handle->event);
+        }
+        if (irq & EXT_IRQ_HDMI_RX_INT2) {
+            adv7441a_irq2_handler(&handle->adv7441a, handle->event);
+        }
     }
-    if (irq & EXT_IRQ_HDMI_RX_INT2) {
-        adv7441a_irq2_handler(&handle->adv7441a, handle->event);
+
+    if (handle->drivers & DRV_ADV9889) {
+        if (irq & EXT_IRQ_HDMI_TX_INT1) {
+            adv9889_irq_handler(&handle->adv9889, handle->event);
+        }
     }
+
     if (irq & EXT_IRQ_J2K_CODEC_0) {
         vio_drv_irq_adv212(&handle->vio, 0, handle->event);
     }
@@ -124,36 +178,18 @@ void hoi_drv_handler(t_hoi* handle)
     vio_drv_handler(&handle->vio, handle->event);
     vsi_drv_handler(&handle->vsi, handle->event);
     vso_drv_handler(&handle->vso, handle->event);
+    asi_drv_handler(&handle->asi, handle->event);
+    aso_drv_handler(&handle->aso, handle->event);
+    eto_drv_handler(&handle->eto, handle->event);
+    eti_drv_handler(&handle->eti, handle->event);
+    stream_sync(&handle->sync);
 }
 
-void hoi_drv_fsm(t_hoi* handle, uint32_t event)
+void hoi_drv_timer(t_hoi* handle)
 {
-    REPORT(INFO, "event = %08x", event); // TODO: remove
-
-}
-
-static int hoi_drv_timer(unsigned long data)
-{
-    uint32_t event;
-    t_hoi* handle = data;
-
-    hoi_drv_lock(handle);
-
     // interrupt
     hoi_drv_interrupt(handle);
 
     // handler
     hoi_drv_handler(handle);
-
-    // FSM
-    while ((event = queue_get(handle->event))) {
-        hoi_drv_fsm(handle, event);
-    }
-
-    // signal update
-
-    hoi_drv_unlock(handle);
-
-    handle->timer.expires = jiffies + HANDLER_TIMER_INTERVAL;
-    add_timer(&handle->timer);
 }

@@ -232,7 +232,7 @@ void adv212_pll_init(void* p)
     // Hard Reset (10ms)
     // Boot Mode should also be reset?
     adv212_write16(p, ADV212_BOOT, ADV212_HARDRST);
-    schedule_timeout(HZ/10+1);
+    msleep(100);
     
     // mclk is 37.5 MHz
     // set pll: Open-drain ACK_N, HCLK = JCLK / 2 (because HCLK max is 108 MHZ)
@@ -266,10 +266,10 @@ void adv212_pll_init(void* p)
  */
 int adv212_boot_jdata(void* p, uint32_t* firmware, size_t size, uint16_t swflag,
                       uint32_t* param_set, uint32_t param_count, 
-                      uint32_t* register_set, uint32_t register_count)
+                      uint32_t* register_set, uint32_t register_count, bool mc)
 {
     unsigned long time;
-    
+
     if (!param_set || !register_set || !firmware) {
         return ERR_ADV212_NULL_POINTER;
     }
@@ -283,13 +283,13 @@ int adv212_boot_jdata(void* p, uint32_t* firmware, size_t size, uint16_t swflag,
     
     // Access for Memory
     adv212_w16_stp16(p);
-    
+
     // Load Firmware
-    adv212_iwrite16b(p, ADV212_FIRMWARE_BASE, firmware, size);
-    
+    adv212_iwrite16b(p, ADV212_FIRMWARE_BASE, (uint16_t*)firmware, size);
+
     // Soft reset
     adv212_write16(p, ADV212_BOOT, ADV212_SOFTRST | ADV212_COPROCESSOR_BOOT);
-    
+
     // Set Bus Mode / MMode again after soft-reset
     // We are using 16 Bit Host Data-Width  
     // and JDATA Mode, No DMA Width may be set in JDATA Mode
@@ -319,7 +319,7 @@ int adv212_boot_jdata(void* p, uint32_t* firmware, size_t size, uint16_t swflag,
     
     // Enable SWIRQ0
     adv212_write16(p, ADV212_EIRQIE, ADV212_EIRQ_SWIRQ0);
-    
+
     // wait for irq assertion (max. 1s)
     time = jiffies + HZ; // 1 second
     while(!(adv212_read16(p, ADV212_EIRQFLG) & ADV212_EIRQ_SWIRQ0)) {
@@ -340,13 +340,17 @@ int adv212_boot_jdata(void* p, uint32_t* firmware, size_t size, uint16_t swflag,
     if (adv212_read16(p, ADV212_SWFLAG) != swflag) {
         return ERR_ADV212_BOOT_FAIL;
     }
-    
-    // Ack all IRQ
-    adv212_write16(p, ADV212_EIRQFLG, 0xffff);
-    
-    // IRQ Enable (for error)
-    adv212_write16(p, ADV212_EIRQIE, ADV212_EIRQ_CFERR);
-    
+
+    // Ack SWIRQ0 IRQ
+    adv212_write16(p, ADV212_EIRQFLG, ADV212_EIRQ_SWIRQ0);
+
+    // IRQ Enable (CFTH/CFERR seems to be not valid in JDATA mode)
+    if (mc) {
+        adv212_write16(p, ADV212_EIRQIE, ADV212_EIRQ_SWIRQ1);
+    } else {
+        adv212_write16(p, ADV212_EIRQIE, 0);
+    }
+
     // Set Bus Mode / MMode again after soft-reset
     // We are using 16 Bit Host Data-Width  
     // and JDATA Mode, No DMA Width may be set in JDATA Mode
@@ -355,8 +359,56 @@ int adv212_boot_jdata(void* p, uint32_t* firmware, size_t size, uint16_t swflag,
     // Access for Parameter
     adv212_w16_stp16(p);
     
-    // ADV212 should now run
-    
+
+    return ERR_ADV212_SUCCESS;
+}
+
+
+/** wait for SWIRQ1
+ *
+ * @param p base address of the ADV212
+ */
+
+int adv212_boot_sync(void* p)
+{
+    unsigned long time;
+
+    // wait for irq assertion (max. 1s)
+    time = jiffies + HZ; // 1 second
+    while(!(adv212_read16(p, ADV212_EIRQFLG) & ADV212_EIRQ_SWIRQ1)) {
+        // add timeout? -> return ADV212_BOOT_TIMEOUT
+        if (time_after(jiffies, time)) {
+            return ERR_ADV212_BOOT_TIMEOUT;
+        }
+    }
+
+    // Ack SWIRQ0 IRQ
+    adv212_write16(p, ADV212_EIRQFLG, ADV212_EIRQ_SWIRQ1);
+
+    return ERR_ADV212_SUCCESS;
+}
+
+int adv212_boot_sync_wait(void* p)
+{
+    unsigned long time;
+
+    // wait for irq assertion (max. 1s)
+    time = jiffies + HZ; // 1 second
+    while(!(adv212_read16(p, ADV212_EIRQFLG) & ADV212_EIRQ_SWIRQ1)) {
+        // add timeout? -> return ADV212_BOOT_TIMEOUT
+        if (time_after(jiffies, time)) {
+            return ERR_ADV212_BOOT_TIMEOUT;
+        }
+    }
+
+    return ERR_ADV212_SUCCESS;
+}
+
+int adv212_boot_sync_ack(void* p)
+{
+    // Ack SWIRQ0 IRQ
+    adv212_write16(p, ADV212_EIRQFLG, ADV212_EIRQ_SWIRQ1);
+
     return ERR_ADV212_SUCCESS;
 }
 

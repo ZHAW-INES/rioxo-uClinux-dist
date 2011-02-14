@@ -15,8 +15,13 @@
 #define vsi_enable(p)               HOI_REG_SET((p), VSI_OFF_CONTROL_WR, (VSI_CFG_RUN))
 #define vsi_disable(p)              HOI_REG_SET((p), VSI_OFF_CONTROL_CLR, (VSI_CFG_RUN))
 
-#define vsi_set_dsc(p, dsc)         rbf_set_dsc_w(p, VSI_OFF_DSC_START_RO, dsc)
-#define vsi_get_dsc(p, dsc)         rbf_get_dsc(p, VSI_OFF_DSC_START_RO, dsc)
+#define vsi_set_dsc(p, d)           rbf_set_dsc_w((p), VSI_OFF_DSC_START_RD, (d))
+#define vsi_set_write_dsc(p, v)     RBF_SET_REG((p), VSI_OFF_DSC_WRITE_RW, (v))
+#define vsi_get_dsc(p, d)           rbf_get_dsc((p), VSI_OFF_DSC_START_RD, (d))
+#define vsi_get_start_dsc(p)        RBF_GET_REG((p), VSI_OFF_DSC_START_RD)
+#define vsi_get_stop_dsc(p)         RBF_GET_REG((p), VSI_OFF_DSC_STOP_RD)
+#define vsi_get_write_dsc(p)        RBF_GET_REG((p), VSI_OFF_DSC_WRITE_RW)
+#define vsi_get_read_dsc(p)         RBF_GET_REG((p), VSI_OFF_DSC_READ_RD)
 
 #define vsi_set_eth_word_len(p, v)  HOI_WR32(p, VSI_OFF_ETH_WORD_LEN_RW, v)
 #define vsi_get_eth_word_len(p)     HOI_RD32(p, VSI_OFF_ETH_WORD_LEN_RW)

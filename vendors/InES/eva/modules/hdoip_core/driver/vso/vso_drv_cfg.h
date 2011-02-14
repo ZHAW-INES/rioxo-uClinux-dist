@@ -1,6 +1,8 @@
 #ifndef VSO_DRV_CFG_H_
 #define VSO_DRV_CFG_H_
 
+#include "hoi_burst.h"
+
 /* VSO configuration */
 
 #define VSO_DRV_FIFO_SIZE			    (1024)
@@ -9,8 +11,7 @@
 #define VSO_DRV_TIMESTAMP_TOLERANCE     (10) /* in percent */
 #define VSO_DRV_CLEAR_TIME              (41)  /* in us */
 
-#define VSO_DRV_DMA_BURST_SIZE          (32) /* in 32 bit words */
-#define VSO_DRV_DMA_ALMOST_FULL         (VSO_DRV_FIFO_SIZE - 10)
+#define VSO_DRV_DMA_ALMOST_FULL         (VSO_DRV_FIFO_SIZE - VSO_DRV_DMA_BURST_SIZE - 10)
 
 /* status bit declaration */
 #define VSO_DRV_STATUS                  (0x0000007F)

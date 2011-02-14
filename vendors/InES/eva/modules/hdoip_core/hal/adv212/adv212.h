@@ -26,8 +26,13 @@
 void adv212_pll_init(void* p);
 int adv212_boot_jdata(void* p, uint32_t* firmware, size_t size, uint16_t swflag,
                       uint32_t* param_set, uint32_t param_count, 
-                      uint32_t* register_set, uint32_t register_count);
+                      uint32_t* register_set, uint32_t register_count, bool mc);
 void adv212_set_rc_size(void* p, uint32_t size);
 uint32_t adv212_get_irq(void* p);
+
+int adv212_boot_sync(void* p);
+int adv212_boot_sync_wait(void* p);
+int adv212_boot_sync_ack(void* p);
+
 
 #endif /*ADV212_H_*/

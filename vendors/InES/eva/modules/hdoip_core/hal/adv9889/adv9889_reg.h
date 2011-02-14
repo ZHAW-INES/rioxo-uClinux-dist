@@ -9,6 +9,7 @@
 #define ADV9889_REG_H_
 
 #define ADV9889_ADDRESS 				(0x72)
+#define ADV9889_ADDRESS_EDID            (0x7e)
 
 // OFFSET
 #define ADV9889_OFF_AUDIO      			(0x0a)
@@ -110,10 +111,10 @@
 #define ADV9889_INFO2_AAR_14_9			0xb0
 
 // ADV9889_OFF_INTEN1
-#define ADV9889_INT1_HPD					0x80
-#define ADV9889_INT1_MSEN				0x40
-#define ADV9889_INT1_VS					0x20
-#define ADV9889_INT1_AUDIO_OF			0x10
+#define ADV9889_INT1_HPD                0x80
+#define ADV9889_INT1_MSEN               0x40
+#define ADV9889_INT1_VS                 0x20
+#define ADV9889_INT1_AUDIO_OF           0x10
 #define ADV9889_INT1_ITU656_ERR			0x08
 #define ADV9889_INT1_EDID				0x04
 #define ADV9889_INT2_HDCP_ERR			0x80

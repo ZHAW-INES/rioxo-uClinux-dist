@@ -53,7 +53,7 @@ int asi_drv_init(t_asi* handle, void* p_asi)
     handle->p_asi = p_asi;
     handle->status = 0;
 
-    asi_drv_stop(p_asi); 
+    asi_drv_stop(handle); 
 
     asi_set_dma_burst_size(p_asi, ASI_DRV_DMA_BURST_SIZE);
 
@@ -94,6 +94,34 @@ int asi_drv_update(t_asi* handle, struct hdoip_eth_params* eth_params, struct hd
         asi_drv_start(handle);
     }
 
+    return ERR_ASI_SUCCESS;
+}
+
+/** Inittialize the ringbuffer (write pointer)
+ *
+ * @param handle pointer to the asi handle
+ * @param start_ptr start address of the buffer
+ * @param size size of the buffer
+ * @return error code
+ */
+int asi_drv_set_buf(t_asi* handle, void* start_ptr, size_t size)
+{
+    t_rbf_dsc dsc;
+
+    rbf_dsc(&dsc, start_ptr, size);
+    asi_set_dsc(handle->p_asi,  &dsc);
+
+    return ERR_ASI_SUCCESS;
+}
+
+/** Flush the ringbuffer (set write to read pointer)
+ *
+ * @param handle pointer to the asi handle
+ * @return error code
+ */
+int asi_drv_flush_buf(t_asi* handle)
+{
+    asi_set_write_dsc(handle->p_asi, asi_get_read_dsc(handle->p_asi));
     return ERR_ASI_SUCCESS;
 }
 

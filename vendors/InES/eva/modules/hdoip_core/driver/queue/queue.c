@@ -62,6 +62,12 @@ uint32_t queue_get(t_queue* queue)
     return elem;
 }
 
+bool queue_empty(t_queue* queue)
+{
+    if (!queue) return true;
+    return (queue->write == queue->read);
+}
+
 void queue_flush(t_queue* queue)
 {
     queue->read = queue->write;

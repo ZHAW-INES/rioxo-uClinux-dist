@@ -17,6 +17,8 @@
 
 int vsi_drv_go(t_vsi* handle, struct hdoip_eth_params* eth_params);
 int vsi_drv_init(t_vsi* handle, void* p_vsi);
+int vsi_drv_set_buf(t_vsi* handle, void* start_ptr, size_t size);
+int vsi_drv_flush_buf(t_vsi* handle);
 int vsi_drv_update(t_vsi* handle, struct hdoip_eth_params* eth_params);
 int vsi_drv_handler(t_vsi* handle, t_queue* event_queue);
 int vsi_drv_set_eth_params(t_vsi* handle, struct hdoip_eth_params* eth_params);

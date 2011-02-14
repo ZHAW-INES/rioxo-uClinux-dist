@@ -21,7 +21,6 @@
 #define MAX_FRAME_LENGTH    (2048)
 
 // Base address
-#define BASE_RESET          (na_ext_reset_pio)
 #define BASE_TIMER          (na_acb_timer)
 #define BASE_VRP            (na_acb_vrp)
 #define BASE_VIO            (na_acb_video_process)
@@ -32,7 +31,16 @@
 #define BASE_VSI	        (na_acb_vid_st_in)
 #define BASE_ASO            (na_acb_aud_st_out)
 #define BASE_ASI            (na_acb_aud_st_in)
-#define BASE_EXT_RESET      (na_ext_reset_pio)
+#define BASE_ETI            (na_acb_eth_in)
+#define BASE_ETI_IRQ        (na_acb_eth_in_irq)
+#define BASE_ETO            (na_acb_eth_out)
+#define BASE_ESC            (na_acb_eth_speed_chg)
 #define BASE_EXT_IRQ        (na_ext_irq_pio)
+#define BASE_TSE            (na_tse_mac_control_port)
+#define BASE_VER            (na_acb_firmware_revision)
+#define BASE_SYSID          (na_sysid)
+
+// Register area sizes
+#define TSE_MAC_SIZE        0x400
 
 #endif /*CONFIG_H_*/

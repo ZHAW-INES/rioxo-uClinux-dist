@@ -7,7 +7,7 @@
 /** tmr hal macros
  * 
  */
-#define tmr_set_avmux(p, v)     HOI_REG_LD(p, TMR_OFF_CONFIG, TMR_CFG_AVMUX_MASK, v)
+#define tmr_set_mux(p, v)       HOI_REG_LD(p, TMR_OFF_CONFIG, TMR_CFG_MUX_MASK, v)
 #define tmr_set_div(p, v)       HOI_WR32(p, TMR_OFF_DIVISION, v)
 #define tmr_set_master(p, v)    HOI_WR32(p, TMR_OFF_MASTER, v)
 #define tmr_set_slave(p, v)     HOI_WR32(p, TMR_OFF_SLAVE, v)
@@ -19,7 +19,7 @@
 #define tmr_get_avout(p)        HOI_RD32(p, TMR_OFF_AVOUT)
 #define tmr_get_eth(p)          HOI_RD32(p, TMR_OFF_ETH)
 #define tmr_get_diff(p)         HOI_RD32(p, TMR_OFF_DIFF)
-#define tmr_get_inc(p)         HOI_RD32(p, TMR_OFF_INCREMENT)
+#define tmr_get_inc(p)          HOI_RD32(p, TMR_OFF_INCREMENT)
 
 
 /** tmr hal function prototypes

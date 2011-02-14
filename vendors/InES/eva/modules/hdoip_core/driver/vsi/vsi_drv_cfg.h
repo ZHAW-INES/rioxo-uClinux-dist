@@ -3,9 +3,10 @@
 
 #include "std.h"
 #include "stdeth.h"
+#include "hoi_burst.h"
+
 
 /* VSO configuration */ 
-#define VSI_DRV_DMA_BURST_SIZE		(32)    // in 32 bit words
 #define VSI_DRV_MIN_PACKET_LEN      (64)    // in bytes
 #define VSI_DRV_MAX_PACKET_LEN      (1520)   // in bytes
 

@@ -28,10 +28,10 @@ static const int adv_scale[4][4] = {
 
 // [COUNT][INDEX] Pixel delay/Chip decode
 static const int adv_decd[4][4] = {
-        {11, 0, 0, 0},
-        {10,10, 0, 0},
-        { 9, 9, 9, 0},
-        { 9, 9, 9, 9}
+        {12, 0, 0, 0},
+        {11,11, 0, 0},
+        {11,11,11, 0},
+        {11,11,11,11}
     };
 
 // [COUNT][INDEX] Pixel delay/Chip encode
@@ -169,6 +169,18 @@ int adv212_reg_dec_hvf_slave(uint32_t* p, int o)
     return o+1; 
 }
 
+/** Set Code FIFO threshold
+ *
+ * @param p base pointer to register set
+ * @param o offset within register set
+ * @return next free offset within register set
+ */
+int adv212_reg_cfth(uint32_t* p, int o, int x)
+{
+    adv212_set(p, o, ADV212_FFTHRC,         x);
+    return o+1; 
+}
+
 /** Set ADV212 mode
  *
  * the register set needs enough free space to add this register.
@@ -182,9 +194,9 @@ int adv212_reg_dec_hvf_slave(uint32_t* p, int o)
 int adv212_reg_mode(uint32_t* p, int o, int bit, int cmp)
 {
     switch (cmp) {
-        case 1: adv212_set(p, o, ADV212_PMODE1, ADV212_PMODE1_PFMT_V_SINGLE         | adv212_color_depth(bit));
-        case 2: adv212_set(p, o, ADV212_PMODE1, ADV212_PMODE1_PFMT_V_INTERLEAVED_C  | adv212_color_depth(bit));
-        case 3: adv212_set(p, o, ADV212_PMODE1, ADV212_PMODE1_PFMT_V_INTERLEAVED_CY | adv212_color_depth(bit));
+        case 1: adv212_set(p, o, ADV212_PMODE1, ADV212_PMODE1_PFMT_V_SINGLE         | adv212_color_depth(bit)); break;
+        case 2: adv212_set(p, o, ADV212_PMODE1, ADV212_PMODE1_PFMT_V_INTERLEAVED_C  | adv212_color_depth(bit)); break;
+        case 3: adv212_set(p, o, ADV212_PMODE1, ADV212_PMODE1_PFMT_V_INTERLEAVED_CY | adv212_color_depth(bit)); break;
     }
     return o+1;
 }
@@ -207,7 +219,7 @@ int adv212_reg_mode(uint32_t* p, int o, int bit, int cmp)
 int adv212_reg_hsamples(uint32_t* p, int o, uint32_t w, uint32_t fp, uint32_t hp, uint32_t bp, uint32_t pd, int s)
 {
     // H starts with index '1' at first pixel after rising edge hsync
-    adv212_set(p, o+0, ADV212_XTOT,         (fp + hp + bp + w) * s / 2 * s);
+    adv212_set(p, o+0, ADV212_XTOT,         (fp + hp + bp + w) * s / 2);
     adv212_set(p, o+1, ADV212_PIXEL_START,  (hp + bp) * s / 2 + 1 - pd);
     adv212_set(p, o+2, ADV212_PIXEL_STOP,   (hp + bp + w) * s / 2 - pd);
     return o+3; 
@@ -331,7 +343,7 @@ void adv212_drv_rc_size(void* p, uint32_t size, t_adv212* p_adv)
 {
     p_adv->size = size;
     size = adv212_size_per_chip(p_adv);
-    
+
     switch (p_adv->cnt) {
         case 1: adv212_set_rc_size(ADV212_0_BASE(p), size); 
         break;
@@ -363,7 +375,7 @@ int adv212_drv_detect_enc(t_video_timing* p_vt, t_adv212* p_adv)
     REPORT(INFO, "<adv212_drv_detect_enc()>");
     
     // autocalculate minimum adv number
-    if (ret = adv212_drv_advcnt(p_vt, &adv_min)) {
+    if ((ret = adv212_drv_advcnt(p_vt, &adv_min))) {
         // autodetection failed
         return ret;
     }
@@ -393,7 +405,7 @@ int adv212_drv_detect_dec(t_video_timing* p_vt, t_adv212* p_adv)
     REPORT(INFO, "<adv212_drv_detect_dec()>");
     
     // autocalculate minimum adv number
-    if (ret = adv212_drv_advcnt(p_vt, &adv_min)) {
+    if ((ret = adv212_drv_advcnt(p_vt, &adv_min))) {
         // autodetection failed
         return ret;
     }
@@ -442,13 +454,24 @@ int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv)
         o = adv212_reg_vsamples(reg, o, p_vt->height, p_vt->vfront, p_vt->vpulse, p_vt->vback);        
         
         // Boot ADV
-        if (ret = adv212_boot_jdata(OFFSET(p, i * ADV212_SIZE), 
-                adv212_encode_2_13_0, size_adv212_encode_2_13_0, ADV212_SWFLAG_ENCODE, 
+        if ((ret = adv212_boot_jdata(OFFSET(p, i * ADV212_SIZE),
+                (uint32_t*)adv212_encode_2_13_0, size_adv212_encode_2_13_0, ADV212_SWFLAG_ENCODE,
                 param, ADV212_PARAM_ENC_COUNT,
-                reg, ADV212_REGISTER_COUNT)) {
+                reg, ADV212_REGISTER_COUNT, (p_adv->cnt > 1)))) {
             ADV212_REPORT_BOOT(i, ret);
             return ret;
         }        
+
+    }
+
+    // sync all needed ADV212
+    if (p_adv->cnt > 1) {
+        for (int i=0; i<p_adv->cnt; i++) {
+            if ((ret = adv212_boot_sync(OFFSET(p, i * ADV212_SIZE)))) {
+                ADV212_REPORT_BOOT(i, ret);
+                return ret;
+            }
+        }
     }
     
     return ret;
@@ -461,10 +484,9 @@ int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv)
  * @param p_adv adv configuration struct
  * @return error code (0 on success)
  */
-
 int adv212_drv_boot_dec(void* p, t_video_timing* p_vt, t_adv212* p_adv)
 {
-    int ret;
+    int ret = SUCCESS;
     uint32_t param[2*ADV212_PARAM_DEC_COUNT];
     uint32_t reg[2*ADV212_REGISTER_COUNT];    
     int o;
@@ -473,7 +495,7 @@ int adv212_drv_boot_dec(void* p, t_video_timing* p_vt, t_adv212* p_adv)
             
     // Initialize all ADV212 because of shared bus (HDATA)
     adv212_drv_init(p);
-    
+
     // setup all needed ADV212    
     for (int i=0; i<p_adv->cnt; i++) {
         
@@ -489,16 +511,36 @@ int adv212_drv_boot_dec(void* p, t_video_timing* p_vt, t_adv212* p_adv)
         o = adv212_reg_vsamples     (reg, o, p_vt->height, p_vt->vfront, p_vt->vpulse, p_vt->vback);        
         
         // Boot ADV
-        if (ret = adv212_boot_jdata(OFFSET(p, i * ADV212_SIZE), 
-                adv212_decode_2_14_1, size_adv212_decode_2_14_1, ADV212_SWFLAG_DECODE, 
+        if ((ret = adv212_boot_jdata(OFFSET(p, i * ADV212_SIZE),
+                (uint32_t*)adv212_decode_2_14_1, size_adv212_decode_2_14_1, ADV212_SWFLAG_DECODE,
                 param, ADV212_PARAM_DEC_COUNT,
-                reg, ADV212_REGISTER_COUNT)) {
+                reg, ADV212_REGISTER_COUNT, (p_adv->cnt > 1)))) {
             ADV212_REPORT_BOOT(i, ret);
             return ret;
         }
 
     }
-    
+
     return ret;
+}
+
+/** Sync the decoding ADV212
+ *
+ * @param p hdata base ponter
+ * @param p_adv adv configuration struct
+ * @return error code (0 on success)
+ */
+int adv212_drv_boot_dec_sync(void* p, t_adv212* p_adv)
+{
+    for (int i=0; i<p_adv->cnt; i++) {
+        adv212_boot_sync_wait(OFFSET(p, i * ADV212_SIZE));
+    }
+
+    for (int i=0; i<p_adv->cnt; i++) {
+        // Ack SWIRQ0 IRQ
+        adv212_boot_sync_ack(OFFSET(p, i * ADV212_SIZE));
+    }
+
+    return SUCCESS;
 }
 

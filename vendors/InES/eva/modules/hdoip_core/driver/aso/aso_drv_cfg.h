@@ -9,13 +9,13 @@
 #define ASO_DRV_CFG_H_
 
 #include "std.h"
+#include "hoi_burst.h"
 
 /* config values */
-#define ASO_DRV_DMA_BURST_SIZE              (16)
-#define ASO_DRV_DMA_FIFO_ALMOST_FULL        (ASO_DATA_FIFO_SIZE-1)
-#define ASO_DRV_I2S_FREQ_TOL                (50.0/1e6)      /* 50 ppm */
-#define ASO_DRV_I2S_FREQ_FACT_FAST          (1 - (2 * ASO_DRV_I2S_FREQ_TOL))
-#define ASO_DRV_I2S_FREQ_FACT_SLOW          (1 + (2 * ASO_DRV_I2S_FREQ_TOL))
+#define ASO_DRV_DMA_FIFO_ALMOST_FULL        (ASO_DATA_FIFO_SIZE - ASO_DRV_DMA_BURST_SIZE - 4)
+#define ASO_DRV_I2S_FREQ_TOL                (1050.0/1.0e6)      /* 1000(source) + 50(local) ppm */
+#define ASO_DRV_I2S_FREQ_FACT_FAST          (1 - ASO_DRV_I2S_FREQ_TOL)
+#define ASO_DRV_I2S_FREQ_FACT_SLOW          (1 + ASO_DRV_I2S_FREQ_TOL)
 #define ASO_DRV_DISABLE_FIFO_LOW_TH         (0)
 #define ASO_DRV_DISABLE_FRAMES_BUFFERED     (ASO_REORDERING_RAM_SIZE - 1)
 #define ASO_DRV_MIN_CH_CNT                  (1)

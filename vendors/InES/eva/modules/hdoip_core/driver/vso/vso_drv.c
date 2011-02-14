@@ -1,9 +1,14 @@
 
+#include "stdrbf.h"
 #include "vso_drv.h"
-
+#include "sta_hal.h"
+#include "debug.h"
 
 static int vso_drv_clear_reordering(t_vso* handle) 
 {
+    PTR(handle);
+    PTR(handle->p_vso);
+
 	vso_start_clear(handle->p_vso);
 	udelay(VSO_DRV_CLEAR_TIME);
 	vso_stop_clear(handle->p_vso);	
@@ -18,9 +23,12 @@ static int vso_drv_clear_reordering(t_vso* handle)
  */
 int vso_drv_start(t_vso* handle) 
 {
+    PTR(handle);
+    PTR(handle->p_vso);
+/*
     if((handle->status & VSO_DRV_STATUS_TIMING_SET) == 0) {
         return ERR_VSO_TIMING_NOT_SET;
-    }
+    }*/
 	
 	vso_enable(handle->p_vso);
     handle->status = handle->status | VSO_DRV_STATUS_ACTIV;
@@ -35,6 +43,9 @@ int vso_drv_start(t_vso* handle)
  */
 int vso_drv_stop(t_vso* handle)
 {
+    PTR(handle);
+    PTR(handle->p_vso);
+
 	vso_disable(handle->p_vso);
   	vso_drv_clear_reordering(handle);	
     handle->status = handle->status & ~VSO_DRV_STATUS_ACTIV;
@@ -54,6 +65,9 @@ int vso_drv_stop(t_vso* handle)
  */
 int vso_drv_init(t_vso* handle, void* p_vso) 
 {
+    PTR(handle);
+    PTR(p_vso);
+
     REPORT(INFO, "+--------------------------------------------------+");
     REPORT(INFO, "| VSO-Driver: Initialize video stream out          |");
     REPORT(INFO, "+--------------------------------------------------+");
@@ -68,6 +82,41 @@ int vso_drv_init(t_vso* handle, void* p_vso)
 	vso_set_dma_almost_full(p_vso, VSO_DRV_DMA_ALMOST_FULL);
 
 	return ERR_VSO_SUCCESS;
+}
+
+/** Initialize the ringbuffer (read pointer)
+ *
+ * @param handle pointer to the vso handle
+ * @param start_ptr start address of the buffer
+ * @param size size of the buffer
+ * @return error code
+ */
+int vso_drv_set_buf(t_vso* handle, void* start_ptr, size_t size)
+{
+    PTR(handle);
+    PTR(handle->p_vso);
+    PTR(start_ptr);
+
+    t_rbf_dsc dsc;
+
+    rbf_dsc(&dsc, start_ptr, size);
+    vso_set_dsc(handle->p_vso, &dsc);
+
+    return ERR_VSO_SUCCESS;
+}
+
+/** Flush the ringbuffer (set read to write pointer)
+ * 
+ * @param handle pointer to the vso handle
+ * @return error code
+ */
+
+int vso_drv_flush_buf(t_vso* handle)
+{
+    PTR(handle);
+    PTR(handle->p_vso);
+    vso_set_read_dsc(handle->p_vso, vso_get_write_dsc(handle->p_vso));
+    return ERR_VSO_SUCCESS;
 }
 
 /** Returns the ethernet packet timeout value in nanoseconds 
@@ -90,6 +139,10 @@ uint32_t vso_drv_get_packet_timeout(t_vso* handle)
  */
 int vso_drv_get_delays(t_vso* handle, uint32_t* vs_delay_us, uint32_t* vsync_delay_ns, uint32_t* scomm5_delay_ns) 
 {
+    PTR(vs_delay_us);
+    PTR(vsync_delay_ns);
+    PTR(scomm5_delay_ns);
+
 	*vs_delay_us = vso_get_vs_delay(handle->p_vso) * AVPERIOD;
 	*vsync_delay_ns = vso_get_vsync_delay(handle->p_vso) * SPERIOD;
 	*scomm5_delay_ns = vso_get_scomm5_delay(handle->p_vso) * SPERIOD;
@@ -108,17 +161,18 @@ int vso_drv_get_delays(t_vso* handle, uint32_t* vs_delay_us, uint32_t* vsync_del
  */
 int vso_drv_update(t_vso* handle, t_video_timing* vid_timing, uint32_t vs_delay_us, uint32_t vsync_delay_ns, uint32_t scomm5_delay_ns, uint32_t packet_timeout_ns) 
 {
-    uint32_t activ = handle->status & VSO_DRV_STATUS_ACTIV;
+    PTR(handle);
+    PTR(handle->p_vso);
+    PTR(vid_timing);
+
     uint32_t duration_us, duration_ns; 
 	uint32_t p_vso = (uint32_t) handle->p_vso;
 
-    if(activ != 0) {
-        vso_drv_stop(handle);
-    }
 	
 	/* set video timing */
-	duration_us = vid_duration_in_us(vid_timing); 
+	duration_us = vid_duration_in_us(vid_timing);
 	duration_ns = vid_duration_in_ns(vid_timing);
+
 	vso_set_vs_duration(p_vso, duration_us / AVPERIOD);
 	vso_set_marker_timeout(p_vso, ((duration_ns / SPERIOD) - ISYSTIME(VSO_DRV_MTIMEOUT_MARGIN)));
 	vso_set_timestamp_min(p_vso, (duration_us - (duration_us * VSO_DRV_TIMESTAMP_TOLERANCE / 100)) / AVPERIOD);	
@@ -134,11 +188,8 @@ int vso_drv_update(t_vso* handle, t_video_timing* vid_timing, uint32_t vs_delay_
 
     handle->status = handle->status | VSO_DRV_STATUS_TIMING_SET;
 
-    vso_report_timing(handle->p_vso);
+    vso_report_timing(handle);
 
-    if(activ != 0) {
-        vso_drv_start(handle);
-    }
     return ERR_VSO_SUCCESS;
 }
 
@@ -171,6 +222,10 @@ static int vso_drv_put_event(t_vso* handle, t_queue* event_queue, uint32_t statu
  */
 int vso_drv_handler(t_vso* handle, t_queue* event_queue) 
 {
+    PTR(handle);
+    PTR(handle->p_vso);
+    PTR(event_queue);
+
 	uint32_t status = vso_get_status(handle->p_vso, VSO_ST_MSK);
 
     /* Error: choked */
@@ -184,6 +239,10 @@ int vso_drv_handler(t_vso* handle, t_queue* event_queue)
 
 	/* Error: timestamp error */
 	vso_drv_put_event(handle, event_queue, status, VSO_ST_TIMESTAMP_ERROR, VSO_DRV_STATUS_TIMESTAMP_ERROR, E_VSO_TIMESTAMP_ERROR, 0);
+
+	// started streaming
+	vso_drv_put_event(handle, event_queue, status, VSO_ST_ACTIVE, VSO_DRV_STATUS_ST_ACTIVE, E_VSO_ST_ACTIVE, 0);
+
 
 	return ERR_VSO_SUCCESS;
 }
