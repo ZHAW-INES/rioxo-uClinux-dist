@@ -29,17 +29,11 @@ int main(int argc, char **argv)
 
     fd = open(FIFO_NODEC, O_RDWR, 0600);                                                     /* open character device */
     fdr = open(FIFO_NODER, O_RDWR, 0600);                                                     /* open character device */
+
     if(fd < 0) {
         err(1, "Failed to open %s: %s \n", FIFO_NODEC, strerror(errno));
         exit(EXIT_FAILURE);
     }
-
-    if(fd < 0) {
-        err(1, "Failed to open %s: %s \n", FIFO_NODER, strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-
 
     for(i=0 ; i<cmd_cnt ; i++) {
          if(strcmp(argv[1], (cmd_arr[i]).cmd_str) == 0) {
@@ -51,7 +45,7 @@ int main(int argc, char **argv)
                 if((argc-2) > 0) {
                     argv = argv+2;
                 }
-                printf("calling %s\n", cmd_arr[i].cmd_str);
+                //printf("calling %s\n", cmd_arr[i].cmd_str);
                 (cmd_arr[i].fnc_ptr)(fd, fdr, argv, argc-2);
                 break;
             } else {
@@ -64,11 +58,12 @@ int main(int argc, char **argv)
 
     if(cmd_found == 0) {
         printf("\'%s %s\' not found!\n", CMD_NAME, argv[1]);
-        hdoip_cli_help(fd, argv, argc);
+        hdoip_cli_help(fd, fdr, argv, argc);
     }
 
 out:
     close(fd);
+    close(fdr);
     return 0;
 }
 

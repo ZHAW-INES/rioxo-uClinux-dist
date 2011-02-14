@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
 
 #include "hdoip_cli.h"
 #include "hdoip_lib.h"
@@ -29,12 +30,10 @@ int hdoip_cli_help(int fd, int fdr, char** argv, int argc)
 int hdoip_cli_canvas(int fd, int fdr, char** argv, int argc)
 {
     uint32_t width, height, fps;
-    printf("hdoip_cli_canvas\n");
+    //printf("hdoip_cli_canvas\n");
 
     if (!(hdoip_lib_res(argv[0], &width, &height, &fps))) {
         hoic_canvas(fd, width, height, fps);
-    } else {
-        printf("\n");
     }
 
     return 0;
@@ -42,7 +41,7 @@ int hdoip_cli_canvas(int fd, int fdr, char** argv, int argc)
 
 int hdoip_cli_capture(int fd, int fdr, char** argv, int argc)
 {
-    printf("hdoip_cli_capture\n");
+    //printf("hdoip_cli_capture\n");
 
     if(strcmp(argv[0], "none") == 0) {
         hoic_capture(fd, false, 0, argv[1]);
@@ -57,8 +56,6 @@ int hdoip_cli_capture(int fd, int fdr, char** argv, int argc)
 
 int hdoip_cli_osd(int fd, int fdr, char** argv, int argc)
 {
-    printf("hdoip_cli_capture\n");
-
     if(strcmp(argv[0], "on") == 0) {
         hoic_osd_on(fd);
     } else if(strcmp(argv[0], "off") == 0) {
@@ -70,9 +67,22 @@ int hdoip_cli_osd(int fd, int fdr, char** argv, int argc)
     return 0;
 }
 
+int hdoip_cli_hpd(int fd, int fdr, char** argv, int argc)
+{
+    if(strcmp(argv[0], "on") == 0) {
+        hoic_hpd_on(fd);
+    } else if(strcmp(argv[0], "off") == 0) {
+        hoic_hpd_off(fd);
+    } else {
+        printf("use: hdoip hpd {on|off}\n");
+    }
+
+    return 0;
+}
+
 int hdoip_cli_load(int fd, int fdr, char** argv, int argc)
 {
-    printf("hdoip_cli_load\n");
+    //printf("hdoip_cli_load\n");
 
     hoic_load(fd, argv[0]);
     return 0;
@@ -80,7 +90,7 @@ int hdoip_cli_load(int fd, int fdr, char** argv, int argc)
 
 int hdoip_cli_loop(int fd, int fdr, char** argv, int argc)
 {
-    printf("hdoip_cli_loop\n");
+    //printf("hdoip_cli_loop\n");
 
     hoic_loop(fd);
 
@@ -89,7 +99,7 @@ int hdoip_cli_loop(int fd, int fdr, char** argv, int argc)
 
 int hdoip_cli_vtb(int fd, int fdr, char** argv, int argc)
 {
-    printf("hdoip_cli_vtb\n");
+    //printf("hdoip_cli_vtb\n");
 
     hoic_vtb(fd);
 
@@ -98,7 +108,7 @@ int hdoip_cli_vtb(int fd, int fdr, char** argv, int argc)
 
 int hdoip_cli_vrb_setup(int fd, int fdr, char** argv, int argc)
 {
-    printf("hdoip_cli_vrb_setup\n");
+    //printf("hdoip_cli_vrb_setup\n");
 
     hoic_vrb_setup(fd, argv[0]);
 
@@ -107,18 +117,39 @@ int hdoip_cli_vrb_setup(int fd, int fdr, char** argv, int argc)
 
 int hdoip_cli_vrb_play(int fd, int fdr, char** argv, int argc)
 {
-    printf("hdoip_cli_vrb_play\n");
+    //printf("hdoip_cli_vrb_play\n");
 
     hoic_vrb_play(fd);
 
     return 0;
 }
 
+int hdoip_cli_ready(int fd, int fdr, char** argv, int argc)
+{
+    //printf("hdoip_cli_vrb_play\n");
+
+    hoic_ready(fd);
+
+    return 0;
+}
+
+int hdoip_cli_reboot(int fd, int fdr, char** argv, int argc)
+{
+    hoic_reboot(fd);
+
+    return 0;
+}
+
+int hdoip_cli_store(int fd, int fdr, char** argv, int argc)
+{
+    hoic_store_cfg(fd);
+    return 0;
+}
 
 int hdoip_cli_fmt(int fd, int fdr, char** argv, int argc)
 {
     int fmt = 0;
-    printf("hdoip_cli_fmt\n");
+    //printf("hdoip_cli_fmt\n");
 
     if (argc == 2) {
         fmt = hdoip_lib_color_format(argv[1]);
@@ -149,77 +180,71 @@ int hdoip_cli_fmt(int fd, int fdr, char** argv, int argc)
     return 0;
 }
 
-hdoip_cli_get(int fd, int fdr, char** argv, int argc)
-{
-    char *ret;
-    ret = hoic_get_param(fd, fdr, argv[0]); 
-
-    printf("response : %s\n", ret);
-
-    return 0; 
-}
-
-hdoip_cli_set(int fd, int fdr, char** argv, int argc)
+int hdoip_cli_set(int fd, int fdr, char** argv, int argc)
 {
     hoic_set_param(fd, argv[0], argv[1]);
-    return 0; 
 }
 
-
-/* Dummy function, just show text 
- *
- * @param fd
- * @param argv
- * @param argc
- * @return error code
- */
-int hdoip_cli_dummy(int fd, int fdr, char** argv, int argc)
+int hdoip_cli_get(int fd, int fdr, char** argv, int argc)
 {
-    printf("hdoip_cli_dummy with no parameters\n");
+    char* s = hoic_get_param(fd, fdr, argv[0]);
+    printf("return: %s\n", s);
+    free(s);
+}
+
+int hdoip_cli_read(int fd, int fdr, char** argv, int argc)
+{
+    uint32_t s = hoic_read(fd, fdr, strtol(argv[0], 0, 16));
+    printf("return: %08x\n", s);
+}
+
+int hdoip_cli_remote_update(int fd, int fdr, char** argv, int argc)
+{
+    hoic_remote_update(fd, argv[0]);
     return 0;
 }
 
-/* dummy function with two arguments
- *
- * @param fd
- * @param argv
- * @param argc
- * @return error code
- */
-int hdoip_cli_dummy2(int fd, int fdr, char** argv, int argc) 
+int hdoip_cli_getversion(int fd, int fdr, char** argv, int argc)
 {
-    int ret;
-    int arg1, arg2;
+    t_hoic_version version;
 
-    /* convert to int */
-    arg1 = strtoul(argv[0], NULL, 10); // 10 = decimal
-    arg2 = strtoul(argv[1], NULL, 10); 
- 
-    printf("hdoip_cli_dummy2()\n");
-    printf(" arg1 : %s (char)\n arg2 : %s (char)\n",argv[0], argv[1]);
-    printf(" arg1 : %d (int)\n arg2 : %d (int)\n",arg1, arg2);
+    hoic_getversion(fd, fdr, &version);
 
+    printf("\n FPGA date        : %s", ctime(&version.fpga_date));
+    printf(" FPGA SVN         : %d\n", version.fpga_svn);
+    printf(" SOPC date        : %s", ctime(&version.sysid_date));
+    printf(" SOPC ID          : 0x%08x\n", version.sysid_id);
+    printf(" Software version : %d.%d\n\n", (version.sw_version>>16), (version.sw_version&0xFFFF));
     return 0;
 }
 
+int hdoip_cli_default(int fd, int fdr, char** argv, int argc)
+{
+    hoic_factory_default(fd); 
+    return 0;
+}
 
 /* Command definitions */
-const int cmd_cnt = 12;
 const t_hdoip_cli_cmd_arr cmd_arr[] = {
-        { "help",       0, hdoip_cli_help,      ""},
-        { "canvas",     1, hdoip_cli_canvas,    "Resolution"},
-        { "capture",   -1, hdoip_cli_capture,   "{none|jp2 [size]} outputfile"},
-        { "load",       1, hdoip_cli_load,      "inputfile"},
-        { "loop",       0, hdoip_cli_loop,      ""},
-        { "osd",        1, hdoip_cli_osd,       "{on|off}"},
-        { "fmt",       -1, hdoip_cli_fmt,       "{in|out} *{fmts}"},
-        { "vtb",        0, hdoip_cli_vtb,       ""},
-        { "vrb",        1, hdoip_cli_vrb_setup, "uri"},
-        { "play",       0, hdoip_cli_vrb_play,  ""},
-        { "set",        2, hdoip_cli_set,       "key value"},
-        { "get",        1, hdoip_cli_get,       "key"},
-
-        { "dummy",      0, hdoip_cli_dummy,     ""},
-        { "dummy2",     2, hdoip_cli_dummy2,    "arg1 arg2"}
+        { "help",           0, hdoip_cli_help,          ""},
+        { "canvas",         1, hdoip_cli_canvas,        "Resolution"},
+        { "capture",       -1, hdoip_cli_capture,       "{none|jp2 [size]} outputfile"},
+        { "load",           1, hdoip_cli_load,          "inputfile"},
+        { "loop",           0, hdoip_cli_loop,          ""},
+        { "osd",            1, hdoip_cli_osd,           "{on|off}"},
+        { "hpd",            1, hdoip_cli_hpd,           "{on|off}"},
+        { "fmt",           -1, hdoip_cli_fmt,           "{in|out} *{fmts}"},
+        { "vtb",            0, hdoip_cli_vtb,           ""},
+        { "vrb",            1, hdoip_cli_vrb_setup,     "uri"},
+        { "play",           0, hdoip_cli_vrb_play,      ""},
+        { "set",            2, hdoip_cli_set,           "name value"},
+        { "get",            1, hdoip_cli_get,           "name"},
+        { "ready",          0, hdoip_cli_ready,         ""},
+        { "store",          0, hdoip_cli_store,         ""},
+        { "reboot",         0, hdoip_cli_reboot,        ""},
+        { "read",           1, hdoip_cli_read,          "hex-address"},
+        { "remote-update",  1, hdoip_cli_remote_update, "file"},
+        { "version",        0, hdoip_cli_getversion,    ""},
+        { "factory-default",0, hdoip_cli_default,       ""}
     };
-
+const int cmd_cnt = sizeof(cmd_arr)/sizeof(t_hdoip_cli_cmd_arr);
