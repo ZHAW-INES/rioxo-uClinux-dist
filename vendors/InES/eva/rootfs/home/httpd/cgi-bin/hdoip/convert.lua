@@ -1,7 +1,7 @@
 #!/usr/bin/lua
 module (..., package.seeall)
 
-t_hex2num = {["f"]=15; ["F"]=15; ["e"]=14; ["E"]=14; ["d"]=13; ["D"]=13; ["c"]=12; ["C"]=12; ["b"]=11; ["B"]=11; ["a"]=10; ["A"]=10;
+local t_hex2num = {["f"]=15; ["F"]=15; ["e"]=14; ["E"]=14; ["d"]=13; ["D"]=13; ["c"]=12; ["C"]=12; ["b"]=11; ["B"]=11; ["a"]=10; ["A"]=10;
             ["9"]=9; ["8"]=8; ["7"]=7; ["6"]=6; ["5"]=5; ["4"]=4; ["3"]=3; ["2"]=2; ["1"]=1;["0"]=0}
 
 function Str2LE_32(str)
@@ -30,8 +30,8 @@ function Str2HexFile(str)
 end
 
 function bin2hex(str, size)
-    len = 0
-    ret = ""
+    local len = 0
+    local ret = ""
 
     while(size ~= len) do
         ret = ret .. string.format("%02x", string.byte(str,len+1))
@@ -41,8 +41,9 @@ function bin2hex(str, size)
 end
 
 function bin2dec(str, size)
-    len = 0
-    ret = 0
+    local len = 0
+    local ret = 0
+
     while(size ~= len) do
         tmp = string.byte(str, len+1)
         ret = ret + (tmp * 16^(2*len))
@@ -51,3 +52,28 @@ function bin2dec(str, size)
     return ret
 end
 
+function checkHex(str)
+    local len = 0
+    local char = 0
+    local size
+
+    if(str == nil) then
+        return false
+    end
+
+    size = string.len(str)
+    
+    while(size ~= len) do
+        char = tonumber(string.byte(str, len+1))
+        len = len + 1 
+
+        -- A - F  => 65 - 70
+        -- a - f  => 97 - 102
+        -- 0 - 9  => 48 - 57
+        if((((char > 47) and (char < 58)) or ((char > 96) and (char < 103)) or ((char > 64) and (char < 71))) == false) then
+            return false
+        end
+    end 
+    
+    return true
+end

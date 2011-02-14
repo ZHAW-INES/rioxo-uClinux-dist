@@ -12,10 +12,27 @@ body {
     margin:20px;
 }
 
-table {
-    border-spacing:10px;
+form {
+    display: inline;
 }
 
+table {
+    empty-cells: show;
+}
+
+tr {
+    padding-top:2px;
+    padding-bottom:2px;
+    padding-left:2px;
+    padding-right:2px;
+}
+
+td {
+    padding-top:2px;
+    padding-bottom:2px;
+    padding-left:2px;
+    padding-right:2px;
+}
 
 #globalnav {
         position:relative;
@@ -26,6 +43,11 @@ table {
         list-style:none;
         line-height:20px;
         border-bottom:2px solid #bbb
+}
+
+#globalnav FORM {
+    margin:0;
+    padding:.0em;
 }
 
 #globalnav LI {

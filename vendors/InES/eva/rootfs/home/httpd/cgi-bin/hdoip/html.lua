@@ -1,16 +1,36 @@
 #!/usr/bin/lua
 module (..., package.seeall)
 
-html_script_path = "/cgi-bin/index.lua"
-html_str = "<b>html error</b>"
-html_table = 0
-html_table_str = "<b>table error</b>"
-html_table_backup = ""
-html_table_col = 0
-html_table_col_cnt = 0
+require ("hdoip.pipe")
+
+local html_css_file = "/main.css"
+local html_favicon = "/favicon.ico"
+local html_str = "<b>html error</b>"
+local html_table = 0
+local html_table_str = "<b>table error</b>"
+local html_table_backup = ""
+local html_table_col = 0
+local html_table_col_cnt = 0
+
+function escape(str)
+    str = string.gsub(str, "\n", "\r\n")
+    str = string.gsub(str, "([^0-9a-zA-Z ])", function (c) return string.format("%%%02X", string.byte(c)) end)
+    str = string.gsub(str, " ", "+")
+    return str
+end
+
+function unescape(str)
+    if(str ~= nil) then
+        str = string.gsub(str, "+", " ")
+        str = string.gsub(str, "%%(%x%x)", function(h) return string.char(tonumber(h, 16)) end)
+        str = string.gsub(str, "\r\n", "\n")
+        return str
+    end
+    return ""
+end
 
 local function extractArg(t, s)
-    sep_pos = string.find(s, "=")
+    local sep_pos = string.find(s, "=")
     local arg_value = string.sub(s, sep_pos+1, string.len(s))
     local arg_name = string.sub(s, 0, sep_pos-1)
     t[arg_name] = arg_value
@@ -21,7 +41,9 @@ function getQueryData(query_string)
     local arg_start = 0
     local arg_end = 0
     local t= {}
-    
+   
+    query_string = unescape(query_string)
+     
     while(arg_end ~= nil) do
         arg_end = string.find(query_string, "&", arg_start)
         if(arg_end ~= nil) then
@@ -36,54 +58,59 @@ function getQueryData(query_string)
 end
 
 function Text(str)
-    html_str = html_str .. str .. "\n"
+    if(str ~= nil) then
+        html_str = html_str .. str .. "\n"
+    end
 end
 
 function Title(str)
-    html_str = html_str .. "<h2>" .. str .. "</h2>\n"
+    if(str ~= nil) then
+        html_str = html_str .. "<h2>" .. str .. "</h2>\n"
+    end
+end
+
+function Link(dest, label)
+    html_str = html_str .. "<a href=\""..dest.."\">"..label.."</a>\n"
+end
+
+function AddError(t, str)
+    t.err = t.err .. str .. "<br>\n"
 end
 
 function Error(str)
     if(str ~= "") then
-        html_str = html_str .. "<b><p style=\"color:#FF0000;\">Error : " .. str .. "</p></b>\n"
+        html_str = html_str .. "<b><p style=\"color:#FF0000;\">Error : <br>" .. str .. "</p></b>\n"
     end
 end
-
-function Header(title, page, addon)
-    local menu_class = ""
-    local css = "<link rel=\"stylesheet\" type=\"text/css\" href=\"/main.css\">\n"
-
-    if(addon == nil) then
-        addon = ""
-    end
-    print ("Content-type: text/html\n")
-    html_str = "<html>\n<head>\n<title>" .. title .. "</title>\n" .. addon .. css .. "</head>\n<body>\n"
-    
-    html_str = html_str .. "<ul id=\"globalnav\">\n"
-    
-    for i=0, (html_menu_item_cnt-1), 1 do
-        if(page == i) then
-            menu_class = " class=\"here\""
-        else 
-            menu_class = ""
-        end
-        html_str = html_str .. "    <li><a" .. menu_class .." href=\"" .. html_script_path .. "?page=" .. i .. "\">" .. html_menu_items[i] .. "</a></li>\n"
-    end
-    html_str = html_str .. "</ul>\n<br><br><br>\n"
-end
-
-function Bottom(err)
-    Error(err)    
-    html_str = html_str .. "</body>\n</html>\n"
-    print(html_str)
-end
-
 function FormHidden(name, value)
-    html_str = html_str .. "<input name=\"" .. name .. "\" type=\"hidden\" value=\"" .. value .. "\">\n"
+    html_str = html_str .. "<input style=\"visibility:hidden\" name=\"" .. name .. "\" type=\"hidden\" value=\"" .. value .. "\">\n"
 end
 
-function FormText(name, value, size)
-    html_str = html_str .. "<input name=\"" .. name .. "\" type=\"text\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value .. "\">\n"
+function FormPassword(name, value, size, disabled)
+    if(value == nil) then
+        value = ""
+    end
+
+    if((disabled == 0) and (disabled ~= nil)) then
+        html_str = html_str .. "<input name=\"" .. name .. "\" type=\"password\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
+    else
+        Text(value)
+    end
+
+end
+
+
+function FormText(name, value, size, disabled)
+    if(value == nil) then
+        value = ""
+    end
+
+    if((disabled == 0) and (disabled ~= nil)) then
+        html_str = html_str .. "<input name=\"" .. name .. "\" type=\"text\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
+    else
+        Text(value)
+    end
+
 end
 
 function FormRadio(name, values, size, selected)
@@ -91,7 +118,7 @@ function FormRadio(name, values, size, selected)
     local checked
 
     while(cnt < size) do
-        if(string.format(cnt) == selected) then
+        if(cnt == tonumber(selected)) then
             checked = " checked"
         else 
             checked = ""
@@ -102,26 +129,99 @@ function FormRadio(name, values, size, selected)
 end 
 
 function FormIP(name, value0, value1, value2, value3)
-    FormText(name .. "0", value0, 3)
-    html_str = html_str .. "."
-    FormText(name .. "1", value1, 3)
-    html_str = html_str .. "."
-    FormText(name .. "2", value2, 3)
-    html_str = html_str .. "."
-    FormText(name .. "3", value3, 3)
+    FormText(name .. "0", value0, 3, 0)
+    html_str = html_str .. " . "
+    FormText(name .. "1", value1, 3, 0)
+    html_str = html_str .. " . "
+    FormText(name .. "2", value2, 3, 0)
+    html_str = html_str .. " . "
+    FormText(name .. "3", value3, 3, 0)
 end
 
-function FormHeader()
-    html_str = html_str .. "<form action=\"" .. html_script_path .. "\" method=\"get\">\n"
+function FormCheckbox(name, value, label, checked)
+    html_str = html_str .. "<input type=\"checkbox\" name=\""..name.."\" value=\""..value.."\""
+    if(checked ~= nil) then
+        html_str = html_str .." checked"
+    end
+    html_str = html_str ..">"..label
 end
 
-function FormBottom(page)
-    FormHidden("page", page)
+function OneButtonForm(t, script_path, value, button_label)
+    FormHeader(script_path)
+    FormHidden(value, 1)
+    FormHidden("page", t.page)
+    html_str = html_str .. "<input type=\"submit\" value=\""..button_label.."\">\n</form>\n"
+end
+
+
+function FormHeader(script_path)
+    html_str = html_str .. "<form action=\"" .. script_path .. "\" method=\"get\" accept-charset=\"UTF-8\">\n"
+end
+
+function FormButton(button_type, label)
+    html_str = html_str .. "<input type=\"".. button_type .."\" value=\""..label.."\">\n"
+end
+
+function FormEnd(t)
+    FormHidden("page", t.page)
     FormHidden("submit", "1")
-    html_str = html_str .. "<br>\n<input type=\"submit\" value=\"Save\">\n"
-    html_str = html_str .. "<input type=\"reset\" value=\"Default\">\n"
+   
     html_str = html_str .. "</form>\n"
 end
+
+function FormBottom(t)
+    html_str = html_str .. "<br>\n"
+    FormButton("submit", label.button_submit)
+    FormButton("reset", label.button_default)
+    FormEnd(t)
+    OneButtonForm(t, script_path, "store_cfg", (label.button_save))
+end
+
+function Header(t, title, script_path, addon)
+    local menu_item_cnt = 6
+    local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_status; [3] = label.tab_firmware; [4] = label.tab_default; [5] = label.tab_settings;}
+    local dev_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_NAME)
+
+    local menu_class = ""
+    local css = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".. html_css_file .."\">\n"
+    local css = css .. "<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\""..html_favicon.."\">\n"
+
+    if(t.cookie == nil) then
+        t.cookie = ""
+    end
+
+    if(addon == nil) then
+        addon = ""
+    end
+    print ("Content-type: text/html\n")
+    html_str = "<html>\n<head>\n".. t.cookie .."<title>" .. title .. "</title>\n" .. addon .. css .. "</head>\n<body>\n"
+   
+
+    html_str = html_str .. "<ul id=\"globalnav\">\n"
+    
+    for i=0, (menu_item_cnt-1), 1 do
+        menu_class = ""
+        if(t.page == i) then
+            menu_class = " class=\"here\""
+        end
+        html_str = html_str .. "    <li><a" .. menu_class .." href=\"" .. script_path .. "?page=" .. i .. "\">" .. menu_items[i] .. "</a></li>\n"
+    end
+
+    if(t.auth_en > 0) then
+        html_str = html_str .. '<li style="float:right">'
+        OneButtonForm(t, script_path, "logout", label.button_logout) 
+        html_str = html_str .. '</li>'
+    end
+
+    html_str = html_str .. "</ul><br><br><b>"..label.device_name..dev_name.."<b/>"
+end
+
+function Bottom(t)
+    Error(t.err)    
+    html_str = html_str .. "</body>\n</html>\n"
+    print(html_str)
+end
+
 
 
 function TableHeader(col_size)
@@ -153,4 +253,11 @@ end
 function TableBottom()
     html_str = html_table_backup .. html_table_str .. "</table>"
     html_table = 0
+end
+
+function UploadForm(t, script_path, label, accept)
+    html_str = html_str .. "<form action=\""..script_path.."\" method=\"post\" enctype=\"multipart/form-data\">\n" 
+--    html_str = html_str .. "<p>"..str.."<input name=\""..label.."\" type=\"file\" size=\"50\" accept=\""..accept.."\">\n"
+    html_str = html_str .. "<p><input name=\""..label.."\" type=\"file\" size=\"50\">\n"
+    html_str = html_str .. "<input type=\"submit\" value=\"Upload\"></p>\n</form>\n"
 end

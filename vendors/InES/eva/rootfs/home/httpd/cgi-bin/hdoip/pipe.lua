@@ -2,38 +2,81 @@
 module (..., package.seeall)
 require ("hdoip.convert")
 
+REG_SYS_IF = "system-ifname"
+REG_SYS_NAME = "system-name"
+REG_SYS_IP = "system-ip"
+REG_SYS_MAC = "system-mac"
+REG_SYS_SUB = "system-subnet"
+REG_SYS_GW = "system-gateway"
+REG_MODE_START = "mode-start"
+REG_ST_MODE_MEDIA = "mode-media"
+REG_ST_URI = "remote-uri"
+REG_ST_HELLO_URI = "hello-uri"
+REG_ST_RSCP_PORT = "rscp-server-port"
+REG_ST_BW = "bandwidth"
+REG_ST_NET_DELAY = "network-delay"
+REG_ST_VID_PORT = "video-port"
+REG_ST_AUD_PORT = "audio-port"
+REG_STATUS_DRIVER = "daemon-driver"
+REG_STATUS_STATE = "daemon-state"
+REG_STATUS_VTB = "daemon-vtb-state"
+REG_STATUS_VRB = "daemon-vrb-state"
+REG_STATUS_RSC = "daemon-rsc"
+REG_STATUS_ETH = "eth-status"
+REG_STATUS_VSO = "vso-status"
+REG_STATUS_SYSTEM = "system-state"
+REG_STATUS_STREAM = "stream-state"
+REG_WEB_LANG = "web-lang"
+REG_WEB_AUTH_EN = "web-auth-en"
+REG_WEB_USER = "web-user"
+REG_WEB_PASS = "web-pass"
+
+
 local PIPE_CMD = "/tmp/web.cmd"
 local PIPE_RSP = "/tmp/web.rsp"
 
 local PIPE_CMD_GET_PARAM = "3800000a"
 local PIPE_CMD_SET_PARAM = "3800000b"
+local PIPE_CMD_STORE_CFG = "32000007"
+local PIPE_CMD_REMOTE_UPDATE = "3100000C"
+local PIPE_CMD_GETVERSION = "3100000D"
+local PIPE_CMD_FACTORY_DEFAULT = "3100000E"
 
 local fd_cmd, fd_rsp = nil, nil
 
+local function fileExist(file)
+    local fd = io.open(file)
+    if(fd) then
+        fd:close()
+        return true
+    else 
+        return false
+    end
+end
+
 function open()
     fd_cmd = io.open(PIPE_CMD, "w");
-    if(fd_cmd == nil) then
-        return ("could not open "..PIPE_CMD.."\n")
+    if(fd_cmd ~= nil) then
+        fd_rsp = io.open(PIPE_RSP, "r+");
+        if(fd_rsp == nil) then
+            fd_cmd:close()
+            fd_cmd = nil
+            return "could not open "..PIPE_RSP.."<br>\n"
+        end
+        return ""
     end
-
-
-    fd_rsp = io.open(PIPE_RSP, "r+");
-    if(fd_rsp == nil) then
-        return ("could not open "..PIPE_RSP.."\n")
-        
-    end
-
-    return "" 
+    return "could not open "..PIPE_CMD.."<br>\n"
 end
 
 function close()
     if(fd_rsp ~= nil) then
         fd_rsp:close()
+
+        if(fd_cmd ~= nil) then
+            fd_cmd:close()
+        end
     end
  
-    if(fd_cmd ~= nil) then
-        fd_cmd:close()
-    end
 end
 
 local function createCmdHeader(cmd, payload_size)
@@ -42,7 +85,6 @@ local function createCmdHeader(cmd, payload_size)
     return str
 end
 
-
 function setParam(key, value)
     if(fd_cmd ~= nil) then
         key_len = string.len(key)
@@ -50,16 +92,15 @@ function setParam(key, value)
 
         str = createCmdHeader(PIPE_CMD_SET_PARAM, (value_len + key_len + 2 + 4))
         str = str .. hdoip.convert.Str2LE_32(string.format("%08x", key_len + 1))
-        debug = str .. key .. string.char(0) .. value .. string.char(0)
         str = hdoip.convert.Str2HexFile(str) .. key .. string.char(0) .. value .. string.char(0)    
         fd_cmd:write(str)
-        fd_cmd:flush() 
+        fd_cmd:flush()
     end
 end
 
 function getParam(key)
     if((fd_cmd ~= nil) and (fd_rsp ~= nil)) then
-        key_len = string.len(key)
+        local key_len = string.len(key)
 
         str = createCmdHeader(PIPE_CMD_GET_PARAM, (key_len + 1 + 4))
         str = str .. hdoip.convert.Str2LE_32(string.format("%08x", key_len + 1))
@@ -74,8 +115,8 @@ function getParam(key)
             ret = fd_rsp:read(8)
         end
         
-        cmd = hdoip.convert.bin2hex(string.sub(ret,1,4),4)
-        cmd = hdoip.convert.Str2LE_32(cmd)
+        -- cmd = hdoip.convert.bin2hex(string.sub(ret,1,4),4)       NOT USED YET
+        -- cmd = hdoip.convert.Str2LE_32(cmd)                       NOT USED YET
         size = hdoip.convert.bin2dec(string.sub(ret,5,8),4)
   
         -- Read payload
@@ -91,4 +132,69 @@ function getParam(key)
     end
 
     return ""
+end
+
+function getVersion(t)
+    if((fd_cmd ~= nil) and (fd_rsp ~= nil)) then
+        str = createCmdHeader(PIPE_CMD_GETVERSION, 20)
+        str = str .. string.format("%08x%08x%08x%08x%08x",0,0,0,0,0)
+        str = hdoip.convert.Str2HexFile(str)
+
+        fd_cmd:write(str)
+        fd_cmd:flush()
+
+        -- Read command header
+        ret = nil
+        while(ret == nil) do
+            ret = fd_rsp:read(8)
+        end
+        
+        size = hdoip.convert.bin2dec(string.sub(ret,5,8),4)
+
+        ret = nil
+        while(ret == nil) do
+            ret = fd_rsp:read(size - 8)
+        end
+        
+        t.fpga_date = hdoip.convert.bin2dec(string.sub(ret,1,4),4)
+        t.fpga_date_str = os.date("%x %X",t.fpga_date)
+    
+        t.fpga_svn  = hdoip.convert.bin2dec(string.sub(ret,5,8),4)
+        t.sopc_date = hdoip.convert.bin2dec(string.sub(ret,9,12),4)
+        t.sopc_date_str = os.date("%x %X",t.sopc_date)
+        t.sopc_id   = hdoip.convert.bin2dec(string.sub(ret,13,16),4)
+        t.sw_version= hdoip.convert.bin2dec(string.sub(ret,17,20),4)
+
+        local tmp  = hdoip.convert.bin2dec(string.sub(ret,17,18),2)
+        local tmp2 = hdoip.convert.bin2dec(string.sub(ret,19,20),2) 
+        t.sw_version_str = string.format("%d.%d",tmp2, tmp) 
+    end
+end
+
+function remote_update(file)
+    if(fd_cmd ~= nil) then
+        file_len = string.len(file)
+
+        str = createCmdHeader(PIPE_CMD_REMOTE_UPDATE, (file_len + 1 + 4))
+        str = str .. hdoip.convert.Str2LE_32(string.format("%08x", 0))
+        str = hdoip.convert.Str2HexFile(str) .. file .. string.char(0)    
+        fd_cmd:write(str)
+        fd_cmd:flush()
+    end
+end
+
+function store_cfg()
+    if(fd_cmd ~= nil) then
+        str = hdoip.convert.Str2HexFile(createCmdHeader(PIPE_CMD_STORE_CFG, 0))
+        fd_cmd:write(str)
+        fd_cmd:flush()
+    end
+end
+
+function factory_default()
+    if(fd_cmd ~= nil) then
+        str = hdoip.convert.Str2HexFile(createCmdHeader(PIPE_CMD_FACTORY_DEFAULT, 0))
+        fd_cmd:write(str)
+        fd_cmd:flush()
+    end
 end
