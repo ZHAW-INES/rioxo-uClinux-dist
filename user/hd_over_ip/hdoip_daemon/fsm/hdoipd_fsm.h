@@ -10,10 +10,56 @@
 
 #include "hdoipd.h"
 
+// daemon events
+#define E_HOID_ID           (0xf0000000)
+#define E_HOID_HELLO        (E_HOID_ID + 1)
+#define E_HOID_UPDATE       (E_HOID_ID + 2)
 
+const char* statestr(int state);
+const char* vtbstatestr(int state);
+const char* vrbstatestr(int state);
+
+bool hdoipd_set_rsc(int state);
+bool hdoipd_clr_rsc(int state);
+bool hdoipd_set_state(int state);
+bool hdoipd_set_tstate(int vtb_state);
+bool hdoipd_set_rstate(int vrb_state);
+
+bool hdoipd_goto_ready();
+void hdoipd_goto_vtb();
+void hdoipd_goto_vrb();
+int hdoipd_vrb_setup(t_rscp_media* media, void* d);
+int hdoipd_vrb_play(t_rscp_media* media, void* d);
+void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps);
+void hdoipd_debug(uint32_t width, uint32_t height, uint32_t fps);
+
+int hdoipd_start_vrb(void* d);
+void hdoipd_launch(int (*f)(void* d), void* d, int timeout_ms, int repeat, int intervall_ms);
+
+void hdoipd_set_default();
 void hdoipd_request(uint32_t* cmd, int rsp);
 void hdoipd_event(uint32_t event);
-void hdoipd_handler();
+void hdoipd_start();
 bool hdoipd_init(int drv);
+
+static inline int hdoipd_rsc(int state)
+{
+    return (hdoipd.rsc_state & state);
+}
+
+static inline int hdoipd_state(int state)
+{
+    return (hdoipd.state & state);
+}
+
+static inline int hdoipd_tstate(int vtb_state)
+{
+    return (hdoipd.vtb_state & vtb_state);
+}
+
+static inline int hdoipd_rstate(int vrb_state)
+{
+    return (hdoipd.vrb_state & vrb_state);
+}
 
 #endif /* HDOIPD_FSM_H_ */

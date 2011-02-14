@@ -6,79 +6,131 @@
  */
 
 #include "hdoipd.h"
+#include "hoi_drv_user.h"
 #include "vtb_video.h"
+#include "hdoipd_fsm.h"
+#include "box_sys.h"
+#include "edid.h"
+#include "rscp_server.h"
 
-struct {
+static struct {
     t_hdoip_eth         remote;
 } vtb;
 
 
-int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection* rsp)
+int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
     int n;
 
     report("vtb_video_setup");
 
+    media->result = RSCP_RESULT_READY;
+
+    if (!hdoipd_state(HOID_VTB)) {
+        // currently no video input active
+        report(" ? not in state vtb");
+        rscp_err_no_vtb(rsp);
+        return RSCP_REQUEST_ERROR;
+    }
+
     // test if resource is available
-    if ((hdoipd.vtb_state != VTB_OFF) && (hdoipd.vtb_state != VTB_IDLE)) {
-        // currently no video input active
-        rtsp_err_busy(rsp);
-        return RTSP_RESOURCE_ERROR;
+    // currently no multicast support -> video must be unused
+    if (hdoipd_tstate(VTB_VID_MASK)) {
+        // currently busy -> no multicast supported yet
+        report(" ? vtb busy");
+        rscp_err_busy(rsp);
+        return RSCP_REQUEST_ERROR;
     }
 
-    if (!(hdoipd.rsc_state & RSC_VIDEO_IN)) {
-        // currently no video input active
-        rtsp_err_no_source(rsp);
-        return RTSP_RESOURCE_ERROR;
+    // get own MAC address
+    if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
+        report(" ? net_get_local_hwaddr failed");
+        rscp_err_server(rsp);
+        return RSCP_REQUEST_ERROR;
     }
 
+    // get own IP address
+    if ((n = net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address)) != RSCP_SUCCESS) {
+        report(" ? net_get_local_addr failed");
+        rscp_err_server(rsp);
+        return RSCP_REQUEST_ERROR;
+    }
+
+    // get MAC address of next in rout
+    if ((n = net_get_remote_hwaddr(hdoipd.listener.sockfd, "eth0", rsp->address, (uint8_t*)&vtb.remote.mac)) != RSCP_SUCCESS) {
+        report(" ? net_get_remote_hwaddr failed");
+        rscp_err_retry(rsp);
+        return RSCP_REQUEST_ERROR;
+    }
+
+    // limit incoming edid
+    // TODO: ...
+    edid_report(m->edid.edid);
+
+    if (!hdoipd_tstate(VTB_VID_MASK)) {
+        // TODO: dont reload when already the same, store edid in file for next boot
+        //       have a list of all contributing edid source (to test if it is allready included in our edid)
+        //
+        // video source not  in use -> update
+        hoi_drv_hpdoff();
+        hoi_drv_wredid(m->edid.edid);
+        hoi_drv_hpdon();
+    }
+    
     // reserve resource
-    hdoipd.vtb_state = VTB_VIDEO;
-
-    //
-    if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.mac)) != RTSP_SUCCESS) {
-        rtsp_err_server(rsp);
-        return n;
-    }
-
-    if ((n = net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address)) != RTSP_SUCCESS) {
-        rtsp_err_server(rsp);
-        return n;
-    }
-
-    if ((n = net_get_remote_hwaddr(hdoipd.listener.sockfd, "eth0", rsp->address, &vtb.remote.mac)) != RTSP_SUCCESS) {
-        rtsp_err_retry(rsp);
-        return n;
-    }
+    hdoipd_set_tstate(VTB_VID_IDLE);
 
     vtb.remote.address = rsp->address;
     vtb.remote.vid_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.vid_port, hdoipd.local.vid_port);
-    rtsp_response_setup(rsp, &m->transport, media->sessionid);
+    rscp_response_setup(rsp, &m->transport, media->sessionid);
 
-    struct in_addr a1, a2; a1.s_addr = hdoipd.local.address; a2.s_addr = vtb.remote.address;
-    printf("TX: %s:%d %s",
-            inet_ntoa(a1), ntohs(hdoipd.local.vid_port), mac_ntoa(hdoipd.local.mac));
-    printf(" -> %s:%d %s\n",
-            inet_ntoa(a2), ntohs(vtb.remote.vid_port), mac_ntoa(vtb.remote.mac));
+    REPORT_RTX("TX", hdoipd.local, "->", vtb.remote, vid);
 
-    return RTSP_SUCCESS;
+    return RSCP_SUCCESS;
 }
 
-int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* rsp)
+int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* rsp)
 {
     int n;
     t_video_timing timing;
-    t_rtsp_rtp_format fmt;
+    t_rscp_rtp_format fmt;
     hdoip_eth_params eth;
 
     report("vtb_video_play");
+
+    media->result = RSCP_RESULT_PLAYING;
+
+    if (!hdoipd_state(HOID_VTB)) {
+        // we don't have the resource reserved
+        report(" ? require state VTB");
+        rscp_err_server(rsp);
+        return RSCP_REQUEST_ERROR;
+    }
+
+    // no multicast currently -> must be idle
+    if (!hdoipd_tstate(VTB_VID_IDLE)) {
+        // we don't have the resource reserved
+        report(" ? require state VTB_IDLE");
+        rscp_err_server(rsp);
+        return RSCP_REQUEST_ERROR;
+    }
+
+    if (!hdoipd_rsc(RSC_VIDEO_IN)) {
+        // currently no video input active
+        report(" ? require active video input");
+        media->result = RSCP_RESULT_NO_VIDEO_IN;
+        rscp_err_no_source(rsp);
+        return RSCP_REQUEST_ERROR;
+    }
+
+    // test for valid resolution
 
     // start ethernet output
     eth.ipv4_dst_ip = vtb.remote.address;
     eth.ipv4_src_ip = hdoipd.local.address;
     eth.ipv4_tos = 0;
-    eth.ipv4_ttl = 4;
+    eth.ipv4_ttl = 30;
     eth.packet_size = 1500;
     eth.rtp_ssrc = 0;
     for(n=0;n<6;n++) eth.src_mac[n] = hdoipd.local.mac[n];
@@ -87,34 +139,95 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
     eth.udp_src_port = hdoipd.local.vid_port;
 
     // start vsi
-    fmt.compress = 1;
+    fmt.compress = m->format.compress;
+    fmt.value = reg_get_int("advcnt-min");
 
-    if ((n = hoi_drv_vsi(hdoipd.drv, true, 10000000, &eth, &timing, &fmt.value))) {
-        rtsp_err_server(rsp);
-        return RTSP_SERVER_ERROR;
+    // probe config
+    if ((n = hoi_drv_info(&timing, &fmt.value))) {
+        rscp_err_server(rsp);
+        return RSCP_REQUEST_ERROR;
     }
 
-    hoi_drv_get_mtime(hdoipd.drv, &fmt.rtptime);
+    hoi_drv_get_mtime(&fmt.rtptime);
 
     // send timing
-    rtsp_response_play(rsp, media->sessionid, &fmt, &timing);
+    rscp_response_play(rsp, media->sessionid, &fmt, &timing);
 
-    return RTSP_SUCCESS;
+#ifdef VID_IN_PATH
+    // activate vsi
+    if ((n = hoi_drv_vsi(fmt.compress, 0, reg_get_int("bandwidth"), &eth, &timing, &fmt.value))) {
+        return RSCP_REQUEST_ERROR;
+    }
+#endif
+
+    // We are streaming Video now...
+    hdoipd_set_tstate(VTB_VIDEO);
+
+    return RSCP_SUCCESS;
 }
 
-int vtb_video_teardown(t_rtsp_media* media, t_rtsp_req_teardown* m, t_rtsp_connection* rsp)
+int vtb_video_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t_rscp_connection* rsp)
 {
-    // get daemon struct
+    report("vtb_video_teardown");
 
-    report("vtb_video_play");
+    media->result = RSCP_RESULT_TEARDOWN;
+
+    if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
+#ifdef VID_IN_PATH
+        hoi_drv_reset(DRV_RST_VID_IN);
+#endif
+        hdoipd_set_tstate(VTB_VID_OFF);
+    }
+
+    rscp_response_teardown(rsp, media->sessionid);
+
+    return RSCP_SUCCESS;
 }
 
-node_anchor(vtb_video_sessions);
-t_rtsp_media vtb_video = {
+void vtb_video_pause(t_rscp_media *media)
+{
+    report("vtb_video_pause");
+
+    media->result = RSCP_RESULT_PAUSE_Q;
+
+    if (hdoipd_tstate(VTB_VIDEO)) {
+#ifdef VID_IN_PATH
+        hoi_drv_reset(DRV_RST_VID_IN);
+#endif
+        hdoipd_set_tstate(VTB_VID_IDLE);
+    }
+
+    // goto ready without further communication
+    rscp_media_force_ready(media);
+}
+
+int vtb_video_event(t_rscp_media *media, uint32_t event)
+{
+    switch (event) {
+        case EVENT_VIDEO_IN_ON:
+            if (rscp_media_splaying(media)) {
+                vtb_video_pause(media);
+                rscp_server_update(media, EVENT_VIDEO_IN_OFF);
+            }
+            rscp_server_update(media, EVENT_VIDEO_IN_ON);
+        break;
+        case EVENT_VIDEO_IN_OFF:
+            if (rscp_media_splaying(media)) {
+                vtb_video_pause(media);
+                rscp_server_update(media, EVENT_VIDEO_IN_OFF);
+            }
+        break;
+    }
+
+    return RSCP_SUCCESS;
+}
+
+t_rscp_media vtb_video = {
+    .name = "video",
     .owner = 0,
     .cookie = 0,
-    .session = &vtb_video_sessions,
-    .setup = vtb_video_setup,
-    .play = vtb_video_play,
-    .teardown = vtb_video_teardown
+    .setup = (frscpm*)vtb_video_setup,
+    .play = (frscpm*)vtb_video_play,
+    .teardown_q = (frscpm*)vtb_video_teardown,
+    .event = (frscpe*)vtb_video_event
 };

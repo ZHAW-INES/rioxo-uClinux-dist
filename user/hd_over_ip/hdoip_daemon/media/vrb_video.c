@@ -1,78 +1,300 @@
 /*
  * vrb_video.c
  *
+ * TODO: multicast
+ *
+ * hdoipd.vtb_state represents the state of the transmitter box!
+ *
  *  Created on: 26.11.2010
  *      Author: alda
  */
 
 #include "hoi_drv_user.h"
 #include "hdoipd.h"
+#include "box_sys.h"
 #include "vrb_video.h"
+#include "hdoipd_osd.h"
+#include "hdoipd_fsm.h"
+#include "edid.h"
+
+#define PROCESSING_DELAY_CORRECTION (6000)
 
 struct {
     t_hdoip_eth         remote;
 } vrb;
 
-int vrb_video_setup(t_rtsp_media* media, t_rtsp_rsp_setup* m, t_rtsp_connection* rsp)
+int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection* rsp)
 {
     int n;
+    report("vrb_video_setup");
 
-    if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.mac)) != RTSP_SUCCESS) {
-        rtsp_response_error(rsp, 400, "Server error");
+    if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
         return n;
     }
 
-    if ((n = net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address)) != RTSP_SUCCESS) {
-        rtsp_response_error(rsp, 400, "Server error");
+    if ((n = net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address)) != RSCP_SUCCESS) {
         return n;
     }
-
 
     vrb.remote.address = rsp->address;
     vrb.remote.vid_port = PORT_RANGE_START(m->transport.server_port);
     hdoipd.local.vid_port = PORT_RANGE_START(m->transport.client_port);
 
-    struct in_addr a1, a2; a1.s_addr = hdoipd.local.address; a2.s_addr = vrb.remote.address;
-    printf("RX: %s:%d %s",
-            inet_ntoa(a1), ntohs(hdoipd.local.vid_port), mac_ntoa(hdoipd.local.mac));
-    printf(" <- %s:%d %s\n",
-            inet_ntoa(a2), ntohs(vrb.remote.vid_port), mac_ntoa(vrb.remote.mac));
+    REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, vid);
 
+#ifdef ETI_PATH
     // setup ethernet input
-    hoi_drv_eti(hdoipd.drv, hdoipd.local.address, vrb.remote.address,
-            hdoipd.local.vid_port, hdoipd.local.aud_port);
+    hoi_drv_eti(hdoipd.local.address, vrb.remote.address,
+            hdoipd.local.vid_port, 0);
+#endif
 
-    return RTSP_SUCCESS;
+    hdoipd_set_tstate(VTB_VID_IDLE);
+
+    report("vrb_video_setup done");
+
+    media->result = RSCP_RESULT_READY;
+
+    return RSCP_SUCCESS;
 }
 
-int vrb_video_play(t_rtsp_media* media, t_rtsp_rsp_play* m, t_rtsp_connection* rsp)
+int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UNUSED *rsp)
 {
-    // set master timer
-    hoi_drv_set_mtime(hdoipd.drv, m->format.rtptime);
+    uint32_t compress = 0;
+    report("vrb_video_play");
 
-    // start vso
-    hoi_drv_vso(hdoipd.drv, m->format.compress, &m->timing, m->format.value);
+    media->result = RSCP_RESULT_PLAYING;
 
-    return RTSP_SUCCESS;
+    osd_permanent(false);
+
+    // set slave timer when not already synced
+    if (!hdoipd_rsc(RSC_SYNC)) {
+        hoi_drv_set_stime(m->format.rtptime+PROCESSING_DELAY_CORRECTION);
+    }
+
+    if (m->format.compress) {
+        compress |= DRV_CODEC_JP2;
+    }
+    if (reg_test("mode-sync", "streamsync")) {
+        if (reg_test("sync-target", "video") || !hdoipd_rsc(RSC_SYNC)) {
+            compress |= DRV_STREAM_SYNC;
+            hdoipd_set_rsc(RSC_VIDEO_SYNC);
+        }
+    }
+
+#ifdef VID_OUT_PATH
+    // start vso (20 ms max. network delay)
+    hoi_drv_vso(compress, 0, &m->timing, m->format.value, reg_get_int("network-delay"));
+#endif
+
+    hdoipd_set_tstate(VTB_VIDEO);
+    hdoipd_set_rsc(RSC_VIDEO_OUT);
+
+    struct in_addr a1; a1.s_addr = vrb.remote.address;
+    osd_printf("Streaming Video %d x %d from %s\n", m->timing.width, m->timing.height, inet_ntoa(a1));
+
+    return RSCP_SUCCESS;
 }
 
-int vrb_video_teardown(t_rtsp_media* media, t_rtsp_rsp_teardown* m, t_rtsp_connection* rsp)
+int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rscp_connection UNUSED *rsp)
 {
-    return RTSP_SUCCESS;
+    report("vrb_video_teardown");
+
+    media->result = RSCP_RESULT_TEARDOWN;
+
+    if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
+#ifdef VID_OUT_PATH
+        hoi_drv_reset(DRV_RST_VID_OUT);
+#endif
+    }
+
+    hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
+    hdoipd_set_tstate(VTB_VID_OFF);
+
+    return RSCP_SUCCESS;
 }
 
-int vrb_video_error(t_rtsp_media* media, intptr_t m, t_rtsp_connection* rsp)
+int vrb_video_teardown_q(t_rscp_media *media, t_rscp_req_teardown UNUSED *m, t_rscp_connection UNUSED *rsp)
 {
-    printf(" ? client failed (%d): %d - %s\n", m, rsp->ecode, rsp->ereason);
-    return RTSP_SUCCESS;
+    report("vrb_video_teardown_q");
+
+    media->result = RSCP_RESULT_TEARDOWN_Q;
+
+    if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
+#ifdef VID_OUT_PATH
+        hoi_drv_reset(DRV_RST_VID_OUT);
+#endif
+    }
+
+    hdoipd_set_tstate(VTB_VID_OFF);
+    hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
+
+    // activate hello listener
+    char *s = reg_get("remote-uri");
+    box_sys_set_remote(s);
+
+    osd_permanent(true);
+    osd_printf("remote off...");
+
+    return RSCP_SUCCESS;
 }
 
+int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
+{
+    if(rsp) {
+        report(" ? client failed (%d): %d - %s", m, rsp->ecode, rsp->ereason);
+        osd_permanent(true);
+        osd_printf("Streaming could not be established: %d - %s\n", rsp->ecode, rsp->ereason);
+        switch(rsp->ecode) {
+            case 300:   media->result = RSCP_RESULT_SERVER_TRY_LATER;
+                        break;
+            case 404:   media->result = RSCP_RESULT_SERVER_BUSY;
+                        break;
+            case 405:   media->result = RSCP_RESULT_SERVER_NO_VTB;
+                        break;
+            case 406:   media->result = RSCP_RESULT_SERVER_NO_VIDEO_IN;
+                        break;
+            case 400:
+            default:    media->result = RSCP_RESULT_SERVER_ERROR;
+                        break;
+        }
+    } else {    
+        osd_permanent(true);
+        osd_printf("Streaming could not be established: connection refused\n");
+        media->result = RSCP_RESULT_CONNECTION_REFUSED;
+    }
+    return RSCP_SUCCESS;
+}
 
-t_rtsp_media vrb_video = {
+void vrb_video_pause(t_rscp_media *media)
+{
+    media->result = RSCP_RESULT_PAUSE_Q;
+
+    if (hdoipd_tstate(VTB_VIDEO)) {
+
+#ifdef VID_OUT_PATH
+        hoi_drv_reset(DRV_RST_VID_OUT);
+#endif
+#ifdef ETI_PATH
+        hoi_drv_eti(hdoipd.local.address, vrb.remote.address,
+                hdoipd.local.vid_port, hdoipd.local.aud_port);
+#endif
+        hdoipd_set_tstate(VTB_VID_IDLE);
+        hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
+    }
+
+    // goto ready without further communication
+    rscp_media_force_ready(media);
+}
+
+int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
+{
+    report("vrb_video_update(%x)", m->event);
+
+    switch (m->event) {
+
+        case EVENT_VIDEO_IN_ON:
+            // No multicast for now...simply stop before starting new
+            if (rscp_media_splaying(media)) {
+                vrb_video_pause(media);
+            }
+
+            // restart
+            unlock("vrb_video_update");
+                hdoipd_launch(hdoipd_start_vrb, media, 250, 3, 1000);
+            lock("vrb_video_update");
+        break;
+
+        case EVENT_VIDEO_IN_OFF:
+            vrb_video_pause(media);
+            osd_permanent(true);
+            osd_printf("vtb.video stopped streaming...");
+        break;
+    }
+
+    return RSCP_SUCCESS;
+}
+
+int vrb_video_ready(t_rscp_media UNUSED *media)
+{
+    if (hdoipd_tstate(VTB_VID_MASK)) {
+        // not ready ->
+        return RSCP_ERRORNO;
+    }
+    if (!hdoipd_rsc(RSC_VIDEO_SINK)) {
+        // no video sink
+        return RSCP_ERRORNO;
+    }
+    return RSCP_SUCCESS;
+}
+
+int vrb_video_dosetup(t_rscp_media *media)
+{
+    int port;
+    t_rscp_transport transport;
+    t_rscp_edid edid;
+    t_rscp_client *client = media->creator;
+
+    if (!client) return RSCP_NULL_POINTER;
+
+    rscp_default_transport(&transport); // TODO: daemon transport configuration
+    port = reg_get_int("video-port");
+    transport.client_port = PORT_RANGE(htons(port), htons(port+1));
+
+    edid.segment = 0;
+    hoi_drv_rdedid(edid.edid);
+    edid_report(edid.edid);
+
+    return rscp_client_setup(client, &transport, &edid);
+}
+
+int vrb_video_doplay(t_rscp_media *media)
+{
+    char *s;
+    t_rscp_rtp_format fmt;
+    t_rscp_client *client = media->creator;
+
+    if (!client) return RSCP_NULL_POINTER;
+
+    // open media
+    s = reg_get("compress");
+    if (strcmp(s, "jp2k") == 0) {
+        fmt.compress = FORMAT_JPEG2000;
+    } else {
+        fmt.compress = FORMAT_PLAIN;
+    }
+    fmt.rtptime = 0;
+    fmt.value = reg_get_int("advcnt-min");
+
+    return rscp_client_play(client, &fmt);
+}
+
+int vrb_video_event(t_rscp_media *media, uint32_t event)
+{
+    t_rscp_client *client = media->creator;
+
+    switch (event) {
+        case EVENT_VIDEO_SINK_OFF:
+            rscp_client_teardown(client);
+        break;
+    }
+
+    return RSCP_SUCCESS;
+}
+
+t_rscp_media vrb_video = {
+    .name = "video",
     .owner = 0,
     .cookie = 0,
-    .setup = vrb_video_setup,
-    .play = vrb_video_play,
-    .teardown = vrb_video_teardown,
-    .error = vrb_video_error
+    .setup = (frscpm*)vrb_video_setup,
+    .play = (frscpm*)vrb_video_play,
+    .teardown_r = (frscpm*)vrb_video_teardown,
+    .teardown_q = (frscpm*)vrb_video_teardown_q,
+    .error = (frscpm*)vrb_video_error,
+    .update = (frscpm*)vrb_video_update,
+
+    .ready = (frscpl*)vrb_video_ready,
+    .dosetup = (frscpl*)vrb_video_dosetup,
+    .doplay = (frscpl*)vrb_video_doplay,
+    .event = (frscpe*)vrb_video_event
 };
+

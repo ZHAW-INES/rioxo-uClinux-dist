@@ -85,19 +85,17 @@ int hoi_res_fps(t_video_timing* p_vt)
  */
 t_video_timing* hoi_res_timing(uint32_t width, uint32_t height, uint32_t fps)
 {
-    bool bfps = false;
     t_video_timing* ret = 0;
-
 
     for (int i=0;i<FORMAT_COUNT;i++) {
         if ((width == VFORMAT[i].width) &&
             (height == VFORMAT[i].height)) {
             // found resolution
             if (!ret) {
-                ret = &VFORMAT[i];
+                ret = (t_video_timing*)&VFORMAT[i];
             } else if (fps) {
-                if (intabs(hoi_res_fps(&VFORMAT[i]), fps) < intabs(hoi_res_fps(ret), fps) ) {
-                    ret = &VFORMAT[i];
+                if (intabs(hoi_res_fps((t_video_timing*)&VFORMAT[i]), fps) < intabs(hoi_res_fps(ret), fps) ) {
+                    ret = (t_video_timing*)&VFORMAT[i];
                 }
             }
         }

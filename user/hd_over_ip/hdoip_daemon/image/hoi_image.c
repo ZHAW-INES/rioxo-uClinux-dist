@@ -4,11 +4,14 @@
  *  Created on: 19.10.2010
  *      Author: alda
  */
+#include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 #include <stdio.h>
 #include "hoi_image.h"
+#include "hoi_res.h"
 
-uint8_t* hoi_image_canvas_create(int f, t_video_timing* timing)
+uint8_t* hoi_image_canvas_create(t_video_timing* timing)
 {
     uint32_t* buffer;
     size_t size = timing->width * timing->height * 3;
@@ -20,7 +23,7 @@ uint8_t* hoi_image_canvas_create(int f, t_video_timing* timing)
     // first field of output contains size
     buffer[0] = size/4;
 
-    hoi_drv_show(f, false, buffer, timing, 0);
+    hoi_drv_show(false, buffer, timing, 0);
 
     return (uint8_t*)buffer + 4;
 }
@@ -32,7 +35,7 @@ void hoi_image_free(uint8_t* pimage)
     }
 }
 
-void hoi_image_capture_jpeg2000(int f, FILE* out, size_t size)
+void hoi_image_capture_jpeg2000(FILE* out, size_t size)
 {
     int ret;
     uint32_t* buffer;
@@ -45,7 +48,7 @@ void hoi_image_capture_jpeg2000(int f, FILE* out, size_t size)
 
     if (!buffer) return;
 
-    if ((ret = hoi_drv_capture(f, true, buffer, size, &timing, &advcnt))) {
+    if ((ret = hoi_drv_capture(true, buffer, size, &timing, &advcnt))) {
         printf("hoi_drv_capture failed. (error code = %d)", ret);
         return;
     }
@@ -60,7 +63,7 @@ void hoi_image_capture_jpeg2000(int f, FILE* out, size_t size)
     free(buffer);
 }
 
-void hoi_image_capture(int f, FILE* out)
+void hoi_image_capture(FILE* out)
 {
     int ret;
     uint32_t* buffer;
@@ -74,7 +77,7 @@ void hoi_image_capture(int f, FILE* out)
 
     if (!buffer) return;
 
-    if ((ret = hoi_drv_capture(f, false, buffer, size, &timing, &advcnt))) {
+    if ((ret = hoi_drv_capture(false, buffer, size, &timing, &advcnt))) {
         printf("hoi_drv_capture failed. (error code = %d)", ret);
         return;
     }
@@ -88,7 +91,7 @@ void hoi_image_capture(int f, FILE* out)
     free(buffer);
 }
 
-uint8_t* hoi_image_load(int f, FILE* in)
+uint8_t* hoi_image_load(FILE* in)
 {
     int ret;
     char hdr[5], fmt[9];
@@ -112,7 +115,7 @@ uint8_t* hoi_image_load(int f, FILE* in)
             if ((buffer = malloc(size*4+4))) {
                 buffer[0] = size;
                 fread(&buffer[1], size*4, 1, in);
-                if ((ret = hoi_drv_show(f, true, buffer, &timing, advcnt))) {
+                if ((ret = hoi_drv_show(true, buffer, &timing, advcnt))) {
                     free(buffer);
                     printf("hoi_drv_show failed. (error code = %d)\n", ret);
                     return 0;
@@ -130,7 +133,7 @@ uint8_t* hoi_image_load(int f, FILE* in)
             if ((buffer = malloc(size*4+4))) {
                 buffer[0] = size;
                 fread(&buffer[1], size*4, 1, in);
-                if ((ret = hoi_drv_show(f, false, buffer, &timing, 0))) {
+                if ((ret = hoi_drv_show(false, buffer, &timing, 0))) {
                     free(buffer);
                     printf("hoi_drv_show failed. (error code = %d)\n", ret);
                     return 0;
@@ -149,5 +152,5 @@ uint8_t* hoi_image_load(int f, FILE* in)
         return 0;
     }
 
-    return &buffer[1];
+    return (uint8_t*)(&buffer[1]);
 }

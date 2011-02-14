@@ -14,42 +14,77 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include "debug.h"
+#include "rscp_include.h"
 #include "bstmap.h"
-#include "rtsp_include.h"
-#include "hoi_cfg.h"
+
+#define CFG_FILE            "/mnt/config/hdoipd.cfg"
 
 typedef void (f_task)(void* value);
 
 enum {
-    HOID_IDLE,              // No drivers loaded
-    HOID_READY,             // Ready for operation
-    HOID_SHOW_CANVAS,       // Outputs an image from local memory
-    HOID_LOOP,              // Loops Input to Output
-    HOID_VRB,               // Configured as VRB (ethernet -> video out)
-    HOID_VTB                // Configure as VTB (video in -> ethernet)
+    HOID_IDLE = 0x01,           // No drivers loaded
+    HOID_READY = 0x02,          // Ready for operation
+    HOID_SHOW_CANVAS = 0x04,    // Outputs an image from local memory
+    HOID_LOOP = 0x08,           // Loops Input to Output
+    HOID_VRB = 0x10,            // Configured as VRB (ethernet -> video out)
+    HOID_VTB = 0x20             // Configure as VTB (video in -> ethernet)
 };
 
 enum {
-    VTB_OFF,
-    VTB_IDLE,               // nothing active
-    VTB_VIDEO,              // streaming video only
-    VTB_AUDIO,              // streaming audio only
-    VTB_AV,                 // streaming audio and video
+    VTB_OFF         = 0x01,
+    VTB_VID_IDLE    = 0x02,
+    VTB_AUD_IDLE    = 0x04,
+    VTB_VIDEO       = 0x08,         // streaming video only
+    VTB_AUDIO       = 0x10,         // streaming audio only
+    VTB_VID_OFF     = 0x20,
+    VTB_AUD_OFF     = 0x40,
+    VTB_VID_MASK    = 0x2a,
+    VTB_AUD_MASK    = 0x54,
+    VTB_VALID       = 0x1f,
+    VTB_ACTIVE      = 0x1e
 };
 
 enum {
-    VRB_OFF,
-    VRB_IDLE,               // nothing active
-    VRB_AUDIO               // streaming audio back
+    VRB_OFF         = 0x01,
+    VRB_IDLE        = 0x02,         // not streaming
+    VRB_AUDIO       = 0x04,         // streaming audio back
+    VRB_AUD_MASK    = 0x06
 };
 
 // what is
-#define RSC_AUDIO_IN        0x01        // active audio input
-#define RSC_VIDEO_IN        0x02        // active video input
-#define RSC_VIDEO_SINK      0x04        // a video sink is connected
-#define RSC_AUDIO_OUT       0x08        // active audio output
-#define RSC_VIDEO_OUT       0x10        // active video otuput
-#define RSC_OSD             0x20        // osd is active
+enum {
+    RSC_AUDIO0_IN   = 0x000001,     // active audio input (from video board)
+    RSC_AUDIO1_IN   = 0x000002,     // active audio input (from audio board)
+    RSC_AUDIO_IN    = 0x000003,     // active audio input
+    RSC_VIDEO_IN    = 0x000010,     // active video input
+    RSC_VIDEO_SINK  = 0x000100,     // a video sink is connected
+    RSC_ETH_LINK    = 0x000200,     // a ethernet link is on
+    RSC_AUDIO_OUT   = 0x001000,     // active audio output
+    RSC_VIDEO_OUT   = 0x002000,     // active video output
+    RSC_OSD         = 0x004000,     // osd output is active
+    RSC_VIDEO_SYNC  = 0x010000,     // sync running on video
+    RSC_AUDIO_SYNC  = 0x020000,     // sync running on audio
+    RSC_SYNC        = 0x030000      // sync running
+};
+
+// events
+enum {
+    EVENT_AUDIO_IN0_ON  = 0x00000001,   // Audio input[0] activated
+    EVENT_AUDIO_IN0_OFF = 0x00000002,   // Audio input[0] deactivated
+    EVENT_AUDIO_IN1_ON  = 0x00000004,   // Audio input[1] activated
+    EVENT_AUDIO_IN1_OFF = 0x00000008,   // Audio input[1] deactivated
+    EVENT_VIDEO_IN_ON   = 0x00000010,   // Video input activated
+    EVENT_VIDEO_IN_OFF  = 0x00000020,   // Video input deactivated
+    EVENT_VIDEO_SINK_ON = 0x00000100,   // Video input activated
+    EVENT_VIDEO_SINK_OFF= 0x00000200,   // Video input deactivated
+};
+
+enum {
+    UPDATE_NETWORK  = 0x0001,
+    UPDATE_SOF      = 0x0002,
+    UPDATE_FIRMWARE = 0x0004
+};
 
 typedef struct {
     uint32_t            address;        // remote ip address
@@ -64,72 +99,87 @@ typedef struct {
 } t_task;
 
 typedef struct {
-    t_bstmap*           registry;       // name=value
-    t_bstmap*           reg_listener;   // listen for write
-    t_node*             tasklet;        // will be executed
     int                 drv;            // used driver hdoipd
+    t_bstmap*           registry;       // name=value
+    t_bstmap*           verify;         //
+    t_bstmap*           set_listener;   // listen for write
+    t_bstmap*           get_listener;   // listen for read
+
+    uint32_t            drivers;
     int                 capabilities;   // reported capabilities
     int                 state;          // daemon state
-    int                 rsc_state;      // bitmap: resource input states
-    int                 vtb_state;      // vtb send state (idle, video, audio, av)
-    int                 vrb_state;      // vrb send state (idle, audio)
+    int                 rsc_state;      // resource input states
+    int                 vtb_state;      // vtb state
+    int                 vrb_state;      // vrb state
+    int                 update;         // pending updates
     pthread_mutex_t     mutex;
 
     void*               canvas;
-    uint32_t            drivers;
-    t_rtsp_listener     listener;
-    t_rtsp_client       client;
+    t_rscp_listener     listener;
+    t_node*             client;
     int                 fd;
     t_hdoip_eth         local;
-    t_hoi_cfg           config;
+    int                 osd_timeout;
 } t_hdoipd;
 
 
 //------------------------------------------------------------------------------
 //
 
-extern t_hdoipd hdoipd;
+extern t_hdoipd             hdoipd;
 
-#define lock()                  pthread_mutex_lock(&hdoipd.mutex)
-#define unlock()                pthread_mutex_unlock(&hdoipd.mutex)
+#define reg_set(n, v)       bstmap_set(&hdoipd.registry, (n), (v))
+#define reg_get(n)          bstmap_get(hdoipd.registry, (n))
+#define reg_get_int(n)      atoi(reg_get(n))
+#define set_listener(n, f)  bstmap_setp(&hdoipd.set_listener, (n), (f))
+#define get_listener(n, f)  bstmap_setp(&hdoipd.get_listener, (n), (f))
+#define reg_verify(n, f)    bstmap_setp(&hdoipd.verify, (n), (f))
+#define reg_test(n, s)      (strcmp(reg_get(n), s) == 0)
 
-#define reg_print(n)            bstmap_print(hdoipd.registry, (n))
-#define reg_set(n, v)           bstmap_set(&hdoipd.registry, (n), (v))
-#define reg_get(n)              bstmap_get(hdoipd.registry, (n))
-#define reg_get_all(a, i)       bstmap_get_all(hdoipd.registry, (a), (i))
-#define reg_cnt(c)              bstmap_cnt_elements(hdoipd.registry, (c))
-#define reg_listener(n, f)      bstmap_setp(&hdoipd.reg_listener, (n), (f))
-#define reg_call(n, k) \
-{ \
-    f_task* f = bstmap_get(&hdoipd.reg_listener, (n)); \
-    if (f) f(k); \
+static inline void reg_verify_set(char* n, char* k)
+{
+    f_task* f = (f_task*)bstmap_get(hdoipd.verify, (n));
+    if (f) f(&k);
+    reg_set(n, k);
 }
 
-#define task_add(f, v) \
-{ \
-    t_task* t= malloc(sizeof(t_task)); \
-    t->fnc = f; t->value = v; \
-    queue_put(&hdoipd.tasklet, t); \
+static inline void set_call(char* n, char* k)
+{
+    reg_set(n, k);
+    f_task* f = (f_task*)bstmap_get(hdoipd.set_listener, (n));
+    if (f) f(k);
+}
+
+static inline void get_call(char* n, char** k)
+{
+    f_task* f = (f_task*)bstmap_get(hdoipd.get_listener, (n));
+    if (f) f(k); else *k = reg_get(n);
 }
 
 
 //------------------------------------------------------------------------------
 //
 
-extern FILE* report_fd;
-extern FILE* rtsp_fd;
 
-#define report(...) { \
-    fprintf(report_fd, __VA_ARGS__); \
-    fprintf(report_fd, "\n"); \
-    fflush(report_fd); \
+#define pthread(th, f, d) \
+{ \
+    pthread_create(&th, 0, f, d); \
+    lock("pthread_create"); \
+    report2("pthread_create(%d, " #f ")", th); \
+    unlock("pthread_create"); \
 }
 
-#define perrno(...) { \
-    fprintf(report_fd, "[error] %s (%d): %s\n", __FILE__, __LINE__, strerror(errno)); \
-    fprintf(report_fd, __VA_ARGS__); \
-    fprintf(report_fd, "\n"); \
-    fflush(report_fd); \
+static inline void lock(const char* s)
+{
+    pthread_mutex_lock(&hdoipd.mutex);
+    report2("hdoipd:pthread_mutex_lock(%d, %s)", pthread_self(), s);
 }
+
+static inline void unlock(const char* s)
+{
+    report2("hdoipd:pthread_mutex_unlock(%d, %s)", pthread_self(), s);
+    pthread_mutex_unlock(&hdoipd.mutex);
+}
+
 
 #endif /* HDOIPD_H_ */

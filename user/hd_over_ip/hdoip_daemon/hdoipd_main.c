@@ -22,7 +22,9 @@
 #include <err.h>
 #include <errno.h>
 #include <pthread.h>
+#include <signal.h>
 
+#include "hoi_drv_user.h"
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 #include "bstmap.h"
@@ -32,7 +34,7 @@
 t_hdoipd hdoipd;
 
 FILE* report_fd;
-FILE* rtsp_fd;
+FILE* rscp_fd;
 
 typedef struct {
     int in, out;
@@ -40,7 +42,7 @@ typedef struct {
     char *rfifo;    // response (write)
 } t_pipe;
 
-ssize_t pipe_read(t_pipe* p, uint8_t *buf, size_t size)
+int pipe_read(t_pipe* p, uint8_t *buf, size_t size)
 {
     ssize_t ret = 0;
     size_t offset = 0;
@@ -50,29 +52,39 @@ ssize_t pipe_read(t_pipe* p, uint8_t *buf, size_t size)
         if (ret == 0) {
             close(p->out);
             close(p->in);
-            if (!(p->in = open(p->cfifo, O_RDONLY))) {
-                perrno(" open(%s) failed: %s", p->cfifo);
-                return 0;
+            if ((p->in = open(p->cfifo, O_RDONLY)) == -1) {
+                perrno(" open(%s) failed", p->cfifo);
+                return -1;
             }
-            if (!(p->out = open(p->rfifo, O_WRONLY))) {
-                perrno(" open(%s) failed: %s", p->rfifo);
-                return 0;
+            if ((p->out = open(p->rfifo, O_WRONLY)) == -1) {
+                perrno(" open(%s) failed", p->rfifo);
+                return -1;
             }
         } else if (ret < 0) {
-            return ret;
-        } else {
-            for (int x=0;x<ret;x++) printf("%02x ", buf[offset+x]);
-            printf("\n");
+            return -1;
         }
         offset = offset + ret;
     };
 
-    return ret;
+    return 0;
+}
+
+void pipe_rm_existing(char* file)
+{
+    struct stat buffer;
+    int l = strlen(file) + 17;
+    char *rm_cmd;
+
+    if(!stat(file, &buffer)) {
+        rm_cmd = malloc(l); 
+        snprintf(rm_cmd, l, "/bin/busybox rm %s", file);
+        system(rm_cmd);
+        free(rm_cmd);
+    }
 }
 
 void* pipe_read_thread(void* arg)
 {
-    size_t size;
     bool run = true;
     t_pipe pipe;
     uint32_t buf[256];
@@ -81,6 +93,11 @@ void* pipe_read_thread(void* arg)
     pipe.cfifo = malloc(l); snprintf(pipe.cfifo, l, "%s.cmd", (char*)arg);
     pipe.rfifo = malloc(l); snprintf(pipe.rfifo, l, "%s.rsp", (char*)arg);
 
+    // Delete existing files 
+    pipe_rm_existing(pipe.cfifo);
+    pipe_rm_existing(pipe.rfifo);
+
+    // Create new pipes
     report("open <%s | %s>", pipe.cfifo, pipe.rfifo);
 
     if (mkfifo(pipe.cfifo, 0770) == -1) {
@@ -88,15 +105,15 @@ void* pipe_read_thread(void* arg)
         return 0;
     }
     if (mkfifo(pipe.rfifo, 0770) == -1) {
-        perrno(" mkfifo(%s) failed: %s", pipe.rfifo);
+        perrno(" mkfifo(%s) failed", pipe.rfifo);
         return 0;
     }
-    if (!(pipe.in = open(pipe.cfifo, O_RDONLY))) {
-        perrno(" open(%s) failed: %s", pipe.cfifo);
+    if ((pipe.in = open(pipe.cfifo, O_RDONLY)) == -1) {
+        perrno(" open(%s) failed", pipe.cfifo);
         return 0;
     }
-    if (!(pipe.out = open(pipe.rfifo, O_WRONLY))) {
-        perrno(" open(%s) failed: %s", pipe.rfifo);
+    if ((pipe.out = open(pipe.rfifo, O_WRONLY)) == -1) {
+        perrno(" open(%s) failed", pipe.rfifo);
         return 0;
     }
 
@@ -104,13 +121,11 @@ void* pipe_read_thread(void* arg)
 
         do {
             // read type/size
-            pipe_read(&pipe, buf, 8);
+            if (pipe_read(&pipe, (void*)buf, 8) == -1) break;
             // read rest of message
-            pipe_read(&pipe, buf+2, buf[1]-8);
+            if (pipe_read(&pipe, (void*)(buf+2), buf[1]-8) == -1) break;
 
-            lock();
-
-            report(" < %x: %d Bytes", buf[0], buf[1]);
+            lock("pipe_read_thread");
 
                 if (buf[0] == 0) {
                     // close
@@ -119,7 +134,7 @@ void* pipe_read_thread(void* arg)
                     hdoipd_request(buf, pipe.out);
                 }
 
-            unlock();
+            unlock("pipe_read_thread");
 
         } while (run);
 
@@ -137,16 +152,48 @@ void* pipe_read_thread(void* arg)
     return 0;
 }
 
+void* event_read_thread(void UNUSED *d)
+{
+    uint32_t event;
+    while(1) {
+        if (read(hdoipd.drv, &event, 4)==4) {
+            hdoipd_event(event);
+        } else {
+            printf("event_read_thread failed\n");
+        }
+    }
+}
+
+void* poll_thread(void UNUSED *d)
+{
+    while (1) {
+        struct timespec ts = {
+            .tv_sec = 0,
+            .tv_nsec = 20000000
+        };
+        nanosleep(&ts, 0);
+
+        lock("poll_thread()");
+        {
+            hoi_drv_poll();
+        }
+        unlock("poll_thread()");
+    }
+}
+
 int main(int argc, char **argv)
 {
     int drv;
+    pthread_t the, thp;
     pthread_t* th = malloc(sizeof(pthread_t)* (argc-1));
+
+    report_fd = stdout;
 
     if (!(report_fd = fopen("/tmp/hdoipd.log", "w"))) {
         return 0;
     }
 
-    if (!(rtsp_fd = fopen("/tmp/rtsp.log", "w"))) {
+    if (!(rscp_fd = fopen("/tmp/rscp.log", "w"))) {
         return 0;
     }
 
@@ -156,20 +203,32 @@ int main(int argc, char **argv)
 
         if (hdoipd_init(drv)) {
 
-            report("hdoipd started");
+            pthread(the, event_read_thread, 0);
+            pthread(thp, poll_thread, 0);
+/*// listen for ethernet up/down event
+            lock("main-hdoipd_start");
+                report("hdoipd started");
 
+                hdoipd_start();
+            unlock("main-hdoipd_start");
+*/
             for (int i=1; i<argc; i++) {
                 report(" [%d] open named pipe <%s>",i,argv[i]);
-                pthread_create(&th[i-1], NULL, pipe_read_thread, argv[i]);
+                pthread(th[i-1], pipe_read_thread, argv[i]);
             }
+
+            // start timer?
+
 
             for (int i=1; i<argc; i++) {
                 pthread_join(th[i-1], NULL);
             }
 
-            close(hdoipd.drv);
+            lock("main-close");
+                close(hdoipd.drv);
 
-            report("hdoipd closed");
+                report("hdoipd closed");
+            unlock("main-close");
 
         } else {
             report("hdoipd init failed");
@@ -180,7 +239,7 @@ int main(int argc, char **argv)
     }
 
     fclose(report_fd);
-    fclose(rtsp_fd);
+    fclose(rscp_fd);
 
     pthread_mutex_destroy(&hdoipd.mutex);
 
