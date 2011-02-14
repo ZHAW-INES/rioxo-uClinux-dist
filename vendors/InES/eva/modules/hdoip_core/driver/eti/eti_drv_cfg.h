@@ -17,9 +17,15 @@
 #define ETI_DRV_AUD_BUF_SET     (0x0000000C)
 #define ETI_DRV_VID_BUF_SET     (0x00000010)
 
+#define LINK_COUNT              (5)
+
 typedef struct {
     uint32_t    link_state;
     void*       ptr;
+    uint32_t    vrx;
+    uint32_t    arx;
+    int         vcnt;
+    int         acnt;
 } t_eti;
 
 #endif /* ETI_DRV_CFG_H_ */

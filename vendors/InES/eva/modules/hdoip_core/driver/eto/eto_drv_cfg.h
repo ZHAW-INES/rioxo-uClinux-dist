@@ -20,9 +20,15 @@
 #define ETO_DRV_AES_SET			            (0x00000004)
 #define ETO_DRV_CPU_BUF_SET                 (0x00000008)
 
+#define LINK_COUNT              (5)
+
 typedef struct {
     uint32_t link_state;
     void*    ptr;
+    uint32_t    vtx;
+    uint32_t    atx;
+    int         vcnt;
+    int         acnt;
 } t_eto;
 
 #endif /* ETO_DRV_CFG_H_ */

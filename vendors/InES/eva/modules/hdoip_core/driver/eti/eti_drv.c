@@ -258,6 +258,10 @@ int eti_drv_init(t_eti* handle, void* ptr)
 
     handle->ptr = ptr;
     handle->link_state = 0;
+    handle->vrx = 0;
+    handle->arx = 0;
+    handle->vcnt = 0;
+    handle->acnt = 0;
 
 	eti_drv_stop(handle);
     eti_clr_irq1(handle->ptr);
@@ -280,6 +284,8 @@ int eti_drv_init(t_eti* handle, void* ptr)
 int eti_drv_handler(t_eti* handle, t_queue* event_queue)
 {
     uint32_t reg = eti_get_config_reg(handle->ptr) & ETI_CONFIG_FSM_EN;
+    uint32_t vrx = eti_get_vid_packet_cnt(handle->ptr);
+    uint32_t arx = eti_get_aud_packet_cnt(handle->ptr);
 
     if(reg != handle->link_state) {
         if(reg > 0) {   /* link up */
@@ -288,6 +294,36 @@ int eti_drv_handler(t_eti* handle, t_queue* event_queue)
             queue_put(event_queue, E_ETI_LINK_DOWN);     
         }
         handle->link_state = reg;
+    }
+
+    if (vrx != handle->vrx) {
+        handle->vrx = vrx;
+        if (!handle->vcnt) {
+            queue_put(event_queue, E_ETI_VIDEO_ON);
+            handle->vcnt = LINK_COUNT;
+        }
+    } else {
+        if (handle->vcnt == 1) {
+            queue_put(event_queue, E_ETI_VIDEO_OFF);
+        }
+        if (handle->vcnt) {
+            handle->vcnt--;
+        }
+    }
+
+    if (arx != handle->arx) {
+        handle->arx = arx;
+        if (!handle->acnt) {
+            queue_put(event_queue, E_ETI_AUDIO_ON);
+            handle->acnt = LINK_COUNT;
+        }
+    } else {
+        if (handle->acnt == 1) {
+            queue_put(event_queue, E_ETI_AUDIO_OFF);
+        }
+        if (handle->acnt) {
+            handle->acnt--;
+        }
     }
 
     return ERR_ETI_SUCCESS;

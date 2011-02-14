@@ -51,15 +51,23 @@
 
 /* ETI events */
 #define E_ETI_ID                (0x70000000)
-#define E_ETI_CNT               2
+#define E_ETI_CNT               6
 #define E_ETI_LINK_UP           (E_ETI_ID + 0x00000001)
 #define E_ETI_LINK_DOWN         (E_ETI_ID + 0x00000002)
+#define E_ETI_VIDEO_ON          (E_ETI_ID + 0x00000003)
+#define E_ETI_VIDEO_OFF         (E_ETI_ID + 0x00000004)
+#define E_ETI_AUDIO_ON          (E_ETI_ID + 0x00000005)
+#define E_ETI_AUDIO_OFF         (E_ETI_ID + 0x00000006)
 
 /* ETO events */
 #define E_ETO_ID                (0x80000000)
-#define E_ETO_CNT               2
+#define E_ETO_CNT               6
 #define E_ETO_LINK_UP           (E_ETO_ID + 0x00000001)
 #define E_ETO_LINK_DOWN         (E_ETO_ID + 0x00000002)
+#define E_ETO_VIDEO_ON          (E_ETO_ID + 0x00000003)
+#define E_ETO_VIDEO_OFF         (E_ETO_ID + 0x00000004)
+#define E_ETO_AUDIO_ON          (E_ETO_ID + 0x00000005)
+#define E_ETO_AUDIO_OFF         (E_ETO_ID + 0x00000006)
 
 
 /* VIO events */
