@@ -37,6 +37,7 @@ int hdoipd_start_vrb(void* d);
 void hdoipd_launch(int (*f)(void* d), void* d, int timeout_ms, int repeat, int intervall_ms);
 
 void hdoipd_set_default();
+void hdoipd_registry_update();
 void hdoipd_request(uint32_t* cmd, int rsp);
 void hdoipd_event(uint32_t event);
 void hdoipd_start();

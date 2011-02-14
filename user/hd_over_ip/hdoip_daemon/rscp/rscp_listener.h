@@ -26,6 +26,7 @@ typedef struct {
     t_node* cons;               //!< Connections
     t_bstmap* media;            //!< media associated with this listener
     t_bstmap* sessions;         //!< active sessions associated with this listener
+    t_node* kills;              //!< media to be killed
 
     pthread_mutex_t mutex;      //!< protects connections
     bool run;                   //!< run flag
@@ -40,6 +41,7 @@ int rscp_listener_close(t_rscp_listener* handle);
 
 // active media in server
 int rscp_listener_add_media(t_rscp_listener* handle, t_rscp_media* media);
+int rscp_listener_add_kill(t_rscp_listener* handle, t_rscp_media* media);
 t_rscp_media* rscp_listener_get_media(t_rscp_listener* handle, char* name);
 void rscp_listener_free_media(t_rscp_listener* handle);
 

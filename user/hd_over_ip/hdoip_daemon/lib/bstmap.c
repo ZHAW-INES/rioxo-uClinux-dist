@@ -99,6 +99,20 @@ char* bstmap_removep(t_bstmap** root, char* key)
     return ret;
 }
 
+void bstmap_remove(t_bstmap** root, char* key)
+{
+    t_keyvalue kv, *ret;
+    kv.key = key;
+
+    ret = bst_remove(root, &kv, (bstc*)cmp);
+
+    if (ret) {
+        free(ret->key);
+        free(ret->value);
+        free(ret);
+    }
+}
+
 void bstmap_print(t_bstmap* root, int n)
 {
     if (!root) {

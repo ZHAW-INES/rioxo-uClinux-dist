@@ -64,6 +64,12 @@ void* hdoipd_osd_timer(void UNUSED *d)
             unlock("hdoipd_osd_timer");
         }
 
+        lock("hdoipd_tick_timer");
+            hdoipd.tick++;
+            rscp_client_event(hdoipd.client, EVENT_TICK);
+            rscp_listener_event(&hdoipd.listener, EVENT_TICK);
+        unlock("hdoipd_tick_timer");
+
     } while (1);
 }
 

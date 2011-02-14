@@ -17,10 +17,13 @@
 #include "hdoipd_fsm.h"
 #include "edid.h"
 
-#define PROCESSING_DELAY_CORRECTION (6000)
+#define PROCESSING_DELAY_CORRECTION     (6000)
+
+#define TICK_SEND_ALIVE                 (10)
 
 struct {
     t_hdoip_eth         remote;
+    int                 alive_ping;
 } vrb;
 
 int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection* rsp)
@@ -53,6 +56,7 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     report("vrb_video_setup done");
 
     media->result = RSCP_RESULT_READY;
+    vrb.alive_ping = TICK_SEND_ALIVE;
 
     return RSCP_SUCCESS;
 }
@@ -273,6 +277,15 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
     t_rscp_client *client = media->creator;
 
     switch (event) {
+        case EVENT_TICK:
+            if (vrb.alive_ping) {
+                vrb.alive_ping--;
+            } else {
+                vrb.alive_ping = TICK_SEND_ALIVE;
+                // send tick we are alive (until something like rtcp is used)
+                rscp_client_update(media->creator, EVENT_TICK);
+            }
+        break;
         case EVENT_VIDEO_SINK_OFF:
             rscp_client_teardown(client);
         break;

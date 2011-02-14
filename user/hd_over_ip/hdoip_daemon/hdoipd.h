@@ -65,7 +65,11 @@ enum {
     RSC_OSD         = 0x004000,     // osd output is active
     RSC_VIDEO_SYNC  = 0x010000,     // sync running on video
     RSC_AUDIO_SYNC  = 0x020000,     // sync running on audio
-    RSC_SYNC        = 0x030000      // sync running
+    RSC_SYNC        = 0x030000,     // sync running
+    RSC_EVI         = 0x100000,     // ethernet video input
+    RSC_EAI         = 0x200000,     // ethernet audio input
+    RSC_EVO         = 0x400000,     // ethernet video output
+    RSC_EAO         = 0x800000      // ethernet audio output
 };
 
 // events
@@ -78,6 +82,9 @@ enum {
     EVENT_VIDEO_IN_OFF  = 0x00000020,   // Video input deactivated
     EVENT_VIDEO_SINK_ON = 0x00000100,   // Video input activated
     EVENT_VIDEO_SINK_OFF= 0x00000200,   // Video input deactivated
+    EVENT_VIDEO_STIN_OFF= 0x00001000,   // Ethernet Video Stream Input stoped
+    EVENT_AUDIO_STIN_OFF= 0x00002000,   // Ethernet Audio Stream Input stoped
+    EVENT_TICK          = 0x10000000    // a tick event
 };
 
 enum {
@@ -120,6 +127,7 @@ typedef struct {
     int                 fd;
     t_hdoip_eth         local;
     int                 osd_timeout;
+    uint64_t            tick;
 } t_hdoipd;
 
 
@@ -131,10 +139,16 @@ extern t_hdoipd             hdoipd;
 #define reg_set(n, v)       bstmap_set(&hdoipd.registry, (n), (v))
 #define reg_get(n)          bstmap_get(hdoipd.registry, (n))
 #define reg_get_int(n)      atoi(reg_get(n))
+#define reg_del(n)          bstmap_remove(&hdoipd.registry, (n))
 #define set_listener(n, f)  bstmap_setp(&hdoipd.set_listener, (n), (f))
 #define get_listener(n, f)  bstmap_setp(&hdoipd.get_listener, (n), (f))
 #define reg_verify(n, f)    bstmap_setp(&hdoipd.verify, (n), (f))
 #define reg_test(n, s)      (strcmp(reg_get(n), s) == 0)
+
+static inline bool tick_delay(uint64_t x)
+{
+    return (hdoipd.tick - x);
+}
 
 static inline void reg_verify_set(char* n, char* k)
 {

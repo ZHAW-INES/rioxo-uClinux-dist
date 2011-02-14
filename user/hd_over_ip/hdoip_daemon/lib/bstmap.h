@@ -22,6 +22,7 @@ t_keyvalue* bstmap_add(t_bstmap** root, char* key, char* value);
 void bstmap_set(t_bstmap** root, char* key, char* value);
 char* bstmap_get(t_bstmap* root, char* key);
 char* bstmap_removep(t_bstmap** root, char* key);
+void bstmap_remove(t_bstmap** root, char* key);
 void bstmap_freep(t_bstmap** root);
 void bstmap_setp(t_bstmap** root, char* key, void* value);
 void bstmap_traverse(t_bstmap* root, void (*f)(char*, char*, void*), void* d);

@@ -439,6 +439,12 @@ void hdoipd_fsm_vrb(uint32_t event)
         case E_ADV9889_CABLE_OFF:
             rscp_client_event(hdoipd.client, EVENT_VIDEO_SINK_OFF);
         break;
+        case E_ETI_VIDEO_OFF:
+            rscp_client_event(hdoipd.client, EVENT_VIDEO_STIN_OFF);
+        break;
+        case E_ETI_AUDIO_OFF:
+            rscp_client_event(hdoipd.client, EVENT_AUDIO_STIN_OFF);
+        break;
     }
 }
 
@@ -468,7 +474,6 @@ void hdoipd_fsm_vtb(uint32_t event)
         case E_ADV7441A_NO_AUDIO:
             rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_OFF);
         break;
-
     }
 }
 
@@ -513,6 +518,31 @@ void hdoipd_event(uint32_t event)
         case E_ADV7441A_NO_AUDIO:
             hdoipd_clr_rsc(RSC_AUDIO0_IN);
         break;
+        case E_ETI_VIDEO_ON:
+            hdoipd_set_rsc(RSC_EVI);
+        break;
+        case E_ETI_VIDEO_OFF:
+            hdoipd_clr_rsc(RSC_EVI);
+        break;
+        case E_ETI_AUDIO_ON:
+            hdoipd_set_rsc(RSC_EAI);
+        break;
+        case E_ETI_AUDIO_OFF:
+            hdoipd_clr_rsc(RSC_EAI);
+        break;
+        case E_ETO_VIDEO_ON:
+            hdoipd_set_rsc(RSC_EVO);
+        break;
+        case E_ETO_VIDEO_OFF:
+            hdoipd_clr_rsc(RSC_EVO);
+        break;
+        case E_ETO_AUDIO_ON:
+            hdoipd_set_rsc(RSC_EAO);
+        break;
+        case E_ETO_AUDIO_OFF:
+            hdoipd_clr_rsc(RSC_EAO);
+        break;
+
         case E_ADV7441A_HDCP:
         break;
         case E_ADV7441A_NO_HDCP:
@@ -644,6 +674,8 @@ bool hdoipd_init(int drv)
     hdoipd_set_default();
 
     hdoipd_register_task();
+
+    hdoipd_registry_update();
 
     hoi_cfg_read(CFG_FILE);
 

@@ -210,6 +210,11 @@ int rscp_client_teardown(t_rscp_client* client)
     return RSCP_SUCCESS;
 }
 
+int rscp_client_update(t_rscp_client* client, uint32_t event)
+{
+    rscp_request_update(&client->con, client->uri, client->media->sessionid, event);
+}
+
 int rscp_client_hello(t_rscp_client* client)
 {
     report(" > RSCP Client [%d] HELLO", client->nr);

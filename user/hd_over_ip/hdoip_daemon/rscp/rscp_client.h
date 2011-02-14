@@ -47,6 +47,7 @@ void rscp_client_event(t_node* list, uint32_t event);
 int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp_edid *edid);
 int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt);
 int rscp_client_teardown(t_rscp_client* client);
+int rscp_client_update(t_rscp_client* client, uint32_t event);
 bool rscp_client_active(t_rscp_client* client);
 bool rscp_client_inuse(t_rscp_client* client);
 int rscp_client_hello(t_rscp_client* client);

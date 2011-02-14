@@ -13,8 +13,11 @@
 #include "edid.h"
 #include "rscp_server.h"
 
+#define VTB_TIMEOUT 15
+
 static struct {
     t_hdoip_eth         remote;
+    int                 timeout;
 } vtb;
 
 
@@ -201,6 +204,18 @@ void vtb_video_pause(t_rscp_media *media)
     rscp_media_force_ready(media);
 }
 
+int vtb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
+{
+    switch (m->event) {
+        case EVENT_TICK:
+            // reset timeout
+            vtb.timeout = 0;
+        break;
+    }
+
+    return RSCP_SUCCESS;
+}
+
 int vtb_video_event(t_rscp_media *media, uint32_t event)
 {
     switch (event) {
@@ -217,6 +232,18 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
                 rscp_server_update(media, EVENT_VIDEO_IN_OFF);
             }
         break;
+        case EVENT_TICK:
+            if (vtb.timeout < VTB_TIMEOUT) {
+                vtb.timeout++;
+            } else {
+                // timeout -> kill connection
+                // server cannot kill itself -> add to kill list
+
+                //
+                // rscp_server_close(media);
+
+            }
+        break;
     }
 
     return RSCP_SUCCESS;
@@ -229,5 +256,6 @@ t_rscp_media vtb_video = {
     .setup = (frscpm*)vtb_video_setup,
     .play = (frscpm*)vtb_video_play,
     .teardown_q = (frscpm*)vtb_video_teardown,
+    .update = (frscpm*)vtb_video_update,
     .event = (frscpe*)vtb_video_event
 };

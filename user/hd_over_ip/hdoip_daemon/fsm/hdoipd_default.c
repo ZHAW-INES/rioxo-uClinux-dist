@@ -6,6 +6,7 @@
  */
 #include "hdoipd.h"
 
+#define CFGTAG "config-version"
 
 void hdoipd_set_default()
 {
@@ -36,3 +37,56 @@ void hdoipd_set_default()
     reg_set("web-user", "admin");
     reg_set("web-pass", "admin");
 }
+
+static void update_0_0_to_0_1()
+{
+    char *p;
+    p = reg_get("rtsp-server-port");
+    if (p) {
+        reg_set("rscp-server-port", p);
+        reg_del("rtsp-server-port");
+    }
+    p = reg_get("remote-uri");
+    if (strncmp(p, "rtsp", 4) == 0) {
+        memcpy(p, "rscp", 4);
+    }
+    p = reg_get("hello-uri");
+    if (strncmp(p, "rtsp", 4) == 0) {
+        memcpy(p, "rscp", 4);
+    }
+
+    reg_set(CFGTAG, "v0.1");
+
+    report(INFO "updated registry from version 0.0 to 0.1");
+}
+
+/** upgrade config
+ *
+ * upgrades from one version to the next until the newest version is
+ * reached
+ *
+ */
+void hdoipd_registry_update()
+{
+    bool update = false;
+
+    if (!reg_get(CFGTAG)) {
+        // version 0.0
+        update_0_0_to_0_1();
+        update = true;
+    }
+
+    // ... further version upgrades
+    // if (reg_test(CFGTAG, "v0.1")) -> upgrade to 0.2 etc..
+
+    // when update store the result
+    if (update) {
+        report(INFO "store updated config");
+        hoi_cfg_write(CFG_FILE);
+    }
+
+    if (!reg_test(CFGTAG, "v0.1")) {
+        report(INFO "unknown config version");
+    }
+}
+

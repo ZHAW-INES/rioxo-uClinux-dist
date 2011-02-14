@@ -161,6 +161,7 @@ int rscp_listener_start(t_rscp_listener* handle, int port)
     handle->port = port;
     handle->run = true;
     handle->cons = list_create();
+    handle->kills = queue_create();
     handle->nr = nr++;
 
     report(" + RSCP Listener [%d]", handle->nr);
@@ -198,6 +199,12 @@ int rscp_listener_add_media(t_rscp_listener* handle, t_rscp_media* media)
     listener_lock(handle, "rscp_listener_add_media");
         bstmap_setp(&handle->media, media->name, media);
     listener_unlock(handle, "rscp_listener_add_media");
+    return RSCP_SUCCESS;
+}
+
+int rscp_listener_add_kill(t_rscp_listener* handle, t_rscp_media* media)
+{
+    queue_put(handle->kills, media);
     return RSCP_SUCCESS;
 }
 
@@ -267,8 +274,12 @@ void rscp_listener_traverse_event(char UNUSED *key, char* value, void* e)
 
 void rscp_listener_event(t_rscp_listener* handle, uint32_t event)
 {
+    t_rscp_media* media;
     listener_lock(handle, "rscp_listener_event");
         bstmap_traverse(handle->sessions, rscp_listener_traverse_event, (void*)event);
+        while ((media = queue_get(handle->kills))) {
+            rscp_server_close(media);
+        }
     listener_unlock(handle, "rscp_listener_event");
 }
 
