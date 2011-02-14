@@ -153,10 +153,6 @@ CONFIG_NIOS2_HW_MUL=y
 #
 # CONFIG_GENERIC_GPIO is not set
 # CONFIG_AVALON_DMA is not set
-
-#
-# Additional NiosII Device Drivers
-#
 # CONFIG_PCI_ALTPCI is not set
 # CONFIG_ALTERA_REMOTE_UPDATE is not set
 

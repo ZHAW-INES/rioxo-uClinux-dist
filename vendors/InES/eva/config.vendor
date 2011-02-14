@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Dist builder
-# Mon Nov  8 13:40:45 2010
+# Wed Nov 24 17:06:52 2010
 #
 CONFIG_DISTVERSION="4.0"
 
@@ -1265,9 +1265,9 @@ CONFIG_USER_NIOS2IO_NIOS2IO=y
 #
 # HD over IP
 #
-# CONFIG_USER_HDOIP_HDOIPD is not set
-# CONFIG_USER_HDOIP_RTPTESTS is not set
+CONFIG_USER_HDOIP_DAEMON=y
 CONFIG_USER_HDOIP_ADV7441A=y
+CONFIG_USER_HDOIP_APP=y
 
 #
 # Stth tests app
