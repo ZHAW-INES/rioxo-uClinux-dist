@@ -9,7 +9,7 @@ require("hdoip.cookie")
 function show(t)
     local login = 0
  
-    if(t.submit ~= nil) then
+    if(t.sent ~= nil) then
         if((t.in_web_user == t.web_user) and (t.in_web_pass == t.web_pass)) then
             hdoip.cookie.set(t, "username", t.web_user, {})        
             hdoip.cookie.set(t, "password", t.web_pass, {})       
@@ -26,7 +26,7 @@ function show(t)
         hdoip.html.Text(label.p_lg_success)
     else 
         hdoip.html.TableHeader(2)
-        hdoip.html.FormHeader(script_path)
+        hdoip.html.FormHeader(script_path, main_form)
     
         hdoip.html.Text(label.username);                        hdoip.html.TableInsElement(1);
         hdoip.html.FormText("in_web_user", "", 30, 0)           hdoip.html.TableInsElement(1);

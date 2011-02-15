@@ -14,7 +14,7 @@ function show(t)
     local t_lang_short  = {["EN"] = 0; ["DE"] = 1;}
     local t_auth_en     = {[0] = label.off; [1] = label.on;}
 
-    if(t.submit ~= nil) then
+    if(t.sent ~= nil) then
         t.lang_sel = tonumber(t.lang_sel)
         t.auth_en = tonumber(t.auth_en_sel)
 
@@ -45,7 +45,7 @@ function show(t)
  
     hdoip.html.Header(t, label.page_name .. label.page_settings, script_path)
 
-    hdoip.html.FormHeader(script_path)
+    hdoip.html.FormHeader(script_path, main_form)
     hdoip.html.Title(label.p_set_lang);                              
     hdoip.html.TableHeader(1)
     hdoip.html.FormRadio("lang_sel", t_lang, lang_cnt, t.lang_sel);          hdoip.html.TableInsElement(1);

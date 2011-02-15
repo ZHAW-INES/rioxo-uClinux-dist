@@ -34,7 +34,7 @@ function show(t)
        
     t.sys_mac = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_MAC)
 
-    if(t.submit == nil) then
+    if(t.sent == nil) then
         str = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_IP)
         t.sys_ip0, t.sys_ip1, t.sys_ip2, t.sys_ip3 = hdoip.network.text2IpValues(str)
         str = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_SUB)
@@ -80,7 +80,7 @@ function show(t)
 
     if((new_ip == 0) or (err > 0))then
         hdoip.html.Header(t, label.page_name .. label.page_ethernet, script_path)
-        hdoip.html.FormHeader(script_path)
+        hdoip.html.FormHeader(script_path, main_form)
         hdoip.html.Title(label.page_ethernet);           
         hdoip.html.TableHeader(2)
         hdoip.html.Text(label.p_eth_mac);                                                   hdoip.html.TableInsElement(1);

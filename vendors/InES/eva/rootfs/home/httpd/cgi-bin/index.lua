@@ -14,6 +14,7 @@ require("hdoip.cookie")
 require("hdoip.download")
 
 script_path = "/cgi-bin/index.lua"
+main_form = "mainform"
 PAGE_ID_ETH = 0
 PAGE_ID_STREAM = 1
 PAGE_ID_STATUS = 2
@@ -68,10 +69,6 @@ else
 end
 
 
-if(query.store_cfg ~= nil) then
-    hdoip.pipe.store_cfg()
-end
-
 if(query.logout ~= nil) then
     hdoip.cookie.delete(query, "username", {})
     hdoip.cookie.delete(query, "password", {})
@@ -79,7 +76,7 @@ if(query.logout ~= nil) then
 end
 
 if(init_err ~= "") then
-    hdoip.addError(t, init_err)
+    hdoip.html.AddError(query, init_err)
 end
 
 if(query.auth_en > 0) then
@@ -92,6 +89,12 @@ if(query.auth_en > 0) then
         query.page = 20
     end
 end
+
+--if(query.submit == nil) then
+--    query.submit = ""
+--end
+--hdoip.html.AddError(query, "submit : "..query.submit) 
+
 
 if(query.page == 0) then
     pages.ethernet.show(query)
@@ -109,6 +112,10 @@ elseif(query.page == 20) then
     pages.login.show(query)
 else 
     pages.debug.show(query)
+end
+
+if(query.store == "1")then
+    hdoip.pipe.store_cfg()
 end
 
 hdoip.pipe.close()

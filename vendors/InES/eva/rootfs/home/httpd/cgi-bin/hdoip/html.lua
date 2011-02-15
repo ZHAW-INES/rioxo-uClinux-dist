@@ -147,24 +147,29 @@ function FormCheckbox(name, value, label, checked)
 end
 
 function OneButtonForm(t, script_path, value, button_label)
-    FormHeader(script_path)
+    FormHeader(script_path, "OneButtonForm")
     FormHidden(value, 1)
     FormHidden("page", t.page)
     html_str = html_str .. "<input type=\"submit\" value=\""..button_label.."\">\n</form>\n"
 end
 
 
-function FormHeader(script_path)
-    html_str = html_str .. "<form action=\"" .. script_path .. "\" method=\"get\" accept-charset=\"UTF-8\">\n"
+function FormHeader(script_path, name)
+    html_str = html_str .. "<form action=\"" .. script_path .. "\" name=\""..name.."\" method=\"get\" accept-charset=\"UTF-8\">\n"
 end
 
+function OnclickButton(label, event)
+    html_str = html_str .. "<input type=\"button\" value=\""..label.."\" name=\"Button\" onclick=\""..event.."\">\n"
+end
+ 
 function FormButton(button_type, label)
     html_str = html_str .. "<input type=\"".. button_type .."\" value=\""..label.."\">\n"
 end
 
 function FormEnd(t)
+    FormHidden("store", 0)
     FormHidden("page", t.page)
-    FormHidden("submit", "1")
+    FormHidden("sent", 1)
    
     html_str = html_str .. "</form>\n"
 end
@@ -173,8 +178,14 @@ function FormBottom(t)
     html_str = html_str .. "<br>\n"
     FormButton("submit", label.button_submit)
     FormButton("reset", label.button_default)
-    FormEnd(t)
-    OneButtonForm(t, script_path, "store_cfg", (label.button_save))
+    FormHidden("store", 0)
+    FormHidden("page", t.page)
+    FormHidden("sent", 1)
+ 
+    OnclickButton(label.button_save,"document.mainform.store.value=1;document.mainform.submit()")
+    html_str = html_str .. "</form>\n"
+ 
+    --FormEnd(t)
 end
 
 function Header(t, title, script_path, addon)
@@ -213,7 +224,7 @@ function Header(t, title, script_path, addon)
         html_str = html_str .. '</li>'
     end
 
-    html_str = html_str .. "</ul><br><br><b>"..label.device_name..dev_name.."<b/>"
+    html_str = html_str .. "</ul><br><br><b>"..label.device_name..dev_name.."</b>"
 end
 
 function Bottom(t)

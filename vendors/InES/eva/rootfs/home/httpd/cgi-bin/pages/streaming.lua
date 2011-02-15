@@ -18,7 +18,7 @@ local MEDIA_SEL_VID = "video"
 -- ------------------------------------------------------------------
 function show(t)
 
-    if(t.submit == nil) then
+    if(t.sent == nil) then
         local str = hdoip.pipe.getParam(hdoip.pipe.REG_ST_URI)
         t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3 = hdoip.network.text2IpValues(string.sub(str, 8))
         
@@ -106,7 +106,7 @@ function show(t)
 
     hdoip.html.Header(t, label.page_name .. label.page_streaming, script_path)
     
-    hdoip.html.FormHeader(script_path)
+    hdoip.html.FormHeader(script_path, main_form)
     hdoip.html.Title(label.page_streaming);
     hdoip.html.TableHeader(3)
     hdoip.html.Text(label.p_st_connect);                                                    hdoip.html.TableInsElement(1);
