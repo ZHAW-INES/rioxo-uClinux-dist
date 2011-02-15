@@ -33,7 +33,7 @@ void hdoipd_set_default()
     reg_set("rscp-server-port", "554");
 
     reg_set("web-lang", "EN");
-    reg_set("web-auth-en", "1");
+    reg_set("web-auth-en", "0");
     reg_set("web-user", "admin");
     reg_set("web-pass", "admin");
 }
