@@ -90,12 +90,6 @@ if(query.auth_en > 0) then
     end
 end
 
---if(query.submit == nil) then
---    query.submit = ""
---end
---hdoip.html.AddError(query, "submit : "..query.submit) 
-
-
 if(query.page == 0) then
     pages.ethernet.show(query)
 elseif(query.page == 1) then

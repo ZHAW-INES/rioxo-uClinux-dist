@@ -57,7 +57,7 @@ label = {
     tab_settings = "Einstellungen";
 
     -- Page default
-    p_df_question = "Ger&aumlt auf Werkeinstellungen zur&uuml;cksetzten?";
+    p_df_question = "Ger&auml;t auf Werkeinstellungen zur&uuml;cksetzen?";
 
     -- Page login
     p_lg_success = "Anmelden war erfolgreich";
