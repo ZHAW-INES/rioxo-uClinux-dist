@@ -277,25 +277,14 @@ void rscp_listener_event(t_rscp_listener* handle, uint32_t event)
     t_rscp_media* media;
     listener_lock(handle, "rscp_listener_event");
         bstmap_traverse(handle->sessions, rscp_listener_traverse_event, (void*)event);
+        // event may add medias to the kill list
         while ((media = queue_get(handle->kills))) {
+            // when we close the sessions, we also must remove it from the listener
             rscp_server_close(media);
+            bstmap_removep(&handle->sessions, media->sessionid);
         }
     listener_unlock(handle, "rscp_listener_event");
 }
-
-/*
-void rscp_listener_update(t_rscp_listener* handle, t_rscp_media* filter)
-{
-    report("rscp_listener_update()");
-    if (filter) {
-        listener_lock(handle, "rscp_listener_update_all");
-            bstmap_ctraverse(handle->sessions,
-                    rscp_listener_cond, filter,
-                    rscp_listener_traverse, rscp_server_update);
-        listener_unlock(handle, "rscp_listener_update_all");
-    }
-}
-*/
 
 void rscp_listener_pause(t_rscp_listener* handle, t_rscp_media* filter)
 {
@@ -342,16 +331,6 @@ void rscp_listener_teardown_all(t_rscp_listener* handle)
         bstmap_traverse_free(&handle->sessions, rscp_listener_traverse, rscp_server_teardown);
     listener_unlock(handle, "rscp_listener_teardown_all");
 }
-
-/*
-void rscp_listener_update_all(t_rscp_listener* handle)
-{
-    report("rscp_listener_update_all()");
-    listener_lock(handle, "rscp_listener_update_all");
-        bstmap_traverse(handle->sessions, rscp_listener_traverse, rscp_server_update);
-    listener_unlock(handle, "rscp_listener_update_all");
-}
-*/
 
 void rscp_listener_pause_all(t_rscp_listener* handle)
 {

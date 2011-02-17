@@ -205,13 +205,7 @@ int main(int argc, char **argv)
 
             pthread(the, event_read_thread, 0);
             pthread(thp, poll_thread, 0);
-/*// listen for ethernet up/down event
-            lock("main-hdoipd_start");
-                report("hdoipd started");
 
-                hdoipd_start();
-            unlock("main-hdoipd_start");
-*/
             for (int i=1; i<argc; i++) {
                 report(" [%d] open named pipe <%s>",i,argv[i]);
                 pthread(th[i-1], pipe_read_thread, argv[i]);

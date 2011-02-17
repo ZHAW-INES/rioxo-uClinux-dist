@@ -96,6 +96,7 @@ const t_map_set srv_method[] = {
     { "PLAY", (void*)tab_request_play, (void*)rmsq_play },
     { "TEARDOWN", (void*)tab_request_teardown, (void*)rmsq_teardown },
     { "HELLO", (void*)tab_request_hello, (void*)rmsq_hello },
+    { "UPDATE", (void*)tab_request_update, (void*)rmsq_update },
     MAP_SET_NULL
 };
 

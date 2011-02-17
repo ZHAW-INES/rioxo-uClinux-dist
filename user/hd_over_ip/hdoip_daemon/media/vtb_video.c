@@ -26,7 +26,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     int n;
 
     report("vtb_video_setup");
-
+    
     media->result = RSCP_RESULT_READY;
 
     if (!hdoipd_state(HOID_VTB)) {
@@ -82,6 +82,8 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     
     // reserve resource
     hdoipd_set_tstate(VTB_VID_IDLE);
+
+    vtb.timeout = 0;
 
     vtb.remote.address = rsp->address;
     vtb.remote.vid_port = PORT_RANGE_START(m->transport.client_port);
@@ -236,12 +238,19 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
             if (vtb.timeout < VTB_TIMEOUT) {
                 vtb.timeout++;
             } else {
+                report("vtb_video_event: timeout");
                 // timeout -> kill connection
                 // server cannot kill itself -> add to kill list
-
-                //
-                // rscp_server_close(media);
-
+                // (will be executed after all events are processed)
+                vtb.timeout = 0;
+                media->result = RSCP_RESULT_TEARDOWN;
+                if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
+#ifdef VID_IN_PATH
+                    hoi_drv_reset(DRV_RST_VID_IN);
+#endif
+                    hdoipd_set_tstate(VTB_VID_OFF);
+                }
+                rscp_listener_add_kill(&hdoipd.listener, media);
             }
         break;
     }

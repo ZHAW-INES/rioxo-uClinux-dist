@@ -66,8 +66,10 @@ void* hdoipd_osd_timer(void UNUSED *d)
 
         lock("hdoipd_tick_timer");
             hdoipd.tick++;
+#ifdef USE_SYS_TICK
             rscp_client_event(hdoipd.client, EVENT_TICK);
             rscp_listener_event(&hdoipd.listener, EVENT_TICK);
+#endif
         unlock("hdoipd_tick_timer");
 
     } while (1);

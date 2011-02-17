@@ -9,6 +9,7 @@
 #include "vtb_audio.h"
 #include "hdoipd_fsm.h"
 #include "box_sys.h"
+#include "rscp_server.h"
 
 static struct {
     t_hdoip_eth         remote;

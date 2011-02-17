@@ -25,8 +25,10 @@
 
 #define USE_OSD_TIMER
 #define USE_LAUNCHER
+#define USE_SYS_TICK
 
 #undef REPORT_PTHREAD
+#undef REPORT_RSCP
 
 //------------------------------------------------------------------------------
 //

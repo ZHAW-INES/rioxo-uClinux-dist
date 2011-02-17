@@ -289,6 +289,22 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
         case EVENT_VIDEO_SINK_OFF:
             rscp_client_teardown(client);
         break;
+        case EVENT_VIDEO_STIN_OFF:
+            // no more video frames received -> stop
+            if (hdoipd_tstate(VTB_VIDEO)) {
+#ifdef VID_OUT_PATH
+                hoi_drv_reset(DRV_RST_VID_OUT);
+#endif
+                hdoipd_set_tstate(VTB_VID_OFF);
+                hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
+            }
+            // goto init without further communication
+            rscp_media_force_init(media);
+            // remove client
+            rscp_client_remove(client);
+            osd_permanent(true);
+            osd_printf("vtb.video connection lost...");
+        break;
     }
 
     return RSCP_SUCCESS;

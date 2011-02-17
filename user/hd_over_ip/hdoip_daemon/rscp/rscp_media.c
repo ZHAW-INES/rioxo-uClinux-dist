@@ -147,7 +147,17 @@ int rmsq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUS
     return ret;
 }
 
-// rscp media server
+// rscp media server request
+int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
+{
+    int ret = RSCP_SUCCESS;
+    if (media->update) ret = media->update(media, msg, rsp);
+    if (ret) media->state = RSCP_READY;
+    return ret;
+}
+
+
+// rscp media server response
 int rmsr_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
@@ -157,16 +167,6 @@ int rmsr_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
     }
     return ret;
 }
-
-
-// rscp media client
-int rmsr_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
-{
-    int ret = RSCP_SUCCESS;
-    if (media->update) ret = media->update(media, msg, rsp);
-    return ret;
-}
-
 
 // rscp media client
 int rmcq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
@@ -274,6 +274,12 @@ int rscp_media_force_ready(t_rscp_media* media)
     if (media->state == RSCP_PLAYING) {
         media->state = RSCP_READY;
     }
+    return RSCP_SUCCESS;
+}
+
+int rscp_media_force_init(t_rscp_media* media)
+{
+    media->state = RSCP_INIT;
     return RSCP_SUCCESS;
 }
 

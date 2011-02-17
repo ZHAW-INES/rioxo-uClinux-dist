@@ -21,6 +21,7 @@ struct {
 int box_sys_hello(t_rscp_media UNUSED *media, intptr_t UNUSED m, t_rscp_connection* rsp)
 {
     if ((rsp->address == box.address) && box.address) {
+        report("hello received from remote device");
         unlock("box_sys_hello");
             hdoipd_launch(hdoipd_start_vrb, 0, 50, 3, 1000);
         lock("box_sys_hello");
@@ -33,6 +34,8 @@ void box_sys_set_remote(char* address)
     char buf[200];
     t_str_uri uri;
     struct hostent* host;
+
+    if (!address) return;
 
     box.address = 0;
 
@@ -51,6 +54,9 @@ void box_sys_set_remote(char* address)
     }
 
     box.address = *((uint32_t*)host->h_addr_list[0]);
+
+    struct in_addr addr; addr.s_addr = box.address;
+    report(INFO "box_sys_set_remote(%s)", inet_ntoa(addr));
 }
 
 t_rscp_media box_sys = {

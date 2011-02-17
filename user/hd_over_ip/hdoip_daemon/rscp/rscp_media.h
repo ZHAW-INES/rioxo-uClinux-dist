@@ -79,9 +79,9 @@ int rmsq_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void* owne
 int rmsq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void* owner);
 int rmsq_hello(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void* owner);
 int rmsq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void* owner);
+int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void* owner);
 int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void* owner);
 int rmsr_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
-int rmsr_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 
 // rscp media client
 int rmcq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void* owner);
@@ -100,7 +100,7 @@ int rscp_media_event(t_rscp_media* media, uint32_t event);
 
 // state changes...
 int rscp_media_force_ready(t_rscp_media* media);
-
+int rscp_media_force_init(t_rscp_media* media);
 
 static inline bool rscp_media_sinit(t_rscp_media* media)
 {

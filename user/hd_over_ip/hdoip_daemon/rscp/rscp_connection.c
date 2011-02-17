@@ -80,11 +80,13 @@ int rscp_receive(t_rscp_connection* con, char** line)
 
     *line = sol;
 
+#ifdef REPORT_RSCP
     if (con->doc & RSCP_CON_DOC_RX) {
         struct in_addr addr = { .s_addr = con->address };
         fprintf(rscp_fd, "[%15s] < %s\n", inet_ntoa(addr), *line);
         fflush(rscp_fd);
     }
+#endif
 
     return RSCP_SUCCESS;
 }
@@ -96,6 +98,7 @@ void rscp_send(t_rscp_connection* con)
         perrno("rscp_send() write failed");
     }
 
+#ifdef REPORT_RSCP
     if (con->doc & RSCP_CON_DOC_TX) {
         struct in_addr addr = { .s_addr = con->address };
         char* sol = con->out.buf;
@@ -104,6 +107,7 @@ void rscp_send(t_rscp_connection* con)
         }
         fflush(rscp_fd);
     }
+#endif
 
     con->out.eol = con->out.buf;
 }

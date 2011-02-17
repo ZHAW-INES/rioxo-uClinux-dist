@@ -79,7 +79,9 @@ int rscp_server_thread(t_rscp_server* handle)
 
         media->creator = handle;
 
+#ifdef REPORT_RSCP
         report(" < RSCP Server [%d] %s", handle->nr, common.rq.method);
+#endif
 
         // process request (function responses for itself)
         n = ((frscpo*)method->fnc)(media, &buf, &handle->con, handle->owner);
@@ -113,15 +115,14 @@ void rscp_server_teardown(t_rscp_media* media)
 
     rscp_request_teardown(&server->con, uri, media->sessionid);
 
-    rmsr_teardown(media, 0, &server->con, server->owner);
-
-    if (shutdown(server->con.fdr, SHUT_RDWR) == -1) {
-        report("close socket error: %s", strerror(errno));
-    }
-
-    free(media);
+    rscp_server_close(media);
 }
 
+/** Close connection
+ *
+ * Note: caller must remove session
+ *
+ */
 void rscp_server_close(t_rscp_media* media)
 {
     t_rscp_server* server = media->creator;
@@ -143,8 +144,6 @@ void rscp_server_update(t_rscp_media* media, uint32_t event)
     sprintf(uri, "rscp://%s/", inet_ntoa(a1));
 
     rscp_request_update(&server->con, uri, media->sessionid, event);
-
-    rmsr_update(media, 0, &server->con);
 }
 
 void rscp_server_pause(t_rscp_media* media)

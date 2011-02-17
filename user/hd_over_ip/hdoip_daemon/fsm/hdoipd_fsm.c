@@ -270,6 +270,9 @@ void hdoipd_goto_vrb()
 
                 hdoipd_set_state(HOID_VRB);
 
+                // register remote for "hello"
+                box_sys_set_remote(reg_get("remote-uri"));
+
                 // first thing to try is setup a new connection based on registry
                 unlock("hdoipd_goto_vrb");
                     hdoipd_launch(hdoipd_start_vrb, 0, 50, 3, 1000);
@@ -427,6 +430,10 @@ int hdoipd_start_vrb(void *d)
 void hdoipd_fsm_vrb(uint32_t event)
 {
     switch (event) {
+        case E_ETO_LINK_DOWN:
+            osd_permanent(true);
+            osd_printf("Ethernet connection lost");
+        break;
         case E_ADV9889_CABLE_ON:
             // plug in the cable is a start point for the VRB to
             // work when video or embedded audio is desired ...
@@ -553,13 +560,15 @@ void hdoipd_event(uint32_t event)
         break;
         case E_VSI_CDFIFO_FULL:
         break;
-        case E_VSO_CHOKED:
-        break;
         case E_VSO_PAYLOAD_EMPTY:
         break;
         case E_VSO_PAYLOAD_MTIMEOUT:
         break;
+
+        case E_VSO_CHOKED:
         case E_VSO_TIMESTAMP_ERROR:
+            // try to repair
+            hoi_drv_repair();
         break;
 
         case E_ASI_RBF_ERROR:
@@ -633,7 +642,7 @@ void hdoipd_hello()
 void hdoipd_start()
 {
     hdoipd_hello();
-
+    
     char *s = reg_get("mode-start");
     if (strcmp(s, "vtb") == 0) {
         hdoipd_goto_vtb();
@@ -675,9 +684,9 @@ bool hdoipd_init(int drv)
 
     hdoipd_register_task();
 
-    hdoipd_registry_update();
-
     hoi_cfg_read(CFG_FILE);
+
+    hdoipd_registry_update();
 
     hoi_cfg_system();
 
