@@ -41,6 +41,7 @@ local PIPE_CMD_STORE_CFG = "32000007"
 local PIPE_CMD_REMOTE_UPDATE = "3100000C"
 local PIPE_CMD_GETVERSION = "3100000D"
 local PIPE_CMD_FACTORY_DEFAULT = "3100000E"
+local PIPE_CMD_REBOOT = "31000009"
 
 local fd_cmd, fd_rsp = nil, nil
 
@@ -53,6 +54,7 @@ local function fileExist(file)
         return false
     end
 end
+
 
 function open()
     fd_cmd = io.open(PIPE_CMD, "w");
@@ -83,6 +85,14 @@ local function createCmdHeader(cmd, payload_size)
     str = hdoip.convert.Str2LE_32(cmd)
     str = str .. hdoip.convert.Str2LE_32(string.format("%08x", (payload_size + 8)))
     return str
+end
+
+local function simple_cmd(cmd_id)
+    if(fd_cmd ~= nil) then
+        str = hdoip.convert.Str2HexFile(createCmdHeader(cmd_id, 0))
+        fd_cmd:write(str)
+        fd_cmd:flush()
+    end
 end
 
 function setParam(key, value)
@@ -184,17 +194,13 @@ function remote_update(file)
 end
 
 function store_cfg()
-    if(fd_cmd ~= nil) then
-        str = hdoip.convert.Str2HexFile(createCmdHeader(PIPE_CMD_STORE_CFG, 0))
-        fd_cmd:write(str)
-        fd_cmd:flush()
-    end
+    simple_cmd(PIPE_CMD_STORE_CFG)
+end
+
+function reboot()
+    simple_cmd(PIPE_CMD_REBOOT)
 end
 
 function factory_default()
-    if(fd_cmd ~= nil) then
-        str = hdoip.convert.Str2HexFile(createCmdHeader(PIPE_CMD_FACTORY_DEFAULT, 0))
-        fd_cmd:write(str)
-        fd_cmd:flush()
-    end
+    simple_cmd(PIPE_CMD_FACTORY_DEFAULT)
 end
