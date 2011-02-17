@@ -183,6 +183,7 @@ int hdoip_cli_fmt(int fd, int fdr, char** argv, int argc)
 int hdoip_cli_set(int fd, int fdr, char** argv, int argc)
 {
     hoic_set_param(fd, argv[0], argv[1]);
+    return 0;
 }
 
 int hdoip_cli_get(int fd, int fdr, char** argv, int argc)
@@ -190,12 +191,14 @@ int hdoip_cli_get(int fd, int fdr, char** argv, int argc)
     char* s = hoic_get_param(fd, fdr, argv[0]);
     printf("return: %s\n", s);
     free(s);
+    return 0;
 }
 
 int hdoip_cli_read(int fd, int fdr, char** argv, int argc)
 {
     uint32_t s = hoic_read(fd, fdr, strtol(argv[0], 0, 16));
     printf("return: %08x\n", s);
+    return 0;
 }
 
 int hdoip_cli_remote_update(int fd, int fdr, char** argv, int argc)
