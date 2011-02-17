@@ -139,6 +139,7 @@ int adv7441a_set_edid(t_adv7441a* handle, char* edid)
  */
 int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, char* edid)
 {
+    int ret;
 
 	REPORT(INFO, "+--------------------------------------------------+");
 	REPORT(INFO, "| ADV7441A-Driver: Initialize HDMI-RX              |");
@@ -151,7 +152,8 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, char* edid)
 	adv7441a_sw_reset(handle);
 
 	adv7441a_lock(handle);
-	/* ************************************** * 
+	
+    /* ************************************** * 
 	    User map
 	 * ************************************** */ 
 
@@ -225,7 +227,8 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, char* edid)
 	adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_4,0x00); 
 	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_1, ADV7441A_BIT_AUDIO_INFO_MB1); 
 	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_2, ADV7441A_BIT_HDMI_ENCRPT_MB1); 
- 	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_3, ADV7441A_BIT_V_LOCKED_MB1 | ADV7441A_BIT_TMDS_CLK_A_MB1); 
+ 	//adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_3, ADV7441A_BIT_V_LOCKED_MB1 | ADV7441A_BIT_TMDS_CLK_A_MB1); 
+ 	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_3, ADV7441A_BIT_VIDEO_PLL_LCK_MB1 | ADV7441A_BIT_V_LOCKED_MB1 | ADV7441A_BIT_TMDS_CLK_A_MB1); 
 	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_4, 0x00); 
  	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_5, 0x00); 
 	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_6, 0x00); 
@@ -266,6 +269,9 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, char* edid)
 	
 	/* Initialize EDID for port A */
 	adv7441a_set_edid(handle, edid);
+
+
+    adv7441a_irq1_handler(handle, NULL);
 
 	return ERR_ADV7441A_SUCCESS;
 }
@@ -372,19 +378,30 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
 		if(hdmi_raw3 & ADV7441A_BIT_TMDS_CLK_A_RAW) {
 			/* Set TMDS equalizer settings */ 
 			adv7441a_set_tmds_equa(handle);	
-		} 
+            REPORT(INFO, "HDMI TMDS clock active on Port A");
+		} else {
+            REPORT(INFO, "HDMI no TMDS clock active");
+        } 
 	}
+
+    if((hdmi_status3 & ADV7441A_BIT_V_LOCKED_ST) != 0) {    /* vertical synch filter status changed */
+        if((hdmi_raw3 & ADV7441A_BIT_V_LOCKED_RAW) != 0) {
+            REPORT(INFO, "HDMI vertical synch filter has locked");
+        } else {
+            REPORT(INFO, "HDMI vertical synch filter not locked");
+        }
+    }
 	
-	if(hdmi_status3 & ADV7441A_BIT_V_LOCKED_ST) { /* Video PLL changed */	
-		if(hdmi_raw3 & ADV7441A_BIT_V_LOCKED_ST) {
-			adv7441a_get_video_timing(handle);
+	if((hdmi_status3 & ADV7441A_BIT_VIDEO_PLL_LCK_ST) != 0) { /* Video PLL changed */	
+		if((hdmi_raw3 & ADV7441A_BIT_VIDEO_PLL_LCK_RAW) != 0){
+//			adv7441a_get_video_timing(handle);
 			handle->status = handle->status | ADV7441A_STATUS_CONNECTION;
 			REPORT(INFO, "HDMI link on port A established  (%dx%d @ %d MHz)\n",handle->vid_st.line_width, handle->vid_st.field0, handle->vid_st.pixel_clk);
 			queue_put(event_queue, E_ADV7441A_NEW_RES);
 		} else {
-			handle->status = handle->status & ~ADV7441A_STATUS_CONNECTION;
-			REPORT(INFO, "HDMI link on port A lost!\n");
-			queue_put(event_queue, E_ADV7441A_NC);
+    		handle->status = handle->status & ~ADV7441A_STATUS_CONNECTION;
+    		REPORT(INFO, "HDMI link on port A lost!\n");
+    	    queue_put(event_queue, E_ADV7441A_NC);
 		}	
 	}
 
@@ -405,13 +422,17 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
 
 	if(hdmi_status2 & ADV7441A_BIT_HDMI_ENCRPT_CLR) { /* Encryption enabled/disabled */
 		if(hdmi_raw2 & ADV7441A_BIT_HDMI_ENCRPT_RAW) {	
-			handle->status = handle->status | ADV7441A_STATUS_ENCRYPTED;
-			REPORT(INFO, "HDMI link is encrypted\n");	
-			queue_put(event_queue, E_ADV7441A_HDCP);
+            if((handle->status & ADV7441A_STATUS_ENCRYPTED) == 0) {
+    			handle->status = handle->status | ADV7441A_STATUS_ENCRYPTED;
+    			REPORT(INFO, "HDMI link is encrypted\n");	
+    			queue_put(event_queue, E_ADV7441A_HDCP);
+            }
 		} else {
-			handle->status = handle->status & ~ADV7441A_STATUS_ENCRYPTED;
-			REPORT(INFO, "HDMI link is not encrypted\n");
-			queue_put(event_queue, E_ADV7441A_NO_HDCP);
+            if((handle->status & ADV7441A_STATUS_ENCRYPTED) != 0) {
+    			handle->status = handle->status & ~ADV7441A_STATUS_ENCRYPTED;
+    			REPORT(INFO, "HDMI link is not encrypted\n");
+    			queue_put(event_queue, E_ADV7441A_NO_HDCP);
+            }
 		}
 	}
 

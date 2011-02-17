@@ -107,7 +107,6 @@ int asi_drv_update(t_asi* handle, struct hdoip_eth_params* eth_params, struct hd
 int asi_drv_set_buf(t_asi* handle, void* start_ptr, size_t size)
 {
     t_rbf_dsc dsc;
-
     rbf_dsc(&dsc, start_ptr, size);
     asi_set_dsc(handle->p_asi,  &dsc);
 
@@ -197,14 +196,14 @@ int asi_drv_set_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params)
     }
 
     /* calculate payload words */
-    payload_words = handle->eth_params.packet_size/4 - ASI_DRV_ETH_HEADER_LEN - ASI_DRV_IPV4_HEADER_LEN - ASI_DRV_UDP_HEADER_LEN - ASI_DRV_RTP_HEADER_LEN;
+    payload_words = handle->eth_params.packet_size/4 - ASI_DRV_ETH_HEADER_LEN - ASI_DRV_IPV4_HEADER_LEN - ASI_DRV_UDP_HEADER_LEN - ASI_DRV_RTP_HEADER_LEN - ASI_DRV_AES_HEADER_LEN;
     sample_len = aud_get_sample_length(aud_params->sample_width, ch);
     payload_words = (payload_words / sample_len ) * sample_len; /* round */
 
     /* calculate header length fields */
-    frame_size = (payload_words + ASI_DRV_ETH_HEADER_LEN + ASI_DRV_IPV4_HEADER_LEN + ASI_DRV_UDP_HEADER_LEN + ASI_DRV_RTP_HEADER_LEN - 1) * 4;
-    ip_length = (payload_words + ASI_DRV_IPV4_HEADER_LEN + ASI_DRV_UDP_HEADER_LEN + ASI_DRV_RTP_HEADER_LEN) * 4;
-    udp_length = (payload_words + ASI_DRV_UDP_HEADER_LEN + ASI_DRV_RTP_HEADER_LEN); 
+    frame_size = (payload_words + ASI_DRV_ETH_HEADER_LEN + ASI_DRV_IPV4_HEADER_LEN + ASI_DRV_UDP_HEADER_LEN + ASI_DRV_RTP_HEADER_LEN + ASI_DRV_AES_HEADER_LEN - 1) * 4;
+    ip_length  = (payload_words + ASI_DRV_IPV4_HEADER_LEN + ASI_DRV_UDP_HEADER_LEN + ASI_DRV_RTP_HEADER_LEN + ASI_DRV_AES_HEADER_LEN) * 4;
+    udp_length = (payload_words + ASI_DRV_UDP_HEADER_LEN + ASI_DRV_RTP_HEADER_LEN + ASI_DRV_AES_HEADER_LEN); 
 
     /* calculate time per word */
     tmp = aud_params->fs * ch;

@@ -198,7 +198,7 @@ int eto_drv_set_vid_buf(t_eto* handle, void* start_ptr, size_t size)
     t_rbf_dsc dsc;
 
     eto_drv_stop_vid(handle);
-    
+
     rbf_dsc(&dsc, start_ptr, size);
     eto_set_vid_desc(handle->ptr, &dsc);
 

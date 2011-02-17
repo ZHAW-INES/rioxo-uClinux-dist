@@ -23,6 +23,7 @@
 #define ASI_DRV_IPV4_HEADER_LEN         (5)     /* in 32 bit words */
 #define ASI_DRV_UDP_HEADER_LEN          (2)     /* in 32 bit words */
 #define ASI_DRV_RTP_HEADER_LEN          (4)     /* in 32 bit words */
+#define ASI_DRV_AES_HEADER_LEN          (2)     /* in 32 bit words */
 
 /* status bits */
 #define ASI_DRV_STATUS_ACTIV            (0x00000001)

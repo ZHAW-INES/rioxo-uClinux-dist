@@ -3,42 +3,42 @@
 
 void asi_set_dst_mac(void* p, uint8_t* mac)
 {
-    HOI_WR8(p, ASI_OFF_DST_MAC_0, mac[0]);
-    HOI_WR8(p, ASI_OFF_DST_MAC_1, mac[1]);
-    HOI_WR8(p, ASI_OFF_DST_MAC_2, mac[2]);
-    HOI_WR8(p, ASI_OFF_DST_MAC_3, mac[3]);
-    HOI_WR8(p, ASI_OFF_DST_MAC_4, mac[4]);
-    HOI_WR8(p, ASI_OFF_DST_MAC_5, mac[5]);
+    HOI_WR8(p, ASI_OFF_DST_MAC_0, mac[1]);
+    HOI_WR8(p, ASI_OFF_DST_MAC_1, mac[0]);
+    HOI_WR8(p, ASI_OFF_DST_MAC_2, mac[5]);
+    HOI_WR8(p, ASI_OFF_DST_MAC_3, mac[4]);
+    HOI_WR8(p, ASI_OFF_DST_MAC_4, mac[3]);
+    HOI_WR8(p, ASI_OFF_DST_MAC_5, mac[2]);
 }
 
 void asi_get_dst_mac(void* p, uint8_t* mac)
 {
-    mac[0] = HOI_RD8(p, ASI_OFF_DST_MAC_0);
-    mac[1] = HOI_RD8(p, ASI_OFF_DST_MAC_1);
-    mac[2] = HOI_RD8(p, ASI_OFF_DST_MAC_2);
-    mac[3] = HOI_RD8(p, ASI_OFF_DST_MAC_3);
-    mac[4] = HOI_RD8(p, ASI_OFF_DST_MAC_4);
-    mac[5] = HOI_RD8(p, ASI_OFF_DST_MAC_5);
+    mac[1] = HOI_RD8(p, ASI_OFF_DST_MAC_0);
+    mac[0] = HOI_RD8(p, ASI_OFF_DST_MAC_1);
+    mac[5] = HOI_RD8(p, ASI_OFF_DST_MAC_2);
+    mac[4] = HOI_RD8(p, ASI_OFF_DST_MAC_3);
+    mac[3] = HOI_RD8(p, ASI_OFF_DST_MAC_4);
+    mac[2] = HOI_RD8(p, ASI_OFF_DST_MAC_5);
 }
 
 void asi_set_src_mac(void* p, uint8_t* mac)
 {
-    HOI_WR8(p, ASI_OFF_SRC_MAC_0, mac[0]);
-    HOI_WR8(p, ASI_OFF_SRC_MAC_1, mac[1]);
-    HOI_WR8(p, ASI_OFF_SRC_MAC_2, mac[2]);
-    HOI_WR8(p, ASI_OFF_SRC_MAC_3, mac[3]);
-    HOI_WR8(p, ASI_OFF_SRC_MAC_4, mac[4]);
-    HOI_WR8(p, ASI_OFF_SRC_MAC_5, mac[5]);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_0, mac[3]);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_1, mac[2]);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_2, mac[1]);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_3, mac[0]);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_4, mac[5]);
+    HOI_WR8(p, ASI_OFF_SRC_MAC_5, mac[4]);
 }
 
 void asi_get_src_mac(void* p, uint8_t* mac)
 {
-    mac[0] = HOI_RD8(p, ASI_OFF_SRC_MAC_0);
-    mac[1] = HOI_RD8(p, ASI_OFF_SRC_MAC_1);
-    mac[2] = HOI_RD8(p, ASI_OFF_SRC_MAC_2);
-    mac[3] = HOI_RD8(p, ASI_OFF_SRC_MAC_3);
-    mac[4] = HOI_RD8(p, ASI_OFF_SRC_MAC_4);
-    mac[5] = HOI_RD8(p, ASI_OFF_SRC_MAC_5);
+    mac[3] = HOI_RD8(p, ASI_OFF_SRC_MAC_0);
+    mac[2] = HOI_RD8(p, ASI_OFF_SRC_MAC_1);
+    mac[1] = HOI_RD8(p, ASI_OFF_SRC_MAC_2);
+    mac[0] = HOI_RD8(p, ASI_OFF_SRC_MAC_3);
+    mac[5] = HOI_RD8(p, ASI_OFF_SRC_MAC_4);
+    mac[4] = HOI_RD8(p, ASI_OFF_SRC_MAC_5);
 }
 
 /** Sets the time to live (TTL) parameter of the IPv4 header
@@ -128,7 +128,6 @@ void asi_set_eth_params(void* p, struct hdoip_eth_params* eth_params)
     asi_set_dst_mac(p, eth_params->dst_mac);
     asi_set_src_mac(p, eth_params->src_mac);
     asi_set_ttl_tos(p, eth_params->ipv4_ttl, eth_params->ipv4_tos);
-
     asi_set_src_ip(p, eth_params->ipv4_src_ip);
     asi_set_dst_ip(p, eth_params->ipv4_dst_ip);
     asi_set_src_port(p, eth_params->udp_src_port);
@@ -194,3 +193,5 @@ void asi_get_aud_cfg(void* p, uint8_t* ch_cnt_l, uint8_t* ch_cnt_r, uint8_t* bit
     *ch_cnt_r = (uint8_t) ((reg_value >> 4) & ASI_CNT_RIGHT_MSK);
     *bits = aud_container_to_bits(reg_value & ASI_CONTAINER_MSK);
 }
+
+
