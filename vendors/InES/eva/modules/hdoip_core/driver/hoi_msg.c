@@ -145,6 +145,11 @@ int hoi_drv_msg_viostat(t_hoi* handle, t_hoi_msg_viostat* msg)
     msg->fout = vio_get_fout(handle->p_vio);
     msg->tgerr = vio_get_tg_error(handle->p_vio);
     msg->pllerr = vio_get_pll_error(handle->p_vio);
+    msg->fvsync = vio_get_statistic_fvsnyc(handle->p_vio);
+    msg->vid_in = vio_get_statistic_vid_in(handle->p_vio);
+    msg->vid_out = vio_get_statistic_vid_out(handle->p_vio);
+    msg->st_in = vio_get_statistic_st_in(handle->p_vio);
+    msg->st_out = vio_get_statistic_st_out(handle->p_vio);
     return SUCCESS;
 }
 

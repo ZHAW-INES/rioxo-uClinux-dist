@@ -268,7 +268,7 @@
 #define	ADV7441A_BIT_VIDEO_PLL_LCK_ST                            0x01
 
 #define	ADV7441A_REG_HDMI_INT_CLR_3                              0x69
-#define	ADV7441A_BIT_V_LOCKED_CL                                 0x80
+#define	ADV7441A_BIT_V_LOCKED_CLR                                0x80
 #define	ADV7441A_BIT_GAMUT_MDATA_CLR                             0x40
 #define	ADV7441A_BIT_INTERNAL_MUTE_CLR                           0x20
 #define	ADV7441A_BIT_TMDS_CLK_A_CLR                              0x10

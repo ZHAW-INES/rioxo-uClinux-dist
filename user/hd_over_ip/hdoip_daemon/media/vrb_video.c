@@ -18,11 +18,12 @@
 #include "edid.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
-
+#define TICK_TIMEOUT                    (20)
 #define TICK_SEND_ALIVE                 (10)
 
 struct {
     t_hdoip_eth         remote;
+    int                 timeout;
     int                 alive_ping;
 } vrb;
 
@@ -56,7 +57,8 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     report("vrb_video_setup done");
 
     media->result = RSCP_RESULT_READY;
-    vrb.alive_ping = TICK_SEND_ALIVE;
+    vrb.alive_ping = 1;
+    vrb.timeout = 0;
 
     return RSCP_SUCCESS;
 }
@@ -109,38 +111,19 @@ int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rsc
 #ifdef VID_OUT_PATH
         hoi_drv_reset(DRV_RST_VID_OUT);
 #endif
+
+        hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
+        hdoipd_set_tstate(VTB_VID_OFF);
     }
 
-    hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
-    hdoipd_set_tstate(VTB_VID_OFF);
+    if (m) {
+        osd_permanent(true);
+        osd_printf("remote off...\n");
+    }
 
     return RSCP_SUCCESS;
 }
 
-int vrb_video_teardown_q(t_rscp_media *media, t_rscp_req_teardown UNUSED *m, t_rscp_connection UNUSED *rsp)
-{
-    report("vrb_video_teardown_q");
-
-    media->result = RSCP_RESULT_TEARDOWN_Q;
-
-    if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
-#ifdef VID_OUT_PATH
-        hoi_drv_reset(DRV_RST_VID_OUT);
-#endif
-    }
-
-    hdoipd_set_tstate(VTB_VID_OFF);
-    hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
-
-    // activate hello listener
-    char *s = reg_get("remote-uri");
-    box_sys_set_remote(s);
-
-    osd_permanent(true);
-    osd_printf("remote off...");
-
-    return RSCP_SUCCESS;
-}
 
 int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
 {
@@ -195,6 +178,11 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
     report("vrb_video_update(%x)", m->event);
 
     switch (m->event) {
+
+        case EVENT_TICK:
+            // reset timeout
+            vrb.timeout = 0;
+        break;
 
         case EVENT_VIDEO_IN_ON:
             // No multicast for now...simply stop before starting new
@@ -285,26 +273,23 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
                 // send tick we are alive (until something like rtcp is used)
                 rscp_client_update(media->creator, EVENT_TICK);
             }
+            if (vrb.timeout < TICK_TIMEOUT) {
+                vrb.timeout++;
+            } else {
+                report("vrb_video_event: timeout");
+                // timeout -> kill connection
+                vrb.timeout = 0;
+                rscp_client_kill(client);
+                osd_permanent(true);
+                osd_printf("vrb.video connection lost...\n");
+            }
         break;
+
         case EVENT_VIDEO_SINK_OFF:
+            // Note: after teardown call media/client is not anymore a valid struct
             rscp_client_teardown(client);
         break;
-        case EVENT_VIDEO_STIN_OFF:
-            // no more video frames received -> stop
-            if (hdoipd_tstate(VTB_VIDEO)) {
-#ifdef VID_OUT_PATH
-                hoi_drv_reset(DRV_RST_VID_OUT);
-#endif
-                hdoipd_set_tstate(VTB_VID_OFF);
-                hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
-            }
-            // goto init without further communication
-            rscp_media_force_init(media);
-            // remove client
-            rscp_client_remove(client);
-            osd_permanent(true);
-            osd_printf("vtb.video connection lost...");
-        break;
+
     }
 
     return RSCP_SUCCESS;
@@ -316,8 +301,7 @@ t_rscp_media vrb_video = {
     .cookie = 0,
     .setup = (frscpm*)vrb_video_setup,
     .play = (frscpm*)vrb_video_play,
-    .teardown_r = (frscpm*)vrb_video_teardown,
-    .teardown_q = (frscpm*)vrb_video_teardown_q,
+    .teardown = (frscpm*)vrb_video_teardown,
     .error = (frscpm*)vrb_video_error,
     .update = (frscpm*)vrb_video_update,
 

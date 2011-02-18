@@ -136,9 +136,13 @@ void task_get_vio_status(char** p)
 {
     t_hoi_msg_viostat *stat;
     hoi_drv_viostat(&stat);
-    sprintf(buf, "fin: %d Hz, fout: %d Hz, vclk-error: %d * 1/fout, pll-error: %d",
+    sprintf(buf, "fin: %d Hz, fout: %d Hz, vclk-error: %d * 1/fout, pll-error: %d\n"
+            "In|Out (Vid: %d|%d St: %d|%d), force-vsync: %d",
             stat->fin, stat->fout,
-            stat->tgerr, stat->pllerr);
+            stat->tgerr, stat->pllerr,
+            stat->vid_in, stat->vid_out,
+            stat->st_in, stat->st_out,
+            stat->fvsync);
     *p = buf;
 }
 

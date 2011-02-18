@@ -210,6 +210,18 @@ int rscp_client_teardown(t_rscp_client* client)
     return RSCP_SUCCESS;
 }
 
+int rscp_client_kill(t_rscp_client* client)
+{
+    report(" > RSCP Client [%d] kill", client->nr);
+
+    // response
+    rmcr_teardown(client->media, 0, &client->con);
+
+    rscp_client_remove(client);
+
+    return RSCP_SUCCESS;
+}
+
 int rscp_client_update(t_rscp_client* client, uint32_t event)
 {
     rscp_request_update(&client->con, client->uri, client->media->sessionid, event);
@@ -309,7 +321,9 @@ void* rscp_client_req_thread(void* _client)
 
         lock("rscp_client_req_thread");
 
+#ifdef REPORT_RSCP
         report(" < RSCP Client [%d] %s", client->nr, common.rq.method);
+#endif
 
         // process request (function responses for itself)
         n = ((frscpo*)method->fnc)(client->media, (void*)&buf, &client->con, 0);

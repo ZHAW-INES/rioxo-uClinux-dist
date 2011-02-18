@@ -82,7 +82,7 @@ int vrb_audio_play(t_rscp_media UNUSED *media, t_rscp_rsp_play* m, t_rscp_connec
 }
 
 
-int vrb_audio_teardown(t_rscp_media UNUSED *media, t_rscp_rsp_teardown UNUSED *m, t_rscp_connection UNUSED *rsp)
+int vrb_audio_teardown(t_rscp_media UNUSED *media, t_rscp_req_teardown *m, t_rscp_connection UNUSED *rsp)
 {
     report("vrb_audio_teardown");
 
@@ -90,32 +90,14 @@ int vrb_audio_teardown(t_rscp_media UNUSED *media, t_rscp_rsp_teardown UNUSED *m
 #ifdef AUD_OUT_PATH
         hoi_drv_reset(DRV_RST_AUD_OUT);
 #endif
+        hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
+        hdoipd_set_tstate(VTB_AUD_OFF);
     }
 
-    hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
-    hdoipd_set_tstate(VTB_AUD_OFF);
-
-    return RSCP_SUCCESS;
-}
-
-int vrb_audio_teardown_q(t_rscp_media UNUSED *media, t_rscp_req_teardown UNUSED *m, t_rscp_connection UNUSED *rsp)
-{
-    report("vrb_audio_teardown_q");
-
-    if (hdoipd_tstate(VTB_AUD_MASK)) {
-#ifdef AUD_OUT_PATH
-        hoi_drv_reset(DRV_RST_AUD_OUT);
-#endif
+    if (m) {
+        // activate hello listener
+        osd_printf("audio remote off...");
     }
-
-    hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
-    hdoipd_set_tstate(VTB_AUD_OFF);
-
-    // activate hello listener
-    char *s = reg_get("remote-uri");
-    box_sys_set_remote(s);
-
-    osd_printf("audio remote off...");
 
     return RSCP_SUCCESS;
 }
@@ -231,8 +213,7 @@ t_rscp_media vrb_audio = {
     .cookie = 0,
     .setup = (frscpm*)vrb_audio_setup,
     .play = (frscpm*)vrb_audio_play,
-    .teardown_r = (frscpm*)vrb_audio_teardown,
-    .teardown_q = (frscpm*)vrb_audio_teardown_q,
+    .teardown = (frscpm*)vrb_audio_teardown,
     .error = (frscpm*)vrb_audio_error,
     .update = (frscpm*)vrb_audio_update,
 

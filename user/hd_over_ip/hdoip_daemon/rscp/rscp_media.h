@@ -62,8 +62,7 @@ typedef struct t_rscp_media {
     frscpm* play;               //!< (c->s) request or response
     frscpm* pause_q;            //!< (c->s|s->c) always request
     frscpm* pause_r;            //!< (c->s|s->c) always response
-    frscpm* teardown_q;         //!< (c->s|s->c) always request
-    frscpm* teardown_r;         //!< (c->s|s->c) always response
+    frscpm* teardown;           //!< (c->s|s->c) m=0: local / else: request
     frscpm* hello;              //!< (s->c)
     frscpm* update;             //!< (s->c) (events)
     frscpl* ready;              //!< local

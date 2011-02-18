@@ -42,6 +42,7 @@ int rscp_client_remove(t_rscp_client* client);
 void rscp_client_force_close(t_node* list);
 void rscp_client_deactivate(t_node* list);
 void rscp_client_event(t_node* list, uint32_t event);
+int rscp_client_kill(t_rscp_client* client);
 
 // returns response code
 int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp_edid *edid);

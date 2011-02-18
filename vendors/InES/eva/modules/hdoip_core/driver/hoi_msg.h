@@ -189,6 +189,11 @@ typedef struct {
     uint32_t            fout;
     int32_t             tgerr;
     int32_t             pllerr;
+    uint32_t            vid_in;
+    uint32_t            vid_out;
+    uint32_t            st_in;
+    uint32_t            st_out;
+    uint32_t            fvsync;
 } __attribute__ ((__packed__)) t_hoi_msg_viostat;
 
 #define hoi_msg_viostat_init(p) hoi_msg_init(p, HOI_MSG_VIOSTAT, t_hoi_msg_viostat)

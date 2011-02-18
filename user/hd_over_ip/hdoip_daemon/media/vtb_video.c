@@ -13,11 +13,14 @@
 #include "edid.h"
 #include "rscp_server.h"
 
-#define VTB_TIMEOUT 15
+#define TICK_TIMEOUT                    (20)
+#define TICK_SEND_ALIVE                 (10)
 
 static struct {
     t_hdoip_eth         remote;
+    // this is per connection (must be changed for multicast)
     int                 timeout;
+    int                 alive_ping;
 } vtb;
 
 
@@ -84,6 +87,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     hdoipd_set_tstate(VTB_VID_IDLE);
 
     vtb.timeout = 0;
+    vtb.alive_ping = 1;
 
     vtb.remote.address = rsp->address;
     vtb.remote.vid_port = PORT_RANGE_START(m->transport.client_port);
@@ -171,7 +175,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     return RSCP_SUCCESS;
 }
 
-int vtb_video_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t_rscp_connection* rsp)
+int vtb_video_teardown(t_rscp_media* media, t_rscp_req_teardown *m, t_rscp_connection* rsp)
 {
     report("vtb_video_teardown");
 
@@ -184,7 +188,9 @@ int vtb_video_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t_rsc
         hdoipd_set_tstate(VTB_VID_OFF);
     }
 
-    rscp_response_teardown(rsp, media->sessionid);
+    if (m) {
+        rscp_response_teardown(rsp, media->sessionid);
+    }
 
     return RSCP_SUCCESS;
 }
@@ -235,7 +241,15 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
             }
         break;
         case EVENT_TICK:
-            if (vtb.timeout < VTB_TIMEOUT) {
+            if (vtb.alive_ping) {
+                vtb.alive_ping--;
+            } else {
+                vtb.alive_ping = TICK_SEND_ALIVE;
+                // send tick we are alive (until something like rtcp is used)
+                rscp_server_update(media, EVENT_TICK);
+            }
+
+            if (vtb.timeout < TICK_TIMEOUT) {
                 vtb.timeout++;
             } else {
                 report("vtb_video_event: timeout");
@@ -243,13 +257,6 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
                 // server cannot kill itself -> add to kill list
                 // (will be executed after all events are processed)
                 vtb.timeout = 0;
-                media->result = RSCP_RESULT_TEARDOWN;
-                if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
-#ifdef VID_IN_PATH
-                    hoi_drv_reset(DRV_RST_VID_IN);
-#endif
-                    hdoipd_set_tstate(VTB_VID_OFF);
-                }
                 rscp_listener_add_kill(&hdoipd.listener, media);
             }
         break;
@@ -264,7 +271,7 @@ t_rscp_media vtb_video = {
     .cookie = 0,
     .setup = (frscpm*)vtb_video_setup,
     .play = (frscpm*)vtb_video_play,
-    .teardown_q = (frscpm*)vtb_video_teardown,
+    .teardown = (frscpm*)vtb_video_teardown,
     .update = (frscpm*)vtb_video_update,
     .event = (frscpe*)vtb_video_event
 };

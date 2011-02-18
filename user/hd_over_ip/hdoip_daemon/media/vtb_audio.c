@@ -137,7 +137,7 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     return RSCP_SUCCESS;
 }
 
-int vtb_audio_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t_rscp_connection* rsp)
+int vtb_audio_teardown(t_rscp_media* media, t_rscp_req_teardown *m, t_rscp_connection* rsp)
 {
     report("vtb_audio_teardown");
 
@@ -148,7 +148,9 @@ int vtb_audio_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t_rsc
         hdoipd_set_tstate(VTB_AUD_OFF);
     }
 
-    rscp_response_teardown(rsp, media->sessionid);
+    if (m) {
+        rscp_response_teardown(rsp, media->sessionid);
+    }
 
     return RSCP_SUCCESS;
 }
@@ -197,6 +199,6 @@ t_rscp_media vtb_audio = {
     .cookie = 0,
     .setup = (frscpm*)vtb_audio_setup,
     .play = (frscpm*)vtb_audio_play,
-    .teardown_q = (frscpm*)vtb_audio_teardown,
+    .teardown = (frscpm*)vtb_audio_teardown,
     .event = (frscpe*)vtb_audio_event
 };

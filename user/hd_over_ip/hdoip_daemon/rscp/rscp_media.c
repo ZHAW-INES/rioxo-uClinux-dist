@@ -104,7 +104,7 @@ int rmsq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void* 
     // needs to be a session
     if (!media->owner) return RSCP_CLIENT_ERROR;
 
-    if (media->teardown_q) ret = media->teardown_q(media, msg, rsp);
+    if (media->teardown) ret = media->teardown(media, msg, rsp);
     media->state = RSCP_INIT;
     rscp_listener_remove_session(owner, media);
     free(media);
@@ -124,7 +124,7 @@ int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void U
     // needs to be a session
     if (!media->owner) return RSCP_CLIENT_ERROR;
 
-    if (media->teardown_r) ret = media->teardown_r(media, msg, rsp);
+    if (media->teardown) ret = media->teardown(media, 0, rsp);
     media->state = RSCP_INIT;
     return ret;
 }
@@ -256,7 +256,7 @@ int rmcr_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 int rmcr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
-    if (media->teardown_r) ret = media->teardown_r(media, msg, rsp);
+    if (media->teardown) ret = media->teardown(media, 0, rsp);
     media->state = RSCP_INIT;
     return ret;
 }
@@ -264,7 +264,7 @@ int rmcr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 int rmcq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
 {
     int ret = RSCP_SUCCESS;
-    if (media->teardown_q) ret = media->teardown_q(media, msg, rsp);
+    if (media->teardown) ret = media->teardown(media, msg, rsp);
     media->state = RSCP_INIT;
     return ret;
 }

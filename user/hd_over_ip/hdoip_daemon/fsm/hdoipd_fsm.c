@@ -430,10 +430,6 @@ int hdoipd_start_vrb(void *d)
 void hdoipd_fsm_vrb(uint32_t event)
 {
     switch (event) {
-        case E_ETO_LINK_DOWN:
-            osd_permanent(true);
-            osd_printf("Ethernet connection lost");
-        break;
         case E_ADV9889_CABLE_ON:
             // plug in the cable is a start point for the VRB to
             // work when video or embedded audio is desired ...
@@ -503,6 +499,8 @@ void hdoipd_event(uint32_t event)
             hdoipd_clr_rsc(RSC_ETH_LINK);
             if (hdoipd_state(HOID_VTB|HOID_VRB)) {
                 hdoipd_force_ready();
+                osd_permanent(true);
+                osd_printf("Ethernet connection lost");
             }
         break;
 
