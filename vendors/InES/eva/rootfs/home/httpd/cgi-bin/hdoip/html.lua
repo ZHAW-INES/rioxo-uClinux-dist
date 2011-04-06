@@ -69,6 +69,23 @@ function Title(str)
     end
 end
 
+function Image(path, tooltip) 
+    if(tooltip == nil) then
+        tooltip = ""
+    end
+    if(path ~= nil) then
+        html_str = html_str .. "<img src=\""..path.."\" alt=\""..path.."\" title=\"".. tooltip .."\">\n"
+    end
+end
+
+function ImageLink(dest, img_path, tooltip)
+    if(dest ~= nil) then
+        html_str = html_str .. "<a class=\"img\" href=\""..dest.."\">"
+        Image(img_path, tooltip)
+        html_str = html_str .. "</a>\n"
+    end
+end
+
 function Link(dest, label)
     html_str = html_str .. "<a href=\""..dest.."\">"..label.."</a>\n"
 end
@@ -222,6 +239,30 @@ function Header(t, title, script_path, addon)
         html_str = html_str .. '<li style="float:right">'
         OneButtonForm(t, script_path, "logout", label.button_logout) 
         html_str = html_str .. '</li>'
+    end
+
+    if(t.system_mode == "vrb") then
+        html_str = html_str .. '<li style="float:right">'
+        ImageLink(script_path.."?page=".. t.page .."&refresh=1", img_path.."refresh.png", label.reconnect)
+        html_str = html_str .. '</li>'
+
+        if(((t.daemon_state == "ready") and (t.refresh == nil) and (t.play == nil)) or (t.stop ~= nil))then    
+            html_str = html_str .. '<li style="float:right">'
+            ImageLink(script_path.."?page=".. t.page, img_path.."stop_gray.png", label.stop)
+            html_str = html_str .. '</li>'
+    
+            html_str = html_str .. '<li style="float:right">'
+            ImageLink(script_path.."?page=".. t.page .."&play=1", img_path.."play.png", label.play)
+            html_str = html_str .. '</li>'
+        else
+            html_str = html_str .. '<li style="float:right">'
+            ImageLink(script_path.."?page=".. t.page .."&stop=1", img_path.."stop.png", label.stop)
+            html_str = html_str .. '</li>'
+    
+            html_str = html_str .. '<li style="float:right">'
+            ImageLink(script_path.."?page=".. t.page, img_path.."play_gray.png", label.play)
+            html_str = html_str .. '</li>'
+        end
     end
 
     html_str = html_str .. "</ul><br><br><b>"..label.device_name..dev_name.."</b>"

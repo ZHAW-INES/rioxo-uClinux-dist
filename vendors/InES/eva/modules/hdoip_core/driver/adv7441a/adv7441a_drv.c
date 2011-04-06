@@ -6,7 +6,7 @@ static t_adv7441a *adv7441a_handle; /* needed for adv7441a_proc_video_in() */
 const __u32 adv7441a_audio_fs_conv[] = {44100, 0 ,48000, 32000, 0, 0, 0, 0, 88200, 0, 96000, 0, 176000, 0, 192000};
 const __u32 adv7441a_audio_bit_conv[2][7] = {{0, 16, 18, 0, 19, 20, 17},{0, 20, 22, 0, 23, 24, 21}};
 
-/** Executes a software reset 
+/** Executes a software reset
  *
  * @param handle pointer to the adv7441a handle
  * @return error code
@@ -14,11 +14,9 @@ const __u32 adv7441a_audio_bit_conv[2][7] = {{0, 16, 18, 0, 19, 20, 17},{0, 20, 
 int adv7441a_sw_reset(t_adv7441a* handle) 
 {
 	handle->status = handle->status & ~ADV7441A_STATUS_ACTIVE;
-	adv7441a_lock(handle);
 	adv7441a_usr_map_write(handle, ADV7441A_REG_POWER_MANAGEMENT, ADV7441A_BIT_RES);
 	//schedule_timeout(jiffies + ADV7441A_RESET_WAIT); /* wait 5ms */
 	mdelay(5);
-	adv7441a_unlock(handle);
 	handle->status = handle->status | ADV7441A_STATUS_ACTIVE;
 	return ERR_ADV7441A_SUCCESS;
 }
@@ -33,13 +31,11 @@ int adv7441a_on(t_adv7441a* handle)
 	int tmp;	
 
 	if((handle->status & ADV7441A_STATUS_ACTIVE) == 0) {
-		adv7441a_lock(handle);
 		tmp = adv7441a_usr_map_read(handle, ADV7441A_REG_OUTPUT_CONTROL);
 		adv7441a_usr_map_write(handle, ADV7441A_REG_OUTPUT_CONTROL, tmp & ~(ADV7441A_BIT_TOD)); /* output drivers active */
 		tmp = adv7441a_usr_map_read(handle, ADV7441A_REG_EXTENDED_OUTPUT_CONTROL);
 		adv7441a_usr_map_write(handle, ADV7441A_REG_EXTENDED_OUTPUT_CONTROL, tmp | ADV7441A_BIT_TIM_OE); /* timing signals enabled */ 
 		adv7441a_usr_map_write(handle, ADV7441A_REG_POWER_MANAGEMENT, 0x00);	/* power down mode off */ 
-		adv7441a_unlock(handle);
 		handle->status = handle->status | ADV7441A_STATUS_ACTIVE;
 	}
 	return ERR_ADV7441A_SUCCESS;
@@ -55,13 +51,11 @@ int adv7441a_off(t_adv7441a* handle)
 	int tmp;
 	
 	if((handle->status & ADV7441A_STATUS_ACTIVE) != 0) {
-		adv7441a_lock(handle);
 		tmp = adv7441a_usr_map_read(handle, ADV7441A_REG_OUTPUT_CONTROL);
 		adv7441a_usr_map_write(handle, ADV7441A_REG_OUTPUT_CONTROL, tmp | ADV7441A_BIT_TOD); /* output drivers tri-stated */
 		tmp = adv7441a_usr_map_read(handle, ADV7441A_REG_EXTENDED_OUTPUT_CONTROL);
 		adv7441a_usr_map_write(handle, ADV7441A_REG_EXTENDED_OUTPUT_CONTROL, tmp & (~ADV7441A_BIT_TIM_OE)); /* timing signals tri-stated */
 		adv7441a_usr_map_write(handle, ADV7441A_REG_POWER_MANAGEMENT, ADV7441A_BIT_PWRDN | ADV7441A_BIT_PDBP);	/* power down mode on */ 
-		adv7441a_unlock(handle);
 		handle->status = handle->status & ~ADV7441A_STATUS_ACTIVE;
 	}
 	return ERR_ADV7441A_SUCCESS;
@@ -77,10 +71,8 @@ int adv7441a_audio_mute(t_adv7441a* handle)
 	int tmp;
 
 	if(handle->aud_st.mute != 1) {
-		adv7441a_lock(handle);
 		tmp = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_1DH);
 		adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, tmp | ADV7441A_BIT_MUTE_AUDIO);	
-		adv7441a_unlock(handle);
 		handle->aud_st.mute = 1;
 	}
 	return ERR_ADV7441A_SUCCESS;
@@ -96,10 +88,8 @@ int adv7441a_audio_unmute(t_adv7441a* handle)
 	int tmp;
 
 	if(handle->aud_st.mute != 0) {	
-		adv7441a_lock(handle);
 		tmp = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_1DH);
 		adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, tmp & ~ADV7441A_BIT_MUTE_AUDIO);	
-		adv7441a_unlock(handle);
 		handle->aud_st.mute = 0;
 	}
 	return ERR_ADV7441A_SUCCESS;
@@ -115,7 +105,6 @@ int adv7441a_set_edid(t_adv7441a* handle, char* edid)
 {
 	int i;
 
-	adv7441a_lock(handle);
 	adv7441a_ksv_map_write(handle, ADV7441A_REG_CTRL_BITS, 0); /* EDID disabled */
 	
 	for(i=0 ; i<0xFF ; i++) {	
@@ -126,7 +115,6 @@ int adv7441a_set_edid(t_adv7441a* handle, char* edid)
 
 	/* EDID enabled & calculate checksums*/
 	adv7441a_ksv_map_write(handle, ADV7441A_REG_CTRL_BITS, ADV7441A_BIT_EDID_A_ENABLE | ADV7441A_BIT_KSV_LIST_READY); 
-	adv7441a_unlock(handle);
 	return ERR_ADV7441A_SUCCESS;
 }
 
@@ -148,8 +136,6 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, char* edid)
 	handle->status = 0; // clear status
 
 	adv7441a_sw_reset(handle);
-
-	adv7441a_lock(handle);
 	
     /* ************************************** * 
 	    User map
@@ -262,7 +248,8 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, char* edid)
 	    Repeater map 1
 	 * ************************************** */
 
-    /* ADV7441A has been implemented in a HDMI receiver mode */
+    /* ADV7441A has been implemented in a HDMI receiver mode 
+     * Disabling Enhanced Link Verification feature (HDCP) */
     adv7441a_ksv_map_write(handle, ADV7441A_REG_BCAPS, 0x80); 
 
 	/* ************************************** * 
@@ -286,8 +273,6 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, char* edid)
 	/* Disable audio pll, MCLK fs, MCLK N */
 	adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1CH, 0x20); /* PLL enable write 0x60, disable write 0x20 */
  
-	adv7441a_unlock(handle);
-	
 	/* Initialize EDID for port A */
 	adv7441a_set_edid(handle, edid);
 
@@ -303,7 +288,6 @@ int adv7441a_set_tmds_equa(t_adv7441a* handle)
 {
 	uint8_t tmds_freq =  adv7441a_hdmi_map_read(adv7441a_handle,ADV7441A_REG_TMDSFREQ);
 
-	adv7441a_lock(handle);
 	if(tmds_freq < 160) {
 		/* TMDS equalizer settings (TMDS frequencies < 160MHz) */
 		adv7441a_usr_map2_write(handle, 0xF0, 0x10);
@@ -315,7 +299,6 @@ int adv7441a_set_tmds_equa(t_adv7441a* handle)
 		adv7441a_usr_map2_write(handle, 0xF1, 0x0F);
 		adv7441a_usr_map2_write(handle, 0xF4, 0x20);
 	}
-	adv7441a_unlock(handle);
 	REPORT(INFO, "HDMI TMDS equalizer settings set");
 	return ERR_ADV7441A_SUCCESS;
 }
@@ -326,21 +309,29 @@ int adv7441a_set_tmds_equa(t_adv7441a* handle)
  * @return error code
  */
 static int adv7441a_get_audio_timing(t_adv7441a* handle)
-{
+{ 
 	uint8_t tmp;
-	adv7441a_lock(handle);
 
 	tmp = adv7441a_hdmi_map_read(handle,ADV7441A_REG_CHANNEL_STATUS_DATA_3);
 	handle->aud_st.fs = adv7441a_audio_fs_conv[tmp & 0xF];
+	REPORT(INFO, "[HDMI IN] Audio fs = %d Hz (%d)", handle->aud_st.fs, tmp);
+
 	tmp = adv7441a_hdmi_map_read(handle,ADV7441A_REG_CHANNEL_STATUS_DATA_4);
 	handle->aud_st.bit_width = adv7441a_audio_bit_conv[tmp&0x1][((tmp & 0x1E)>>1)];
+	REPORT(INFO, "[HDMI IN] Audio width = %d Bit (%d)", handle->aud_st.bit_width, tmp);
+
 	tmp = adv7441a_usr_map1_read(handle,ADV7441A_REG_HDMI_RAW_STATUS_3);
 	handle->aud_st.mute = (tmp & ADV7441A_BIT_INTERNAL_MUTE_RAW) >> 5;	
-	tmp = adv7441a_hdmi_map_read(handle,ADV7441A_REG_CHANNEL_STATUS_DATA_2);
-	handle->aud_st.channel_cnt = ((tmp>>4) & 0x1F);
 
-	adv7441a_unlock(handle);
-	return ERR_ADV7441A_SUCCESS;
+	tmp = adv7441a_hdmi_map_read(handle,ADV7441A_REG_CHANNEL_STATUS_DATA_2);
+	handle->aud_st.channel_cnt = ((tmp>>4) & 0x0F) + 1;
+	REPORT(INFO, "[HDMI IN] Audio count = %d", handle->aud_st.channel_cnt);
+
+    if((handle->aud_st.fs == 0) || (handle->aud_st.bit_width < 8) || (handle->aud_st.bit_width > 32)) {
+        return ERR_ADV7441A_AUD_PARAM_NOT_VALID;
+    } else {
+	    return ERR_ADV7441A_SUCCESS;
+    }
 }
 
 /** Reads all video parameters and save it in the handle
@@ -352,7 +343,6 @@ static int adv7441a_get_video_timing(t_adv7441a* handle)
 {
 	uint32_t tmp;
 
-	adv7441a_lock(handle);
 	tmp = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_05H);
 	handle->vid_st.vsync_pol = ((tmp & ADV7441A_BIT_DVI_VSYNC_POLARITY) != 0);
 	handle->vid_st.hsync_pol = ((tmp & ADV7441A_BIT_DVI_HSYNC_POLARITY) != 0);
@@ -363,7 +353,6 @@ static int adv7441a_get_video_timing(t_adv7441a* handle)
 	handle->vid_st.field1 = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_0BH) & 0x0F;
 	handle->vid_st.field1 = ((handle->vid_st.field1)<<8) | adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD_1_HEIGHT);
 	handle->vid_st.pixel_clk = adv7441a_hdmi_map_read(handle,ADV7441A_REG_TMDSFREQ);
-	adv7441a_unlock(handle);
 
 	return ERR_ADV7441A_SUCCESS;
 }
@@ -375,12 +364,12 @@ static int adv7441a_get_video_timing(t_adv7441a* handle)
  * @return error code
  */
 int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue) 
-{
+{ 
 	uint8_t hdmi_status1, hdmi_status2, hdmi_status3, hdmi_status5;
 	uint8_t hdmi_raw1, hdmi_raw2, hdmi_raw3;
-    uint8_t int1_clr = 0, int2_clr = 0, int3_clr = 0, int5_clr = 0;
+    uint8_t int1_clr = 0, int2_clr = 0, int3_clr = 0, int5_clr = 0, reg_04 = 0;
+    int ret;
 
-	adv7441a_lock(handle);
 	hdmi_status1 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_1);	
 	hdmi_raw1 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_RAW_STATUS_1);
 	hdmi_status2 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_2);	
@@ -388,20 +377,18 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
 	hdmi_status3 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_3);	
 	hdmi_raw3 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_RAW_STATUS_3);
 	hdmi_status5 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_5);	
-	adv7441a_unlock(handle);
-
-
-	if(hdmi_status3 & ADV7441A_BIT_TMDS_CLK_A_ST) {
+	
+    if(hdmi_status3 & ADV7441A_BIT_TMDS_CLK_A_ST) {
         int3_clr |= ADV7441A_BIT_TMDS_CLK_A_CLR;
 		if(hdmi_raw3 & ADV7441A_BIT_TMDS_CLK_A_RAW) {
-			/* Set TMDS equalizer settings */ 
+			/* Set TMDS equalizer settings */
             REPORT(INFO, "[HDMI IN] TMDS clock active on Port A");
 		} else {
             REPORT(INFO, "[HDMI IN] no TMDS clock active");
         } 
 	}
 
-	if((hdmi_status3 & ADV7441A_BIT_VIDEO_PLL_LCK_ST) != 0) { /* Video PLL changed */	
+	if((hdmi_status3 & ADV7441A_BIT_VIDEO_PLL_LCK_ST) != 0) { /* Video PLL changed */ 
         int3_clr |= ADV7441A_BIT_VIDEO_PLL_LCK_CLR;
 		if((hdmi_raw3 & ADV7441A_BIT_VIDEO_PLL_LCK_RAW) != 0){
 			REPORT(INFO, "[HDMI IN] Video PLL locked\n");
@@ -439,27 +426,40 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
    
         /* Encryption enabled/disabled */
     	if(hdmi_status2 & ADV7441A_BIT_HDMI_ENCRPT_ST) {            
-             int2_clr |= ADV7441A_BIT_HDMI_ENCRPT_CLR;
+            int2_clr |= ADV7441A_BIT_HDMI_ENCRPT_CLR;
     		if(hdmi_raw2 & ADV7441A_BIT_HDMI_ENCRPT_RAW) {	
         	    handle->status = handle->status | ADV7441A_STATUS_ENCRYPTED;
         		REPORT(INFO, "[HDMI IN] link is encrypted\n");	
         		queue_put(event_queue, E_ADV7441A_HDCP);
+
+                reg_04 = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_04H);
+                if(((reg_04 & ADV7441A_BIT_HDCP_KEY_ERROR) > 0) || ((reg_04 & ADV7441A_BIT_HDCP_KEYS_READ) == 0)) {
+                    REPORT(INFO, "[HDMI IN] HDCP key error");
+                    queue_put(event_queue, E_ADV7441A_HDCP_KEY_ERR);
+                } else {
+                    REPORT(INFO, "[HDMI IN] HDCP keys read");
+                }
     		} else {
         		handle->status = handle->status & ~ADV7441A_STATUS_ENCRYPTED;
         		REPORT(INFO, "[HDMI IN] link is not encrypted\n");
         		queue_put(event_queue, E_ADV7441A_NO_HDCP);
     		}
     	}
-
+ 
         /* Audio status changed */
     	if(hdmi_status1 & ADV7441A_BIT_AUDIO_INFO_ST) {
             int1_clr |= ADV7441A_BIT_AUDIO_INFO_CLR;
     		if(hdmi_raw1 & ADV7441A_BIT_AUDIO_INFO_RAW) {
-    			handle->status = handle->status | ADV7441A_STATUS_AUDIO;
-    			REPORT(INFO, "[HDMI IN] audio sampling rate has changed (audio unmuted)\n");
-    			adv7441a_audio_unmute(handle);
-    			adv7441a_get_audio_timing(handle);	
-    			queue_put(event_queue, E_ADV7441A_NEW_AUDIO);
+    			ret = adv7441a_get_audio_timing(handle);	
+                if (ret == ERR_ADV7441A_AUD_PARAM_NOT_VALID) {
+                    ret = adv7441a_get_audio_timing(handle);
+                }
+                if (ret == ERR_ADV7441A_SUCCESS) {
+                    handle->status = handle->status | ADV7441A_STATUS_AUDIO;
+    			    REPORT(INFO, "[HDMI IN] audio sampling rate has changed (audio unmuted)\n");
+    			    adv7441a_audio_unmute(handle);
+    			    queue_put(event_queue, E_ADV7441A_NEW_AUDIO);
+                }
     		} else {	
     			handle->status = handle->status & ~ADV7441A_STATUS_AUDIO;
     			adv7441a_audio_mute(handle);
@@ -486,12 +486,11 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
             handle->status = handle->status & ~ADV7441A_STATUS_CONNECTION;
             REPORT(INFO, "[HDMI IN] link on port A lost!\n");
     	    queue_put(event_queue, E_ADV7441A_NC);
+    	    queue_put(event_queue, E_ADV7441A_NO_AUDIO);
     }
 
     /* Clear interrupts */
     if(int1_clr | int2_clr | int3_clr) {
-	    
-        adv7441a_lock(handle);
         if(int1_clr) 
         	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_1, int1_clr);	
         if(int2_clr) 
@@ -500,8 +499,6 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
     	    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_3, int3_clr);	
         if(int5_clr) 
     	    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_5, int5_clr);		
-	    adv7441a_unlock(handle);
-
     }
 	
 	return ERR_ADV7441A_SUCCESS;
@@ -512,22 +509,20 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
  * @param handle pointer to the adv7441a handle
  * @param event_queue pointer to the event queue
  * @return error code
- */
+ */ 
 int adv7441a_irq2_handler(t_adv7441a* handle, t_queue* event_queue)
 {
 	uint8_t hdmi_status4, hdmi_raw3;
 
-	adv7441a_lock(handle);
 	hdmi_raw3 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_RAW_STATUS_3);
 	hdmi_status4 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_4);
 //	hdmi_raw4 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_RAW_STATUS_4);
 	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_4, 0xFF); 		/* clear hdmi int 4 */
-	adv7441a_unlock(handle);
 
     /* IRQ only valid under following conditions 
      *  TMDS clock active
      *  Video PLL locked
-     */
+     */  
     if(((hdmi_raw3 & ADV7441A_BIT_TMDS_CLK_A_RAW) != 0) && ((hdmi_raw3 & ADV7441A_BIT_VIDEO_PLL_LCK_RAW) != 0)) {
 
     	if(hdmi_status4 & ADV7441A_BIT_NEW_AVI_INFO_ST) {
@@ -561,7 +556,7 @@ int adv7441a_irq2_handler(t_adv7441a* handle, t_queue* event_queue)
 	    if(hdmi_status4 & ADV7441A_BIT_NEW_GAMUT_MDATA_ST) {
     		REPORT(INFO,"[HDMI IN] New GAMUT infoframe received\n");
     	}
-    }	
+    }	 
 	return ERR_ADV7441A_SUCCESS;
 }
 
@@ -606,5 +601,3 @@ int adv7441a_proc_video_in(char *buf, char **start, off_t offset, int count, int
 	*eof = 1;
  	return len;
 }
-
-

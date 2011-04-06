@@ -55,7 +55,7 @@ void bst_rotate_left(t_bstn** root)
 void bst_balance(t_bstn** root)
 {
     int b;
-    if (!*root || !root) return;
+    if (!(*root) || !root) return;
     b = bst_diff(*root);
     if (b > 1 ) { // left side is deeper
         // balance to the right
@@ -275,8 +275,7 @@ void bst_traverse(t_bstn* root, bstt* f, void* d)
 void bst_free(t_bstn** root, bstc* f, void* d)
 {
     int b;
-    if (!root || !*root) return;
-
+    if (!root || !(*root)) return;
     if ((*root)->left) bst_free(&(*root)->left, f, d);
     b = f((*root)->elem, d);
     if ((*root)->right) bst_free(&(*root)->right, f, d);

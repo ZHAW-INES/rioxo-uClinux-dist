@@ -15,6 +15,9 @@ label = {
 
     on = "on";
     off = "off";
+    play = "play";
+    stop = "stop";
+    reconnect = "reconnect";
 
     username = "User name";
     password = "Password";

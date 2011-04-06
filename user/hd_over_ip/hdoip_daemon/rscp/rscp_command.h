@@ -14,7 +14,8 @@
 #define rscp_err_busy(x)            rscp_response_error(x, 404, "Busy")
 #define rscp_err_no_vtb(x)          rscp_response_error(x, 405, "Not a VTB")
 #define rscp_err_retry(x)           rscp_response_error(x, 300, "Please retry later")
-#define rscp_err_no_source(x)       rscp_response_error(x, 406, "No Video Input")
+#define rscp_err_no_source(x)       rscp_response_error(x, 406, "No Input")
+#define rscp_err_def_source(x)      rscp_response_error(x, 407, "HW defect")
 
 
 void rscp_response_line(t_rscp_connection* msg, int code, char* reason);

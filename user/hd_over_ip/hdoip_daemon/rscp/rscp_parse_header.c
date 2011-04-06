@@ -100,10 +100,22 @@ int rscp_parse_rtp_format(char* line, t_rscp_rtp_format* p)
         p->compress = FORMAT_PLAIN;
     } else if (strcmp(token, "aud16Bit") == 0) {
         p->compress = 16;
+        nextsp(token, line);
+        p->value = atoi(token);
+        nextsp(token, line);
+        p->value2 = atoi(token);
     } else if (strcmp(token, "aud24Bit") == 0) {
         p->compress = 24;
+        nextsp(token, line);
+        p->value = atoi(token);
+        nextsp(token, line);
+        p->value2 = atoi(token);
     } else if (strcmp(token, "aud32Bit") == 0) {
         p->compress = 32;
+        nextsp(token, line);
+        p->value = atoi(token);
+        nextsp(token, line);
+        p->value2 = atoi(token);
     } else if (strcmp(token, "jp2k") == 0) {
         p->compress = FORMAT_JPEG2000;
         nextsp(token, line);
@@ -179,12 +191,12 @@ int rscp_parse_edid(char* line, t_rscp_edid *edid)
     return RSCP_SUCCESS;
 }
 
-int rscp_ommit_header(t_rscp_connection* con)
+int rscp_ommit_header(t_rscp_connection* con, int timeout)
 {
     int n = RSCP_SUCCESS;
     char *line;
 
-    while (!(n = rscp_receive(con, &line)) ) {
+    while (!(n = rscp_receive(con, &line, timeout)) ) {
         // RSCP Header ends with empty line
         if (!*line) break;
     }
@@ -193,14 +205,14 @@ int rscp_ommit_header(t_rscp_connection* con)
     return n;
 }
 
-int rscp_parse_header(t_rscp_connection* con, const t_map_fnc attr[], void* base, t_rscp_header_common* common)
+int rscp_parse_header(t_rscp_connection* con, const t_map_fnc attr[], void* base, t_rscp_header_common* common, int timeout)
 {
     int n;
     char *line, *attrstr;
 
     if (common) common->session[0] = 0;
 
-    while (!(n = rscp_receive(con, &line))) {
+    while (!(n = rscp_receive(con, &line, timeout))) {
         // RSCP Header ends with empty line
         if (!*line) break;
 
@@ -235,7 +247,7 @@ void rscp_common_default(t_rscp_header_common* common)
     common->session[0] = 0;
 }
 
-int rscp_parse_response(t_rscp_connection* con, const t_map_fnc attr[], void* base, t_rscp_header_common* common)
+int rscp_parse_response(t_rscp_connection* con, const t_map_fnc attr[], void* base, t_rscp_header_common* common, int timeout)
 {
     t_str_response_line rsp;
     int n;
@@ -244,7 +256,7 @@ int rscp_parse_response(t_rscp_connection* con, const t_map_fnc attr[], void* ba
     rscp_common_default(common);
 
     // Response Header
-    if ((n = rscp_receive(con, &line))) {
+    if ((n = rscp_receive(con, &line, timeout))) {
         return n;
     }
 
@@ -258,20 +270,19 @@ int rscp_parse_response(t_rscp_connection* con, const t_map_fnc attr[], void* ba
         con->ecode = atoi(rsp.code);
         con->ereason = rsp.reason;
         report("rscp error (%s): %s", rsp.code, rsp.reason);
-        rscp_ommit_header(con);
+        rscp_ommit_header(con, timeout);
         return RSCP_RESPONSE_ERROR;
     }
 
     if (strcmp(rsp.version, RSCP_VERSION) != 0) {
         report("unsupported version: %s", rsp.version);
-        rscp_ommit_header(con);
+        rscp_ommit_header(con, timeout);
         return RSCP_VERSION_ERROR;
     }
 
-    n = rscp_parse_header(con, attr, base, common);
-    if (n != RSCP_SUCCESS) return n;
+    n = rscp_parse_header(con, attr, base, common, timeout);
 
-    return RSCP_SUCCESS;
+    return n;
 }
 
 int rscp_parse_request(t_rscp_connection* con, const t_map_set srv_method[], const t_map_set** method, void* req, t_rscp_header_common* common)
@@ -282,7 +293,7 @@ int rscp_parse_request(t_rscp_connection* con, const t_map_set srv_method[], con
     rscp_common_default(common);
 
     // receive request line
-    if ((n = rscp_receive(con, &line))) {
+    if ((n = rscp_receive(con, &line, 0))) {
         return n;
     }
     strcpy(common->line, line);
@@ -299,13 +310,13 @@ int rscp_parse_request(t_rscp_connection* con, const t_map_set srv_method[], con
     *method = map_find_set(srv_method, common->rq.method);
 
     if (!*method) {
-        rscp_ommit_header(con);
+        rscp_ommit_header(con, 0);
         rscp_response_error(con, 405, "Method not allowed");
         report(" ? unsupported method %s", common->rq.method);
         return RSCP_SUCCESS;
     }
 
-    if ((n = rscp_parse_header(con, (*method)->rec, req, common))) {
+    if ((n = rscp_parse_header(con, (*method)->rec, req, common, 0))) {
         report(" ? parse request-header error (%d)", n);
         return n;
     }

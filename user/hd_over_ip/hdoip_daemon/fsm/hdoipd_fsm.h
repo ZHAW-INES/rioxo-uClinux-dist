@@ -22,8 +22,9 @@ const char* vrbstatestr(int state);
 bool hdoipd_set_rsc(int state);
 bool hdoipd_clr_rsc(int state);
 bool hdoipd_set_state(int state);
-bool hdoipd_set_tstate(int vtb_state);
-bool hdoipd_set_rstate(int vrb_state);
+bool hdoipd_set_vtb_state(int vtb_state);
+bool hdoipd_set_vrb_state(int vrb_state);
+void hdoipd_hw_reset(int rv);
 
 bool hdoipd_goto_ready();
 void hdoipd_goto_vtb();
@@ -41,6 +42,7 @@ void hdoipd_registry_update();
 void hdoipd_request(uint32_t* cmd, int rsp);
 void hdoipd_event(uint32_t event);
 void hdoipd_start();
+void hdoipd_hello();
 bool hdoipd_init(int drv);
 
 static inline int hdoipd_rsc(int state)

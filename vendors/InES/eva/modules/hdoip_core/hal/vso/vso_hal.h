@@ -52,4 +52,7 @@
 #define vso_set_timestamp_max(p, v)     HOI_WR32(p, VSO_OFF_TIMESTAMP_MAX, v)
 #define vso_get_timestamp_diff(p)       HOI_RD32(p, VSO_OFF_TIMESTAMP_DIFF_RO)
 
+#define vso_set_clkmux_75_mhz_clock(p)  HOI_WR32(p, VSO_OFF_CLKMUX, VSO_CLKMUX_75_MHZ)
+#define vso_set_clkmux_hdmi_rx_clock(p) HOI_WR32(p, VSO_OFF_CLKMUX, VSO_CLKMUX_HDMI_RX)
+
 #endif /* VSO_HAL_H_ */ 

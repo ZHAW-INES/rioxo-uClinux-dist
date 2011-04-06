@@ -24,11 +24,12 @@
     #define ASSERT(y, ...) { if (!(y)) REPORT(ERROR, __VA_ARGS__); }
     #define DBGIF(c, ...) { if (c) { __VA_ARGS__ } }
     #define DBG(...) { __VA_ARGS__ }
-    #define PTR(p) {                                \
-        if (!(p)) {                                 \
-            REPORT(ERROR, "null pointer: " #p);     \
-            while(1);                               \
-        }                                           \
+    #define PTR(p)
+//    #define PTR(p) {                                \
+//        if (!(p)) {                                 \
+//            REPORT(ERROR, "null pointer: " #p);     \
+//            while(1);                               \
+//        }                                           \
     }
 #else
     #define REPORT(y, ...) {}

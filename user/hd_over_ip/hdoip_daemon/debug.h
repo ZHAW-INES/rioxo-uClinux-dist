@@ -30,6 +30,9 @@
 #undef REPORT_PTHREAD
 #undef REPORT_RSCP
 
+#define DBGCONSOLE
+#undef DBGCONSOLERSCP
+
 //------------------------------------------------------------------------------
 //
 
@@ -45,6 +48,7 @@ extern FILE* rscp_fd;
 #define OUTGOING    " > "
 #define EVENT       " ← "
 #define CHANGE      " → "
+#define CONT        "     "
 
 #define UNUSED __attribute__((__unused__))
 

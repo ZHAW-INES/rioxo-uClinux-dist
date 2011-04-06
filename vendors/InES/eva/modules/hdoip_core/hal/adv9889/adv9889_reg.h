@@ -12,6 +12,9 @@
 #define ADV9889_ADDRESS_EDID            (0x7e)
 
 // OFFSET
+#define ADV9889_OFF_N_2                 (0x01)
+#define ADV9889_OFF_N_1                 (0x02)
+#define ADV9889_OFF_N_0                 (0x03)
 #define ADV9889_OFF_AUDIO      			(0x0a)
 #define ADV9889_OFF_I2S					(0x0c)
 #define ADV9889_OFF_I2S_WIDTH			(0x0d)
@@ -22,19 +25,28 @@
 #define ADV9889_OFF_FORMAT   			(0x45)
 #define ADV9889_OFF_INFO1    			(0x46)
 #define ADV9889_OFF_INFO2    			(0x47)
+#define ADV9889_OFF_AUD_CHCNT           (0x50)
+#define ADV9889_OFF_SPEAKER_MAP         (0x51)
 #define ADV9889_OFF_INTEN1   			(0x94)
 #define ADV9889_OFF_INTEN2   			(0x95)
 #define ADV9889_OFF_IRQ1     			(0x96)
 #define ADV9889_OFF_IRQ2     			(0x97)
+#define ADV9889_OFF_PWR_DOWN            (0xa1)
 #define ADV9889_OFF_DDS        			(0xa2)
 #define ADV9889_OFF_CDS        			(0xa3)
 #define ADV9889_OFF_MODE     			(0xaf)
 #define ADV9889_OFF_MODE_STATUS	        (0xb8)
 #define ADV9889_OFF_HDCP     			(0xbe)
 #define ADV9889_OFF_CLOCK    			(0xba)
+#define ADV9889_OFF_BKSV0               (0xbf)
+#define ADV9889_OFF_BKSV1               (0xc0)
+#define ADV9889_OFF_BKSV2               (0xc1)
+#define ADV9889_OFF_BKSV3               (0xc2)
+#define ADV9889_OFF_BKSV4               (0xc3)
 #define ADV9889_OFF_EDID_SEG 			(0xc4)
 #define ADV9889_OFF_ERROR    			(0xc5)
-#define ADV9889_OFF_HMDI_STATE          (0xc6)
+#define ADV9889_OFF_HDMI_STATE          (0xc6)
+#define ADV9889_OFF_BKSV_CNT            (0xc7)
 #define ADV9889_OFF_HDCP_STATE		    (0xc8)
 
 /** Flags
@@ -75,7 +87,7 @@
 #define ADV9889_STATUS_HPD	    		0x40
 #define ADV9889_STATUS_MSEN				0x20
 
-// ADV9889_OFF_PACKET
+// ADV9889_OFF_PACKET00
 #define ADV9889_PACKET_SPDIF			0x80
 #define ADV9889_PACKET_NCTS				0x40
 #define ADV9889_PACKET_AUDIO			0x20
@@ -94,6 +106,9 @@
 #define ADV9889_FORMAT_HO_BAR_INF		0x02
 #define ADV9889_FORMAT_VE_BAR_INF		0x04
 #define ADV9889_FORMAT_HV_BAR_INF		0x06
+
+// ADV9889_OFF_AUD_CHCNT
+#define ADV9889_AUD_CHANNEL(x)          (((x-1)<<5)&0xe0)
 
 // ADV9889_OFF_INF1
 #define ADV9889_INFO1_OVERSCAN			0x40
@@ -144,5 +159,10 @@
 // ADV9889_OFF_CLOCK
 #define ADV9889_CLOCK_POS_EDGE			0x60
 #define ADV9889_CLOCK_NEG_EDGE			0xe0
+#define ADV9889_CLOCK_9839              0x10
+
+// ADV9889_OFF_PWR_DOWN
+#define ADV9889_PWR_DOWN_ON             0x38
+#define ADV9889_PWR_DOWN_OFF            0x00
 
 #endif /* ADV9889_REG_H_ */

@@ -191,9 +191,6 @@ int asi_drv_set_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params)
     }
 
     ch = aud_params->ch_cnt_left + aud_params->ch_cnt_right; 
-    if((ch < ASI_DRV_MIN_CH_CNT) || (ch > ASI_DRV_MAX_CH_CNT) || (aud_bits_to_container(aud_params->sample_width) == 0)){
-        return ERR_ASI_AUD_PARAMS_ERR;
-    }
 
     /* calculate payload words */
     payload_words = handle->eth_params.packet_size/4 - ASI_DRV_ETH_HEADER_LEN - ASI_DRV_IPV4_HEADER_LEN - ASI_DRV_UDP_HEADER_LEN - ASI_DRV_RTP_HEADER_LEN - ASI_DRV_AES_HEADER_LEN;

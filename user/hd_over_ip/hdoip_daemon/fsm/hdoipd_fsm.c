@@ -111,7 +111,7 @@ bool hdoipd_set_state(int state)
     return true;
 }
 
-bool hdoipd_set_tstate(int vtb_state)
+bool hdoipd_set_vtb_state(int vtb_state)
 {
     if (hdoipd_state(HOID_VTB|HOID_VRB)) {
         if (vtb_state & VTB_VID_MASK) hdoipd.vtb_state = (hdoipd.vtb_state & ~VTB_VID_MASK) | vtb_state;
@@ -126,7 +126,7 @@ bool hdoipd_set_tstate(int vtb_state)
     return true;
 }
 
-bool hdoipd_set_rstate(int vrb_state)
+bool hdoipd_set_vrb_state(int vrb_state)
 {
     if (hdoipd_state(HOID_VTB|HOID_VRB)) {
         if (vrb_state & VRB_AUD_MASK) hdoipd.vrb_state = (hdoipd.vrb_state & ~VRB_AUD_MASK) | vrb_state;
@@ -156,6 +156,21 @@ void hdoipd_off(bool osd)
     hdoipd_set_state(HOID_READY);
 
     osd_permanent(osd);
+}
+
+void hdoipd_hw_reset(int rv)
+{
+    char tmp[200], *s = tmp;
+    hoi_drv_reset(rv);
+    s += sprintf(s, INFO "reset: ");
+    if (rv & DRV_RST_TMR) s += sprintf(s, "TIMER ");
+    if (rv & DRV_RST_STSYNC) s += sprintf(s, "SYNC ");
+    if (rv & DRV_RST_VID_OUT) s += sprintf(s, "Video-OUT ");
+    if (rv & DRV_RST_VID_IN) s += sprintf(s, "Video-IN ");
+    if (rv & DRV_RST_AUD_OUT) s += sprintf(s, "Audio-OUT ");
+    if (rv & DRV_RST_AUD_IN) s += sprintf(s, "Audio-IN ");
+    if (rv & DRV_RST_VRP) s += sprintf(s, "VRP ");
+    report(tmp);
 }
 
 /** Goto ready state
@@ -218,6 +233,8 @@ void hdoipd_force_ready()
     }
 
     hdoipd_goto_ready();
+
+    report(INFO, "hdoipd_force_ready() done");
 }
 
 
@@ -292,7 +309,6 @@ void hdoipd_goto_vrb()
  */
 int hdoipd_vrb_setup(t_rscp_media* media, void UNUSED *d)
 {
-    char* s;
     t_rscp_client* client;
     int ret;
     char tmp[200];
@@ -312,7 +328,7 @@ int hdoipd_vrb_setup(t_rscp_media* media, void UNUSED *d)
 
     // open media (currently all source defined by "remote-uri" + media->name)
     sprintf(tmp, "%s/%s", reg_get("remote-uri"), media->name);
-    client = rscp_client_add(hdoipd.client, media, tmp);
+    client = rscp_client_open(hdoipd.client, media, tmp);
 
     if (client) {
         // try to setup a connection
@@ -321,14 +337,11 @@ int hdoipd_vrb_setup(t_rscp_media* media, void UNUSED *d)
             rscp_media_play(media);
         } else {
             report(ERROR "hdoipd_vrb_setup() rscp_media_setup failed");
+            rscp_client_close(client);
         }
     } else {
         report(ERROR "hdoipd_vrb_setup() rscp_client_open failed");
-        // listen for hello
-        s = reg_get("remote-uri");
-        box_sys_set_remote(s);
-        osd_permanent(true);
-        osd_printf("VTB not found. Waiting for %s\n", s);
+        osd_printf("VTB(%s) not found. Waiting for %s\n", media->name, tmp);
     }
 
     return 0;
@@ -484,9 +497,7 @@ void hdoipd_event(uint32_t event)
 {
     lock("hdoipd_event");
         report(EVENT "(%x) %s ", event, event_str(event));
-    unlock("hdoipd_event");
 
-    lock("hdoipd_event");
     switch (event) {
         // Ethernet connection on/off
         case E_ETO_LINK_UP:
@@ -500,7 +511,7 @@ void hdoipd_event(uint32_t event)
             if (hdoipd_state(HOID_VTB|HOID_VRB)) {
                 hdoipd_force_ready();
                 osd_permanent(true);
-                osd_printf("Ethernet connection lost");
+                osd_printf("Ethernet connection lost\n");
             }
         break;
 
@@ -608,9 +619,7 @@ void hdoipd_event(uint32_t event)
         case E_VIO_ADV212_CFTH+3:
         break;
     }
-    unlock("hdoipd_event");
 
-    lock("hdoipd_event");
         if (hdoipd_state(HOID_VRB)) {
             hdoipd_fsm_vrb(event);
         } else if (hdoipd_state(HOID_VTB)) {
@@ -626,12 +635,14 @@ void hdoipd_hello()
 
     s = reg_get("hello-uri");
     if (s) {
-        client = rscp_client_add(hdoipd.client, 0, s);
+        client = rscp_client_open(hdoipd.client, 0, s);
 
         if (client) {
-            report("say hello to %s", s);
+            report(INFO "say hello to %s", s);
             rscp_client_hello(client);
-            rscp_client_remove(client);
+            rscp_client_close(client);
+        } else {
+            report(ERROR "could not say hello to %s", s);
         }
     }
 
@@ -660,6 +671,8 @@ void hdoipd_start()
 
 bool hdoipd_init(int drv)
 {
+    pthread_mutexattr_t attr;
+
     memset(&hdoipd, 0, sizeof(t_hdoipd));
 
     hdoipd.drv = drv;
@@ -692,7 +705,12 @@ bool hdoipd_init(int drv)
     hdoipd.local.aud_port = htons(reg_get_int("audio-port"));
     hdoipd.drivers = DRV_ADV9889 | DRV_ADV7441;
 
-    pthread_mutex_init(&hdoipd.mutex, NULL);
+
+    pthread_mutexattr_init(&attr);
+    //pthread_mutexattr_setrobust_np(&attr, PTHREAD_MUTEX_ROBUST_NP);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK_NP);
+    pthread_mutexattr_setpshared (&attr, PTHREAD_PROCESS_SHARED);
+    pthread_mutex_init(&hdoipd.mutex, &attr);
 
     // starting with load drivers the driver may send events
     // so we lock before calling hoi_drv_ldrv
@@ -739,6 +757,7 @@ bool hdoipd_init(int drv)
         }
 
         // setup default output
+        osd_permanent(true);
         osd_printf("Welcome to <rioxo> - 2011 Barox\n\n");
     }
     unlock("hdoipd_init");

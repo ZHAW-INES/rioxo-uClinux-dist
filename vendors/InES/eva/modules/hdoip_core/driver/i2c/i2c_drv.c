@@ -15,7 +15,6 @@
 int i2c_drv_init(t_i2c* handle, void* p, int freq)
 {
 	handle->p = p;
-	spin_lock_init(&handle->sem);
 
 	i2c_init(p, I2C_PRESCALE(SFREQ, freq));
 

@@ -35,13 +35,15 @@ REG_WEB_PASS = "web-pass"
 local PIPE_CMD = "/tmp/web.cmd"
 local PIPE_RSP = "/tmp/web.rsp"
 
-local PIPE_CMD_GET_PARAM = "3800000a"
-local PIPE_CMD_SET_PARAM = "3800000b"
-local PIPE_CMD_STORE_CFG = "32000007"
-local PIPE_CMD_REMOTE_UPDATE = "3100000C"
-local PIPE_CMD_GETVERSION = "3100000D"
-local PIPE_CMD_FACTORY_DEFAULT = "3100000E"
-local PIPE_CMD_REBOOT = "31000009"
+local PIPE_CMD_READY            = "31000008"
+local PIPE_CMD_VRB_PLAY         = "31000007"
+local PIPE_CMD_GET_PARAM        = "3800000a"
+local PIPE_CMD_SET_PARAM        = "3800000b"
+local PIPE_CMD_STORE_CFG        = "32000007"
+local PIPE_CMD_REMOTE_UPDATE    = "3100000C"
+local PIPE_CMD_GETVERSION       = "3100000D"
+local PIPE_CMD_FACTORY_DEFAULT  = "3100000E"
+local PIPE_CMD_REBOOT           = "31000009"
 
 local fd_cmd, fd_rsp = nil, nil
 
@@ -204,3 +206,12 @@ end
 function factory_default()
     simple_cmd(PIPE_CMD_FACTORY_DEFAULT)
 end
+
+function ready()
+    simple_cmd(PIPE_CMD_READY)
+end
+
+function play()
+    simple_cmd(PIPE_CMD_VRB_PLAY)
+end
+

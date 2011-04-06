@@ -50,6 +50,13 @@ td {
     padding:.0em;
 }
 
+#globalnav IMG {
+    border:0;
+    margin:0;
+    padding:.0em;
+}
+
+
 #globalnav LI {
         float:left;
         margin:0;
@@ -81,4 +88,12 @@ td {
         position:relative;
         z-index:102;
                 }
+
+#globalnav .img {
+    padding:0em 0em;
+    border-left:0px solid #000;
+    border-top:0px solid #000;
+    border-right:0px solid #000;
+}
+
 

@@ -14,6 +14,7 @@ require("hdoip.cookie")
 require("hdoip.download")
 
 script_path = "/cgi-bin/index.lua"
+img_path = "/img/"
 main_form = "mainform"
 PAGE_ID_ETH = 0
 PAGE_ID_STREAM = 1
@@ -50,15 +51,16 @@ else
     end
 end
 
+-----------------------------------------------
+-- System parameters
 query.err = hdoip.pipe.open()
 query.lang = hdoip.pipe.getParam(hdoip.pipe.REG_WEB_LANG)
 query.auth_en = hdoip.pipe.getParam(hdoip.pipe.REG_WEB_AUTH_EN)
-if(query.auth_en == "") then
-    query.auth_en = 1
-else
-    query.auth_en = tonumber(query.auth_en)
-end
+query.system_mode = hdoip.pipe.getParam(hdoip.pipe.REG_MODE_START)
+query.daemon_state = hdoip.pipe.getParam(hdoip.pipe.REG_STATUS_STATE) 
 
+-----------------------------------------------
+-- Language select
 if (query.lang == "DE") then
     require("lang.de")
     label = lang.de.label
@@ -68,15 +70,37 @@ else
     label = lang.en.label
 end
 
-
+-----------------------------------------------
+-- General functions
 if(query.logout ~= nil) then
     hdoip.cookie.delete(query, "username", {})
     hdoip.cookie.delete(query, "password", {})
     query.page = PAGE_ID_LOGIN
 end
 
+if(query.stop ~= nil) then
+    hdoip.pipe.ready()
+end
+
+if(query.play ~= nil) then
+    hdoip.pipe.play()
+end
+
+if(query.refresh ~= nil) then
+    hdoip.pipe.ready()
+    hdoip.pipe.play()
+end
+
 if(init_err ~= "") then
     hdoip.html.AddError(query, init_err)
+end
+
+-----------------------------------------------
+-- Web authentification
+if(query.auth_en == "") then
+    query.auth_en = 1
+else
+    query.auth_en = tonumber(query.auth_en)
 end
 
 if(query.auth_en > 0) then
@@ -90,6 +114,8 @@ if(query.auth_en > 0) then
     end
 end
 
+-----------------------------------------------
+-- Page select
 if(query.page == 0) then
     pages.ethernet.show(query)
 elseif(query.page == 1) then

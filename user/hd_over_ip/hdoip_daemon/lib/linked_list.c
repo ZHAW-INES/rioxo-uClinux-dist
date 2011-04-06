@@ -20,6 +20,8 @@ t_node* node_create(void* elem)
         node->next = node;
         node->prev = node;
         node->elem = elem;
+    } else {
+        printf("node_create.malloc: out of memory");
     }
     return node;
 }

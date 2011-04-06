@@ -19,7 +19,7 @@ void box_sys_set_remote(char* address);
     struct in_addr a1, a2;                                  \
     a1.s_addr = s.address;                                  \
     a2.s_addr = d.address;                                  \
-    reportn(dir ": %s:%d %s " dir2,                         \
+    reportn(INFO dir ": %s:%d %s " dir2,                    \
             inet_ntoa(a1),                                  \
             ntohs(s. __av##_port),                          \
             mac_ntoa(s.mac));                               \

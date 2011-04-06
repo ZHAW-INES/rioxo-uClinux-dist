@@ -62,6 +62,7 @@
 #define HOI_MSG_REPAIR              (0x7000002b)
 #define HOI_MSG_HPDON               (0x7000002c)
 #define HOI_MSG_HPDOFF              (0x7000002d)
+#define HOI_MSG_ASOREG				(0x7000002e)
 #define HOI_MSG_POLL                (0x700000ff)
 
 // Driver Bit Mask
@@ -185,6 +186,18 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
+    uint32_t			config;
+    uint32_t            status;
+    uint32_t			start;
+    uint32_t			stop;
+    uint32_t			read;
+    uint32_t			write;
+} __attribute__ ((__packed__)) t_hoi_msg_asoreg;
+
+#define hoi_msg_asoreg_init(p) hoi_msg_init(p, HOI_MSG_ASOREG, t_hoi_msg_asoreg)
+
+typedef struct {
+    hoi_msg_extends;
     uint32_t            fin;
     uint32_t            fout;
     int32_t             tgerr;
@@ -242,6 +255,7 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
+    uint32_t            cfg;
     uint32_t            delay_ms;       //!< (wr) audio delay
     uint32_t            fs;             //!< (wr) sampel frequency in Hz
     uint32_t            fs_tol;         //!< (wr) frequency tolerance (fs +/- fs_tol)
@@ -333,6 +347,7 @@ typedef struct {
     uint32_t            advcnt;
     uint32_t            audio_fs[2];    //!< audio sampling frequency [HZ] (0=off)
     uint32_t            audio_width[2]; //!< audio sample width [bit]
+    uint32_t            audio_cnt[2];   //!< number of active channels
     uint32_t            audio_map;      //!< bitmap for active audio channels
 } __attribute__ ((__packed__)) t_hoi_msg_info;
 

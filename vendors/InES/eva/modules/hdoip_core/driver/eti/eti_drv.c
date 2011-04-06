@@ -21,7 +21,7 @@ int eti_drv_stop(t_eti* handle)
     eti_set_cpu_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
 	eti_set_config_stop(handle->ptr);
 
-    while((eti_get_config_reg(handle->ptr) & ETI_STATUS_FSM_IDLE) == 1);
+    while(!(eti_get_status_reg(handle->ptr) & ETI_STATUS_FSM_IDLE));
  
 	return ERR_ETI_SUCCESS;
 }
@@ -300,7 +300,7 @@ int eti_drv_handler(t_eti* handle, t_queue* event_queue)
         handle->vrx = vrx;
         if (!handle->vcnt) {
             queue_put(event_queue, E_ETI_VIDEO_ON);
-            handle->vcnt = LINK_COUNT;
+            handle->vcnt = ETI_LINK_COUNT;
         }
     } else {
         if (handle->vcnt == 1) {
@@ -315,7 +315,7 @@ int eti_drv_handler(t_eti* handle, t_queue* event_queue)
         handle->arx = arx;
         if (!handle->acnt) {
             queue_put(event_queue, E_ETI_AUDIO_ON);
-            handle->acnt = LINK_COUNT;
+            handle->acnt = ETI_LINK_COUNT;
         }
     } else {
         if (handle->acnt == 1) {

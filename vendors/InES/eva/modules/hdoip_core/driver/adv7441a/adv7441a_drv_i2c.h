@@ -6,16 +6,6 @@
 #include "adv7441a_drv_cfg.h"
 
 /* Inline functions */ 
-static inline void adv7441a_lock(t_adv7441a* handle) 
-{
-	i2c_drv_lock(handle->p_i2c);
-}
-
-static inline void adv7441a_unlock(t_adv7441a* handle) 
-{
-	i2c_drv_unlock(handle->p_i2c);
-}
-
 static inline void adv7441a_usr_map_write(t_adv7441a* handle, uint8_t a, uint8_t x) 
 {
 	i2c_drv_wreg8(handle->p_i2c, ADV7441A_I2C_USR_MAP, a, x);

@@ -13,8 +13,8 @@
 #include "edid.h"
 #include "rscp_server.h"
 
-#define TICK_TIMEOUT                    (20)
-#define TICK_SEND_ALIVE                 (10)
+#define TICK_TIMEOUT                    (hdoipd.eth_timeout)
+#define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
 static struct {
     t_hdoip_eth         remote;
@@ -28,7 +28,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
 {
     int n;
 
-    report("vtb_video_setup");
+    report(INFO "vtb_video_setup");
     
     media->result = RSCP_RESULT_READY;
 
@@ -71,7 +71,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
 
     // limit incoming edid
     // TODO: ...
-    edid_report(m->edid.edid);
+    edid_report((void*)m->edid.edid);
 
     if (!hdoipd_tstate(VTB_VID_MASK)) {
         // TODO: dont reload when already the same, store edid in file for next boot
@@ -84,7 +84,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     }
     
     // reserve resource
-    hdoipd_set_tstate(VTB_VID_IDLE);
+    hdoipd_set_vtb_state(VTB_VID_IDLE);
 
     vtb.timeout = 0;
     vtb.alive_ping = 1;
@@ -106,7 +106,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     t_rscp_rtp_format fmt;
     hdoip_eth_params eth;
 
-    report("vtb_video_play");
+    report(INFO "vtb_video_play");
 
     media->result = RSCP_RESULT_PLAYING;
 
@@ -170,49 +170,49 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
 #endif
 
     // We are streaming Video now...
-    hdoipd_set_tstate(VTB_VIDEO);
+    hdoipd_set_vtb_state(VTB_VIDEO);
 
     return RSCP_SUCCESS;
 }
 
 int vtb_video_teardown(t_rscp_media* media, t_rscp_req_teardown *m, t_rscp_connection* rsp)
 {
-    report("vtb_video_teardown");
+    report(INFO "vtb_video_teardown");
 
     media->result = RSCP_RESULT_TEARDOWN;
 
     if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
 #ifdef VID_IN_PATH
-        hoi_drv_reset(DRV_RST_VID_IN);
+        hdoipd_hw_reset(DRV_RST_VID_IN);
 #endif
-        hdoipd_set_tstate(VTB_VID_OFF);
+        hdoipd_set_vtb_state(VTB_VID_OFF);
     }
 
-    if (m) {
+    if (rsp) {
         rscp_response_teardown(rsp, media->sessionid);
     }
+
+    vtb.timeout = 0;
+    vtb.alive_ping = 1;
 
     return RSCP_SUCCESS;
 }
 
 void vtb_video_pause(t_rscp_media *media)
 {
-    report("vtb_video_pause");
+    report(INFO "vtb_video_pause");
 
     media->result = RSCP_RESULT_PAUSE_Q;
 
     if (hdoipd_tstate(VTB_VIDEO)) {
 #ifdef VID_IN_PATH
-        hoi_drv_reset(DRV_RST_VID_IN);
+        hdoipd_hw_reset(DRV_RST_VID_IN);
 #endif
-        hdoipd_set_tstate(VTB_VID_IDLE);
+        hdoipd_set_vtb_state(VTB_VID_IDLE);
     }
-
-    // goto ready without further communication
-    rscp_media_force_ready(media);
 }
 
-int vtb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
+int vtb_video_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
     switch (m->event) {
         case EVENT_TICK:
@@ -233,12 +233,14 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
                 rscp_server_update(media, EVENT_VIDEO_IN_OFF);
             }
             rscp_server_update(media, EVENT_VIDEO_IN_ON);
+            return RSCP_PAUSE;
         break;
         case EVENT_VIDEO_IN_OFF:
             if (rscp_media_splaying(media)) {
                 vtb_video_pause(media);
                 rscp_server_update(media, EVENT_VIDEO_IN_OFF);
             }
+            return RSCP_PAUSE;
         break;
         case EVENT_TICK:
             if (vtb.alive_ping) {
@@ -249,10 +251,10 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
                 rscp_server_update(media, EVENT_TICK);
             }
 
-            if (vtb.timeout < TICK_TIMEOUT) {
+            if (vtb.timeout <= TICK_TIMEOUT) {
                 vtb.timeout++;
             } else {
-                report("vtb_video_event: timeout");
+                report(INFO "vtb_video_event: timeout");
                 // timeout -> kill connection
                 // server cannot kill itself -> add to kill list
                 // (will be executed after all events are processed)

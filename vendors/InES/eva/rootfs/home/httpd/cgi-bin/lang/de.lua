@@ -15,7 +15,10 @@ label = {
 
     on = "Ein";
     off = "Aus";
-    
+    play = "abspielen";
+    stop = "anhalten";
+    reconnect = "wiederverbinden";
+   
     username = "Benutzername";
     password = "Passwort";
     retype_password = "Passwort bestätigen";

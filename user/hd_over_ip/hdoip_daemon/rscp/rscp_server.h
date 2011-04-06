@@ -17,7 +17,6 @@
 
 typedef struct {
     int                 nr;
-    pthread_t           th;             //!< Server Connection thread
     t_node*             idx;            //!< node containing this connection
     void*               owner;
     t_rscp_connection   con;

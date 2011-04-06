@@ -11,6 +11,13 @@ const t_color_transform xyz_one = FRAC_M3x4(
 		0.0,     1.0,     0.0,     0.0,
 		0.0,     0.0,     1.0,     0.0
     );
+
+// black picture transform
+const t_color_transform black_out = FRAC_M3x4(
+		0.0,     0.0,     0.0,     0.0,
+		0.0,     0.0,     0.0,     0.0,
+		0.0,     0.0,     0.0,     0.0
+    );
     
 // yuv range y:[16..236] uv:[16..240]
 const t_color_transform rgb2yuv = FRAC_M3x4(

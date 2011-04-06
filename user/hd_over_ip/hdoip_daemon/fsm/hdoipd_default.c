@@ -5,6 +5,7 @@
  *      Author: alda
  */
 #include "hdoipd.h"
+#include "hoi_cfg.h"
 
 #define CFGTAG "config-version"
 
@@ -25,9 +26,11 @@ void hdoipd_set_default()
     reg_set("remote-uri", "rscp://192.168.1.201");
     reg_set("hello-uri", "rscp://192.168.1.201");
     reg_set("compress", "jp2k");
-    reg_set("bandwidth", "9830400");
+    reg_set("bandwidth", "10000000");
     reg_set("advcnt-min", "0");
     reg_set("network-delay", "20");
+    reg_set("network-alive", "1");
+    reg_set("network-timeout", "3");
     reg_set("video-port", "3400");
     reg_set("audio-port", "3402");
     reg_set("rscp-server-port", "554");
@@ -47,11 +50,11 @@ static void update_0_0_to_0_1()
         reg_del("rtsp-server-port");
     }
     p = reg_get("remote-uri");
-    if (strncmp(p, "rtsp", 4) == 0) {
+    if (p && (strncmp(p, "rtsp", 4) == 0)) {
         memcpy(p, "rscp", 4);
     }
     p = reg_get("hello-uri");
-    if (strncmp(p, "rtsp", 4) == 0) {
+    if (p && (strncmp(p, "rtsp", 4) == 0)) {
         memcpy(p, "rscp", 4);
     }
 

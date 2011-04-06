@@ -25,7 +25,7 @@ typedef void* (pf)(void*);
 static void listener_lock(t_rscp_listener* handle, const char* s)
 {
     pthread_mutex_lock(&handle->mutex);
-    report2("rscp_listener:pthread_mutex_lock(%d, %s)", pthread_self(), s);
+    report2("rscp_listener:pthread_mutex_lock(%x:%d, %s)", handle, pthread_self(), s);
 }
 
 /* listener_unlock mutex for connection list
@@ -34,27 +34,29 @@ static void listener_lock(t_rscp_listener* handle, const char* s)
  */
 static void listener_unlock(t_rscp_listener* handle, const char* s)
 {
-    report2("rscp_listener:pthread_mutex_unlock(%d, %s)", pthread_self(), s);
+    report2("rscp_listener:pthread_mutex_unlock(%x:%d, %s)", handle, pthread_self(), s);
     pthread_mutex_unlock(&handle->mutex);
 }
 
 void* rscp_listener_run_server(t_rscp_server* con)
 {
-    int ret = rscp_server_thread(con);
+    rscp_server_thread(con);
 
     shutdown(con->con.fdw, SHUT_RDWR);
 
-    // remove from list
+    // remove from list & delete server
     listener_lock(con->owner, "rscp_listener_run_server");
         list_remove(con->idx);
         rscp_server_free(con);
     listener_unlock(con->owner, "rscp_listener_run_server");
 
-    return (void*)ret;
+    return 0;
 }
 
 int rscp_listener_start_server(t_rscp_listener* handle, int fd, struct sockaddr_in* addr)
 {
+    pthread_t th;
+    pthread_attr_t attr;
     t_rscp_server* con = 0;
 
     if (!(con = rscp_server_create(fd, addr->sin_addr.s_addr))) {
@@ -67,22 +69,24 @@ int rscp_listener_start_server(t_rscp_listener* handle, int fd, struct sockaddr_
         con->owner = handle;
     listener_unlock(handle, "rscp_listener_start_server");
 
-    pthread(con->th, (pf*)rscp_listener_run_server, con);
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthreada(th, &attr, (pf*)rscp_listener_run_server, con);
 
     return RSCP_SUCCESS;
 }
 
 void rscp_listener_close_server(t_rscp_server* con, t_rscp_listener *handle)
 {
-    pthread_t th = con->th;
+    bool valid = false;
     listener_lock(handle, "rscp_listener_close_server");
         if (list_contains(handle->cons, con)) {
+            valid = true;
             if (shutdown(con->con.fdw, SHUT_RDWR) == -1) {
                 report("close connection error: %s", strerror(errno));
             }
         }
     listener_unlock(handle, "rscp_listener_close_server");
-    pthread_join(th, 0);
 }
 
 /* listener thread
@@ -198,6 +202,7 @@ int rscp_listener_add_media(t_rscp_listener* handle, t_rscp_media* media)
 {
     listener_lock(handle, "rscp_listener_add_media");
         bstmap_setp(&handle->media, media->name, media);
+        report(NEW "RSCP Media add \"%s\"", media->name);
     listener_unlock(handle, "rscp_listener_add_media");
     return RSCP_SUCCESS;
 }
@@ -205,6 +210,7 @@ int rscp_listener_add_media(t_rscp_listener* handle, t_rscp_media* media)
 int rscp_listener_add_kill(t_rscp_listener* handle, t_rscp_media* media)
 {
     queue_put(handle->kills, media);
+    report(DEL "RSCP Media add %s:%s to kill list", media->name, media->sessionid);
     return RSCP_SUCCESS;
 }
 
@@ -229,6 +235,7 @@ int rscp_listener_add_session(t_rscp_listener* handle, t_rscp_media* media)
 {
     listener_lock(handle, "rscp_listener_add_session");
         bstmap_setp(&handle->sessions, media->sessionid, media);
+        report(NEW "RSCP Media add session %s:%s", media->name, media->sessionid);
     listener_unlock(handle, "rscp_listener_add_session");
     return RSCP_SUCCESS;
 }
@@ -237,6 +244,7 @@ int rscp_listener_remove_session(t_rscp_listener* handle, t_rscp_media* media)
 {
     listener_lock(handle, "rscp_listener_remove_session");
         bstmap_removep(&handle->sessions, media->sessionid);
+        report(DEL "RSCP Media remove session(1) %s:%s", media->name, media->sessionid);
     listener_unlock(handle, "rscp_listener_remove_session");
     return RSCP_SUCCESS;
 }
@@ -280,41 +288,19 @@ void rscp_listener_event(t_rscp_listener* handle, uint32_t event)
         // event may add medias to the kill list
         while ((media = queue_get(handle->kills))) {
             // when we close the sessions, we also must remove it from the listener
-            rscp_server_close(media);
-            bstmap_removep(&handle->sessions, media->sessionid);
+            if (bstmap_removep(&handle->sessions, media->sessionid)) {
+                report(DEL "RSCP Media remove session(2) %s:%s", media->name, media->sessionid);
+                rscp_server_close(media);
+            }
         }
     listener_unlock(handle, "rscp_listener_event");
 }
 
-void rscp_listener_pause(t_rscp_listener* handle, t_rscp_media* filter)
-{
-    report("rscp_listener_pause()");
-    if (filter) {
-        listener_lock(handle, "rscp_listener_update_all");
-            bstmap_ctraverse(handle->sessions,
-                    rscp_listener_cond, filter,
-                    rscp_listener_traverse, rscp_server_pause);
-        listener_unlock(handle, "rscp_listener_update_all");
-    }
-}
-
-void rscp_listener_teardown(t_rscp_listener* handle, t_rscp_media* filter)
-{
-    report("rscp_listener_teardwon()");
-    if (filter) {
-        listener_lock(handle, "rscp_listener_update_all");
-            bstmap_ctraverse_free(&handle->sessions,
-                    rscp_listener_cond, filter,
-                    rscp_listener_traverse, rscp_server_teardown);
-        listener_unlock(handle, "rscp_listener_update_all");
-    }
-}
-
 void rscp_listener_close_all(t_rscp_listener* handle)
 {
-    report("rscp_listener_teardown_all()");
+    report("rscp_listener_close_all()");
     listener_lock(handle, "rscp_listener_teardown_all");
-        bstmap_traverse_free(&handle->sessions, rscp_listener_traverse, rscp_server_close);
+        bstmap_traverse_freep(&handle->sessions, rscp_listener_traverse, rscp_server_close);
     listener_unlock(handle, "rscp_listener_teardown_all");
 }
 
@@ -328,7 +314,7 @@ void rscp_listener_teardown_all(t_rscp_listener* handle)
 {
     report("rscp_listener_teardown_all()");
     listener_lock(handle, "rscp_listener_teardown_all");
-        bstmap_traverse_free(&handle->sessions, rscp_listener_traverse, rscp_server_teardown);
+        bstmap_traverse_freep(&handle->sessions, rscp_listener_traverse, rscp_server_teardown);
     listener_unlock(handle, "rscp_listener_teardown_all");
 }
 
@@ -342,8 +328,7 @@ void rscp_listener_pause_all(t_rscp_listener* handle)
 
 void rscp_listener_session_traverse(t_rscp_listener* handle, void (*f)(char*, char*, void*), void* d)
 {
-     listener_lock(handle, "rscp_listener_session_traverse");
+    listener_lock(handle, "rscp_listener_session_traverse");
         bstmap_traverse(handle->sessions, f, d);
     listener_unlock(handle, "rscp_listener_session_traverse");
-
 }

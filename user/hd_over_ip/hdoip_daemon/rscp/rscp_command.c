@@ -11,7 +11,6 @@
 
 void rscp_response_line(t_rscp_connection* msg, int code, char* reason)
 {
-    rscp_msginit(msg);
     msgprintf(msg, "%s %03d %s\r\n",
         RSCP_VERSION,
         code,
@@ -28,7 +27,6 @@ void rscp_response_error(t_rscp_connection* msg, int code, char* reason)
 
 void rscp_request_line(t_rscp_connection* msg, char* method, char* uri)
 {
-    rscp_msginit(msg);
     msgprintf(msg, "%s %s %s\r\n",
         method,
         uri,
@@ -94,11 +92,11 @@ void rscp_header_rtp_format(t_rscp_connection* msg, t_rscp_rtp_format* p)
 {
     // RTP-Format: compress[ value] rtptime
     if (p->compress == 16) {
-        msgprintf(msg, "RTP-Format: aud16Bit %d %u\r\n", p->value, p->rtptime);
+        msgprintf(msg, "RTP-Format: aud16Bit %d %d %u\r\n", p->value, p->value2, p->rtptime);
     } else if (p->compress == 24) {
-        msgprintf(msg, "RTP-Format: aud24Bit %d %u\r\n", p->value, p->rtptime);
+        msgprintf(msg, "RTP-Format: aud24Bit %d %d %u\r\n", p->value, p->value2, p->rtptime);
     } else if (p->compress == 32) {
-        msgprintf(msg, "RTP-Format: aud32Bit %d %u\r\n", p->value, p->rtptime);
+        msgprintf(msg, "RTP-Format: aud32Bit %d %d %u\r\n", p->value, p->value2, p->rtptime);
     } else if (p->compress == FORMAT_JPEG2000) {
         msgprintf(msg, "RTP-Format: jp2k %d %u\r\n", p->value, p->rtptime);
     } else {

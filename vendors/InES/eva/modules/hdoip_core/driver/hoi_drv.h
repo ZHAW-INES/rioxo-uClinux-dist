@@ -17,6 +17,7 @@
 #include "adv7441a_drv.h"
 #include "adv9889_drv.h"
 #include "adv212_drv.h"
+#include "led_drv.h"
 #include "eti_drv.h"
 #include "eto_drv.h"
 #include "vio_drv.h"
@@ -38,6 +39,8 @@ typedef struct {
     void                *p_irq;
     void                *p_tx;
     void                *p_rx;
+    void                *p_i2c_tag_aud;
+    void                *p_i2c_tag_vid;
     void                *p_vio;
     void                *p_eso;
     void                *p_vsi;
@@ -53,8 +56,11 @@ typedef struct {
 
     t_i2c               i2c_tx;
     t_i2c               i2c_rx;
+    t_i2c               i2c_tag_aud;
+    t_i2c               i2c_tag_vid;
 
     uint32_t            drivers;
+    t_led               led;
     t_tag               vtag;
     t_tag               atag;
     t_vio               vio;

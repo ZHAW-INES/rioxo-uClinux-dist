@@ -25,7 +25,6 @@ int aso_drv_init(t_aso* handle, void* p_aso)
     /* disable miss filter => no dummy data */
     aso_set_fifo_low_th(handle->p_aso, ASO_DRV_DISABLE_FIFO_LOW_TH);
     aso_set_min_frames_buffered(handle->p_aso, ASO_DRV_DISABLE_FRAMES_BUFFERED);
- 
 
     return ERR_ASO_SUCCESS;
 }
@@ -95,7 +94,8 @@ int aso_drv_stop(t_aso* handle)
 {
     aso_disable(handle->p_aso);
 
-    while(aso_get_status(handle->p_aso, ASO_STATUS_IDLE) == 0);
+    // FIXME:
+    //while(aso_get_status(handle->p_aso, ASO_STATUS_IDLE) == 0);
 
     handle->status = handle->status & ~ASO_DRV_STATUS_ACTIV;
     return ERR_ASO_SUCCESS;
@@ -192,35 +192,33 @@ int aso_drv_handler(t_aso* handle, t_queue* event_queue)
  */
 int aso_drv_set_aud_params(t_aso* handle, struct hdoip_aud_params* aud_params)
 {
-    uint64_t div_base, div_slow, div_fast;
-    uint8_t ch = aud_params->ch_cnt_left + aud_params->ch_cnt_right;
+    uint64_t div_base, div_lower_bound, div_upper_bound;
+    uint32_t div_inc;
 
     if((handle->status & ASO_DRV_STATUS_ACTIV) != 0) {
         return ERR_ASO_RUNNING;
     }
 
-    if((aud_bits_to_container(aud_params->sample_width)) == 0) {
-        return ERR_ASO_SAMPLE_WIDTH_ERR;
-    }
-
-    if((ch < ASO_DRV_MIN_CH_CNT) || (ch > ASO_DRV_MAX_CH_CNT)) {
-        return ERR_ASO_CHANNEL_CNT_ERR;
-    }
-
-    /* calculate i2s clock (in q7.20 format) */
+    /* calculate i2s clock (in q5.27 format) */
 
     /* 64*fs = output frequency. division by 2 because clock signal toggles after division factor */
-    div_base = ((uint64_t)(1 << 20) * SFREQ) / (aud_params->fs * 64 * 2); 
+    div_base = ((uint64_t)(1 << 27) * SFREQ) / (aud_params->fs * 64 * 2); 
     
     /* fixed point multiplied with tolerance */
-    div_slow = div_base * ((uint64_t)ASO_DRV_I2S_FREQ_FACT_SLOW * (1 << 20));
-    div_slow = div_slow >> 20;
+    div_upper_bound = div_base * ((uint64_t)ASO_DRV_I2S_FREQ_FACT_UPPER);
+    div_upper_bound = div_upper_bound >> 27;
 
-    div_fast = div_base * ((uint64_t)ASO_DRV_I2S_FREQ_FACT_FAST * (1 << 20));  
-    div_fast = div_fast >> 20;
+    div_lower_bound = div_base * ((uint64_t)ASO_DRV_I2S_FREQ_FACT_LOWER);  
+    div_lower_bound = div_lower_bound >> 27;
 
-    aso_set_clk_div_fast(handle->p_aso, (uint32_t)div_fast);
-    aso_set_clk_div_slow(handle->p_aso, (uint32_t)div_slow);
+    aso_set_clk_div_upper_bound(handle->p_aso, (uint32_t)div_upper_bound);
+    aso_set_clk_div_lower_bound(handle->p_aso, (uint32_t)div_lower_bound);
+    aso_set_clk_div_act(handle->p_aso, (uint32_t)div_base);
+
+    /* calculate incremental value*/
+    div_inc = (uint32_t)div_upper_bound - (uint32_t)div_base;
+    div_inc = div_inc / ASO_DRV_I2S_FREQ_TOL_DIV; 
+    aso_set_clk_div_inc(handle->p_aso, div_inc);
 
     /* set fs, sample_width, channel count left and channel count right */
     aso_set_aud_params(handle->p_aso, aud_params);

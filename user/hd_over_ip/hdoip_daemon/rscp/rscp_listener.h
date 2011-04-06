@@ -52,14 +52,10 @@ t_rscp_media* rscp_listener_get_session(t_rscp_listener* handle, char* id);
 void rscp_listener_create_sessionid(t_rscp_listener* handle, char* id);
 
 // S->C communication
-void rscp_listener_close_all(t_rscp_listener* handle);
 void rscp_listener_event(t_rscp_listener* handle, uint32_t event);
-
+void rscp_listener_close_all(t_rscp_listener* handle);
 void rscp_listener_teardown_all(t_rscp_listener* handle);
 void rscp_listener_pause_all(t_rscp_listener* handle);
-
-void rscp_listener_teardown(t_rscp_listener* handle, t_rscp_media* filter);
-void rscp_listener_pause(t_rscp_listener* handle, t_rscp_media* filter);
 void rscp_listener_session_traverse(t_rscp_listener* handle, void (*f)(char*, char*, void*), void* d);
 
 #endif /* RSCP_LISTENER_H_ */

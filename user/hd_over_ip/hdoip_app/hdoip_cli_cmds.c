@@ -189,7 +189,7 @@ int hdoip_cli_set(int fd, int fdr, char** argv, int argc)
 int hdoip_cli_get(int fd, int fdr, char** argv, int argc)
 {
     char* s = hoic_get_param(fd, fdr, argv[0]);
-    printf("return: %s\n", s);
+    printf("return: \"%s\"\n", s);
     free(s);
     return 0;
 }

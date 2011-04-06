@@ -57,14 +57,13 @@ end
 function show(t)
     local str = hdoip.pipe.getParam(hdoip.pipe.REG_STATUS_STREAM)
     parse_stream_state(t, str)
-    t.daemon_state = hdoip.pipe.getParam(hdoip.pipe.REG_STATUS_STATE)
 
     if(t.daemon_state == "vtb") then
-        t.daemon_state = "Video transmitter box"
+        t.daemon_state_label = "Video transmitter box"
     elseif(t.daemon_state == "vrb") then
-        t.daemon_state = "Video receiver box"
+        t.daemon_state_label = "Video receiver box"
     else
-        t.daemon_state = "none"
+        t.daemon_state_label = "none"
     end
     
     hdoip.html.Header(t, label.page_name .. label.page_status, script_path)
@@ -72,7 +71,7 @@ function show(t)
 
     hdoip.html.TableHeader(2)
     hdoip.html.Text("Operating mode");                                          hdoip.html.TableInsElement(1);
-    hdoip.html.Text(t.daemon_state);                                            hdoip.html.TableInsElement(1);
+    hdoip.html.Text(t.daemon_state_label);                                      hdoip.html.TableInsElement(1);
 
     hdoip.html.Text("Video sink");                                              hdoip.html.TableInsElement(1);
     hdoip.html.Text(t.vid_out);                                                 hdoip.html.TableInsElement(1);

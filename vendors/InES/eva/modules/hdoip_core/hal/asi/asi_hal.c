@@ -168,11 +168,8 @@ uint8_t asi_set_aud_cfg(void* p, uint8_t ch_cnt_l, uint8_t ch_cnt_r, uint8_t bit
     uint32_t reg_value = 0;
     
     reg_value = aud_bits_to_container(bits);
-    if(reg_value == 0) {
-        return 1; /* error: format unknown */
-    }
 
-    reg_value = reg_value | (ch_cnt_l & ASI_CNT_LEFT_MSK) | ((ch_cnt_r << 4) & ASI_CNT_RIGHT_MSK);
+    reg_value = ((reg_value << 8) & ASI_CONTAINER_MSK) | (ch_cnt_l & ASI_CNT_LEFT_MSK) | ((ch_cnt_r << 4) & ASI_CNT_RIGHT_MSK);
     HOI_WR32(p, ASI_OFF_AUD_INFO, reg_value);
 
     return 0;

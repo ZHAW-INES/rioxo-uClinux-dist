@@ -44,11 +44,10 @@ typedef struct {
     } \
 }
 
-int rscp_receive_body(t_rscp_connection* con, char* buf, size_t length);
-int rscp_receive(t_rscp_connection* con, char** line);
-void rscp_send(t_rscp_connection* con);
 void rscp_coninit(t_rscp_connection* m, int fd, uint32_t addr);
-void rscp_msginit(t_rscp_connection* m);
-int rscp_split(t_rscp_connection* con, t_rscp_connection* mux, t_rscp_connection* con2);
+int rscp_receive(t_rscp_connection* con, char** line, int timeout);
+void rscp_send(t_rscp_connection* con);
+void rscp_write(t_rscp_connection* con);
+int rscp_split(t_rscp_connection* con, t_rscp_connection* con1, t_rscp_connection* con2);
 
 #endif /* RSCP_CONNECTION_H_ */

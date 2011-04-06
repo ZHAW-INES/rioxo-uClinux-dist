@@ -49,10 +49,15 @@
 #define aso_get_dma_burst_size(p)           HOI_RD32((p), ASO_OFF_DMA_BURST_SIZE)
 #define aso_set_dma_fifo_almost_full(p, v)  HOI_WR32((p), ASO_OFF_DMA_FIFO_ALMOST_FULL, (v))
 #define aso_get_dma_fifo_almost_full(p)     HOI_RD32((p), ASO_OFF_DMA_FIFO_ALMOST_FULL)
-#define aso_set_clk_div_fast(p, v)          HOI_WR32((p), ASO_OFF_CLK_DIV_FAST, (v))
-#define aso_get_clk_div_fast(p)             HOI_RD32((p), ASO_OFF_CLK_DIV_FAST)
-#define aso_set_clk_div_slow(p, v)          HOI_WR32((p), ASO_OFF_CLK_DIV_SLOW, (v))
-#define aso_get_clk_div_slow(p)             HOI_RD32((p), ASO_OFF_CLK_DIV_SLOW)
+
+#define aso_set_clk_div_upper_bound(p, v)   HOI_WR32((p), ASO_OFF_CLK_DIV_UPPER_BOUND, (v))
+#define aso_get_clk_div_upper_bound(p)      HOI_RD32((p), ASO_OFF_CLK_DIV_UPPER_BOUND)
+#define aso_set_clk_div_lower_bound(p, v)   HOI_WR32((p), ASO_OFF_CLK_DIV_LOWER_BOUND, (v))
+#define aso_get_clk_div_lower_bound(p)      HOI_RD32((p), ASO_OFF_CLK_DIV_LOWER_BOUND)
+#define aso_set_clk_div_act(p, v)           HOI_WR32((p), ASO_OFF_CLK_DIV_ACT, (v))
+#define aso_get_clk_div_act(p)              HOI_RD32((p), ASO_OFF_CLK_DIV_ACT)
+#define aso_set_clk_div_inc(p, v)           HOI_WR32((p), ASO_OFF_CLK_DIV_INC, (v))
+#define aso_get_clk_div_inc(p)              HOI_RD32((p), ASO_OFF_CLK_DIV_INC)
 
 
 /* function prototypes */

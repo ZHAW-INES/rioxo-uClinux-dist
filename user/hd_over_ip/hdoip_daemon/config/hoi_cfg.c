@@ -48,7 +48,8 @@ int hoi_cfg_read(char* filename)
     char *line = 0, *key, *value;
     size_t len = 0;
 
-    report("read config file %s", filename);
+    report(INFO "read config file %s", filename);
+
     if (!(fd = fopen(filename, "r"))) {
         report("Could not open %s", filename);
         return -1;
@@ -73,15 +74,28 @@ int hoi_cfg_read(char* filename)
     return 0;
 }
 
+#define sysprintf(x, ...) \
+{ \
+    sprintf(x, __VA_ARGS__); \
+    reportn(CONT "%s", x); \
+    system(x); \
+    report(" [DONE]"); \
+}
+
 void hoi_cfg_system()
 {
     char tmp[256];
-    sprintf(tmp, "/sbin/ifconfig %s hw ether %s", reg_get("system-ifname"), reg_get("system-mac"));
-    system(tmp);
-    sprintf(tmp, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), reg_get("system-ip"), reg_get("system-subnet"));
-    system(tmp);
-    sprintf(tmp, "/sbin/route add default gw %s", reg_get("system-gateway"));
-    system(tmp);
-    system(reg_get("system-cmd"));
+
+    report(INFO "config system...");
+
+    hdoipd.eth_alive = reg_get_int("network-alive");
+    hdoipd.eth_timeout = reg_get_int("network-timeout");
+
+    sysprintf(tmp, "/sbin/ifconfig %s hw ether %s", reg_get("system-ifname"), reg_get("system-mac"));
+    sysprintf(tmp, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), reg_get("system-ip"), reg_get("system-subnet"));
+    sysprintf(tmp, "/sbin/route add default gw %s", reg_get("system-gateway"));
+    sysprintf(tmp, "%s", reg_get("system-cmd"));
+
+    report(INFO "config system done!");
 }
 

@@ -188,14 +188,19 @@ int main(int argc, char **argv)
     pthread_t* th = malloc(sizeof(pthread_t)* (argc-1));
 
     report_fd = stdout;
+    rscp_fd = stdout;
 
+#ifndef DBGCONSOLE
     if (!(report_fd = fopen("/tmp/hdoipd.log", "w"))) {
         return 0;
     }
+#endif
 
+#ifndef DBGCONSOLERSCP
     if (!(rscp_fd = fopen("/tmp/rscp.log", "w"))) {
         return 0;
     }
+#endif
 
     report("/tmp/hdoipd.log started");
 

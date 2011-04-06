@@ -11,6 +11,19 @@
 
 // local buffer
 static char buf[256];
+static uint32_t update_vector = 0;
+
+enum {
+	HOID_TSK_UPD_GOTO_READY		= 0x0001,
+	HOID_TSK_UPD_START			= 0x0002,
+	HOID_TSK_UPD_SYS_IP 		= 0x0001,
+	HOID_TSK_UPD_SYS_SUBNET 	= 0x0002,
+	HOID_TSK_UPD_SYS_GATEWAY 	= 0x0004,
+	HOID_TSK_UPD_SYS_MAC 		= 0x0008,
+	HOID_TSK_UPD_REMOTE_URI 	= 0x0010,
+	HOID_TSK_UPD_HELLO_URI 		= 0x0020,
+	HOID_TSK_UPD_MODE_START 	= 0x0040
+};
 
 void task_get_drivers(char** p)
 {
@@ -132,6 +145,22 @@ void task_get_vso_status(char** p)
     *p = buf;
 }
 
+void task_get_aso_status(char** p)
+{
+    t_hoi_msg_asoreg *stat;
+    char * tmp = buf;
+
+    hoi_drv_asoreg(&stat);
+
+    tmp += sprintf(buf, "config: 0x%08x, status: 0x%08x\n",stat->config, stat->status);
+    tmp += sprintf(tmp, " start = 0x%08x\n", stat->start);
+    tmp += sprintf(tmp, " stop  = 0x%08x\n", stat->stop);
+    tmp += sprintf(tmp, " read  = 0x%08x\n", stat->read);
+    tmp += sprintf(tmp, " write = 0x%08x\n", stat->write);
+
+    *p = buf;
+}
+
 void task_get_vio_status(char** p)
 {
     t_hoi_msg_viostat *stat;
@@ -175,6 +204,60 @@ void task_get_system_state(char** p)
     if (hdoipd.update) tmp += sprintf(tmp, "Device update pending. Restart box to continue");
 
     *p = buf;
+}
+
+void task_get_system_update(char** p)
+{
+/*	int tmp;
+
+	if(update_vector != 0) {
+
+		if(update_vector & HOID_TSK_UPD_SYS_IP) {
+			tmp = task_ready();
+
+			sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), reg_get("system-ip"), reg_get("system-subnet"));
+			system(buf);
+			task_restart(tmp);
+		}
+
+		if(update_vector & HOID_TSK_UPD_SYS_SUBNET) {
+			sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), reg_get("system-ip"), reg_get("system-subnet"));
+			system(buf);
+		}
+
+		if(update_vector & HOID_TSK_UPD_SYS_MAC) {
+			sprintf(buf, "/sbin/ifconfig %s hw ether %s", reg_get("system-ifname"), reg_get("system-mac"));
+			system(buf);
+		}
+
+		if(update_vector & HOID_TSK_UPD_SYS_GATEWAY) {
+			sprintf(buf, "/sbin/route add default gw %s", reg_get("system-gateway"));
+			system(buf);
+		}
+
+		if(update_vector & HOID_TSK_UPD_REMOTE_URI) {
+			if(hdoipd_state(HOID_VRB)) {
+				hdoipd_goto_ready();
+				hdoipd_goto_vrb();
+			}
+		}
+
+		if(update_vector & HOID_TSK_UPD_HELLO_URI) {
+			hdoipd_hello();
+		}
+
+		if(update_vector & HOID_TSK_UPD_MODE_START) {
+			hdoipd_goto_ready();
+			hdoipd_start();
+		}
+
+		update_vector = 0;
+		sprintf(buf, "System parameters updated\n");
+	} else {
+		sprintf(buf, "Nothing to update!");
+	}
+*/
+	*p = buf;
 }
 
 char* task_conv_rscp_state(int state)
@@ -235,7 +318,7 @@ void task_get_rscp_state(char** s)
 
     t_rscp_client* client;
     LIST_FOR(client, hdoipd.client) {
-        buf_ptr += sprintf(buf_ptr, "stream %02d {in} : %s (%s)\n",cnt++, task_conv_rscp_state(client->media->result), client->media->name);
+        buf_ptr += sprintf(buf_ptr, "stream %02d {in} : %s (%s)\n",client->nr, task_conv_rscp_state(client->media->result), client->media->name);
     }
 
     if(hdoipd.listener.sessions) {
@@ -247,17 +330,107 @@ void task_get_rscp_state(char** s)
     *s = buf;
 }
 
-void task_set_bw(char* s)
+int task_ready()
 {
-    int bw = atoi(s);
+    int state = hdoipd.state;
+    if (hdoipd_state(HOID_VRB|HOID_VTB)) {
+        hdoipd_goto_ready();
+    }
+    return state;
+}
+
+void task_restart(int state)
+{
+    switch (state) {
+        case HOID_VRB: hdoipd_goto_vrb(); break;
+        case HOID_VTB: hdoipd_goto_vtb(); break;
+    }
+}
+
+void task_set_bw(char* p)
+{
+    int bw = atoi(p);
     report("update bandwidth: %d Byte/s", bw);
     bw = bw - bw / 20; // 5% overhead approx.
     if (bw) hoi_drv_bw(bw);
 }
 
+void task_set_ip(char* p)
+{
+    int tmp = task_ready();
+
+	update_vector = HOID_TSK_UPD_SYS_IP;
+
+    // ip changed:
+    sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), p, reg_get("system-subnet"));
+    system(buf);
+    task_restart(tmp);
+}
+
+void task_set_subnet(char* p)
+{
+	update_vector = HOID_TSK_UPD_SYS_SUBNET;
+
+    // subnet changed:
+    sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), reg_get("system-ip"), p);
+    system(buf);
+}
+
+void task_set_gateway(char* p)
+{
+	update_vector = HOID_TSK_UPD_SYS_GATEWAY;
+
+    // gateway changed:
+    sprintf(buf, "/sbin/route add default gw %s", p);
+    system(buf);
+}
+
+void task_set_mac(char* p)
+{
+	update_vector = HOID_TSK_UPD_SYS_MAC;
+
+    // mac changed:
+    sprintf(buf, "/sbin/ifconfig %s hw ether %s", reg_get("system-ifname"), p);
+    system(buf);
+}
+
+void task_set_remote(char* p)
+{
+	update_vector = HOID_TSK_UPD_REMOTE_URI;
+
+    if (hdoipd_state(HOID_VRB)) {
+        hdoipd_goto_ready();
+        hdoipd_goto_vrb();
+    }
+}
+
+void task_set_hello(char* p)
+{
+	update_vector = HOID_TSK_UPD_HELLO_URI;
+
+    hdoipd_hello();
+}
+
+void task_set_mode_start(char* p)
+{
+	update_vector = HOID_TSK_UPD_MODE_START;
+
+    hdoipd_goto_ready();
+    hdoipd_start();
+}
+
+void task_set_mode_media(char* p)
+{
+    if (hdoipd_state(HOID_VRB)) {
+        hdoipd_goto_ready();
+        hdoipd_start();
+    }
+}
+
 void hdoipd_register_task()
 {
     get_listener("system-state", task_get_system_state);
+    get_listener("system-update", task_get_system_update);
     get_listener("daemon-driver", task_get_drivers);
     get_listener("daemon-state", task_get_state);
     get_listener("daemon-vtb-state", task_get_vtb_state);
@@ -266,10 +439,21 @@ void hdoipd_register_task()
     get_listener("eth-status", task_get_eth_status);
     get_listener("vso-status", task_get_vso_status);
     get_listener("vio-status", task_get_vio_status);
+    get_listener("aso-status", task_get_aso_status);
     get_listener("sync-delay", task_get_sync_delay);
     get_listener("stream-state", task_get_rscp_state);
 
+    // set-listener are called when a new value is written to the register
+    // if the same value is written as already stored the listener isn't called
     set_listener("bandwidth", task_set_bw);
+    set_listener("system-ip", task_set_ip);
+    set_listener("system-subnet", task_set_subnet);
+    set_listener("system-gateway", task_set_gateway);
+    set_listener("system-mac", task_set_mac);
+    set_listener("mode-start", task_set_mode_start);
+    set_listener("mode-media", task_set_mode_media);
+    set_listener("remote-uri", task_set_remote);
+    set_listener("hello-uri", task_set_hello);
 }
 
 

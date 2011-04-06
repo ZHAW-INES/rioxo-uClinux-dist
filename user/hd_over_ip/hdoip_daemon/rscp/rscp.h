@@ -104,6 +104,7 @@ typedef struct {
 typedef struct {
     uint32_t            compress;
     uint32_t            value;
+    uint32_t            value2;
     uint32_t            rtptime;
 } t_rscp_rtp_format;
 
