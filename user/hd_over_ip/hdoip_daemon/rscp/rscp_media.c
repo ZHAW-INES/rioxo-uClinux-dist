@@ -154,7 +154,10 @@ int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
     if (media->update) ret = media->update(media, msg, rsp);
-    if (ret) media->state = RSCP_READY;
+    switch (ret) {
+    	case RSCP_PAUSE: media->state = RSCP_READY; ret = RSCP_SUCCESS; break;
+    	case RSCP_CLOSE: media->state = RSCP_INIT; ret = RSCP_SUCCESS; break;
+    }
     return ret;
 }
 
@@ -201,7 +204,10 @@ int rmcq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
     if (media->update) ret = media->update(media, msg, rsp);
-    if (ret) media->state = RSCP_READY;
+    switch (ret) {
+    	case RSCP_PAUSE: media->state = RSCP_READY; ret = RSCP_SUCCESS; break;
+    	case RSCP_CLOSE: media->state = RSCP_INIT; ret = RSCP_SUCCESS; break;
+    }
     return ret;
 }
 
@@ -298,19 +304,9 @@ int rmcr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 // state manipulation (local)
 
 
-int rscp_media_force_ready(t_rscp_media* media)
-{
-    if (media->state == RSCP_PLAYING) {
-        media->state = RSCP_READY;
-    }
-    return RSCP_SUCCESS;
-}
 
-int rscp_media_force_init(t_rscp_media* media)
-{
-    media->state = RSCP_INIT;
-    return RSCP_SUCCESS;
-}
+///////////////////////////////////////////////////////////////////////////////
+// state manipulation (local)
 
 int rscp_media_ready(t_rscp_media* media)
 {
@@ -343,7 +339,13 @@ int rscp_media_event(t_rscp_media* media, uint32_t event)
 {
     int ret = RSCP_NULL_POINTER;
     if (media) {
-        if (media->event) ret = media->event(media, event);
+    	if (media->state != RSCP_INIT) {
+			if (media->event) ret = media->event(media, event);
+			switch (ret) {
+				case RSCP_PAUSE: media->state = RSCP_READY; ret = RSCP_SUCCESS; break;
+				case RSCP_CLOSE: media->state = RSCP_INIT; ret = RSCP_SUCCESS; break;
+			}
+    	}
     }
     return ret;
 }

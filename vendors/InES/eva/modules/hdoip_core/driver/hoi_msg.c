@@ -142,6 +142,18 @@ int hoi_drv_msg_vsostat(t_hoi* handle, t_hoi_msg_vsostat* msg)
     return SUCCESS;
 }
 
+int hoi_drv_msg_asoreg(t_hoi* handle, t_hoi_msg_asoreg* msg)
+{
+    msg->config = aso_get_ctrl(handle->p_aso, 0xFFFFFFFF);
+    msg->status = aso_get_status(handle->p_aso, 0xFFFFFFFF);
+    msg->start = eti_get_aud_start_desc(handle->p_esi);
+    msg->stop = eti_get_aud_stop_desc(handle->p_esi);
+    msg->read = eti_get_aud_read_desc(handle->p_esi);
+    msg->write = eti_get_aud_write_desc(handle->p_esi);
+
+    return SUCCESS;
+}
+
 
 int hoi_drv_msg_viostat(t_hoi* handle, t_hoi_msg_viostat* msg)
 {
@@ -629,6 +641,8 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_ETHSTAT,   hoi_drv_msg_ethstat);
         call(HOI_MSG_VSOSTAT,   hoi_drv_msg_vsostat);
         call(HOI_MSG_VIOSTAT,   hoi_drv_msg_viostat);
+        call(HOI_MSG_ASOREG,    hoi_drv_msg_asoreg);
+
 
         call(HOI_MSG_GETVERSION,hoi_drv_msg_getversion);
 

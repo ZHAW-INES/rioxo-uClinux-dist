@@ -6,7 +6,7 @@ static t_adv7441a *adv7441a_handle; /* needed for adv7441a_proc_video_in() */
 const __u32 adv7441a_audio_fs_conv[] = {44100, 0 ,48000, 32000, 0, 0, 0, 0, 88200, 0, 96000, 0, 176000, 0, 192000};
 const __u32 adv7441a_audio_bit_conv[2][7] = {{0, 16, 18, 0, 19, 20, 17},{0, 20, 22, 0, 23, 24, 21}};
 
-/** Executes a software reset 
+/** Executes a software reset
  *
  * @param handle pointer to the adv7441a handle
  * @return error code

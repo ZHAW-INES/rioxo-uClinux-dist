@@ -48,7 +48,11 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
             0, hdoipd.local.aud_port);
 #endif
 
-    hdoipd_set_tstate(VTB_AUD_IDLE);
+    hdoipd_set_vtb_state(VTB_AUD_IDLE);
+
+    media->result = RSCP_RESULT_READY;
+    vrb.alive_ping = 1;
+    vrb.timeout = 0;
 
     media->result = RSCP_RESULT_READY;
     vrb.alive_ping = 1;
@@ -84,7 +88,7 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     report(INFO "audio streaming started(fs = %d Hz, bitwidth = %d Bit, channels = %d)", m->format.value, m->format.compress, m->format.value2);
 #endif
 
-    hdoipd_set_tstate(VTB_AUDIO);
+    hdoipd_set_vtb_state(VTB_AUDIO);
     hdoipd_set_rsc(RSC_AUDIO_OUT);
 
     struct in_addr a1; a1.s_addr = vrb.remote.address;
@@ -104,7 +108,7 @@ int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown *m, t_rscp_conne
         hdoipd_hw_reset(DRV_RST_AUD_OUT);
 #endif
         hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
-        hdoipd_set_tstate(VTB_AUD_OFF);
+        hdoipd_set_vtb_state(VTB_AUD_OFF);
     }
 
     if (rsp) {
@@ -157,11 +161,8 @@ void vrb_audio_pause(t_rscp_media *media)
                 0, hdoipd.local.aud_port);
 #endif
         hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
-        hdoipd_set_tstate(VTB_AUD_IDLE);
+        hdoipd_set_vtb_state(VTB_AUD_IDLE);
     }
-
-    // goto ready without further communication
-    rscp_media_force_ready(media);
 }
 
 
@@ -184,12 +185,16 @@ int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
             unlock("vrb_audio_update");
                 hdoipd_launch(hdoipd_start_vrb, media, 250, 3, 1000);
             lock("vrb_audio_update");
+
+            return RSCP_PAUSE;
         break;
 
         case EVENT_AUDIO_IN0_OFF:
             vrb_audio_pause(media);
             osd_printf("vtb.audio stoped streaming...\n");
             report(ERROR "vtb.audio stoped streaming");
+
+            return RSCP_PAUSE;
         break;
     }
 

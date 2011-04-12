@@ -23,6 +23,7 @@
 
 typedef void (f_task)(void* value);
 
+// state of box
 enum {
     HOID_IDLE = 0x01,           // No drivers loaded
     HOID_READY = 0x02,          // Ready for operation
@@ -32,20 +33,22 @@ enum {
     HOID_VTB = 0x20             // Configure as VTB (video in -> ethernet)
 };
 
+// upstream state for video and audio
 enum {
-    VTB_OFF         = 0x01,
-    VTB_VID_IDLE    = 0x02,
-    VTB_AUD_IDLE    = 0x04,
-    VTB_VIDEO       = 0x08,         // streaming video only
-    VTB_AUDIO       = 0x10,         // streaming audio only
-    VTB_VID_OFF     = 0x20,
-    VTB_AUD_OFF     = 0x40,
+    VTB_OFF         = 0x01,			// no upstream
+    VTB_VID_IDLE    = 0x02,			// video configured but not active
+    VTB_AUD_IDLE    = 0x04,			// audio configured but not active
+    VTB_VIDEO       = 0x08,         // video active
+    VTB_AUDIO       = 0x10,         // audio active
+    VTB_VID_OFF     = 0x20,			// goto video off (remove idle & active bit)
+    VTB_AUD_OFF     = 0x40,			// goto audio off (remove idle & active bit)
     VTB_VID_MASK    = 0x2a,
     VTB_AUD_MASK    = 0x54,
     VTB_VALID       = 0x1f,
     VTB_ACTIVE      = 0x1e
 };
 
+// downstream state for audio backchannel
 enum {
     VRB_OFF         = 0x01,
     VRB_IDLE        = 0x02,         // not streaming
@@ -88,12 +91,6 @@ enum {
     EVENT_TICK          = 0x10000000    // a tick event
 };
 
-enum {
-    UPDATE_NETWORK  = 0x0001,
-    UPDATE_SOF      = 0x0002,
-    UPDATE_FIRMWARE = 0x0004
-};
-
 typedef struct {
     uint32_t            address;        // remote ip address
     uint8_t             mac[6];         // mac address
@@ -131,8 +128,8 @@ typedef struct {
     uint64_t            tick;
     int                 eth_alive;
     int                 eth_timeout;
-    int					hdcp_hdmi_forced;
-    int					hdcp_extern_forced;
+    int			hdcp_hdmi_forced;
+    int			hdcp_extern_forced;
 } t_hdoipd;
 
 

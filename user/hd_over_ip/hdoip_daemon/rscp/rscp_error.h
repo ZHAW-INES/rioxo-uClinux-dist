@@ -12,6 +12,7 @@ typedef enum {
     RSCP_ERRORNO =-1,           //!< general system error -> see errorno
     RSCP_SUCCESS = 0,
     RSCP_CLOSE = 1,
+    RSCP_PAUSE,
     RSCP_CLIENT_ERROR,
     RSCP_SERVER_ERROR,
     RSCP_PARSE_ERROR,

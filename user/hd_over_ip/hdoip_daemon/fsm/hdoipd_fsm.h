@@ -22,8 +22,8 @@ const char* vrbstatestr(int state);
 bool hdoipd_set_rsc(int state);
 bool hdoipd_clr_rsc(int state);
 bool hdoipd_set_state(int state);
-bool hdoipd_set_tstate(int vtb_state);
-bool hdoipd_set_rstate(int vrb_state);
+bool hdoipd_set_vtb_state(int vtb_state);
+bool hdoipd_set_vrb_state(int vrb_state);
 void hdoipd_hw_reset(int rv);
 
 bool hdoipd_goto_ready();

@@ -212,7 +212,7 @@ int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt)
     int n;
     u_rscp_header buf;
 
-    report(" > RSCP Client [%d] PLAY", client->nr);
+    report(" > RSCP Client [%s %d] PLAY", client->media->name, client->nr);
 
     rscp_request_play(&client->con, client->uri, client->media->sessionid, fmt);
 
@@ -235,7 +235,7 @@ int rscp_client_teardown(t_rscp_client* client)
 {
     u_rscp_header buf;
 
-    report(" > RSCP Client [%d] TEARDOWN", client->nr);
+    report(" > RSCP Client [%s %d] TEARDOWN", client->media->name, client->nr);
 
     // request teardown
     rscp_request_teardown(&client->con, client->uri, client->media->sessionid);
@@ -266,7 +266,7 @@ int rscp_client_kill(t_rscp_client* client)
 int rscp_client_update(t_rscp_client* client, uint32_t event)
 {
 #ifdef REPORT_RSCP
-    report(" > RSCP Client [%d] UPDATE", client->nr);
+    report(" > RSCP Client [%s %d] UPDATE", client->media->name, client->nr);
 #endif
 
     rscp_request_update(&client->con, client->uri, client->media->sessionid, event);

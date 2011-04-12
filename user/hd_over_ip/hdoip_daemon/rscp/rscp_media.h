@@ -96,8 +96,6 @@ int rscp_media_ready(t_rscp_media* media);
 int rscp_media_setup(t_rscp_media* media);
 int rscp_media_play(t_rscp_media* media);
 int rscp_media_event(t_rscp_media* media, uint32_t event);
-int rscp_media_force_ready(t_rscp_media* media);
-int rscp_media_force_init(t_rscp_media* media);
 
 static inline bool rscp_media_sinit(t_rscp_media* media)
 {

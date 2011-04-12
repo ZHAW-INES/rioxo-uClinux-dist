@@ -114,7 +114,7 @@ bool hdoipd_set_state(int state)
     return true;
 }
 
-bool hdoipd_set_tstate(int vtb_state)
+bool hdoipd_set_vtb_state(int vtb_state)
 {
     if (hdoipd_state(HOID_VTB|HOID_VRB)) {
         if (vtb_state & VTB_VID_MASK) hdoipd.vtb_state = (hdoipd.vtb_state & ~VTB_VID_MASK) | vtb_state;
@@ -129,7 +129,7 @@ bool hdoipd_set_tstate(int vtb_state)
     return true;
 }
 
-bool hdoipd_set_rstate(int vrb_state)
+bool hdoipd_set_vrb_state(int vrb_state)
 {
     if (hdoipd_state(HOID_VTB|HOID_VRB)) {
         if (vrb_state & VRB_AUD_MASK) hdoipd.vrb_state = (hdoipd.vrb_state & ~VRB_AUD_MASK) | vrb_state;

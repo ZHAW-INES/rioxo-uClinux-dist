@@ -82,7 +82,7 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
             hdoipd.local.vid_port, 0);
 #endif
 
-    hdoipd_set_tstate(VTB_VID_IDLE);
+    hdoipd_set_vtb_state(VTB_VID_IDLE);
 
     media->result = RSCP_RESULT_READY;
     vrb.alive_ping = 1;
@@ -120,7 +120,7 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     hoi_drv_vso(compress, 0, &m->timing, m->format.value, reg_get_int("network-delay"));
 #endif
 
-    hdoipd_set_tstate(VTB_VIDEO);
+    hdoipd_set_vtb_state(VTB_VIDEO);
     hdoipd_set_rsc(RSC_VIDEO_OUT);
 
     struct in_addr a1; a1.s_addr = vrb.remote.address;
@@ -140,7 +140,7 @@ int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rsc
         hdoipd_hw_reset(DRV_RST_VID_OUT);
 #endif
         hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
-        hdoipd_set_tstate(VTB_VID_OFF);
+        hdoipd_set_vtb_state(VTB_VID_OFF);
     }
 
     if (rsp) {
@@ -193,11 +193,10 @@ void vrb_video_pause(t_rscp_media *media)
                 hdoipd.local.vid_port, 0);
 #endif
         hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
-        hdoipd_set_tstate(VTB_VID_IDLE);
-    }
 
-    // goto ready without further communication
-    rscp_media_force_ready(media);
+        hdoipd_set_vtb_state(VTB_VID_IDLE);
+
+    }
 }
 
 int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
@@ -219,6 +218,7 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
             unlock("vrb_video_update");
                 hdoipd_launch(hdoipd_start_vrb, media, 250, 3, 1000);
             lock("vrb_video_update");
+            return RSCP_PAUSE;
         break;
 
         case EVENT_VIDEO_IN_OFF:
@@ -226,6 +226,8 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
             osd_permanent(true);
             osd_printf("vtb.video stoped streaming...\n");
             report(ERROR "vtb.video stoped streaming");
+
+            return RSCP_PAUSE;
         break;
     }
 

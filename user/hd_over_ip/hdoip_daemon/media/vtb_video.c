@@ -88,7 +88,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     }
     
     // reserve resource
-    hdoipd_set_tstate(VTB_VID_IDLE);
+    hdoipd_set_vtb_state(VTB_VID_IDLE);
 
     vtb.timeout = 0;
     vtb.alive_ping = 1;
@@ -216,7 +216,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
 #endif
 
     // We are streaming Video now...
-    hdoipd_set_tstate(VTB_VIDEO);
+    hdoipd_set_vtb_state(VTB_VIDEO);
 
     return RSCP_SUCCESS;
 }
@@ -231,7 +231,7 @@ int vtb_video_teardown(t_rscp_media* media, t_rscp_req_teardown *m, t_rscp_conne
 #ifdef VID_IN_PATH
         hdoipd_hw_reset(DRV_RST_VID_IN);
 #endif
-        hdoipd_set_tstate(VTB_VID_OFF);
+        hdoipd_set_vtb_state(VTB_VID_OFF);
     }
 
     if (rsp) {
@@ -254,11 +254,8 @@ void vtb_video_pause(t_rscp_media *media)
 #ifdef VID_IN_PATH
         hdoipd_hw_reset(DRV_RST_VID_IN);
 #endif
-        hdoipd_set_tstate(VTB_VID_IDLE);
+        hdoipd_set_vtb_state(VTB_VID_IDLE);
     }
-
-    // goto ready without further communication
-    rscp_media_force_ready(media);
 }
 
 int vtb_video_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
@@ -282,12 +279,14 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
                 rscp_server_update(media, EVENT_VIDEO_IN_OFF);
             }
             rscp_server_update(media, EVENT_VIDEO_IN_ON);
+            return RSCP_PAUSE;
         break;
         case EVENT_VIDEO_IN_OFF:
             if (rscp_media_splaying(media)) {
                 vtb_video_pause(media);
                 rscp_server_update(media, EVENT_VIDEO_IN_OFF);
             }
+            return RSCP_PAUSE;
         break;
         case EVENT_TICK:
             if (vtb.alive_ping) {

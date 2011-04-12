@@ -111,6 +111,7 @@ int hoi_drv_info_all(t_hoi_msg_info** nfo)
 HOI_GET_STAT(vsostat);
 HOI_GET_STAT(ethstat);
 HOI_GET_STAT(viostat);
+HOI_GET_STAT(asoreg);
 
 
 //------------------------------------------------------------------------------

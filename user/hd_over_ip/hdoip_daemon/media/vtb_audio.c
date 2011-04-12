@@ -66,12 +66,13 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     }
 
     // reserve resource
-    hdoipd_set_tstate(VTB_AUD_IDLE);
+    hdoipd_set_vtb_state(VTB_AUD_IDLE);
 
     vtb.remote.address = rsp->address;
     vtb.remote.aud_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.aud_port, hdoipd.local.aud_port);
     rscp_response_setup(rsp, &m->transport, media->sessionid, &m->hdcp);
+
 
     REPORT_RTX("TX", hdoipd.local, "->", vtb.remote, aud);
 
@@ -153,7 +154,7 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
 #endif
 
     // We are streaming Audio now...
-    hdoipd_set_tstate(VTB_AUDIO);
+    hdoipd_set_vtb_state(VTB_AUDIO);
 
     return RSCP_SUCCESS;
 }
@@ -168,7 +169,7 @@ int vtb_audio_teardown(t_rscp_media* media, t_rscp_req_teardown *m, t_rscp_conne
 #ifdef AUD_IN_PATH
         hdoipd_hw_reset(DRV_RST_AUD_IN);
 #endif
-        hdoipd_set_tstate(VTB_AUD_OFF);
+        hdoipd_set_vtb_state(VTB_AUD_OFF);
     }
 
     if (rsp) {
@@ -191,11 +192,21 @@ void vtb_audio_pause(t_rscp_media *media)
 #ifdef AUD_IN_PATH
         hdoipd_hw_reset(DRV_RST_AUD_IN);
 #endif
-        hdoipd_set_tstate(VTB_AUD_IDLE);
+        hdoipd_set_vtb_state(VTB_AUD_IDLE);
+    }
+}
+
+
+int vtb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
+{
+    switch (m->event) {
+        case EVENT_TICK:
+            // reset timeout
+            vtb.timeout = 0;
+        break;
     }
 
-    // goto ready without further communication
-    rscp_media_force_ready(media);
+    return RSCP_SUCCESS;
 }
 
 
@@ -221,11 +232,33 @@ int vtb_audio_event(t_rscp_media *media, uint32_t event)
                 rscp_server_update(media, EVENT_AUDIO_IN0_OFF);
             }
             rscp_server_update(media, EVENT_AUDIO_IN0_ON);
+            return RSCP_PAUSE;
         break;
         case EVENT_AUDIO_IN0_OFF:
             if (rscp_media_splaying(media)) {
                 vtb_audio_pause(media);
                 rscp_server_update(media, EVENT_AUDIO_IN0_OFF);
+            }
+            return RSCP_PAUSE;
+        break;
+        case EVENT_TICK:
+            if (vtb.alive_ping) {
+                vtb.alive_ping--;
+            } else {
+                vtb.alive_ping = TICK_SEND_ALIVE;
+                // send tick we are alive (until something like rtcp is used)
+                rscp_server_update(media, EVENT_TICK);
+            }
+
+            if (vtb.timeout <= TICK_TIMEOUT) {
+                vtb.timeout++;
+            } else {
+                report(INFO "vtb_audio_event: timeout");
+                // timeout -> kill connection
+                // server cannot kill itself -> add to kill list
+                // (will be executed after all events are processed)
+                vtb.timeout = 0;
+                rscp_listener_add_kill(&hdoipd.listener, media);
             }
         break;
         case EVENT_TICK:

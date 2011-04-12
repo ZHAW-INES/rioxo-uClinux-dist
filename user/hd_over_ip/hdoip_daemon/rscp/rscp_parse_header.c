@@ -193,17 +193,6 @@ int rscp_parse_edid(char* line, t_rscp_edid *edid)
 
 int rscp_parse_hdcp(char* line, t_rscp_hdcp *hdcp)
 {
-	//printf("line!!: %s\n",line);
-	/*char* token;
-    next(token, line);
-    //printf("token0: %s\n",token);
-    hdcp->hdcp_on = (uint32_t)str_hdcp(token);
-    next(token, line);
-    //printf("token1: %s\n",token);
-    hdcp->port_nr = (uint32_t)str_hdcp(token);
-    printf("Status: %i\n",hdcp->hdcp_on);
-    printf("PortNr: %i\n",hdcp->port_nr);*/
-
 	int a, b;
 	char* token;
 	next(token, line);
@@ -219,27 +208,6 @@ int rscp_parse_hdcp(char* line, t_rscp_hdcp *hdcp)
 	 hdcp->port_nr = b;
 	 //TODO: set port to global variable
 	 hdoipd.hdcp_extern_forced=a;
-
-
-    /*char *hdcp_stat;
-    hdcp_stat = strchr(token,"=");
-    hdcp_stat++;
-    printf("TK: %s",*hdcp_stat);
-    hdcp->hdcp_on = atoi(*hdcp_stat);
-    printf("token2: %08x\n",hdcp->hdcp_on);
-
-    while (*(token = str_next_token(&line, ";%0"))) {
-    	printf("token: %s\n",token);
-        // port
-        if (str_starts_with(&token, "HDCP-Status=")) hdcp->hdcp_on = atoi(token);
-        if (str_starts_with(&token, "HDCP-Port=")) hdcp->port_nr = atoi(token);
-    }
-    printf("HDCP-Status: %08x\n", hdcp->hdcp_on);
-    printf("HDCP-Port:   %08x\n", hdcp->port_nr);
-
-    //hdcp->hdcp_on = atoi(token);
-    //nextsp(token, line);
-    //hdcp->port_nr = atoi(token);*/
 
     return RSCP_SUCCESS;
 }
