@@ -11,23 +11,23 @@
 #include "bstmap.h"
 #include "debug.h"
 
+typedef struct {
+    void (*f)(char*, char*, void*);
+    int (*c)(char*, char*, void*);
+    void *d, *cd;
+} t_kvd;
+
+
 int cmp(t_keyvalue* a, t_keyvalue* b)
 {
     return strcmp(a->key, b->key);
 }
 
-int bstmap_free_node(t_keyvalue* kv, void UNUSED *d)
-{
-    free(kv);
-    return 1;
-}
 
-void bstmap_freep(t_bstmap** root)
-{
-    bst_free(root, (bstc*)bstmap_free_node, 0);
-    *root = 0;
-}
-
+/** Stores copy of Key/Value in MAP (String)
+ *
+ * @return the old Key/Value pair if available with the same Key
+ */
 t_keyvalue* bstmap_add(t_bstmap** root, char* key, char* value)
 {
     t_keyvalue* ret = 0;
@@ -61,6 +61,9 @@ t_keyvalue* bstmap_add(t_bstmap** root, char* key, char* value)
     return ret;
 }
 
+/** Replace or Add a new Key/Value pair (String)
+ *
+ */
 void bstmap_set(t_bstmap** root, char* key, char* value)
 {
     t_keyvalue *ret = bstmap_add(root, key, value);
@@ -72,6 +75,9 @@ void bstmap_set(t_bstmap** root, char* key, char* value)
     }
 }
 
+/** Get Value based on Key (String)
+ *
+ */
 char* bstmap_get(t_bstmap* root, char* key)
 {
     t_keyvalue kv, *p;
@@ -84,21 +90,10 @@ char* bstmap_get(t_bstmap* root, char* key)
     return p->value;
 }
 
-char* bstmap_removep(t_bstmap** root, char* key)
-{
-    t_keyvalue kv, *p;
-    kv.key = key;
 
-    p = bst_remove(root, &kv, (bstc*)cmp);
-
-    if (!p) return 0;
-
-    char* ret = p->value;
-    free(p);
-
-    return ret;
-}
-
+/** Remove Key/Value pair (String)
+ *
+ */
 void bstmap_remove(t_bstmap** root, char* key)
 {
     t_keyvalue kv, *ret;
@@ -113,19 +108,12 @@ void bstmap_remove(t_bstmap** root, char* key)
     }
 }
 
-void bstmap_print(t_bstmap* root, int n)
-{
-    if (!root) {
-        return;
-    }
+// Pointer version
 
-    bstmap_print(root->left, n + 1);
-    for (int m=n;m;m--) printf("        ");
-    printf("(%d)> %s: %s\n", root->depth, ((t_keyvalue*)root->elem)->key, ((t_keyvalue*)root->elem)->value);
-    bstmap_print(root->right, n + 1);
 
-}
-
+/** Replace or Add a new Key/Value pair (Pointer)
+ *
+ */
 void bstmap_setp(t_bstmap** root, char* key, void* value)
 {
     t_keyvalue* ret = 0;
@@ -147,41 +135,77 @@ void bstmap_setp(t_bstmap** root, char* key, void* value)
     }
 }
 
-typedef struct {
-    void (*f)(char*, char*, void*);
-    int (*c)(char*, char*, void*);
-    void *d, *cd;
-} t_kvd;
 
-static void callback_cond(t_keyvalue* elem, t_kvd* kvd)
+/** Remove Key/Value pair (Pointer)
+ *
+ */
+char* bstmap_removep(t_bstmap** root, char* key)
 {
-    if (kvd->c(elem->key, elem->value, kvd->cd))
-        kvd->f(elem->key, elem->value, kvd->d);
+    t_keyvalue kv, *p;
+    kv.key = key;
+
+    p = bst_remove(root, &kv, (bstc*)cmp);
+
+    if (!p) return 0;
+
+    char* ret = p->value;
+    free(p);
+
+    return ret;
 }
+
+// Callback
 
 static void callback(t_keyvalue* elem, t_kvd* kvd)
 {
     kvd->f(elem->key, elem->value, kvd->d);
 }
 
-static int callback_cond_free(t_keyvalue* elem, t_kvd* kvd)
+static void callback_traverse_cond(t_keyvalue* elem, t_kvd* kvd)
 {
-    int ret = 0;
-    if (kvd->c(elem->key, elem->value, kvd->cd)) {
-        kvd->f(elem->key, elem->value, kvd->d);
-        free(elem);
-        ret = 1;
-    }
-    return ret;
+    if (kvd->c)
+        if (kvd->c(elem->key, elem->value, kvd->cd))
+            if (kvd->f) kvd->f(elem->key, elem->value, kvd->d);
 }
 
-static int callback_free(t_keyvalue* elem, t_kvd* kvd)
+static int callback_traverse_freep(t_keyvalue* elem, t_kvd* kvd)
 {
-    kvd->f(elem->key, elem->value, kvd->d);
+    if (kvd->f) kvd->f(elem->key, elem->value, kvd->d);
     free(elem);
     return 1;
 }
 
+static int callback_traverse_cond_freep(t_keyvalue* elem, t_kvd* kvd)
+{
+    int ret = 0;
+    if (kvd->c)
+        if (kvd->c(elem->key, elem->value, kvd->cd)) {
+            if (kvd->f) kvd->f(elem->key, elem->value, kvd->d);
+            free(elem);
+            ret = 1;
+        }
+    return ret;
+}
+
+static int callback_freep(t_keyvalue* kv, void UNUSED *d)
+{
+    free(kv);
+    return 1;
+}
+
+
+/** Free complete map (Pointer)
+ *
+ */
+void bstmap_freep(t_bstmap** root)
+{
+    bst_free(root, (bstc*)callback_freep, 0);
+    *root = 0;
+}
+
+/** Traverse and callback (Pointer & String)
+ *
+ */
 void bstmap_traverse(t_bstmap* root, void (*f)(char*, char*, void*), void* d)
 {
     t_kvd kvd;
@@ -190,14 +214,20 @@ void bstmap_traverse(t_bstmap* root, void (*f)(char*, char*, void*), void* d)
     bst_traverse(root, (bstt*)callback, &kvd);
 }
 
-void bstmap_traverse_free(t_bstmap** root, void (*f)(char*, char*, void*), void* d)
+/** Traverse and callback and then free (Pointer)
+ *
+ */
+void bstmap_traverse_freep(t_bstmap** root, void (*f)(char*, char*, void*), void* d)
 {
     t_kvd kvd;
     kvd.f = f;
     kvd.d = d;
-    bst_free(root, callback_free, &kvd);
+    bst_free(root, (bstc*)callback_traverse_freep, &kvd);
 }
 
+/** Traverse and callback under condition (String & Pointer)
+ *
+ */
 void bstmap_ctraverse(t_bstmap* root, int (*c)(char*, char*, void*), void* cd, void (*f)(char*, char*, void*), void* d)
 {
     t_kvd kvd;
@@ -205,15 +235,18 @@ void bstmap_ctraverse(t_bstmap* root, int (*c)(char*, char*, void*), void* cd, v
     kvd.d = d;
     kvd.c = c;
     kvd.cd = cd;
-    bst_traverse(root, (bstt*)callback_cond, &kvd);
+    bst_traverse(root, (bstt*)callback_traverse_cond, &kvd);
 }
 
-void bstmap_ctraverse_free(t_bstmap** root, int (*c)(char*, char*, void*), void* cd, void (*f)(char*, char*, void*), void* d)
+/** Traverse and (callback and then free) under condition (Pointer)
+ *
+ */
+void bstmap_ctraverse_freep(t_bstmap** root, int (*c)(char*, char*, void*), void* cd, void (*f)(char*, char*, void*), void* d)
 {
     t_kvd kvd;
     kvd.f = f;
     kvd.d = d;
     kvd.c = c;
     kvd.cd = cd;
-    bst_free(root, callback_cond_free, &kvd);
+    bst_free(root, (bstc*)callback_traverse_cond_freep, &kvd);
 }

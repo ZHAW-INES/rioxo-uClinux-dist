@@ -20,10 +20,6 @@ uint8_t aso_set_aud_cfg(void* p, uint8_t ch_cnt_l, uint8_t ch_cnt_r, uint8_t bit
 {
     uint32_t container = aud_bits_to_container(bits);
 
-    if(container == 0) {
-        return 1;
-    }
-
     HOI_WR32(p, ASO_OFF_CH_CNT_LEFT, ch_cnt_l);    
     HOI_WR32(p, ASO_OFF_CH_CNT_RIGHT, ch_cnt_r);   
     HOI_WR32(p, ASO_OFF_CONTAINER, container); 

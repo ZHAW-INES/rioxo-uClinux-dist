@@ -242,6 +242,7 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
+    uint32_t            cfg;
     uint32_t            delay_ms;       //!< (wr) audio delay
     uint32_t            fs;             //!< (wr) sampel frequency in Hz
     uint32_t            fs_tol;         //!< (wr) frequency tolerance (fs +/- fs_tol)
@@ -333,6 +334,7 @@ typedef struct {
     uint32_t            advcnt;
     uint32_t            audio_fs[2];    //!< audio sampling frequency [HZ] (0=off)
     uint32_t            audio_width[2]; //!< audio sample width [bit]
+    uint32_t            audio_cnt[2];   //!< number of active channels
     uint32_t            audio_map;      //!< bitmap for active audio channels
 } __attribute__ ((__packed__)) t_hoi_msg_info;
 

@@ -235,7 +235,7 @@ void task_get_rscp_state(char** s)
 
     t_rscp_client* client;
     LIST_FOR(client, hdoipd.client) {
-        buf_ptr += sprintf(buf_ptr, "stream %02d {in} : %s (%s)\n",cnt++, task_conv_rscp_state(client->media->result), client->media->name);
+        buf_ptr += sprintf(buf_ptr, "stream %02d {in} : %s (%s)\n",client->nr, task_conv_rscp_state(client->media->result), client->media->name);
     }
 
     if(hdoipd.listener.sessions) {
@@ -247,12 +247,86 @@ void task_get_rscp_state(char** s)
     *s = buf;
 }
 
-void task_set_bw(char* s)
+int task_ready()
 {
-    int bw = atoi(s);
+    int state = hdoipd.state;
+    if (hdoipd_state(HOID_VRB|HOID_VTB)) {
+        hdoipd_goto_ready();
+    }
+    return state;
+}
+
+void task_restart(int state)
+{
+    switch (state) {
+        case HOID_VRB: hdoipd_goto_vrb(); break;
+        case HOID_VTB: hdoipd_goto_vtb(); break;
+    }
+}
+
+void task_set_bw(char* p)
+{
+    int bw = atoi(p);
     report("update bandwidth: %d Byte/s", bw);
     bw = bw - bw / 20; // 5% overhead approx.
     if (bw) hoi_drv_bw(bw);
+}
+
+void task_set_ip(char* p)
+{
+    int tmp = task_ready();
+    // ip changed:
+    sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), p, reg_get("system-subnet"));
+    system(buf);
+    task_restart(tmp);
+}
+
+void task_set_subnet(char* p)
+{
+    // subnet changed:
+    sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), reg_get("system-ip"), p);
+    system(buf);
+}
+
+void task_set_gateway(char* p)
+{
+    // gateway changed:
+    sprintf(buf, "/sbin/route add default gw %s", p);
+    system(buf);
+}
+
+void task_set_mac(char* p)
+{
+    // mac changed:
+    sprintf(buf, "/sbin/ifconfig %s hw ether %s", reg_get("system-ifname"), p);
+    system(buf);
+}
+
+void task_set_remote(char* p)
+{
+    if (hdoipd_state(HOID_VRB)) {
+        hdoipd_goto_ready();
+        hdoipd_goto_vrb();
+    }
+}
+
+void task_set_hello(char* p)
+{
+    hdoipd_hello();
+}
+
+void task_set_mode_start(char* p)
+{
+    hdoipd_goto_ready();
+    hdoipd_start();
+}
+
+void task_set_mode_media(char* p)
+{
+    if (hdoipd_state(HOID_VRB)) {
+        hdoipd_goto_ready();
+        hdoipd_start();
+    }
 }
 
 void hdoipd_register_task()
@@ -269,7 +343,17 @@ void hdoipd_register_task()
     get_listener("sync-delay", task_get_sync_delay);
     get_listener("stream-state", task_get_rscp_state);
 
+    // set-listener are called when a new value is written to the register
+    // if the same value is written as already stored the listener isn't called
     set_listener("bandwidth", task_set_bw);
+    set_listener("system-ip", task_set_ip);
+    set_listener("system-subnet", task_set_subnet);
+    set_listener("system-gateway", task_set_gateway);
+    set_listener("system-mac", task_set_mac);
+    set_listener("mode-start", task_set_mode_start);
+    set_listener("mode-media", task_set_mode_media);
+    set_listener("remote-uri", task_set_remote);
+    set_listener("hello-uri", task_set_hello);
 }
 
 

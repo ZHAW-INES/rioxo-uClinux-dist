@@ -19,6 +19,7 @@
 #include "bstmap.h"
 
 #define CFG_FILE            "/mnt/config/hdoipd.cfg"
+#define CFG_RSP_TIMEOUT     20
 
 typedef void (f_task)(void* value);
 
@@ -128,27 +129,37 @@ typedef struct {
     t_hdoip_eth         local;
     int                 osd_timeout;
     uint64_t            tick;
+    int                 eth_alive;
+    int                 eth_timeout;
+    int					hdcp_hdmi_forced;
+    int					hdcp_extern_forced;
 } t_hdoipd;
 
 
 //------------------------------------------------------------------------------
 //
 
-extern t_hdoipd             hdoipd;
+extern t_hdoipd                 hdoipd;
 
-#define reg_set(n, v)       bstmap_set(&hdoipd.registry, (n), (v))
-#define reg_get(n)          bstmap_get(hdoipd.registry, (n))
-#define reg_get_int(n)      atoi(reg_get(n))
-#define reg_del(n)          bstmap_remove(&hdoipd.registry, (n))
-#define set_listener(n, f)  bstmap_setp(&hdoipd.set_listener, (n), (f))
-#define get_listener(n, f)  bstmap_setp(&hdoipd.get_listener, (n), (f))
-#define reg_verify(n, f)    bstmap_setp(&hdoipd.verify, (n), (f))
-#define reg_test(n, s)      (strcmp(reg_get(n), s) == 0)
 
 static inline bool tick_delay(uint64_t x)
 {
     return (hdoipd.tick - x);
 }
+
+
+//------------------------------------------------------------------------------
+//
+
+#define reg_set(n, v)           bstmap_set(&hdoipd.registry, (n), (v))
+#define reg_get(n)              bstmap_get(hdoipd.registry, (n))
+#define reg_get_int(n)          atoi(reg_get(n))
+#define reg_test(n, s)          (strcmp(reg_get(n), s) == 0)
+#define reg_del(n)              bstmap_remove(&hdoipd.registry, (n))
+
+#define set_listener(n, f)      bstmap_setp(&hdoipd.set_listener, (n), (f))
+#define get_listener(n, f)      bstmap_setp(&hdoipd.get_listener, (n), (f))
+#define verify_listener(n, f)   bstmap_setp(&hdoipd.verify, (n), (f))
 
 static inline void reg_verify_set(char* n, char* k)
 {
@@ -159,9 +170,15 @@ static inline void reg_verify_set(char* n, char* k)
 
 static inline void set_call(char* n, char* k)
 {
-    reg_set(n, k);
     f_task* f = (f_task*)bstmap_get(hdoipd.set_listener, (n));
-    if (f) f(k);
+    if (f) {
+        if (!reg_test(n, k)) {
+            reg_set(n, k);
+            f(k);
+        }
+    } else {
+        reg_set(n, k);
+    }
 }
 
 static inline void get_call(char* n, char** k)
@@ -177,22 +194,34 @@ static inline void get_call(char* n, char** k)
 
 #define pthread(th, f, d) \
 { \
-    pthread_create(&th, 0, f, d); \
-    lock("pthread_create"); \
-    report2("pthread_create(%d, " #f ")", th); \
-    unlock("pthread_create"); \
+    int ret = pthread_create(&th, 0, f, d); \
+    if (ret) { \
+        report(ERROR #f ".pthread_create: failed %d", ret); \
+    } else { \
+        report(INFO #f ".pthread_create successful"); \
+    } \
+}
+
+#define pthreada(th, a, f, d) \
+{ \
+    int ret = pthread_create(&th, a, f, d); \
+    if (ret) { \
+        report(ERROR #f ".pthread_create: failed %d", ret); \
+    } else { \
+        report(INFO #f ".pthread_create successful"); \
+    } \
 }
 
 static inline void lock(const char* s)
 {
-    pthread_mutex_lock(&hdoipd.mutex);
+    if (pthread_mutex_lock(&hdoipd.mutex)) perrno("hdoipd:pthread_mutex_lock() failed");
     report2("hdoipd:pthread_mutex_lock(%d, %s)", pthread_self(), s);
 }
 
 static inline void unlock(const char* s)
 {
     report2("hdoipd:pthread_mutex_unlock(%d, %s)", pthread_self(), s);
-    pthread_mutex_unlock(&hdoipd.mutex);
+    if (pthread_mutex_unlock(&hdoipd.mutex)) perrno("hdoipd:pthread_mutex_unlock() failed");
 }
 
 

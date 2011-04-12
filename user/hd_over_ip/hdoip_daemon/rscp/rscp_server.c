@@ -21,13 +21,27 @@ t_rscp_server* rscp_server_create(int fd, uint32_t addr)
         rscp_coninit(&server->con, fd, addr);
         server->nr = nr++;
         report(" + RSCP Server [%d] for %s", server->nr, str_ntoa(addr));
+    } else {
+        report(ERROR "rscp_server_create.malloc: out of memory");
     }
     return server;
+}
+
+void rscp_invalidate_server(char UNUSED *key, char* value, void* fd)
+{
+    t_rscp_media* media = (t_rscp_media*)value;
+    if (media->creator == fd) media->creator = 0;
 }
 
 void rscp_server_free(t_rscp_server* server)
 {
     report(" - RSCP Server [%d]", server->nr);
+    t_rscp_listener* listener = server->owner;
+    if (listener) {
+        // TODO FIXME: currently a linear search is performed :(
+        // invalidate all media->creator pointing to this server-connection
+        bstmap_traverse(listener->sessions, rscp_invalidate_server, server);
+    }
     free(server);
 }
 
@@ -50,7 +64,7 @@ int rscp_server_thread(t_rscp_server* handle)
     t_rscp_media *media, *smedia;
     u_rscp_header buf;
 
-    report("rscp server started");
+    report(INFO "rscp server started");
 
     // receive request line
     while (1) {
@@ -58,7 +72,7 @@ int rscp_server_thread(t_rscp_server* handle)
         n = rscp_parse_request(&handle->con, srv_method, &method, &buf, &common);
 
         // connection closed...
-        if (n) return n;
+        if (n) break;
 
         // find media
         media = rscp_listener_get_media(handle->owner, common.uri.name);
@@ -84,7 +98,8 @@ int rscp_server_thread(t_rscp_server* handle)
 #endif
 
         // process request (function responses for itself)
-        n = ((frscpo*)method->fnc)(media, &buf, &handle->con, handle->owner);
+        n = ((frscpm*)method->fnc)(media, &buf, &handle->con);
+        // media may be not valid anymore!
         if (n != RSCP_SUCCESS) {
             report(" ? execute method \"%s\" error (%d)", common.rq.method, n);
             unlock("rscp_server_thread");
@@ -95,9 +110,9 @@ int rscp_server_thread(t_rscp_server* handle)
 
     }
 
-    report("rscp server ended");
+    report(" - RSCP Server [%d] ended", handle->nr);
 
-    return RSCP_SUCCESS;
+    return n;
 }
 
 
@@ -113,7 +128,10 @@ void rscp_server_teardown(t_rscp_media* media)
     struct in_addr a1; a1.s_addr = server->con.address;
     sprintf(uri, "rscp://%s/", inet_ntoa(a1));
 
-    rscp_request_teardown(&server->con, uri, media->sessionid);
+    if (server) {
+        // a server connection is active for this media -> use it to send a teardown message
+        rscp_request_teardown(&server->con, uri, media->sessionid);
+    }
 
     rscp_server_close(media);
 }
@@ -127,13 +145,17 @@ void rscp_server_close(t_rscp_media* media)
 {
     t_rscp_server* server = media->creator;
 
-    rmsr_teardown(media, 0, &server->con, server->owner);
+    if (server) {
+        // a server connection is active for this media -> shut it down
+        report(DEL "RSCP Server [%d] close %s:%s", server->nr, media->name, media->sessionid);
 
-    if (shutdown(server->con.fdr, SHUT_RDWR) == -1) {
-        report("close socket error: %s", strerror(errno));
+        if (shutdown(server->con.fdr, SHUT_RDWR) == -1) {
+            report(ERROR "close socket error: %s", strerror(errno));
+        }
+
     }
 
-    free(media);
+    rmsr_teardown(media, 0, 0);
 }
 
 void rscp_server_update(t_rscp_media* media, uint32_t event)
@@ -143,7 +165,13 @@ void rscp_server_update(t_rscp_media* media, uint32_t event)
     struct in_addr a1; a1.s_addr = server->con.address;
     sprintf(uri, "rscp://%s/", inet_ntoa(a1));
 
-    rscp_request_update(&server->con, uri, media->sessionid, event);
+#ifdef REPORT_RSCP
+    report(" > RSCP Server [%d] UPDATE", server->nr);
+#endif
+
+    if (server) {
+        rscp_request_update(&server->con, uri, media->sessionid, event);
+    }
 }
 
 void rscp_server_pause(t_rscp_media* media)
@@ -153,8 +181,10 @@ void rscp_server_pause(t_rscp_media* media)
     struct in_addr a1; a1.s_addr = server->con.address;
     sprintf(uri, "rscp://%s/", inet_ntoa(a1));
 
-    rscp_request_pause(&server->con, uri, media->sessionid);
+    if (server) {
+        rscp_request_pause(&server->con, uri, media->sessionid);
+    }
 
-    rmsr_pause(media, 0, &server->con);
+    rmsr_pause(media, 0, 0);
 }
 

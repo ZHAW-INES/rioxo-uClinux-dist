@@ -32,6 +32,7 @@
 #define VSO_OFF_TIMESTAMP_MIN		(0x0050)
 #define VSO_OFF_TIMESTAMP_MAX		(0x0054)
 #define VSO_OFF_TIMESTAMP_DIFF_RO	(0x0058)
+#define VSO_OFF_CLKMUX              (0x005C)
 #define VSO_OFF_STAT_STATUS         (VSO_BASE_STATISTIC)
 #define VSO_OFF_STAT_DELAY          (VSO_BASE_STATISTIC + 0x04)
 #define VSO_OFF_STAT_MISS_CNT       (VSO_BASE_STATISTIC + 0x08)
@@ -48,6 +49,9 @@
 #define VSO_ST_ACTIVE			    (1<<3)
 #define VSO_ST_CHOKED			    (1<<4)
 #define VSO_ST_TIMESTAMP_ERROR		(1<<5)
+#define VSO_CLKMUX_75_MHZ           (1<<0)
+#define VSO_CLKMUX_HDMI_RX          (0x00)
+
 
 /** register masks
  *

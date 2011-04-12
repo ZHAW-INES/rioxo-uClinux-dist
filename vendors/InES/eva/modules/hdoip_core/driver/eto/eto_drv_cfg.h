@@ -20,7 +20,7 @@
 #define ETO_DRV_AES_SET			            (0x00000004)
 #define ETO_DRV_CPU_BUF_SET                 (0x00000008)
 
-#define LINK_COUNT              (5)
+#define ETO_LINK_COUNT                      (5)
 
 typedef struct {
     uint32_t link_state;

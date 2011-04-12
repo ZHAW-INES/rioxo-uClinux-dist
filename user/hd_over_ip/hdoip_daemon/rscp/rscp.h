@@ -104,6 +104,7 @@ typedef struct {
 typedef struct {
     uint32_t            compress;
     uint32_t            value;
+    uint32_t            value2;
     uint32_t            rtptime;
 } t_rscp_rtp_format;
 
@@ -111,6 +112,12 @@ typedef struct {
     uint8_t             segment;
     uint8_t             edid[256];
 } t_rscp_edid;
+
+// hdcp status and port number
+typedef struct {
+    uint32_t            hdcp_on; //on=1, off=0
+    uint32_t            port_nr;
+} t_rscp_hdcp;
 
 //------------------------------------------------------------------------------
 // Requests
@@ -123,6 +130,7 @@ typedef struct {
     uint32_t            cseq;
     t_rscp_transport    transport;
     t_rscp_edid         edid;
+    t_rscp_hdcp			hdcp;
 } t_rscp_req_setup;
 
 typedef struct {
@@ -164,6 +172,7 @@ typedef struct {
     uint32_t            cseq;
     char                session[50];
     t_rscp_transport    transport;
+    t_rscp_hdcp			hdcp;
 } t_rscp_rsp_setup;
 
 typedef struct {

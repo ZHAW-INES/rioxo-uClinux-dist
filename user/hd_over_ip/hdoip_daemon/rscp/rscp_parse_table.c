@@ -29,6 +29,7 @@ const t_map_fnc tab_request_setup[] ={
         { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_setup, cseq) },
         { "Transport", rscp_parse_transport, offsetof(t_rscp_req_setup, transport) },
         { "EDID-Segment", rscp_parse_edid,  offsetof(t_rscp_req_setup, edid) },
+        { "HDCP", rscp_parse_hdcp,  offsetof(t_rscp_req_setup, hdcp) },
         MAP_FNC_NULL
 };
 
@@ -51,6 +52,7 @@ const t_map_fnc tab_response_setup[] ={
         { "CSeq", rscp_parse_ui32, offsetof(t_rscp_rsp_setup, cseq) },
         { "Session", rscp_parse_str, offsetof(t_rscp_rsp_setup, session) },
         { "Transport", rscp_parse_transport, offsetof(t_rscp_rsp_setup, transport) },
+        { "HDCP", rscp_parse_hdcp,  offsetof(t_rscp_req_setup, hdcp) },
         MAP_FNC_NULL
 };
 

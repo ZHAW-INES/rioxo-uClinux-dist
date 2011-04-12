@@ -81,7 +81,33 @@ static int vio_set_output_format(void* p, t_video_timing* p_vt, t_video_format f
 
     return ERR_VIO_SUCCESS;    
 }
-    
+ 
+/** Set as output format a black picture
+ *
+ * @param handle vio handle
+ * @return error code (0 on success)
+ */
+int vio_drv_set_black_output(t_vio* handle) 
+{
+    void *tf = (void *) black_out;
+    uint32_t cfg = S444TO444;
+
+    vio_set_transform(handle->p_vio, VIO_OFF_OUTPUT_PT, tf, cfg, handle->timing.vpolarity, handle->timing.hpolarity);
+
+    return ERR_VIO_SUCCESS;
+}   
+
+/** Restores the output format 
+ *
+ * @param handle vio handle
+ * @return error code (0 on success)
+ */
+int vio_drv_clr_black_output(t_vio* handle)
+{
+    vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out);
+
+    return ERR_VIO_SUCCESS;
+}
 
 /** Initialize driver for vio
  * 

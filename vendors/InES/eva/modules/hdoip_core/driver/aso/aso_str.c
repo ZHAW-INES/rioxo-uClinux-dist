@@ -22,9 +22,10 @@ int aso_str_report_aud(t_aso* handle)
     aso_get_aud_params(handle->p_aso, &aud_params);
     aud_report_params(&aud_params);
 
-    REPORT(INFO, "Audio delay         : %d us", aso_get_aud_delay(handle->p_aso));
-    REPORT(INFO, "Clock div. slow     : %d", aso_get_clk_div_slow(handle->p_aso));
-    REPORT(INFO, "Clock div. fast     : %d", aso_get_clk_div_fast(handle->p_aso));
+    REPORT(INFO, "Audio delay                : %d us", aso_get_aud_delay(handle->p_aso));
+    REPORT(INFO, "Clock div. upper bound     : %d", aso_get_clk_div_upper_bound(handle->p_aso));
+    REPORT(INFO, "Clock div. lower bound     : %d", aso_get_clk_div_lower_bound(handle->p_aso));
+    REPORT(INFO, "Clock div. incremental     : %d", aso_get_clk_div_inc(handle->p_aso));
 
     return ERR_ASO_SUCCESS; 
 }

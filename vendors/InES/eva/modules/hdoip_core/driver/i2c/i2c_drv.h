@@ -14,24 +14,32 @@
 
 typedef struct {
     void*    		p;        	//!< I2C Hardware pointer
-    spinlock_t		sem;		//!< I2C Hardware access
     uint32_t        error;      //!< I2C error code
 } t_i2c;
 
 
 int i2c_drv_init(t_i2c* handle, void* p, int freq);
 
-
-static inline void i2c_drv_lock(t_i2c* handle)
+static inline void i2c_drv_write(t_i2c* handle, uint8_t device, uint8_t data)
 {
-	spin_lock(&handle->sem);
+    int ret;
+	if ((ret = i2c_write(handle->p, device, 1, &data))) {
+	    handle->error = ret;
+		I2C_REPORT_ERROR(ret, device, 0);
+	}
 }
 
-static inline void i2c_drv_unlock(t_i2c* handle)
+static inline uint8_t i2c_drv_read(t_i2c* handle, uint8_t device)
 {
-	spin_unlock(&handle->sem);
-}
+    int ret;
+    uint8_t data;
 
+	if ((ret = i2c_read(handle->p, device, 1, &data))) {
+	    handle->error = ret;
+		I2C_REPORT_ERROR(ret, device, 0);
+	}
+    return data;
+}
 
 static inline void i2c_drv_wreg8(t_i2c* handle, uint8_t device, uint8_t address, uint8_t data)
 {

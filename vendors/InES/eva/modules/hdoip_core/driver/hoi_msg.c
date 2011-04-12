@@ -39,7 +39,7 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
 
     // install driver...
     if (lddrv & DRV_ADV9889) {
-        adv9889_drv_init(&handle->adv9889, &handle->i2c_tx);
+        adv9889_drv_init(&handle->adv9889, &handle->i2c_tx, &handle->vio);
     }
     if (lddrv & DRV_ADV7441) {
         adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, (char*)adv7441a_edid_table);
@@ -76,6 +76,10 @@ int hoi_drv_msg_eti(t_hoi* handle, t_hoi_msg_eti* msg)
     eti_drv_set_filter(&handle->eti,
             msg->ip_address_dst, msg->ip_address_src, msg->ip_address_src,
             msg->udp_port_aud, msg->udp_port_vid);
+
+    // flush buffers
+    if (msg->udp_port_vid) vso_drv_flush_buf(&handle->vso);
+    if (msg->udp_port_aud) aso_drv_flush_buf(&handle->aso);
 
     // activate ethernet input
     if (msg->udp_port_vid) eti_drv_start_vid(&handle->eti);
@@ -167,6 +171,8 @@ int hoi_drv_msg_getversion(t_hoi* handle, t_hoi_msg_version* msg)
 
 int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 {
+    vsi_drv_flush_buf(&handle->vsi);
+
     // activate ethernet output
     eto_drv_start_vid(&handle->eto);
 
@@ -203,6 +209,9 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
         REPORT(INFO, "vio_drv_(output) failed: %s", vio_str_err(n));
     }
 
+    // sync...
+    vso_drv_stop(&handle->vso);
+
     // setup vso (20ms delay, 15ms scomm5 delay, 1ms packet timeout)
     vid = vid_duration_in_us(&msg->timing);
     delay = msg->delay_ms * 1000 + 2 * vid;
@@ -212,9 +221,6 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
         REPORT(INFO, "vso_drv_update failed: %s", vso_str_err(n));
         return n;
     }
-
-    // sync...
-    vso_drv_stop(&handle->vso);
 
     // !!! workaround !!!
     // ADV212 chips are sensitive to timing
@@ -285,8 +291,11 @@ int hoi_drv_msg_vso_repaire(t_hoi* handle)
 
 int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
 {
+    asi_drv_flush_buf(&handle->asi);
+
     // activate ethernet output
     eto_drv_start_aud(&handle->eto);
+
     // setup asi
     struct hdoip_aud_params aud_params;
     aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
@@ -302,20 +311,32 @@ int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
 
 int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
 {
+    int vid = 0;
+
+    // sync...
+    aso_drv_stop(&handle->aso);
+
     // setup aso ()
     struct hdoip_aud_params aud_params;
     aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
     aud_params.ch_cnt_right = msg->channel_cnt - aud_params.ch_cnt_left;
     aud_params.fs = msg->fs;
     aud_params.sample_width = msg->width;
-    aso_drv_update(&handle->aso, &aud_params, msg->delay_ms*1000);
+    if (handle->vio.active) {
+        vid = 4 * vid_duration_in_us(&handle->vio.timing);
+    }
+    aso_drv_update(&handle->aso, &aud_params, msg->delay_ms*1000+vid);
     aso_drv_start(&handle->aso);
-/*
+
+    if (handle->drivers & DRV_ADV9889) {
+        adv9889_drv_setup_audio(&handle->adv9889, msg->channel_cnt, msg->fs);
+    }
+
     if (msg->cfg & DRV_STREAM_SYNC) {
         stream_sync_chg_source(&handle->sync, SYNC_SOURCE_AUDIO);
         stream_sync_start(&handle->sync);
     }
-*/
+
     return SUCCESS;
 }
 
@@ -472,9 +493,15 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
     adv212_drv_advcnt(&msg->timing, &min);
     if (msg->advcnt < min) msg->advcnt = min;
     // read audio input timing (from video board) [ch: 0..15]
-    msg->audio_fs[0] = 44100;
-    msg->audio_width[0] = 16;
+    if (handle->drivers & DRV_ADV7441) {
+        msg->audio_fs[0] = handle->adv7441a.aud_st.fs;
+        msg->audio_width[0] = handle->adv7441a.aud_st.bit_width;
+        msg->audio_cnt[0] = handle->adv7441a.aud_st.channel_cnt;
+    }
     // read audio input timing (from audio board) [ch: 16..31]
+    msg->audio_fs[1] = 0;
+    msg->audio_width[1] = 0;
+    msg->audio_cnt[1] = 0;
     return SUCCESS;
 }
 

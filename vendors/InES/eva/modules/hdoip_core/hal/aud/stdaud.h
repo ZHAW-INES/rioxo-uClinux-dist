@@ -11,9 +11,9 @@
 #include "std.h"
 
 #define AUD_I2S_8BIT                (0x00000000)
-#define AUD_I2S_16BIT               (0x00000100)
-#define AUD_I2S_24BIT               (0x00000200)
-#define AUD_I2S_32BIT               (0x00000300)
+#define AUD_I2S_16BIT               (0x00000001)
+#define AUD_I2S_24BIT               (0x00000002)
+#define AUD_I2S_32BIT               (0x00000003)
 
 struct hdoip_aud_params {
     uint8_t     ch_cnt_left;        /* Channel count left */

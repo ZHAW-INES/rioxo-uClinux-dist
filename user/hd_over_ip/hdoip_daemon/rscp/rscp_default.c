@@ -29,6 +29,9 @@ void rscp_default_response_setup(t_rscp_rsp_setup* p)
     p->cseq = 0;
     p->session[0] = 0;
     rscp_default_transport(&p->transport);
+    p->hdcp.hdcp_on = 0;
+    p->hdcp.port_nr = 56000;
+
 }
 
 void rscp_default_response_play(t_rscp_rsp_play* p)

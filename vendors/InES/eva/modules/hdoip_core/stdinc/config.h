@@ -27,6 +27,8 @@
 #define BASE_ADV212	        (na_hdata_bus)
 #define BASE_VIDEO_TX       (na_hdmi_tx_i2c)
 #define BASE_VIDEO_RX       (na_hdmi_rx_i2c)
+#define BASE_I2C_VID_TAG    (na_tag_vid_i2c)
+#define BASE_I2C_AUD_TAG    (na_tag_aud_i2c)
 #define BASE_VSO	        (na_acb_vid_st_out)
 #define BASE_VSI	        (na_acb_vid_st_in)
 #define BASE_ASO            (na_acb_aud_st_out)

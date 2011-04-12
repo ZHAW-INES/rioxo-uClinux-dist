@@ -34,8 +34,8 @@ typedef struct {
     uint16_t        timings;            // 35
     uint8_t         timings_reserved;
     uint16_t        std_timings[8];     // 38
-    t_edid_timing   detailed_timing[4];
-    uint8_t         extension_count;
+    t_edid_timing   detailed_timing[4]; // 54
+    uint8_t         extension_count;    // 126
     uint8_t         checksum;
 } __attribute__((packed)) t_edid;
 

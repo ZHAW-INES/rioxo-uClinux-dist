@@ -13,6 +13,21 @@
 
 #include "hdoipd.h"
 
+
+void rscp_coninit(t_rscp_connection* m, int fd, uint32_t addr)
+{
+    m->fdw = fd;
+    m->fdr = fd;
+    m->sequence = 1;
+    m->in.eol = m->in.sol = m->in.buf;
+    m->out.eol = m->out.sol = m->out.buf;
+    m->in.buf[0] = 0;
+    m->out.buf[0] = 0;
+    m->address = addr;
+    m->doc = RSCP_CON_DOC_RX | RSCP_CON_DOC_TX;
+}
+
+
 bool rscp_receive_crlf(char** s, char* eol)
 {
     char* p = *s;
@@ -55,25 +70,46 @@ int rscp_receive_body(t_rscp_connection* con, char* buf, size_t length)
     return length;
 }
 
-int rscp_receive(t_rscp_connection* con, char** line)
+int rscp_receive(t_rscp_connection* con, char** line, int timeout)
 {
-    int n = 0;
+    int ret = 0;
+    size_t s;
     char* sol = con->in.sol;
     char* eol = sol;
+    fd_set rfds;
+    struct timeval tv;
 
     *line = 0;
 
     while (!rscp_receive_crlf(&eol, con->in.eol)) {
-        n = (eol - sol);
-        memmove(con->in.buf, sol, n);
+        s = (eol - sol);
+        memmove(con->in.buf, sol, s);
         sol = con->in.buf;
         con->in.sol = sol;
-        eol = sol + n;
-        //if ((n = recv(con->fdr, eol, RSCP_MSG_MAX_LENGTH - 1 - n, 0)) <= 0) return -1;
-        if ((n = read(con->fdr, eol, RSCP_MSG_MAX_LENGTH - 1 - n)) <= 0) return -1;
-        con->in.eol = eol + n;
+        eol = sol + s;
+        if (timeout&&0) {
+            FD_ZERO(&rfds);
+            FD_SET(con->fdr, &rfds);
+            tv.tv_sec = timeout;
+            tv.tv_usec = 0;
+            ret = select(1, &rfds, NULL, NULL, &tv);
+            if (ret == -1) {
+                report(ERROR "rscp_receive() select failed");
+                return -1;
+            } else if (ret == 0) {
+                report(ERROR "rscp_receive() timeout");
+                return RSCP_TIMEOUT;
+            }
+        }
+        ret = read(con->fdr, eol, RSCP_MSG_MAX_LENGTH - 1 - s);
+        if (ret == 0) {
+            return RSCP_CLOSE;
+        } else if (ret == -1) {
+            return -1;
+        }
+        con->in.eol = eol + ret;
         if (eol > sol) eol--;
-        *(eol + n) = 0;
+        *(eol + ret) = 0;
     }
 
     con->in.sol = eol;
@@ -93,7 +129,30 @@ int rscp_receive(t_rscp_connection* con, char** line)
 
 void rscp_send(t_rscp_connection* con)
 {
-    //send(con->fdw, con->out.buf, con->out.eol - con->out.buf, 0);
+    if (send(con->fdw, con->out.buf, con->out.eol - con->out.buf, 0) == -1) {
+    //if (write(con->fdw, con->out.buf, con->out.eol - con->out.buf) == -1) {
+        perrno("rscp_send() send failed");
+    }
+
+#ifdef REPORT_RSCP
+    if (con->doc & RSCP_CON_DOC_TX) {
+        struct in_addr addr = { .s_addr = con->address };
+        char* sol = con->out.buf;
+        while (*sol) {
+            fprintf(rscp_fd, "[%15s] > %s\n", inet_ntoa(addr), str_next_token(&sol, "%:\r\n;%0"));
+        }
+        fflush(rscp_fd);
+    }
+#endif
+
+    con->sequence++;
+    con->out.eol = con->out.sol = con->out.buf;
+    con->out.buf[0] = 0;
+}
+
+void rscp_write(t_rscp_connection* con)
+{
+    //if (send(con->fdw, con->out.buf, con->out.eol - con->out.buf, 0) == -1) {
     if (write(con->fdw, con->out.buf, con->out.eol - con->out.buf) == -1) {
         perrno("rscp_send() write failed");
     }
@@ -109,41 +168,24 @@ void rscp_send(t_rscp_connection* con)
     }
 #endif
 
-    con->out.eol = con->out.buf;
+    con->sequence++;
+    con->out.eol = con->out.sol = con->out.buf;
+    con->out.buf[0] = 0;
 }
 
-void rscp_coninit(t_rscp_connection* m, int fd, uint32_t addr)
+int rscp_split(t_rscp_connection* con, t_rscp_connection* con1, t_rscp_connection* con2)
 {
-    m->fdw = fd;
-    m->fdr = fd;
-    m->sequence = 1;
-    m->in.eol = m->in.sol = m->in.buf;
-    m->out.eol = m->out.sol = m->out.buf;
-    m->in.buf[0] = 0;
-    m->out.buf[0] = 0;
-    m->address = addr;
-    m->doc = RSCP_CON_DOC_RX | RSCP_CON_DOC_TX;
-}
+    int pfd1[2], pfd2[2]; // 0=read, 1=write
 
-void rscp_msginit(t_rscp_connection* m)
-{
-    m->sequence++;
-    m->out.eol = m->out.sol = m->out.buf;
-    m->out.buf[0] = 0;
-}
-
-int rscp_split(t_rscp_connection* con, t_rscp_connection* mux, t_rscp_connection* con2)
-{
-    int pfd[2], pfd2[2]; // 0=read, 1=write
-
-    if (pipe(pfd) == -1) return -1;
-    rscp_coninit(mux, 0, con->address);
-    mux->doc = 0;
-    mux->fdr = con->fdr;
-    mux->fdw = pfd[1];
-    con->fdr = pfd[0];
-
+    if (pipe(pfd1) == -1) return -1;
     if (pipe(pfd2) == -1) return -1;
+
+    rscp_coninit(con1, 0, con->address);
+    con1->doc = 0;
+    con1->fdr = con->fdr;
+    con1->fdw = pfd1[1];
+    con->fdr  = pfd1[0];
+
     rscp_coninit(con2, 0, con->address);
     con2->doc = RSCP_CON_DOC_RX;
     con2->fdw = pfd2[1];

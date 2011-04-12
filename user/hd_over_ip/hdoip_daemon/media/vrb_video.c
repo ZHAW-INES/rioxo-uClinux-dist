@@ -16,12 +16,13 @@
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "edid.h"
+#include "../../../hdcp/receiver/receiver.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
-#define TICK_TIMEOUT                    (20)
-#define TICK_SEND_ALIVE                 (10)
+#define TICK_TIMEOUT                    (hdoipd.eth_timeout)
+#define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
-struct {
+static struct {
     t_hdoip_eth         remote;
     int                 timeout;
     int                 alive_ping;
@@ -30,7 +31,8 @@ struct {
 int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection* rsp)
 {
     int n;
-    report("vrb_video_setup");
+    t_rscp_client* client = media->creator;
+    report(INFO "vrb_video_setup");
 
     if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
         return n;
@@ -40,11 +42,39 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
         return n;
     }
 
-    vrb.remote.address = rsp->address;
+    vrb.remote.address = client->con.address;
     vrb.remote.vid_port = PORT_RANGE_START(m->transport.server_port);
     hdoipd.local.vid_port = PORT_RANGE_START(m->transport.client_port);
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, vid);
+
+    //start HDCP code!? If (hdcp= on) {....}
+    /* - if hdcp is necessary, check if it is already enabled
+     * - get port number
+     * - start server and SKE if necessary
+     * - if successful, write keys to HW, else go back to ?idle? state
+     *
+     * */
+    printf("hdcp_on1: %d\n",m->hdcp.hdcp_on);
+    printf("hdcp_port1: %d\n",m->hdcp.port_nr);
+    sleep(2); //wait 2 sec to allow the server to start up
+    //TODO: replace to sleep command (with a loop?!)
+    printf("hdcp_extern_forced: %d\n",hdoipd.hdcp_extern_forced);
+    /*check if hdcp is needed, only check the external command*/
+    if (hdoipd.hdcp_extern_forced == 1){
+  	  //TODO: check if already enabled
+  	  char port_nr_string[10];
+  	  char riv[17];
+  	  char session_key[33];
+  	  char *ip;
+  	  ip=reg_get("remote-uri");
+  	  ip += 7;
+  	  printf("Remote-uri: %s\n",ip);
+  	  sprintf(port_nr_string, "%d",m->hdcp.port_nr);
+  	  receiver(port_nr_string,ip,session_key,riv); //start server for SKE
+  	  //TODO: check if SKE was successful
+  	  //write keys down to HW
+    }
 
 #ifdef ETI_PATH
     // setup ethernet input
@@ -53,8 +83,6 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 #endif
 
     hdoipd_set_tstate(VTB_VID_IDLE);
-
-    report("vrb_video_setup done");
 
     media->result = RSCP_RESULT_READY;
     vrb.alive_ping = 1;
@@ -66,7 +94,7 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UNUSED *rsp)
 {
     uint32_t compress = 0;
-    report("vrb_video_play");
+    report(INFO "vrb_video_play");
 
     media->result = RSCP_RESULT_PLAYING;
 
@@ -103,22 +131,21 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 
 int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rscp_connection UNUSED *rsp)
 {
-    report("vrb_video_teardown");
+    report(INFO "vrb_video_teardown");
 
     media->result = RSCP_RESULT_TEARDOWN;
 
     if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
 #ifdef VID_OUT_PATH
-        hoi_drv_reset(DRV_RST_VID_OUT);
+        hdoipd_hw_reset(DRV_RST_VID_OUT);
 #endif
-
         hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
         hdoipd_set_tstate(VTB_VID_OFF);
     }
 
-    if (m) {
+    if (rsp) {
         osd_permanent(true);
-        osd_printf("remote off...\n");
+        osd_printf("video remote off...\n");
     }
 
     return RSCP_SUCCESS;
@@ -130,7 +157,7 @@ int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
     if(rsp) {
         report(" ? client failed (%d): %d - %s", m, rsp->ecode, rsp->ereason);
         osd_permanent(true);
-        osd_printf("Streaming could not be established: %d - %s\n", rsp->ecode, rsp->ereason);
+        osd_printf("vrb.video streaming could not be established: %d - %s\n", rsp->ecode, rsp->ereason);
         switch(rsp->ecode) {
             case 300:   media->result = RSCP_RESULT_SERVER_TRY_LATER;
                         break;
@@ -146,7 +173,7 @@ int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
         }
     } else {    
         osd_permanent(true);
-        osd_printf("Streaming could not be established: connection refused\n");
+        osd_printf("vrb.video streaming could not be established: connection refused\n");
         media->result = RSCP_RESULT_CONNECTION_REFUSED;
     }
     return RSCP_SUCCESS;
@@ -159,14 +186,14 @@ void vrb_video_pause(t_rscp_media *media)
     if (hdoipd_tstate(VTB_VIDEO)) {
 
 #ifdef VID_OUT_PATH
-        hoi_drv_reset(DRV_RST_VID_OUT);
+        hdoipd_hw_reset(DRV_RST_VID_OUT);
 #endif
 #ifdef ETI_PATH
         hoi_drv_eti(hdoipd.local.address, vrb.remote.address,
-                hdoipd.local.vid_port, hdoipd.local.aud_port);
+                hdoipd.local.vid_port, 0);
 #endif
-        hdoipd_set_tstate(VTB_VID_IDLE);
         hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
+        hdoipd_set_tstate(VTB_VID_IDLE);
     }
 
     // goto ready without further communication
@@ -175,8 +202,6 @@ void vrb_video_pause(t_rscp_media *media)
 
 int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
-    report("vrb_video_update(%x)", m->event);
-
     switch (m->event) {
 
         case EVENT_TICK:
@@ -199,7 +224,8 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
         case EVENT_VIDEO_IN_OFF:
             vrb_video_pause(media);
             osd_permanent(true);
-            osd_printf("vtb.video stopped streaming...");
+            osd_printf("vtb.video stoped streaming...\n");
+            report(ERROR "vtb.video stoped streaming");
         break;
     }
 
@@ -222,9 +248,26 @@ int vrb_video_ready(t_rscp_media UNUSED *media)
 int vrb_video_dosetup(t_rscp_media *media)
 {
     int port;
+    char *p;
     t_rscp_transport transport;
     t_rscp_edid edid;
     t_rscp_client *client = media->creator;
+    t_rscp_hdcp hdcp;
+    //hdcp.hdcp_on = 0;
+    hdcp.port_nr = 55000;	  //set port number
+    hdoipd.hdcp_hdmi_forced=0;//this value has to be set by the hdmi chip
+    hdoipd.hdcp_extern_forced=0;
+
+    p = reg_get("hdcp-force");
+    printf("Value HDCP force: %s/n",p);
+    /*check if hdcp is needed*/
+    if ((hdoipd.hdcp_hdmi_forced==1)||(hdoipd.hdcp_extern_forced==1)||((strcmp(p, "1")==0))){
+      hdcp.hdcp_on = 1;
+    }
+    else{
+      hdcp.hdcp_on = 0;
+    }
+    printf("hdcp_dccp_on: %d/n",hdcp.hdcp_on);
 
     if (!client) return RSCP_NULL_POINTER;
 
@@ -234,9 +277,9 @@ int vrb_video_dosetup(t_rscp_media *media)
 
     edid.segment = 0;
     hoi_drv_rdedid(edid.edid);
-    edid_report(edid.edid);
+    edid_report((void*)edid.edid);
 
-    return rscp_client_setup(client, &transport, &edid);
+    return rscp_client_setup(client, &transport, &edid, &hdcp);
 }
 
 int vrb_video_doplay(t_rscp_media *media)
@@ -273,10 +316,10 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
                 // send tick we are alive (until something like rtcp is used)
                 rscp_client_update(media->creator, EVENT_TICK);
             }
-            if (vrb.timeout < TICK_TIMEOUT) {
+            if (vrb.timeout <= TICK_TIMEOUT) {
                 vrb.timeout++;
             } else {
-                report("vrb_video_event: timeout");
+                report(INFO "vrb_video_event: timeout");
                 // timeout -> kill connection
                 vrb.timeout = 0;
                 rscp_client_kill(client);

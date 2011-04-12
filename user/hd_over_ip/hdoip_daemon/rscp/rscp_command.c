@@ -11,7 +11,6 @@
 
 void rscp_response_line(t_rscp_connection* msg, int code, char* reason)
 {
-    rscp_msginit(msg);
     msgprintf(msg, "%s %03d %s\r\n",
         RSCP_VERSION,
         code,
@@ -28,7 +27,6 @@ void rscp_response_error(t_rscp_connection* msg, int code, char* reason)
 
 void rscp_request_line(t_rscp_connection* msg, char* method, char* uri)
 {
-    rscp_msginit(msg);
     msgprintf(msg, "%s %s %s\r\n",
         method,
         uri,
@@ -80,6 +78,12 @@ void rscp_header_edid(t_rscp_connection* msg, t_rscp_edid *edid)
     msgprintf(msg, "\r\n");
 }
 
+void rscp_header_hdcp(t_rscp_connection* msg, t_rscp_hdcp *hdcp)
+{
+    msgprintf(msg, "HDCP: HDCP-Status=%d;HDCP-Port=%d", hdcp->hdcp_on, hdcp->port_nr);
+    msgprintf(msg, "\r\n");
+}
+
 void rscp_header_timing(t_rscp_connection* msg, t_video_timing* timing)
 {
     // Timing: pfreq width fp p bp pol height fp p bp pol
@@ -94,11 +98,11 @@ void rscp_header_rtp_format(t_rscp_connection* msg, t_rscp_rtp_format* p)
 {
     // RTP-Format: compress[ value] rtptime
     if (p->compress == 16) {
-        msgprintf(msg, "RTP-Format: aud16Bit %d %u\r\n", p->value, p->rtptime);
+        msgprintf(msg, "RTP-Format: aud16Bit %d %d %u\r\n", p->value, p->value2, p->rtptime);
     } else if (p->compress == 24) {
-        msgprintf(msg, "RTP-Format: aud24Bit %d %u\r\n", p->value, p->rtptime);
+        msgprintf(msg, "RTP-Format: aud24Bit %d %d %u\r\n", p->value, p->value2, p->rtptime);
     } else if (p->compress == 32) {
-        msgprintf(msg, "RTP-Format: aud32Bit %d %u\r\n", p->value, p->rtptime);
+        msgprintf(msg, "RTP-Format: aud32Bit %d %d %u\r\n", p->value, p->value2, p->rtptime);
     } else if (p->compress == FORMAT_JPEG2000) {
         msgprintf(msg, "RTP-Format: jp2k %d %u\r\n", p->value, p->rtptime);
     } else {
@@ -106,7 +110,7 @@ void rscp_header_rtp_format(t_rscp_connection* msg, t_rscp_rtp_format* p)
     }
 
 }
-
+/*
 void rscp_request_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, t_rscp_edid *edid)
 {
     rscp_request_line(msg, "SETUP", uri);
@@ -114,8 +118,26 @@ void rscp_request_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* tra
     if (edid) rscp_header_edid(msg, edid);
     rscp_eoh(msg);
     rscp_send(msg);
+}*/
+void rscp_request_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, t_rscp_edid *edid, t_rscp_hdcp *hdcp)
+{
+    rscp_request_line(msg, "SETUP", uri);
+    rscp_header_transport(msg, transport);
+    if (edid) rscp_header_edid(msg, edid);
+    rscp_header_hdcp(msg, hdcp); //input hdcp info
+    rscp_eoh(msg);
+    rscp_send(msg);
 }
-
+void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session, t_rscp_hdcp *hdcp)
+{
+    rscp_response_line(msg, RSCP_SC_OK, "OK");
+    rscp_header_session(msg, session);
+    rscp_header_transport(msg, transport);
+    rscp_header_hdcp(msg, hdcp); //input hdcp info
+    rscp_eoh(msg);
+    rscp_send(msg);
+}
+/*
 void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session)
 {
     rscp_response_line(msg, RSCP_SC_OK, "OK");
@@ -123,7 +145,7 @@ void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, ch
     rscp_header_transport(msg, transport);
     rscp_eoh(msg);
     rscp_send(msg);
-}
+}*/
 
 void rscp_request_play(t_rscp_connection* msg, char* uri, char* session, t_rscp_rtp_format* fmt)
 {

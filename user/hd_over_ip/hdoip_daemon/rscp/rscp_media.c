@@ -10,27 +10,44 @@
 #include <string.h>
 #include "rscp_media.h"
 #include "rscp_listener.h"
+#include "rscp_server.h"
 #include "rscp_command.h"
 #include "rscp_error.h"
 #include "string.h"
 #include "debug.h"
 
-int rmsq_option(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
-{
-    return media->option(media, msg, rsp);
-}
+///////////////////////////////////////////////////////////////////////////////
+// received a request as a server (can answer -> rsp != 0)
 
-int rmsq_setup(t_rscp_media* _media, void* msg, t_rscp_connection* rsp, void* owner)
+
+int rmsq_setup(t_rscp_media* _media, void* msg, t_rscp_connection* rsp)
 {
-    t_rscp_media* media = _media;
+    t_rscp_media *media = _media;
     int ret = RSCP_SERVER_ERROR;
+
+    // creator is the rscp_server who started this connection
+    // we get the rscp_listener from it
+    media->top = ((t_rscp_server*)media->creator)->owner;
 
     // start new session?
     if (!_media->owner) {
         media = malloc(sizeof(t_rscp_media));
+        if (!media) {
+            report(ERROR "rmsq_setup.malloc: out of memory");
+            return ret;
+        }
         memcpy(media, _media, sizeof(t_rscp_media));
         media->owner = _media;
-        rscp_listener_create_sessionid(owner, media->sessionid);
+        if (media->cookie_size) {
+            media->cookie = malloc(media->cookie_size);
+            if (!media->cookie) {
+                report(ERROR "rmsq_setup.malloc: out of memory");
+                free(media);
+                return ret;
+            }
+            memset(media->cookie, 0, media->cookie_size);
+        }
+        rscp_listener_create_sessionid(media->top, media->sessionid);
     }
 
     if (media->setup) ret = media->setup(media, msg, rsp);
@@ -49,10 +66,12 @@ int rmsq_setup(t_rscp_media* _media, void* msg, t_rscp_connection* rsp, void* ow
 
     if (media != _media) {
         if (ret == RSCP_SUCCESS) {
-            rscp_listener_add_session(owner, media);
+            rscp_listener_add_session(media->top, media);
         } else {
+            if (media->cookie_size) free(media->cookie);
             free(media);
         }
+        _media->creator = 0;
     }
 
     // request properly handled
@@ -63,7 +82,7 @@ int rmsq_setup(t_rscp_media* _media, void* msg, t_rscp_connection* rsp, void* ow
     return ret;
 }
 
-int rmsq_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
+int rmsq_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SERVER_ERROR;
 
@@ -97,7 +116,7 @@ int rmsq_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSE
     return ret;
 }
 
-int rmsq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void* owner)
+int rmsq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SERVER_ERROR;
 
@@ -106,30 +125,13 @@ int rmsq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void* 
 
     if (media->teardown) ret = media->teardown(media, msg, rsp);
     media->state = RSCP_INIT;
-    rscp_listener_remove_session(owner, media);
+    if (media->cookie_size) free(media->cookie);
+    rscp_listener_remove_session(media->top, media);
     free(media);
     return ret;
 }
 
-/** Teardown server
- *
- * Note: the listener(owner) is locked when this function is called
- * Sessions are removed by the caller
- *
- */
-int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
-{
-    int ret = RSCP_SUCCESS;
-
-    // needs to be a session
-    if (!media->owner) return RSCP_CLIENT_ERROR;
-
-    if (media->teardown) ret = media->teardown(media, 0, rsp);
-    media->state = RSCP_INIT;
-    return ret;
-}
-
-int rmsq_hello(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
+int rmsq_hello(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
     if (media->hello) ret = media->hello(media, msg, rsp);
@@ -137,18 +139,18 @@ int rmsq_hello(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUS
 }
 
 // rscp media server
-int rmsq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
+int rmsq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
     if (media->state == RSCP_PLAYING) {
-        if (media->pause_q) ret = media->pause_q(media, msg, rsp);
+        if (media->pause) ret = media->pause(media, msg, rsp);
         if (!ret) media->state = RSCP_READY;
     }
     return ret;
 }
 
 // rscp media server request
-int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
+int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
     if (media->update) ret = media->update(media, msg, rsp);
@@ -157,19 +159,45 @@ int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNU
 }
 
 
-// rscp media server response
+///////////////////////////////////////////////////////////////////////////////
+// received a response as a server (can not answer -> rsp = 0)
+
+/** Teardown server
+ *
+ * Note: the listener(owner) is locked when this function is called
+ * Sessions are removed by the caller
+ *
+ */
+int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
+{
+    int ret = RSCP_SUCCESS;
+
+    // needs to be a session
+    if (!media->owner) return RSCP_CLIENT_ERROR;
+
+    if (media->teardown) ret = media->teardown(media, msg, 0);
+    media->state = RSCP_INIT;
+    if (media->cookie_size) free(media->cookie);
+    free(media);
+    return ret;
+}
+
 int rmsr_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
     if (media->state == RSCP_PLAYING) {
-        if (media->pause_r) ret = media->pause_r(media, msg, rsp);
+        if (media->pause) ret = media->pause(media, msg, 0);
         if (!ret) media->state = RSCP_READY;
     }
     return ret;
 }
 
-// rscp media client
-int rmcq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
+
+///////////////////////////////////////////////////////////////////////////////
+// received a request as a client (can answer -> rsp != 0)
+
+
+int rmcq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
     if (media->update) ret = media->update(media, msg, rsp);
@@ -177,32 +205,36 @@ int rmcq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNU
     return ret;
 }
 
-// rscp media client
-int rmcq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
+int rmcq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
     if (media->state == RSCP_PLAYING) {
-        if (media->pause_q) ret = media->pause_q(media, msg, rsp);
+        if (media->pause) ret = media->pause(media, msg, rsp);
         if (!ret) media->state = RSCP_READY;
     }
     return ret;
 }
 
-// rscp media client
+int rmcq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
+{
+    int ret = RSCP_SUCCESS;
+    if (media->teardown) ret = media->teardown(media, msg, rsp);
+    media->state = RSCP_INIT;
+    return ret;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// received a response as a client (can not answer -> rsp = 0)
+
+
 int rmcr_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
     if (media->state == RSCP_PLAYING) {
-        if (media->pause_r) ret = media->pause_r(media, msg, rsp);
+        if (media->pause) ret = media->pause(media, msg, 0);
         if (!ret) media->state = RSCP_READY;
     }
-    return ret;
-}
-
-// rscp media client
-int rmcr_option(t_rscp_media UNUSED *media, void UNUSED *msg, t_rscp_connection UNUSED *rsp)
-{
-    int ret = RSCP_SUCCESS;
     return ret;
 }
 
@@ -210,7 +242,7 @@ int rmcr_setup(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
 
-    ret = media->setup(media, msg, rsp);
+    ret = media->setup(media, msg, 0);
 
     if (ret == RSCP_SUCCESS) {
         switch (media->state) {
@@ -237,7 +269,7 @@ int rmcr_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
         break;
         case RSCP_READY:
         case RSCP_PLAYING:
-            ret = media->play(media, msg, rsp);
+            ret = media->play(media, msg, 0);
             if (ret == RSCP_SUCCESS) {
                 media->state = RSCP_PLAYING;
             } else {
@@ -256,18 +288,15 @@ int rmcr_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 int rmcr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
-    if (media->teardown) ret = media->teardown(media, 0, rsp);
+    if (media->teardown) ret = media->teardown(media, msg, 0);
     media->state = RSCP_INIT;
     return ret;
 }
 
-int rmcq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp, void UNUSED *owner)
-{
-    int ret = RSCP_SUCCESS;
-    if (media->teardown) ret = media->teardown(media, msg, rsp);
-    media->state = RSCP_INIT;
-    return ret;
-}
+
+///////////////////////////////////////////////////////////////////////////////
+// state manipulation (local)
+
 
 int rscp_media_force_ready(t_rscp_media* media)
 {

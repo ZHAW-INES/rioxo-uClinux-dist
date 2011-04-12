@@ -206,12 +206,13 @@ int hoi_drv_asi(uint32_t cfg, hdoip_eth_params* eth, uint32_t fs, uint32_t width
 }
 
 
-int hoi_drv_aso(uint32_t fs, uint32_t fs_tol, uint32_t width, uint32_t cnt, uint8_t* sel, uint32_t delay_ms)
+int hoi_drv_aso(uint32_t fs, uint32_t fs_tol, uint32_t width, uint32_t cnt, uint8_t* sel, uint32_t delay_ms, uint32_t cfg)
 {
     int ret;
     t_hoi_msg_aso msg;
 
     hoi_msg_aso_init(&msg);
+    msg.cfg = cfg;
     msg.fs_tol = fs_tol;
     memcpy(&msg.channel, sel, 16);
     msg.channel_cnt = cnt;

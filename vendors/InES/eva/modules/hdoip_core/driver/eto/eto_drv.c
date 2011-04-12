@@ -8,7 +8,6 @@
 int eto_drv_start(t_eto* handle)
 {
 	eto_set_config_cpu_frame_enable(handle->ptr);
-
 	eto_set_config_start(handle->ptr);	
 	return ERR_ETO_SUCCESS;
 }
@@ -20,6 +19,8 @@ int eto_drv_stop(t_eto* handle)
 {   
 	eto_set_config_cpu_frame_disable(handle->ptr);
 	eto_set_config_stop(handle->ptr);
+    while (!eto_get_status_fsm_idle(handle->ptr));
+	while(!(eto_get_status_reg(handle->ptr) & ETO_STATUS_FSM_IDLE));
 
 	return ERR_ETO_SUCCESS;
 }
@@ -43,6 +44,8 @@ int eto_drv_start_aud(t_eto* handle)
 int eto_drv_stop_aud(t_eto* handle)
 {
     eto_set_config_aud_frame_disable(handle->ptr);
+    while (!eto_get_status_aud_idle(handle->ptr));
+    eto_clr_status_aud_idle(handle->ptr);
     return ERR_ETO_SUCCESS;
 }
 
@@ -65,6 +68,8 @@ int eto_drv_start_vid(t_eto* handle)
 int eto_drv_stop_vid(t_eto* handle)
 {
     eto_set_config_vid_frame_disable(handle->ptr);
+    while (!eto_get_status_vid_idle(handle->ptr));
+    eto_clr_status_vid_idle(handle->ptr);
     return ERR_ETO_SUCCESS;
 }
 
@@ -273,7 +278,7 @@ int eto_drv_handler(t_eto* handle, t_queue* event_queue)
         handle->vtx = vtx;
         if (!handle->vcnt) {
             queue_put(event_queue, E_ETO_VIDEO_ON);
-            handle->vcnt = LINK_COUNT;
+            handle->vcnt = ETO_LINK_COUNT;
         }
     } else {
         if (handle->vcnt == 1) {
@@ -288,7 +293,7 @@ int eto_drv_handler(t_eto* handle, t_queue* event_queue)
         handle->atx = atx;
         if (!handle->acnt) {
             queue_put(event_queue, E_ETO_AUDIO_ON);
-            handle->acnt = LINK_COUNT;
+            handle->acnt = ETO_LINK_COUNT;
         }
     } else {
         if (handle->acnt == 1) {

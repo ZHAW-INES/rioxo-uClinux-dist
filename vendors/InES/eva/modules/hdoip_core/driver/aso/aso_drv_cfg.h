@@ -13,10 +13,12 @@
 
 /* config values */
 #define ASO_DRV_DMA_FIFO_ALMOST_FULL        (ASO_DATA_FIFO_SIZE - ASO_DRV_DMA_BURST_SIZE - 4)
-#define ASO_DRV_I2S_FREQ_TOL                (1050.0/1.0e6)      /* 1000(source) + 50(local) ppm */
-#define ASO_DRV_I2S_FREQ_FACT_FAST          (1 - ASO_DRV_I2S_FREQ_TOL)
-#define ASO_DRV_I2S_FREQ_FACT_SLOW          (1 + ASO_DRV_I2S_FREQ_TOL)
+#define ASO_DRV_I2S_FREQ_TOL                (((uint64_t)1050<<27)/1e6)      /* 1000(source) + 50(local) ppm */
+#define ASO_DRV_I2S_FREQ_FACT_UPPER         ((1<<27) + ASO_DRV_I2S_FREQ_TOL)
+#define ASO_DRV_I2S_FREQ_FACT_LOWER         ((1<<27) - ASO_DRV_I2S_FREQ_TOL)
+#define ASO_DRV_I2S_FREQ_TOL_DIV            (1050/50)                       /* max 50ppm change per frequency step*/
 #define ASO_DRV_DISABLE_FIFO_LOW_TH         (0)
+#define ASO_DRV_DEFAULT_FIFO_LOW_TH         (5)
 #define ASO_DRV_DISABLE_FRAMES_BUFFERED     (ASO_REORDERING_RAM_SIZE - 1)
 #define ASO_DRV_MIN_CH_CNT                  (1)
 #define ASO_DRV_MAX_CH_CNT                  (8)

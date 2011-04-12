@@ -21,7 +21,7 @@ struct {
 int box_sys_hello(t_rscp_media UNUSED *media, intptr_t UNUSED m, t_rscp_connection* rsp)
 {
     if ((rsp->address == box.address) && box.address) {
-        report("hello received from remote device");
+        report(INFO "hello received from remote device");
         unlock("box_sys_hello");
             hdoipd_launch(hdoipd_start_vrb, 0, 50, 3, 1000);
         lock("box_sys_hello");

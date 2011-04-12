@@ -14,7 +14,8 @@
 #define rscp_err_busy(x)            rscp_response_error(x, 404, "Busy")
 #define rscp_err_no_vtb(x)          rscp_response_error(x, 405, "Not a VTB")
 #define rscp_err_retry(x)           rscp_response_error(x, 300, "Please retry later")
-#define rscp_err_no_source(x)       rscp_response_error(x, 406, "No Video Input")
+#define rscp_err_no_source(x)       rscp_response_error(x, 406, "No Input")
+#define rscp_err_def_source(x)      rscp_response_error(x, 407, "HW defect")
 
 
 void rscp_response_line(t_rscp_connection* msg, int code, char* reason);
@@ -26,14 +27,14 @@ void rscp_header_timing(t_rscp_connection* msg, t_video_timing* timing);
 void rscp_header_rtp_format(t_rscp_connection* msg, t_rscp_rtp_format* p);
 void rscp_eoh(t_rscp_connection* msg);
 
-void rscp_request_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, t_rscp_edid *edid);
+void rscp_request_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, t_rscp_edid *edid, t_rscp_hdcp* hdcp);
 void rscp_request_play(t_rscp_connection* msg, char* uri, char* session, t_rscp_rtp_format* fmt);
 void rscp_request_teardown(t_rscp_connection* msg, char* uri, char* session);
 void rscp_request_update(t_rscp_connection* msg, char* uri, char* session, uint32_t event);
 void rscp_request_pause(t_rscp_connection* msg, char* uri, char* session);
 void rscp_request_hello(t_rscp_connection* msg, char* uri);
 
-void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session);
+void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session, t_rscp_hdcp* hdcp);
 void rscp_response_play(t_rscp_connection* msg, char* session, t_rscp_rtp_format* fmt, t_video_timing* timing);
 void rscp_response_teardown(t_rscp_connection* msg, char* session);
 

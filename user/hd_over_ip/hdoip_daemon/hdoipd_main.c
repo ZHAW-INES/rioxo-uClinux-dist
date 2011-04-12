@@ -28,6 +28,7 @@
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 #include "bstmap.h"
+#include "../../hdcp/receiver/receiver.h"
 
 #define DEV_NODE        "/dev/hdoip_core"
 
@@ -164,6 +165,21 @@ void* event_read_thread(void UNUSED *d)
     }
 }
 
+/*void* hdcp_thread(void UNUSED *d)
+{
+
+//start server
+
+
+    while(1) {
+      //start hdcp server
+      char riv[17];
+      char session_key[33];
+      receiver("55000", session_key, riv); 
+      //transmitter(port_nr, ip_nr, session_key, riv);
+    }
+}*/
+
 void* poll_thread(void UNUSED *d)
 {
     while (1) {
@@ -188,14 +204,19 @@ int main(int argc, char **argv)
     pthread_t* th = malloc(sizeof(pthread_t)* (argc-1));
 
     report_fd = stdout;
+    rscp_fd = stdout;
 
+#ifndef DBGCONSOLE
     if (!(report_fd = fopen("/tmp/hdoipd.log", "w"))) {
         return 0;
     }
+#endif
 
+#ifndef DBGCONSOLERSCP
     if (!(rscp_fd = fopen("/tmp/rscp.log", "w"))) {
         return 0;
     }
+#endif
 
     report("/tmp/hdoipd.log started");
 
@@ -205,6 +226,8 @@ int main(int argc, char **argv)
 
             pthread(the, event_read_thread, 0);
             pthread(thp, poll_thread, 0);
+	    //start hdcp server
+	    //pthread(thh, hdcp_thread, 0);
 
             for (int i=1; i<argc; i++) {
                 report(" [%d] open named pipe <%s>",i,argv[i]);

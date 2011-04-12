@@ -17,7 +17,7 @@
 #define ETI_DRV_AUD_BUF_SET     (0x0000000C)
 #define ETI_DRV_VID_BUF_SET     (0x00000010)
 
-#define LINK_COUNT              (250)
+#define ETI_LINK_COUNT          (250)
 
 typedef struct {
     uint32_t    link_state;

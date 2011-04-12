@@ -16,21 +16,23 @@
 void hoi_drv_init(t_hoi* handle)
 {
     // TODO proper range in config.h
-    handle->p_tx      = ioremap(BASE_VIDEO_TX,    0xffffffff);
-    handle->p_rx      = ioremap(BASE_VIDEO_RX,    0xffffffff);
-    handle->p_vio     = ioremap(BASE_VIO,         0xffffffff);
-    handle->p_vsi     = ioremap(BASE_VSI,         0xffffffff);
-    handle->p_vso     = ioremap(BASE_VSO,         0xffffffff);
-    handle->p_aso     = ioremap(BASE_ASO,         0xffffffff);
-    handle->p_asi     = ioremap(BASE_ASI,         0xffffffff);
-    handle->p_adv212  = ioremap(BASE_ADV212,      0xffffffff);
-    handle->p_vrp     = ioremap(BASE_VRP,         0xffffffff);
-    handle->p_tmr     = ioremap(BASE_TIMER,       0xffffffff);
-    handle->p_irq     = ioremap(BASE_EXT_IRQ,     0xffffffff);
-    handle->p_esi     = ioremap(BASE_ETI,         0xffffffff);
-    handle->p_eso     = ioremap(BASE_ETO,         0xffffffff);
-    handle->p_ver     = ioremap(BASE_VER,         0xffffffff);
-    handle->p_sysid   = ioremap(BASE_SYSID,       0xffffffff);
+    handle->p_tx            = ioremap(BASE_VIDEO_TX,    0xffffffff);
+    handle->p_rx            = ioremap(BASE_VIDEO_RX,    0xffffffff);
+    handle->p_i2c_tag_aud   = ioremap(BASE_I2C_AUD_TAG, 0xffffffff);
+    handle->p_i2c_tag_vid   = ioremap(BASE_I2C_VID_TAG, 0xffffffff);
+    handle->p_vio           = ioremap(BASE_VIO,         0xffffffff);
+    handle->p_vsi           = ioremap(BASE_VSI,         0xffffffff);
+    handle->p_vso           = ioremap(BASE_VSO,         0xffffffff);
+    handle->p_aso           = ioremap(BASE_ASO,         0xffffffff);
+    handle->p_asi           = ioremap(BASE_ASI,         0xffffffff);
+    handle->p_adv212        = ioremap(BASE_ADV212,      0xffffffff);
+    handle->p_vrp           = ioremap(BASE_VRP,         0xffffffff);
+    handle->p_tmr           = ioremap(BASE_TIMER,       0xffffffff);
+    handle->p_irq           = ioremap(BASE_EXT_IRQ,     0xffffffff);
+    handle->p_esi           = ioremap(BASE_ETI,         0xffffffff);
+    handle->p_eso           = ioremap(BASE_ETO,         0xffffffff);
+    handle->p_ver           = ioremap(BASE_VER,         0xffffffff);
+    handle->p_sysid         = ioremap(BASE_SYSID,       0xffffffff);
 
     // init
     handle->event = queue_init(100);
@@ -43,8 +45,11 @@ void hoi_drv_init(t_hoi* handle)
     // init i2c with 400kHz
     i2c_drv_init(&handle->i2c_tx, handle->p_tx, 400000);
     i2c_drv_init(&handle->i2c_rx, handle->p_rx, 400000);
-
+//    i2c_drv_init(&handle->i2c_tag_aud, handle->p_i2c_tag_aud, 400000);
+    i2c_drv_init(&handle->i2c_tag_vid, handle->p_i2c_tag_vid, 400000);
+ 
     // init
+    led_drv_init(&handle->led, &handle->i2c_tag_vid, &handle->i2c_tag_aud);
     eti_drv_set_ptr(&handle->eti, handle->p_esi);
     eto_drv_set_ptr(&handle->eto, handle->p_eso);
     vio_drv_init(&handle->vio, handle->p_vio, handle->p_adv212);
@@ -126,6 +131,8 @@ void hoi_drv_reset(t_hoi* handle, uint32_t rv)
         REPORT(INFO, "reset timer");
         tmr_init(handle->p_tmr);
     }
+
+    REPORT(INFO, "reset done");
 }
 
 

@@ -100,6 +100,7 @@ void hdoipd_launch(int (*f)(void* d), void* d, int timeout_ms, int repeat, int i
 {
 #ifdef USE_LAUNCHER
     pthread_t th;
+    pthread_attr_t attr;
     t_delayed_task* task = malloc(sizeof(t_delayed_task));
 
     if (task) {
@@ -111,7 +112,9 @@ void hdoipd_launch(int (*f)(void* d), void* d, int timeout_ms, int repeat, int i
         task->repeat = repeat;
         task->rts.tv_sec = intervall_ms / 1000;
         task->rts.tv_nsec = (unsigned long)(intervall_ms % 1000) * (unsigned long)1000000;
-        pthread(th, hdoipd_delayed_thread, task);
+        pthread_attr_init(&attr);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+        pthreada(th, &attr, hdoipd_delayed_thread, task);
     } else {
         report("malloc(sizeof(t_delayed_task)) failed");
     }

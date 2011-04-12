@@ -7,15 +7,6 @@
 
 #include "tag_drv.h"
 
-
-static inline void tag_lock(t_tag* handle) {
-	i2c_drv_lock(handle->p_i2c);
-}
-
-static inline void tag_unlock(t_tag* handle) {
-	i2c_drv_unlock(handle->p_i2c);
-}
-
 static inline void tag_write(t_tag* handle, uint8_t a, uint8_t x) {
 	i2c_drv_wreg8(handle->p_i2c, handle->devaddr, a, x);
 }
@@ -49,8 +40,6 @@ int tag_drv_inquire(t_tag* handle)
 {
     uint32_t ret;
 
-    tag_lock(handle);
-
 	// read total size
     size_t size = tag_read(handle, 0) + 2;
 
@@ -70,16 +59,12 @@ int tag_drv_inquire(t_tag* handle)
 
     }
 
-    tag_unlock(handle);
-
 	return SUCCESS;
 }
 
 int tag_drv_write(t_tag* handle)
 {
     uint32_t ret;
-
-    tag_lock(handle);
 
     // read total size
     size_t size = (size_t)handle->buf[0] + 2;
@@ -89,8 +74,6 @@ int tag_drv_write(t_tag* handle)
 
     // write tag
     ret = tag_write_buf(handle, 0, handle->buf, size);
-
-    tag_unlock(handle);
 
     return SUCCESS;
 }

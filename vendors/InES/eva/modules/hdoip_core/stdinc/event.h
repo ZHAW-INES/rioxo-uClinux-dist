@@ -6,17 +6,18 @@
 
 /* ADV7441A events */
 #define E_ADV7441A_ID		    (0x10000000) /* ADV7441A event ID */
-#define E_ADV7441A_CNT          6
+#define E_ADV7441A_CNT          7
 #define E_ADV7441A_NC		    (E_ADV7441A_ID + 0x00000001)  /* no HDMI connected */
 #define E_ADV7441A_NEW_RES      (E_ADV7441A_ID + 0x00000002)	/* Resolution change */
 #define E_ADV7441A_NEW_AUDIO    (E_ADV7441A_ID + 0x00000003)  /* new audio content received */ 
 #define E_ADV7441A_NO_AUDIO     (E_ADV7441A_ID + 0x00000004)  /* no audio avaible */
 #define E_ADV7441A_HDCP         (E_ADV7441A_ID + 0x00000005)  /* HDCP encrypted content */
 #define E_ADV7441A_NO_HDCP      (E_ADV7441A_ID + 0x00000006)  /* no HDCP encrypted content */
+#define E_ADV7441A_HDCP_KEY_ERR (E_ADV7441A_ID + 0x00000007)  /* HDCP key error (not read or error) */
 
 /* ETO events */
 #define E_ADV9889_ID            (0x90000000)
-#define E_ADV9889_CNT           2
+#define E_ADV9889_CNT           3
 #define E_ADV9889_CABLE_ON      (E_ADV9889_ID + 0x00000001)  /* HDMI connected */
 #define E_ADV9889_CABLE_OFF     (E_ADV9889_ID + 0x00000002)  /* no HDMI connected */
 #define E_ADV9889_NEXT_EDID     (E_ADV9889_ID + 0x00000003)  /* next edid segment ready */

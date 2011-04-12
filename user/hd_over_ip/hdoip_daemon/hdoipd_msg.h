@@ -280,7 +280,10 @@ static inline char* hoic_get_param(int fd, int fdr, char* name)
 
     hoic_response(t_hoic_kvparam);
     char* ret = malloc(rsp.offset);
-    hoic_rdpipe(fdr, ret, rsp.offset);
+    if (ret) {
+        hoic_rdpipe(fdr, ret, rsp.offset);
+        ret[rsp.offset-1] = 0;
+    }
     return ret;
 }
 

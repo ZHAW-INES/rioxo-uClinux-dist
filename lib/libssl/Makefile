@@ -8,7 +8,7 @@ endif
 
 SSL_MAKE = \
 	$(MAKE) -C $(VER) -j1 \
-	DIRS="crypto ssl engines" \
+	DIRS="apps crypto ssl engines" \
 	CC=$(CONFIGURE_HOST)-gcc
 
 all: $(VER)/.configure

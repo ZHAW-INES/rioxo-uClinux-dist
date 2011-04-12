@@ -472,7 +472,7 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	spin_lock_irqsave(&hde->tx_lock, flags);
 
 	/* Is there space in the ringbuffer? */
-	if (!hdoip_etho_accepts_cpu_write(hde, len)) {
+	if (!hdoip_etho_accepts_cpu_write(hde, len + 4)) {
 		t_rbf_dsc desc;
 
         eto_get_cpu_desc(hde->eto.ptr, &desc);
@@ -487,7 +487,7 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	/* Get current descriptor values */
     eto_get_cpu_desc(hde->eto.ptr, &tx_desc);
 
-	tx_buf = (u32 *) ioremap_nocache(tx_desc.write, tx_desc.stop - tx_desc.write);
+	tx_buf = (u32 *) ioremap_nocache(tx_desc.write, MAX_PKT_SIZE);
 	if (!tx_buf) {
 		dev->stats.tx_dropped++;
 		printk(KERN_ERR "%s: Failed to remap TX ringbuffer memory.\n", dev->name);
@@ -545,11 +545,11 @@ again:
 	if (rx_desc.read == rx_desc.write) {
 		/* TODO: Stop netif queue */
 		spin_unlock_irqrestore(&hde->rx_lock, flags);
-		printk(KERN_NOTICE "%s: RX ring buffer full.\n", dev->name);
+		printk(KERN_NOTICE "%s: RX ring buffer empty.\n", dev->name);
 		return;
 	}
 
-	rx_buf = (u32 *) ioremap_nocache(rx_desc.read, rx_desc.stop - rx_desc.read);
+	rx_buf = (u32 *) ioremap_nocache(rx_desc.read, MAX_PKT_SIZE);
 	if (!rx_buf) {
 		spin_unlock_irqrestore(&hde->rx_lock, flags);
 		printk(KERN_ERR "%s: Failed to remap RX ringbuffer memory.\n", dev->name);

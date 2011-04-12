@@ -18,6 +18,7 @@
 /* macros set*/
 #define eto_set_config_reg(p, v)                HOI_WR32((p), ETO_CONFIG_SET_REG, (v))
 #define eto_clr_config_reg(p, v)                HOI_WR32((p), ETO_CONFIG_CLR_REG, (v))
+#define eto_clr_status_reg(p, v)                HOI_WR32((p), ETO_STATUS_REG, (v))
 #define eto_set_config_audio_enc_en(p) 		    HOI_WR32(p, ETO_CONFIG_SET_REG, ETO_CONFIG_AUDIO_ENC_EN)
 #define eto_set_config_video_enc_en(p) 		    HOI_WR32(p, ETO_CONFIG_SET_REG, ETO_CONFIG_VIDEO_ENC_EN)
 #define eto_set_config_audio_enc_dis(p) 	    HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_AUDIO_ENC_EN)
@@ -30,6 +31,10 @@
 #define eto_set_config_aud_frame_enable(p) 	    HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_SEND_AUD_FRAME_DISABLE)
 #define eto_set_config_start(p) 		        HOI_WR32(p, ETO_CONFIG_SET_REG, ETO_CONFIG_FSM_EN)
 #define eto_set_config_stop(p) 			        HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_FSM_EN)
+
+#define eto_clr_status_cpu_idle(p)              eto_clr_status_reg(p, ETO_STATUS_CPU_IDLE)
+#define eto_clr_status_vid_idle(p)              eto_clr_status_reg(p, ETO_STATUS_VID_IDLE)
+#define eto_clr_status_aud_idle(p)              eto_clr_status_reg(p, ETO_STATUS_AUD_IDLE)
 
 #define eto_set_burst_size_reg(p, v) 		    HOI_WR32((p), ETO_BURST_SIZE_REG, (v))
 #define eto_set_dma_almost_full(p, v) 		    HOI_WR32((p), ETO_DMA_ALMOST_FULL_REG, (v))
@@ -72,6 +77,11 @@
 #define eto_get_config_start(p) 		        HOI_REG_TST(p, ETO_CONFIG_SET_REG, ETO_CONFIG_FSM_EN)
 
 #define eto_get_status_reg(p)                   HOI_RD32((p), ETO_STATUS_REG)
+#define eto_get_status_fsm_idle(p)              ((eto_get_status_reg(p) & ETO_STATUS_FSM_IDLE) && ETO_STATUS_FSM_IDLE)
+#define eto_get_status_cpu_idle(p)              ((eto_get_status_reg(p) & ETO_STATUS_CPU_IDLE) && ETO_STATUS_CPU_IDLE)
+#define eto_get_status_vid_idle(p)              ((eto_get_status_reg(p) & ETO_STATUS_VID_IDLE) && ETO_STATUS_VID_IDLE)
+#define eto_get_status_aud_idle(p)              ((eto_get_status_reg(p) & ETO_STATUS_AUD_IDLE) && ETO_STATUS_AUD_IDLE)
+
 
 #define eto_get_burst_size_reg(p) 		        HOI_RD32((p), ETO_BURST_SIZE_REG)
 #define eto_get_dma_almost_full(p)   		    HOI_RD32((p), ETO_DMA_ALMOST_FULL_REG)
