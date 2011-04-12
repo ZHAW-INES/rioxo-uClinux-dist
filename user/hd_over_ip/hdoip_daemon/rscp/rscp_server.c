@@ -20,6 +20,7 @@ t_rscp_server* rscp_server_create(int fd, uint32_t addr)
         memset(server, 0, sizeof(t_rscp_server));
         rscp_coninit(&server->con, fd, addr);
         server->nr = nr++;
+        server->kill = false;
         report(" + RSCP Server [%d] for %s", server->nr, str_ntoa(addr));
     } else {
         report(ERROR "rscp_server_create.malloc: out of memory");
@@ -72,7 +73,9 @@ int rscp_server_thread(t_rscp_server* handle)
         n = rscp_parse_request(&handle->con, srv_method, &method, &buf, &common);
 
         // connection closed...
-        if (n) break;
+        if (n) {
+        	break;
+        }
 
         // find media
         media = rscp_listener_get_media(handle->owner, common.uri.name);
@@ -103,12 +106,14 @@ int rscp_server_thread(t_rscp_server* handle)
         if (n != RSCP_SUCCESS) {
             report(" ? execute method \"%s\" error (%d)", common.rq.method, n);
             unlock("rscp_server_thread");
-            return n;
+            break;
         }
 
         unlock("rscp_server_thread");
 
     }
+
+    handle->kill = true;
 
     report(" - RSCP Server [%d] ended", handle->nr);
 
