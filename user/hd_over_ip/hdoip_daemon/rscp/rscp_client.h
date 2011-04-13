@@ -25,6 +25,7 @@
 typedef struct {
     int                 nr;
     pthread_t           th1, th2;
+    bool				kill;
     char                uri[200];       //!< remote resource name
     t_rscp_connection   con;
     t_rscp_connection   con1;           //!< request/response multiplexer

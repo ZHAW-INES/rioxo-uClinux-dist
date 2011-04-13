@@ -44,6 +44,7 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
     }
 
     memset(client, 0, sizeof(t_rscp_client));
+    client->kill = false;
 
     if (media) {
         if (media->creator) {
@@ -304,6 +305,7 @@ void rscp_client_event(t_node* list, uint32_t event)
     t_rscp_client* client;
     LIST_FOR(client, list) {
         if (client->media) rscp_media_event(client->media, event);
+        if (client->kill)  rscp_client_close(client);
     }
 }
 
@@ -353,6 +355,8 @@ void* rscp_client_thread(void* _client)
 
         }
     }
+
+    client->kill = true;
 
     report(" - RSCP Client [%d] filter: (%d) %s", client->nr, n, strerror(errno));
 

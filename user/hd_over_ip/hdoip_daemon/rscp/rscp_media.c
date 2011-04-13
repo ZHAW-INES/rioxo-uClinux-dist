@@ -11,6 +11,7 @@
 #include "rscp_media.h"
 #include "rscp_listener.h"
 #include "rscp_server.h"
+#include "rscp_client.h"
 #include "rscp_command.h"
 #include "rscp_error.h"
 #include "string.h"
@@ -226,6 +227,9 @@ int rmcq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
     int ret = RSCP_SUCCESS;
     if (media->teardown) ret = media->teardown(media, msg, rsp);
     media->state = RSCP_INIT;
+
+    ((t_rscp_client*)media->creator)->kill = true;
+
     return ret;
 }
 
