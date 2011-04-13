@@ -672,6 +672,7 @@ void hdoipd_start()
 bool hdoipd_init(int drv)
 {
     pthread_mutexattr_t attr;
+    int broadcast = 1;
 
     memset(&hdoipd, 0, sizeof(t_hdoipd));
 
@@ -705,6 +706,33 @@ bool hdoipd_init(int drv)
     hdoipd.local.aud_port = htons(reg_get_int("audio-port"));
     hdoipd.drivers = DRV_ADV9889 | DRV_ADV7441;
 
+    if(strcmp(reg_get("amx-en"), "1") == 0) {
+    	hdoipd.amx.enable = true;
+    } else {
+    	hdoipd.amx.enable = false;
+    }
+
+    if(hdoipd.amx.enable) {
+    	hdoipd.amx.interval = reg_get_int("amx-hello-interval");
+    	hdoipd.amx.socket = socket(PF_INET, SOCK_DGRAM, 0);
+
+    	if(hdoipd.amx.socket) {
+    		if((setsockopt(hdoipd.amx.socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast))) == -1) {
+    			perror("[AMX] no broadcast possible (setsockopt() failed)");
+    		}
+    		hdoipd.amx.addr_in.sin_family 		= AF_INET;
+    		hdoipd.amx.addr_in.sin_port 		= htons(atoi(reg_get("amx-hello-port")));
+    		hdoipd.amx.addr_in.sin_addr.s_addr  = inet_addr(reg_get("amx-hello-ip"));
+
+    		if(connect(hdoipd.amx.socket, (struct sockaddr*)&(hdoipd.amx.addr_in), sizeof(struct sockaddr_in)) == -1) {
+    			perror("[AMX] connect failed");
+    			return false;
+    		}
+    	} else {
+    		perror("[AMX] socket error");
+    		return false;
+    	}
+    }
 
     pthread_mutexattr_init(&attr);
     //pthread_mutexattr_setrobust_np(&attr, PTHREAD_MUTEX_ROBUST_NP);

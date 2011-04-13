@@ -13,6 +13,7 @@
 #include "hoi_res.h"
 
 char osdtmp[OSD_BUFFER_LENGTH];
+int amx_cnt = 0;
 
 void hdoipd_osd_deactivate()
 {
@@ -46,6 +47,7 @@ void hdoipd_osd_activate()
 
 void* hdoipd_osd_timer(void UNUSED *d)
 {
+
     do {
         struct timespec ts = {
             .tv_sec = 1,
@@ -65,6 +67,20 @@ void* hdoipd_osd_timer(void UNUSED *d)
         }
 
         lock("hdoipd_tick_timer");
+			if(hdoipd.amx.enable) {
+				if(amx_cnt == 0) {
+					if(hdoipd.amx.socket) {
+						write(hdoipd.amx.socket, reg_get("amx-hello-msg"), strlen(reg_get("amx-hello-msg")));
+					}
+
+					if(hdoipd.amx.interval > 1) {
+						amx_cnt = hdoipd.amx.interval - 1;
+					}
+				} else {
+					amx_cnt--;
+				}
+			}
+
             hdoipd.tick++;
 #ifdef USE_SYS_TICK
             rscp_client_event(hdoipd.client, EVENT_TICK);

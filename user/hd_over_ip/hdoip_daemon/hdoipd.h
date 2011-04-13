@@ -104,6 +104,13 @@ typedef struct {
 } t_task;
 
 typedef struct {
+	bool				enable;
+	int					socket;
+	int					interval;
+	struct sockaddr_in	addr_in;
+} t_hdoip_amx;
+
+typedef struct {
     int                 drv;            // used driver hdoipd
     t_bstmap*           registry;       // name=value
     t_bstmap*           verify;         //
@@ -128,6 +135,7 @@ typedef struct {
     uint64_t            tick;
     int                 eth_alive;
     int                 eth_timeout;
+    t_hdoip_amx			amx;
 } t_hdoipd;
 
 
