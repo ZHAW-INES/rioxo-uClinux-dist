@@ -87,12 +87,12 @@ int rscp_receive(t_rscp_connection* con, char** line, int timeout)
         sol = con->in.buf;
         con->in.sol = sol;
         eol = sol + s;
-        if (timeout&&0) {
+        if (timeout) {
             FD_ZERO(&rfds);
             FD_SET(con->fdr, &rfds);
             tv.tv_sec = timeout;
             tv.tv_usec = 0;
-            ret = select(1, &rfds, NULL, NULL, &tv);
+            ret = select(con->fdr+1, &rfds, NULL, NULL, &tv);
             if (ret == -1) {
                 report(ERROR "rscp_receive() select failed");
                 return -1;
