@@ -338,7 +338,7 @@ int rscp_media_ready(t_rscp_media* media)
 int rscp_media_setup(t_rscp_media* media)
 {
     int ret = RSCP_NULL_POINTER;
-    if (media) {
+    if (media && media->creator) {
         if (media->dosetup) ret = media->dosetup(media);
     }
     return ret;
@@ -347,7 +347,7 @@ int rscp_media_setup(t_rscp_media* media)
 int rscp_media_play(t_rscp_media* media)
 {
     int ret = RSCP_NULL_POINTER;
-    if (media) {
+    if (media && media->creator) {
         if (media->doplay) ret = media->doplay(media);
     }
     return ret;
@@ -356,7 +356,7 @@ int rscp_media_play(t_rscp_media* media)
 int rscp_media_event(t_rscp_media* media, uint32_t event)
 {
     int ret = RSCP_NULL_POINTER;
-    if (media) {
+    if (media && media->creator) {
     	if (media->state != RSCP_INIT) {
 			if (media->event) ret = media->event(media, event);
 			switch (ret) {
