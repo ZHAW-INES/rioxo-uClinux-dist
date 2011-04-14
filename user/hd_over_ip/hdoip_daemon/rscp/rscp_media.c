@@ -124,7 +124,7 @@ int rmsq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
     // needs to be a session
     if (!media->owner) return RSCP_CLIENT_ERROR;
 
-    if (media->teardown) ret = media->teardown(media, msg, rsp);
+    if ((media->teardown) && (media->state != RSCP_INIT)) ret = media->teardown(media, msg, rsp);
     media->state = RSCP_INIT;
     if (media->cookie_size) free(media->cookie);
     rscp_listener_remove_session(media->top, media);
@@ -179,7 +179,7 @@ int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
     // needs to be a session
     if (!media->owner) return RSCP_CLIENT_ERROR;
 
-    if (media->teardown) ret = media->teardown(media, msg, 0);
+    if ((media->teardown) && (media->state != RSCP_INIT)) ret = media->teardown(media, msg, 0);
     media->state = RSCP_INIT;
     if (media->cookie_size) free(media->cookie);
     free(media);
@@ -225,7 +225,7 @@ int rmcq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 int rmcq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
-    if (media->teardown) ret = media->teardown(media, msg, rsp);
+    if ((media->teardown) && (media->state != RSCP_INIT)) ret = media->teardown(media, msg, rsp);
     media->state = RSCP_INIT;
 
     ((t_rscp_client*)media->creator)->kill = true;
@@ -298,7 +298,7 @@ int rmcr_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 int rmcr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
-    if (media->teardown) ret = media->teardown(media, msg, 0);
+    if ((media->teardown) && (media->state != RSCP_INIT)) ret = media->teardown(media, msg, 0);
     media->state = RSCP_INIT;
     return ret;
 }

@@ -45,6 +45,7 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
 
     memset(client, 0, sizeof(t_rscp_client));
     client->kill = false;
+    client->teardown = false;
 
     if (media) {
         if (media->creator) {
@@ -157,7 +158,7 @@ int rscp_client_close(t_rscp_client* client)
 
     // detach client from media
     if (client->media) {
-        client->media->state = RSCP_INIT;
+    	rmcr_teardown(client->media, 0, 0);
         client->media->creator = 0;
         client->media = 0;
     }
@@ -231,6 +232,12 @@ int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt)
     return n;
 }
 
+int rscp_client_set_teardown(t_rscp_client* client)
+{
+	client->teardown = true;
+	return RSCP_SUCCESS;
+}
+
 int rscp_client_teardown(t_rscp_client* client)
 {
     u_rscp_header buf;
@@ -249,6 +256,12 @@ int rscp_client_teardown(t_rscp_client* client)
     rscp_client_close(client);
 
     return RSCP_SUCCESS;
+}
+
+int rscp_client_set_kill(t_rscp_client* client)
+{
+	client->kill = true;
+	return RSCP_SUCCESS;
 }
 
 int rscp_client_kill(t_rscp_client* client)
@@ -306,6 +319,8 @@ void rscp_client_event(t_node* list, uint32_t event)
     LIST_FOR(client, list) {
         if (client->media) rscp_media_event(client->media, event);
         if (client->kill)  rscp_client_close(client);
+        else if (client->teardown) rscp_client_teardown(client);
+
     }
 }
 
@@ -313,7 +328,6 @@ void rscp_client_force_close(t_node* list)
 {
     t_rscp_client* client;
     while ((client = list_peek(list))) {
-        rmcr_teardown(client->media, 0, &client->con);
         rscp_client_close(client);
     }
 }

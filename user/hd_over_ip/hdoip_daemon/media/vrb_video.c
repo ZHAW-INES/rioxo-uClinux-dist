@@ -100,7 +100,7 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     return RSCP_SUCCESS;
 }
 
-int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rscp_connection UNUSED *rsp)
+int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rscp_connection *rsp)
 {
     report(INFO "vrb_video_teardown");
 
@@ -267,7 +267,7 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
             } else {
                 vrb.alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
-                rscp_client_update(media->creator, EVENT_TICK);
+                rscp_client_update(client, EVENT_TICK);
             }
             if (vrb.timeout <= TICK_TIMEOUT) {
                 vrb.timeout++;
@@ -275,7 +275,7 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
                 report(INFO "vrb_video_event: timeout");
                 // timeout -> kill connection
                 vrb.timeout = 0;
-                rscp_client_kill(client);
+                rscp_client_set_kill(client);
                 osd_permanent(true);
                 osd_printf("vrb.video connection lost...\n");
             }
@@ -283,7 +283,7 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
 
         case EVENT_VIDEO_SINK_OFF:
             // Note: after teardown call media/client is not anymore a valid struct
-            rscp_client_teardown(client);
+            rscp_client_set_teardown(client);
         break;
 
     }
