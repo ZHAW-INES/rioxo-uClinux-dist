@@ -38,17 +38,28 @@ static void listener_unlock(t_rscp_listener* handle, const char* s)
     pthread_mutex_unlock(&handle->mutex);
 }
 
-void* rscp_listener_run_server(t_rscp_server* con)
+void* rscp_listener_run_server(t_rscp_server* server)
 {
-    rscp_server_thread(con);
-
-    shutdown(con->con.fdw, SHUT_RDWR);
+	t_rscp_listener* listener = server->owner;
+    rscp_server_thread(server);
 
     // remove from list & delete server
-    listener_lock(con->owner, "rscp_listener_run_server");
-        list_remove(con->idx);
-        rscp_server_free(con);
-    listener_unlock(con->owner, "rscp_listener_run_server");
+    lock("rscp_listener_run_server");
+		listener_lock(listener, "rscp_listener_run_server");
+			list_remove(server->idx);
+			if (server->con.fdr != -1) {
+				close(server->con.fdr);
+				server->con.fdr = -1;
+			}
+
+			if(server->media) {
+				bstmap_removep(&listener->sessions, server->media->sessionid);
+				rmsr_teardown(server->media, 0, 0);
+			}
+
+			free(server);
+		listener_unlock(listener, "rscp_listener_run_server");
+    unlock("rscp_listener_run_server");
 
     return 0;
 }
@@ -82,9 +93,10 @@ void rscp_listener_close_server(t_rscp_server* con, t_rscp_listener *handle)
     listener_lock(handle, "rscp_listener_close_server");
         if (list_contains(handle->cons, con)) {
             valid = true;
-            if (shutdown(con->con.fdw, SHUT_RDWR) == -1) {
+            if (close(con->con.fdw) == -1) {
                 report("close connection error: %s", strerror(errno));
             }
+            con->con.fdw = -1;
         }
     listener_unlock(handle, "rscp_listener_close_server");
 }

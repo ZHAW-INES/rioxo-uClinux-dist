@@ -28,24 +28,6 @@ t_rscp_server* rscp_server_create(int fd, uint32_t addr)
     return server;
 }
 
-void rscp_invalidate_server(char UNUSED *key, char* value, void* fd)
-{
-    t_rscp_media* media = (t_rscp_media*)value;
-    if (media->creator == fd) media->creator = 0;
-}
-
-void rscp_server_free(t_rscp_server* server)
-{
-    report(" - RSCP Server [%d]", server->nr);
-    t_rscp_listener* listener = server->owner;
-    if (listener) {
-        // TODO FIXME: currently a linear search is performed :(
-        // invalidate all media->creator pointing to this server-connection
-        bstmap_traverse(listener->sessions, rscp_invalidate_server, server);
-    }
-    free(server);
-}
-
 /** process incoming RSCP messages
  *
  * Format is the following:
@@ -150,17 +132,15 @@ void rscp_server_close(t_rscp_media* media)
 {
     t_rscp_server* server = media->creator;
 
-    if (server) {
+    if ((server) && (server->con.fdr != -1)) {
         // a server connection is active for this media -> shut it down
         report(DEL "RSCP Server [%d] close %s:%s", server->nr, media->name, media->sessionid);
 
-        if (shutdown(server->con.fdr, SHUT_RDWR) == -1) {
+        if (close(server->con.fdr) == -1) {
             report(ERROR "close socket error: %s", strerror(errno));
         }
-
+        server->con.fdr = -1;
     }
-
-    rmsr_teardown(media, 0, 0);
 }
 
 void rscp_server_update(t_rscp_media* media, uint32_t event)
