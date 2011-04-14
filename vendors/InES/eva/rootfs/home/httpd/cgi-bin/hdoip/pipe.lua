@@ -2,6 +2,7 @@
 module (..., package.seeall)
 require ("hdoip.convert")
 
+REG_SYS_UPDATE = "system-update"
 REG_SYS_IF = "system-ifname"
 REG_SYS_NAME = "system-name"
 REG_SYS_IP = "system-ip"

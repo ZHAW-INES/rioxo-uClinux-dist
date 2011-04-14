@@ -107,6 +107,7 @@ function show(t)
             t.media = t.media .. "audio" 
         end
         hdoip.pipe.setParam(hdoip.pipe.REG_ST_MODE_MEDIA, t.media)
+        hdoip.pipe.getParam(hdoip.pipe.REG_SYS_UPDATE)
     end
 
     hdoip.html.Header(t, label.page_name .. label.page_streaming, script_path)

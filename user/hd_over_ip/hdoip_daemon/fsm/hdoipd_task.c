@@ -14,15 +14,21 @@ static char buf[256];
 static uint32_t update_vector = 0;
 
 enum {
-	HOID_TSK_UPD_GOTO_READY		= 0x0001,
-	HOID_TSK_UPD_START			= 0x0002,
-	HOID_TSK_UPD_SYS_IP 		= 0x0001,
-	HOID_TSK_UPD_SYS_SUBNET 	= 0x0002,
-	HOID_TSK_UPD_SYS_GATEWAY 	= 0x0004,
-	HOID_TSK_UPD_SYS_MAC 		= 0x0008,
-	HOID_TSK_UPD_REMOTE_URI 	= 0x0010,
-	HOID_TSK_UPD_HELLO_URI 		= 0x0020,
-	HOID_TSK_UPD_MODE_START 	= 0x0040
+	HOID_TSK_UPD_GOTO_READY		= 0x00000001,
+	HOID_TSK_UPD_START			= 0x00000002,
+	HOID_TSK_UPD_SYS_IP 		= 0x00000001,
+	HOID_TSK_UPD_SYS_SUBNET 	= 0x00000002,
+	HOID_TSK_UPD_SYS_GATEWAY 	= 0x00000004,
+	HOID_TSK_UPD_SYS_MAC 		= 0x00000008,
+	HOID_TSK_UPD_REMOTE_URI 	= 0x00000010,
+	HOID_TSK_UPD_HELLO_URI 		= 0x00000020,
+	HOID_TSK_UPD_MODE_START 	= 0x00000040,
+	HOID_TSK_EXEC_GOTO_READY	= 0x00010000,
+	HOID_TSK_EXEC_START			= 0x00020000,
+	HOID_TSK_EXEC_RESTART		= 0x00030000,
+	HOID_TSK_EXEC_HELLO			= 0x00040000,
+	HOID_TSK_EXEC_RESTART_VRB   = 0X01000000,
+	HOID_TSK_EXEC_RESTART_VTB   = 0X02000000
 };
 
 void task_get_drivers(char** p)
@@ -208,47 +214,94 @@ void task_get_system_state(char** p)
 
 void task_get_system_update(char** p)
 {
-/*	int tmp;
+	int state;
 
 	if(update_vector != 0) {
 
-		if(update_vector & HOID_TSK_UPD_SYS_IP) {
-			tmp = task_ready();
+		// -------------------------------------------------------------
+		// System commands (before update)
 
-			sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), reg_get("system-ip"), reg_get("system-subnet"));
-			system(buf);
-			task_restart(tmp);
+		/* save actual state */
+		state = hdoipd.state;
+
+		/* goto ready */
+		if((update_vector & HOID_TSK_EXEC_GOTO_READY) ||
+		   ((update_vector & HOID_TSK_EXEC_RESTART_VRB) && (state == HOID_VRB)) ||
+		   ((update_vector & HOID_TSK_EXEC_RESTART_VTB) && (state == HOID_VTB))) {
+
+			if (hdoipd_state(HOID_VRB|HOID_VTB)) {
+				report("set device into ready state...");
+				hdoipd_goto_ready();
+	    	}
 		}
 
-		if(update_vector & HOID_TSK_UPD_SYS_SUBNET) {
-			sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), reg_get("system-ip"), reg_get("system-subnet"));
-			system(buf);
-		}
+		// -------------------------------------------------------------
+		// Parameter specific commands
 
+		/* MAC address */
 		if(update_vector & HOID_TSK_UPD_SYS_MAC) {
+			report("Updating MAC address...");
 			sprintf(buf, "/sbin/ifconfig %s hw ether %s", reg_get("system-ifname"), reg_get("system-mac"));
 			system(buf);
 		}
 
+		/* IP & subnet mask */
+		if((update_vector & HOID_TSK_UPD_SYS_IP) ||
+		   (update_vector & HOID_TSK_UPD_SYS_SUBNET)) {
+
+			report("Updating IP & subnet mask...");
+			sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), reg_get("system-ip"), reg_get("system-subnet"));
+			system(buf);
+		}
+
+		/* default gateway */
 		if(update_vector & HOID_TSK_UPD_SYS_GATEWAY) {
+			report("Updating Gateway...");
+			sprintf(buf, "/sbin/route del default", reg_get("system-gateway"));
+			system(buf);
 			sprintf(buf, "/sbin/route add default gw %s", reg_get("system-gateway"));
 			system(buf);
 		}
 
+		/* remote URI  */
 		if(update_vector & HOID_TSK_UPD_REMOTE_URI) {
-			if(hdoipd_state(HOID_VRB)) {
-				hdoipd_goto_ready();
-				hdoipd_goto_vrb();
+			report("Updating remote URI...");
+		}
+
+		/* hello URI  */
+		if(update_vector & HOID_TSK_UPD_HELLO_URI) {
+			report("Updating hello URI...");
+		}
+
+		/* device mode */
+		if(update_vector & HOID_TSK_UPD_MODE_START) {
+			report("Updating device modus...");
+		}
+
+		// -------------------------------------------------------------
+		// System commands (after update)
+
+		/* start device */
+		if((update_vector & HOID_TSK_EXEC_START) ||
+		   ((update_vector & HOID_TSK_EXEC_RESTART_VRB) && (state == HOID_VRB)) ||
+		   ((update_vector & HOID_TSK_EXEC_RESTART_VTB) && (state == HOID_VTB))) {
+
+			report("start device now...");
+
+			switch(state) {
+				case HOID_VTB : hdoipd_goto_vtb();
+								break;
+				case HOID_VRB : hdoipd_goto_vrb();
+								break;
+				default 	  :
+								break;
 			}
 		}
 
-		if(update_vector & HOID_TSK_UPD_HELLO_URI) {
+		/* send hello */
+		if(update_vector & HOID_TSK_EXEC_HELLO) {
+			report("send hello packets...");
 			hdoipd_hello();
-		}
-
-		if(update_vector & HOID_TSK_UPD_MODE_START) {
-			hdoipd_goto_ready();
-			hdoipd_start();
 		}
 
 		update_vector = 0;
@@ -256,7 +309,7 @@ void task_get_system_update(char** p)
 	} else {
 		sprintf(buf, "Nothing to update!");
 	}
-*/
+
 	*p = buf;
 }
 
@@ -357,74 +410,42 @@ void task_set_bw(char* p)
 
 void task_set_ip(char* p)
 {
-    int tmp = task_ready();
-
-	update_vector = HOID_TSK_UPD_SYS_IP;
-
-    // ip changed:
-    sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), p, reg_get("system-subnet"));
-    system(buf);
-    task_restart(tmp);
+	update_vector |= HOID_TSK_UPD_SYS_IP | HOID_TSK_EXEC_RESTART;
 }
 
 void task_set_subnet(char* p)
 {
-	update_vector = HOID_TSK_UPD_SYS_SUBNET;
-
-    // subnet changed:
-    sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), reg_get("system-ip"), p);
-    system(buf);
+	update_vector |= HOID_TSK_UPD_SYS_SUBNET;
 }
 
 void task_set_gateway(char* p)
 {
-	update_vector = HOID_TSK_UPD_SYS_GATEWAY;
-
-    // gateway changed:
-    sprintf(buf, "/sbin/route add default gw %s", p);
-    system(buf);
+	update_vector |= HOID_TSK_UPD_SYS_GATEWAY;
 }
 
 void task_set_mac(char* p)
 {
-	update_vector = HOID_TSK_UPD_SYS_MAC;
-
-    // mac changed:
-    sprintf(buf, "/sbin/ifconfig %s hw ether %s", reg_get("system-ifname"), p);
-    system(buf);
+	update_vector |= HOID_TSK_UPD_SYS_MAC | HOID_TSK_EXEC_RESTART;
 }
 
 void task_set_remote(char* p)
 {
-	update_vector = HOID_TSK_UPD_REMOTE_URI;
-
-    if (hdoipd_state(HOID_VRB)) {
-        hdoipd_goto_ready();
-        hdoipd_goto_vrb();
-    }
+	update_vector |= HOID_TSK_UPD_REMOTE_URI | HOID_TSK_EXEC_RESTART_VRB;
 }
 
 void task_set_hello(char* p)
 {
-	update_vector = HOID_TSK_UPD_HELLO_URI;
-
-    hdoipd_hello();
+	update_vector |= HOID_TSK_UPD_HELLO_URI | HOID_TSK_EXEC_HELLO;
 }
 
 void task_set_mode_start(char* p)
 {
-	update_vector = HOID_TSK_UPD_MODE_START;
-
-    hdoipd_goto_ready();
-    hdoipd_start();
+	update_vector |= HOID_TSK_UPD_MODE_START | HOID_TSK_EXEC_RESTART;
 }
 
 void task_set_mode_media(char* p)
 {
-    if (hdoipd_state(HOID_VRB)) {
-        hdoipd_goto_ready();
-        hdoipd_start();
-    }
+	update_vector |= HOID_TSK_EXEC_RESTART_VRB;
 }
 
 void hdoipd_register_task()
