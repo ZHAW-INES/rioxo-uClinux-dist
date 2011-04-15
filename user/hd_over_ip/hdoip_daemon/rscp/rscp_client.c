@@ -156,14 +156,8 @@ int rscp_client_close(t_rscp_client* client)
         client->idx = 0;
     }
 
-    // detach client from media
-    if (client->media) {
-    	rmcr_teardown(client->media, 0, 0);
-        client->media->creator = 0;
-        client->media = 0;
-    }
-
-    shutdown(client->con.fdw, SHUT_RDWR);
+    client->kill = true;
+    close(client->con.fdw);
 
     report(" i RSCP Client [%d] join pthread", client->nr);
 
@@ -171,6 +165,13 @@ int rscp_client_close(t_rscp_client* client)
         pthread_join(client->th1, 0);
         pthread_join(client->th2, 0);
     lock("rscp_client_close");
+
+    // detach client from media
+    if (client->media) {
+    	rmcr_teardown(client->media, 0, 0);
+        client->media->creator = 0;
+        client->media = 0;
+    }
 
     report(" - RSCP Client [%d]", client->nr);
 
@@ -400,16 +401,18 @@ void* rscp_client_req_thread(void* _client)
 
         lock("rscp_client_req_thread");
 
+        if((!client->kill) && (client->media)) {
 #ifdef REPORT_RSCP
-        report(" < RSCP Client [%d] %s", client->nr, common.rq.method);
+            report(" < RSCP Client [%d] %s", client->nr, common.rq.method);
 #endif
 
-        // process request (function responses for itself)
-        n = ((frscpm*)method->fnc)(client->media, (void*)&buf, &client->con);
-        if (n != RSCP_SUCCESS) {
-            report(" ? execute method \"%s\" error (%d)", common.rq.method, n);
-            unlock("rscp_client_req_thread");
-            break;
+            // process request (function responses for itself)
+            n = ((frscpm*)method->fnc)(client->media, (void*)&buf, &client->con);
+            if (n != RSCP_SUCCESS) {
+                report(" ? execute method \"%s\" error (%d)", common.rq.method, n);
+                unlock("rscp_client_req_thread");
+                break;
+            }
         }
 
         unlock("rscp_client_req_thread");
