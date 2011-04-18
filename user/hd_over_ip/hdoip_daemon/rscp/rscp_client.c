@@ -157,7 +157,7 @@ int rscp_client_close(t_rscp_client* client)
     }
 
     client->kill = true;
-    close(client->con.fdw);
+    shutdown(client->con.fdw, SHUT_RDWR);
 
     // detach client from media
     if (client->media) {

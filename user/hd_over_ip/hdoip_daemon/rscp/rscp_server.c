@@ -136,7 +136,7 @@ void rscp_server_close(t_rscp_media* media)
         // a server connection is active for this media -> shut it down
         report(DEL "RSCP Server [%d] close %s:%s", server->nr, media->name, media->sessionid);
 
-        if (close(server->con.fdr) == -1) {
+        if (shutdown(server->con.fdr, SHUT_RDWR) == -1) {
             report(ERROR "close socket error: %s", strerror(errno));
         }
         server->con.fdr = -1;

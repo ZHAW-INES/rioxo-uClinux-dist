@@ -48,7 +48,7 @@ void* rscp_listener_run_server(t_rscp_server* server)
 		listener_lock(listener, "rscp_listener_run_server");
 			list_remove(server->idx);
 			if (server->con.fdr != -1) {
-				close(server->con.fdr);
+				shutdown(server->con.fdr, SHUT_RDWR);
 				server->con.fdr = -1;
 			}
 
@@ -93,7 +93,7 @@ void rscp_listener_close_server(t_rscp_server* con, t_rscp_listener *handle)
     listener_lock(handle, "rscp_listener_close_server");
         if (list_contains(handle->cons, con)) {
             valid = true;
-            if (close(con->con.fdw) == -1) {
+            if (shutdown(con->con.fdw, SHUT_RDWR) == -1) {
                 report("close connection error: %s", strerror(errno));
             }
             con->con.fdw = -1;
