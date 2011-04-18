@@ -159,15 +159,18 @@ int rscp_client_close(t_rscp_client* client)
     client->kill = true;
     close(client->con.fdw);
 
-    report(" i RSCP Client [%d] join pthread", client->nr);
-
-    unlock("rscp_client_close");
-        pthread_join(client->th1, 0);
-        pthread_join(client->th2, 0);
-    lock("rscp_client_close");
-
     // detach client from media
     if (client->media) {
+        report(" i RSCP Client [%d] join pthread", client->nr);
+
+        unlock("rscp_client_close");
+            pthread_join(client->th1, 0);
+            pthread_join(client->th2, 0);
+        lock("rscp_client_close");
+
+        close(client->con.fdr);
+        close(client->con2.fdr);
+
     	rmcr_teardown(client->media, 0, 0);
         client->media->creator = 0;
         client->media = 0;
