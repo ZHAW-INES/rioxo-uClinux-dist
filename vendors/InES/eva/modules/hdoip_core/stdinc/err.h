@@ -26,6 +26,7 @@
 #define ERR_ADV7441A_SUCCESS                    (0)
 #define ERR_ADV7441A_AUD_PARAM_NOT_VALID        (ERR_ADV7441A+1)
 #define ERR_ADV7441A_VID_PARAM_NOT_VALID        (ERR_ADV7441A+2)
+#define ERR_ADV7441A_AUD_PARAM_NOT_CHANGED      (ERR_ADV7441A+3)
 
 #define ERR_VIO                                 (0xe3000000)
 #define ERR_VIO_SUCCESS                 	    (0)
