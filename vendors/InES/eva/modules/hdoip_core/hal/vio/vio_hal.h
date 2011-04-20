@@ -45,6 +45,7 @@
 #define vio_get_advcnt(p)       (HOI_REG_RD((p), VIO_OFF_CONFIG, VIO_CFG_MODE) >> VIO_CFG_MODE_SHIFT) 
 #define vio_get_size(p)         HOI_RD32((p), VIO_OFF_FRAME_LENGTH)
 #define vio_get_hsplit(p)       HOI_RD32((p), VIO_OFF_HSPLIT)
+#define vio_get_timer(p)        HOI_RD32((p), VIO_OFF_TIMER)
 
 #define vio_get_statistic_fvsnyc(p)     HOI_RD32((p), VIO_OFF_FVSYNC_CNT)
 #define vio_get_statistic_vid_in(p)     HOI_RD32((p), VIO_OFF_VID_IN_CNT)

@@ -30,6 +30,7 @@
 #define VIO_OFF_ST_IN_CNT           (0x004c)
 #define VIO_OFF_ST_OUT_CNT          (0x0050)
 #define VIO_OFF_FVSYNC_CNT          (0x0058)
+#define VIO_OFF_TIMER               (0x0068)
 // Frame length
 #define VIO_OFF_FRAME_LENGTH        (0x0054)
 // PLL
