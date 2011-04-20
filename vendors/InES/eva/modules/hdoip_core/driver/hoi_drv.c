@@ -43,7 +43,7 @@ void hoi_drv_init(t_hoi* handle)
     tmr_init(handle->p_tmr);
 
     // init i2c with 400kHz
-    i2c_drv_init(&handle->i2c_tx, handle->p_tx, 400000);
+    i2c_drv_init(&handle->i2c_tx, handle->p_tx, 100000);
     i2c_drv_init(&handle->i2c_rx, handle->p_rx, 400000);
 //    i2c_drv_init(&handle->i2c_tag_aud, handle->p_i2c_tag_aud, 400000);
     i2c_drv_init(&handle->i2c_tag_vid, handle->p_i2c_tag_vid, 400000);
