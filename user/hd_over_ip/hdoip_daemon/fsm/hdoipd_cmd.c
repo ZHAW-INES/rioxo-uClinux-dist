@@ -129,9 +129,7 @@ void hdoipd_cmd_vrb_setup(t_hoic_load* cmd)
 void hdoipd_cmd_play(t_hoic_cmd UNUSED *cmd)
 {
     if (hdoipd_state(HOID_VRB)) {
-        unlock("hdoipd_cmd_play");
-            hdoipd_launch(hdoipd_start_vrb, 0, 50, 3, 1000);
-        lock("hdoipd_cmd_play");
+        hdoipd_set_task_start_vrb();
     } else {
         hdoipd_goto_vrb();
     }
@@ -163,11 +161,6 @@ void hdoipd_repair(t_hoic_cmd UNUSED *cmd)
     hoi_drv_repair();
 }
 
-void hdoipd_ld_flash(t_hoic_load* cmd)
-{
-    update_flash(cmd->filename);
-}
-
 void hdoipd_store_cfg(t_hoic_cmd UNUSED *cmd)
 {
     hoi_cfg_write(CFG_FILE);
@@ -195,9 +188,7 @@ void hdoipd_read(t_hoic_param* cmd, int rsp)
 
 void hdoipd_remote_update(t_hoic_kvparam *cmd)
 {
-    int ret;
-    ret = update_flash(cmd->str);
-    if(ret != 0) {
+    if(update_flash(cmd->str) != 0) {
         printf("update_flash() failed\n");
     }
 }
@@ -215,7 +206,6 @@ void hdoipd_factory_default(t_hoic_cmd UNUSED *cmd)
     hdoipd_set_default();
     reg_set("system-mac", s);                           /* MAC restore */
 }
-
 
 #define hdoipdreq(x, y) case x: y((void*)cmd); break
 #define hdoipdreq_rsp(x, y) case x: y((void*)cmd, rsp); break
@@ -241,7 +231,6 @@ void hdoipd_request(uint32_t* cmd, int rsp)
         hdoipdreq(HOIC_REPAIR, hdoipd_repair);
         hdoipdreq(HOIC_STORE_CFG, hdoipd_store_cfg);
         hdoipdreq(HOIC_PARAM_SET, hdoipd_set_param);
-        hdoipdreq(HOIC_LD_FLASH, hdoipd_ld_flash);
         hdoipdreq(HOIC_REMOTE_UPDATE, hdoipd_remote_update);
         hdoipdreq(HOIC_FACTORY_DEFAULT, hdoipd_factory_default);
         hdoipdreq_rsp(HOIC_GETVERSION, hdoipd_get_version);
