@@ -14,21 +14,21 @@ static char buf[256];
 static uint32_t update_vector = 0;
 
 enum {
-	HOID_TSK_UPD_GOTO_READY		= 0x00000001,
-	HOID_TSK_UPD_START			= 0x00000002,
 	HOID_TSK_UPD_SYS_IP 		= 0x00000001,
-	HOID_TSK_UPD_SYS_SUBNET 	= 0x00000002,
-	HOID_TSK_UPD_SYS_GATEWAY 	= 0x00000004,
-	HOID_TSK_UPD_SYS_MAC 		= 0x00000008,
+	HOID_TSK_UPD_SYS_SUBNET 	= 0x00000001,
+	HOID_TSK_UPD_SYS_GATEWAY 	= 0x00000002,
+	HOID_TSK_UPD_SYS_MAC 		= 0x00000004,
 	HOID_TSK_UPD_REMOTE_URI 	= 0x00000010,
 	HOID_TSK_UPD_HELLO_URI 		= 0x00000020,
 	HOID_TSK_UPD_MODE_START 	= 0x00000040,
-	HOID_TSK_EXEC_GOTO_READY	= 0x00010000,
-	HOID_TSK_EXEC_START			= 0x00020000,
-	HOID_TSK_EXEC_RESTART		= 0x00030000,
-	HOID_TSK_EXEC_HELLO			= 0x00040000,
-	HOID_TSK_EXEC_RESTART_VRB   = 0X01000000,
-	HOID_TSK_EXEC_RESTART_VTB   = 0X02000000
+	HOID_TSK_UPD_AUTO_STREAM    = 0x00000080,
+	HOID_TSK_UPD_AMX            = 0x00000100,
+	HOID_TSK_EXEC_GOTO_READY	= 0x01000000,
+	HOID_TSK_EXEC_START			= 0x02000000,
+	HOID_TSK_EXEC_RESTART		= 0x03000000,
+	HOID_TSK_EXEC_HELLO			= 0x04000000,
+	HOID_TSK_EXEC_RESTART_VRB   = 0x10000000,
+	HOID_TSK_EXEC_RESTART_VTB   = 0x20000000
 };
 
 void task_get_drivers(char** p)
@@ -273,6 +273,21 @@ void task_get_system_update(char** p)
 			report("Updating hello URI...");
 		}
 
+		/* AMX update */
+		if(update_vector & HOID_TSK_UPD_AMX) {
+		    report("Updating AMX updated...");
+		    if(hdoipd_amx_update(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"),
+		                        inet_addr(reg_get("amx-hello-ip")), htons(reg_get_int("amx-hello-port")))) {
+		        perror("hdoipd_amx_update() failed");
+		    }
+		}
+
+		/* Auto-stream feature */
+		if(update_vector & HOID_TSK_UPD_AUTO_STREAM) {
+		    report("Updating auto-stream flag...");
+		    hdoipd.auto_stream = reg_test("auto-stream", "true");
+		}
+
 		/* device mode */
 		if(update_vector & HOID_TSK_UPD_MODE_START) {
 			report("Updating device modus...");
@@ -305,7 +320,7 @@ void task_get_system_update(char** p)
 		}
 
 		update_vector = 0;
-		sprintf(buf, "System parameters updated\n");
+		sprintf(buf, "System parameters updated!");
 	} else {
 		sprintf(buf, "Nothing to update!");
 	}
@@ -448,6 +463,16 @@ void task_set_mode_media(char* p)
 	update_vector |= HOID_TSK_EXEC_RESTART_VRB;
 }
 
+void task_set_amx_update(char* p)
+{
+    update_vector |= HOID_TSK_UPD_AMX;
+}
+
+void task_set_auto_stream(char* p)
+{
+    update_vector |= HOID_TSK_UPD_AUTO_STREAM | HOID_TSK_EXEC_RESTART_VRB;
+}
+
 void hdoipd_register_task()
 {
     get_listener("system-state", task_get_system_state);
@@ -475,6 +500,12 @@ void hdoipd_register_task()
     set_listener("mode-media", task_set_mode_media);
     set_listener("remote-uri", task_set_remote);
     set_listener("hello-uri", task_set_hello);
+    set_listener("auto-stream", task_set_auto_stream);
+    set_listener("amx-en", task_set_amx_update);
+    set_listener("amx-hello-ip", task_set_amx_update);
+    set_listener("amx-hello-port", task_set_amx_update);
+    set_listener("amx-hello-interval", task_set_amx_update);
+
 }
 
 
