@@ -129,7 +129,8 @@ int rscp_receive(t_rscp_connection* con, char** line, int timeout)
 
 void rscp_send(t_rscp_connection* con)
 {
-    if (send(con->fdw, con->out.buf, con->out.eol - con->out.buf, 0) == -1) {
+
+    if (send(con->fdw, con->out.buf, con->out.eol - con->out.buf, MSG_NOSIGNAL) == -1) {
     //if (write(con->fdw, con->out.buf, con->out.eol - con->out.buf) == -1) {
         perrno("rscp_send() send failed");
     }
