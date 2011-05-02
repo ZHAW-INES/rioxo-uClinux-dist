@@ -22,11 +22,16 @@
 #include "rscp_connection.h"
 #include "rscp_default.h"
 
+enum {
+    E_RSCP_CLIENT_KILL      = 0x00000001,
+    E_RSCP_CLIENT_TEARDOWN  = 0x00000002,
+    E_RSCP_CLIENT_PLAY      = 0x00000004
+};
+
 typedef struct {
     int                 nr;
     pthread_t           th1, th2;
-    bool				kill;
-    bool				teardown;
+    uint32_t            task;
     char                uri[200];       //!< remote resource name
     t_rscp_connection   con;
     t_rscp_connection   con1;           //!< request/response multiplexer
@@ -55,6 +60,7 @@ int rscp_client_set_kill(t_rscp_client* client);
 int rscp_client_kill(t_rscp_client* client);
 
 int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp_edid *edid);
+int rscp_client_set_play(t_rscp_client* client);
 int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt);
 int rscp_client_set_teardown(t_rscp_client* client);
 int rscp_client_teardown(t_rscp_client* client);

@@ -298,11 +298,10 @@ void rscp_listener_traverse_event(char UNUSED *key, char* value, void* _cookie)
 	struct t_listener_event *cookie = _cookie;
 	t_rscp_media* media = (t_rscp_media*)value;
 	t_rscp_server* server = media->creator;
-
 	if (server && server->kill) {
-		rscp_listener_add_kill(cookie->handle, media);
+	    rscp_listener_add_kill(cookie->handle, media);
 	} else {
-		rscp_media_event(media, cookie->event);
+	    rscp_media_event(media, cookie->event);
 	}
 }
 

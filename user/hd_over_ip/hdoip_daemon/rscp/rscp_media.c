@@ -247,7 +247,7 @@ int rmcq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
     if ((media->teardown) && (media->state != RSCP_INIT)) ret = media->teardown(media, msg, rsp);
     media->state = RSCP_INIT;
 
-    ((t_rscp_client*)media->creator)->kill = true;
+    ((t_rscp_client*)media->creator)->task = E_RSCP_CLIENT_KILL;
 
     return ret;
 }
@@ -339,7 +339,11 @@ int rscp_media_setup(t_rscp_media* media)
 {
     int ret = RSCP_NULL_POINTER;
     if (media && media->creator) {
-        if (media->dosetup) ret = media->dosetup(media);
+        if (media->state != RSCP_PLAYING) {
+            if (media->dosetup) ret = media->dosetup(media);
+        } else {
+            ret = RSCP_WRONG_STATE;
+        }
     }
     return ret;
 }
@@ -348,7 +352,11 @@ int rscp_media_play(t_rscp_media* media)
 {
     int ret = RSCP_NULL_POINTER;
     if (media && media->creator) {
-        if (media->doplay) ret = media->doplay(media);
+        if (media->state == RSCP_READY) {
+            if (media->doplay) ret = media->doplay(media);
+        } else {
+            ret = RSCP_WRONG_STATE;
+        }
     }
     return ret;
 }
