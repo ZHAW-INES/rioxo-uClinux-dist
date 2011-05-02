@@ -257,6 +257,11 @@ int rscp_parse_response(t_rscp_connection* con, const t_map_fnc attr[], void* ba
 
     // Response Header
     if ((n = rscp_receive(con, &line, timeout))) {
+        if(n != RSCP_CLOSE) {
+            report("rscp response receive header failed");
+        } else {
+            report("rscp response receive unexpected close");
+        }
         return n;
     }
 
@@ -280,7 +285,9 @@ int rscp_parse_response(t_rscp_connection* con, const t_map_fnc attr[], void* ba
         return RSCP_VERSION_ERROR;
     }
 
-    n = rscp_parse_header(con, attr, base, common, timeout);
+    if(n = rscp_parse_header(con, attr, base, common, timeout)) {
+        report("rscp response receive header fields failed");
+    }
 
     return n;
 }
