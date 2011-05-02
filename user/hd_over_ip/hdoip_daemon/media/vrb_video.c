@@ -184,9 +184,8 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
             }
 
             // restart
-            unlock("vrb_video_update");
-                hdoipd_launch(hdoipd_start_vrb, media, 250, 3, 1000);
-            lock("vrb_video_update");
+            rscp_client_set_play(media->creator);
+
             return RSCP_PAUSE;
         break;
 
