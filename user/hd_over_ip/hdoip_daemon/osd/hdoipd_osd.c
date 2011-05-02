@@ -13,7 +13,6 @@
 #include "hoi_res.h"
 
 char osdtmp[OSD_BUFFER_LENGTH];
-int amx_cnt = 0;
 
 void hdoipd_osd_deactivate()
 {
@@ -47,11 +46,10 @@ void hdoipd_osd_activate()
 
 void* hdoipd_osd_timer(void UNUSED *d)
 {
-
     do {
         struct timespec ts = {
-            .tv_sec = 1,
-            .tv_nsec = 0
+            .tv_sec = OSD_TIMER_INTERVAL_SEC,
+            .tv_nsec = OSD_TIMER_INTERVAL_NSEC
         };
         nanosleep(&ts, 0);
 
@@ -67,19 +65,9 @@ void* hdoipd_osd_timer(void UNUSED *d)
         }
 
         lock("hdoipd_tick_timer");
-			if(hdoipd.amx.enable) {
-				if(amx_cnt == 0) {
-					if(hdoipd.amx.socket) {
-						write(hdoipd.amx.socket, reg_get("amx-hello-msg"), strlen(reg_get("amx-hello-msg")));
-					}
-
-					if(hdoipd.amx.interval > 1) {
-						amx_cnt = hdoipd.amx.interval - 1;
-					}
-				} else {
-					amx_cnt--;
-				}
-			}
+            if(hdoipd_amx_handler(&hdoipd.amx, reg_get("amx-hello-msg"))) {
+                perror("[AMX] hdoipd_amx_handler() failed");
+            }
 
             hdoipd.tick++;
 #ifdef USE_SYS_TICK
