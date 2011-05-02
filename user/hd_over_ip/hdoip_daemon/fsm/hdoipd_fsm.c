@@ -291,9 +291,9 @@ void hdoipd_goto_vrb()
                 box_sys_set_remote(reg_get("remote-uri"));
 
                 // first thing to try is setup a new connection based on registry
-                unlock("hdoipd_goto_vrb");
-                    hdoipd_launch(hdoipd_start_vrb, 0, 50, 3, 1000);
-                lock("hdoipd_goto_vrb");
+                if(hdoipd.auto_stream) {
+                    hdoipd_set_task_start_vrb();
+                }
             }
         } else {
             report(ERROR "already in state vrb");
@@ -427,6 +427,35 @@ int hdoipd_start_vrb(void *d)
     return failed;
 }
 
+void hdoipd_set_task_start_vrb(void)
+{
+    hdoipd.task_commands |= TASK_START_VRB;
+    hdoipd.task_timeout = 1;
+    hdoipd.task_repeat = 2;
+}
+
+void hdoipd_task(void)
+{
+    // Task: start vrb
+    if(hdoipd.task_commands & TASK_START_VRB) {
+        if(hdoipd.task_timeout) {
+            hdoipd.task_timeout--;
+        } else {
+            if(hdoipd_start_vrb(0)) {
+                if(hdoipd.task_repeat > 0) {
+                    hdoipd.task_timeout = 50;
+                    hdoipd.task_repeat--;
+                } else {
+                    hdoipd.task_commands &= ~TASK_START_VRB;
+                }
+            } else {
+                hdoipd.task_repeat = 0;
+                hdoipd.task_commands &= ~TASK_START_VRB;
+            }
+        }
+    }
+}
+
 
 
 //------------------------------------------------------------------------------
@@ -446,11 +475,9 @@ void hdoipd_fsm_vrb(uint32_t event)
         case E_ADV9889_CABLE_ON:
             // plug in the cable is a start point for the VRB to
             // work when video or embedded audio is desired ...
-            unlock("hdoipd_fsm_vrb");
-                // TODO: test if we want video or embedded audio -> start
-                // try to start vrb when video sink plugin
-                hdoipd_launch(hdoipd_start_vrb, 0, 50, 3, 1000);
-            lock("hdoipd_fsm_vrb");
+            if(hdoipd.auto_stream) {
+                hdoipd_set_task_start_vrb();
+            }
         break;
         case E_ADV9889_CABLE_OFF:
             rscp_client_event(hdoipd.client, EVENT_VIDEO_SINK_OFF);
@@ -671,8 +698,8 @@ void hdoipd_start()
 
 bool hdoipd_init(int drv)
 {
+    int ret;
     pthread_mutexattr_t attr;
-    int broadcast = 1;
 
     memset(&hdoipd, 0, sizeof(t_hdoipd));
 
@@ -686,6 +713,7 @@ bool hdoipd_init(int drv)
     hdoipd.vtb_state = VTB_OFF;
     hdoipd.vrb_state = VRB_OFF;
     hdoipd.client = list_create();
+    hdoipd.auto_stream = false;
 
     // allocate resource
     void* vid = malloc(VID_SIZE);
@@ -706,32 +734,11 @@ bool hdoipd_init(int drv)
     hdoipd.local.aud_port = htons(reg_get_int("audio-port"));
     hdoipd.drivers = DRV_ADV9889 | DRV_ADV7441;
 
-    if(strcmp(reg_get("amx-en"), "1") == 0) {
-    	hdoipd.amx.enable = true;
-    } else {
-    	hdoipd.amx.enable = false;
-    }
+    hdoipd.auto_stream = reg_test("auto-stream", "true");
 
-    if(hdoipd.amx.enable) {
-    	hdoipd.amx.interval = reg_get_int("amx-hello-interval");
-    	hdoipd.amx.socket = socket(PF_INET, SOCK_DGRAM, 0);
-
-    	if(hdoipd.amx.socket) {
-    		if((setsockopt(hdoipd.amx.socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast))) == -1) {
-    			perror("[AMX] no broadcast possible (setsockopt() failed)");
-    		}
-    		hdoipd.amx.addr_in.sin_family 		= AF_INET;
-    		hdoipd.amx.addr_in.sin_port 		= htons(atoi(reg_get("amx-hello-port")));
-    		hdoipd.amx.addr_in.sin_addr.s_addr  = inet_addr(reg_get("amx-hello-ip"));
-
-    		if(connect(hdoipd.amx.socket, (struct sockaddr*)&(hdoipd.amx.addr_in), sizeof(struct sockaddr_in)) == -1) {
-    			perror("[AMX] connect failed");
-    			return false;
-    		}
-    	} else {
-    		perror("[AMX] socket error");
-    		return false;
-    	}
+    if(hdoipd_amx_open(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"),
+                    inet_addr(reg_get("amx-hello-ip")), htons(reg_get_int("amx-hello-port")))) {
+        perror("[AMX] hdoipd_amx_open() failed");
     }
 
     pthread_mutexattr_init(&attr);
