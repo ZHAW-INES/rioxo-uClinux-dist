@@ -386,7 +386,7 @@ int vio_drv_decode_sync(t_vio* handle)
 
     if (handle->adv.cnt > 1) {
         if (handle->config & VIO_CONFIG_DECODE) {
-            if ((ret = adv212_drv_boot_dec_sync(handle->p_adv, &handle->adv))) {
+            if ((ret = adv212_drv_boot_dec_sync(handle->p_adv, handle->p_vio, &handle->adv))) {
                 return ret;
             }
             vio_set_cfg(handle->p_vio, VIO_CFG_SCOMM5);
