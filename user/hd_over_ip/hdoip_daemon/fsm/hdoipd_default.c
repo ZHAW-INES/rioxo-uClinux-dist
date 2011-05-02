@@ -19,6 +19,7 @@ void hdoipd_set_default()
     reg_set("system-mac", "00:15:12:00:00:42");
     reg_set("system-cmd", "");
 
+    reg_set("auto-stream", "true");
     reg_set("mode-start", "none");
     reg_set("mode-media", "video");
     reg_set("mode-sync", "streamsync");
@@ -36,11 +37,11 @@ void hdoipd_set_default()
     reg_set("rscp-server-port", "554");
 
     reg_set("web-lang", "EN");
-    reg_set("web-auth-en", "0");
+    reg_set("web-auth-en", "false");
     reg_set("web-user", "admin");
     reg_set("web-pass", "admin");
 
-    reg_set("amx-en", "1");
+    reg_set("amx-en", "true");
     reg_set("amx-hello-ip", "192.168.1.255");
     reg_set("amx-hello-port", "1000");
     reg_set("amx-hello-msg", "HELLO");
