@@ -166,16 +166,20 @@ void* event_read_thread(void UNUSED *d)
 
 void* poll_thread(void UNUSED *d)
 {
+    int ret;
+
     while (1) {
         struct timespec ts = {
-            .tv_sec = 0,
-            .tv_nsec = 20000000
+            .tv_sec = POLL_THREAD_INTERVAL_SEC,
+            .tv_nsec = POLL_THREAD_INTERVAL_NSEC
         };
         nanosleep(&ts, 0);
 
         lock("poll_thread()");
         {
             hoi_drv_poll();
+
+            hdoipd_task();
         }
         unlock("poll_thread()");
     }
@@ -225,6 +229,10 @@ int main(int argc, char **argv)
 
             lock("main-close");
                 close(hdoipd.drv);
+
+                if(hdoipd.amx.enable) {
+                	shutdown(hdoipd.amx.socket, SHUT_RDWR);
+                }
 
                 report("hdoipd closed");
             unlock("main-close");
