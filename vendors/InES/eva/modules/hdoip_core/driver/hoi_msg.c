@@ -9,6 +9,7 @@
 #include "hoi_drv.h"
 
 #include "adv7441a_drv_edid.h" // TODO no edid for init
+#include "adv7441a_drv.h"
 
 // demo workaround:
 #include <linux/types.h>
@@ -42,7 +43,7 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
         adv9889_drv_init(&handle->adv9889, &handle->i2c_tx, &handle->vio);
     }
     if (lddrv & DRV_ADV7441) {
-        adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, (char*)adv7441a_edid_table);
+        adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, &handle->vio, (char*)adv7441a_edid_table);
     }
 
     handle->drivers = msg->drivers & DRV_ALL;
@@ -592,7 +593,6 @@ int hoi_drv_msg_poll(t_hoi* handle)
 
     return SUCCESS;
 }
-
 
 //------------------------------------------------------------------------------
 // message
