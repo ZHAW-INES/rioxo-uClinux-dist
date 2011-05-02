@@ -530,10 +530,10 @@ int adv212_drv_boot_dec(void* p, t_video_timing* p_vt, t_adv212* p_adv)
  * @param p_adv adv configuration struct
  * @return error code (0 on success)
  */
-int adv212_drv_boot_dec_sync(void* p, t_adv212* p_adv)
+int adv212_drv_boot_dec_sync(void* p, void* vio, t_adv212* p_adv)
 {
     for (int i=0; i<p_adv->cnt; i++) {
-        adv212_boot_sync_wait(OFFSET(p, i * ADV212_SIZE));
+        adv212_boot_sync_wait(OFFSET(p, i * ADV212_SIZE), vio);
     }
 
     for (int i=0; i<p_adv->cnt; i++) {

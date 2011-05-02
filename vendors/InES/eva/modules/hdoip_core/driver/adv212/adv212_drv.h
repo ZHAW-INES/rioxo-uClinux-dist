@@ -29,6 +29,6 @@ int adv212_drv_detect_enc(t_video_timing* p_vt, t_adv212* p_adv);
 int adv212_drv_detect_dec(t_video_timing* p_vt, t_adv212* p_adv);
 int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv);
 int adv212_drv_boot_dec(void* p, t_video_timing* p_vt, t_adv212* p_adv);
-int adv212_drv_boot_dec_sync(void* p, t_adv212* p_adv);
+int adv212_drv_boot_dec_sync(void* p, void* vio, t_adv212* p_adv);
 
 #endif /*ADV212_DRV_H_*/
