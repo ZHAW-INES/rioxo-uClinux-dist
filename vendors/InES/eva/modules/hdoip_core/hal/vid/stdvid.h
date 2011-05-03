@@ -9,7 +9,7 @@ typedef struct {
     uint32_t    id;                 //!< resolution id
     
     uint32_t    width;              //!< visible screen size
-    uint32_t    height;
+    uint32_t    height;             //!< visible height field 0
     uint32_t    pfreq;              //!< pixel frequency in 1 [Hz]
     
     uint32_t    hfront;             //!< horizontal front porch
@@ -17,12 +17,20 @@ typedef struct {
     uint32_t    hback;              //!< horizontal back porch
     uint32_t    hpolarity;          //!< 1=active high, 0=active low
     
-    uint32_t    vfront;             //!< vertical front porch
-    uint32_t    vpulse;             //!< vertical sync pulse
-    uint32_t    vback;              //!< vertical back porch
+    uint32_t    vfront;             //!< vertical front porch field 0
+    uint32_t    vpulse;             //!< vertical sync pulse field 0
+    uint32_t    vback;              //!< vertical back porch field 0
     uint32_t    vpolarity;          //!< 1=active high, 0=active low
+
+    uint32_t    interlaced;         //!< 1=interlace, 0=progressive
+
+    uint32_t    height_1;           //!< visible height field 1
+    uint32_t    vfront_1;           //!< vertical front porch field 1
+    uint32_t    vpulse_1;           //!< vertical sync pulse field 1
+    uint32_t    vback_1;            //!< vertical back porch field 1
+
+    uint32_t    fpolarity;          //!< 1= high for odd field
     
-    uint32_t    interlace;          //!< 1=interlace, 0=progressive
 } __attribute__((__packed__)) t_video_timing;
 
 

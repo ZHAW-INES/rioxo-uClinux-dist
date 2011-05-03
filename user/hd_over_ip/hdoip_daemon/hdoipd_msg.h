@@ -128,7 +128,6 @@ static inline void hoic_sw(int fd, uint32_t id)
 
 
 
-
 //------------------------------------------------------------------------------
 // flash 
 typedef struct {

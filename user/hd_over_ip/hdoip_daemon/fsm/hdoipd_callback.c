@@ -64,7 +64,3 @@ int hdoipd_media_callback(t_rscp_media* media, int (*f)(t_rscp_media*, void*), v
     }
     return ret;
 }
-
-
-
-

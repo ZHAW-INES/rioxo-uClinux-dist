@@ -20,6 +20,8 @@ int vio_drv_osd_write_(void *p, t_osd* p_osd, uint8_t* src, size_t size)
 	uint32_t x = p_osd->x;
 	uint32_t y = p_osd->y;
 	uint8_t* screen = vio_osd_screen(p) + x + y * w;
+    uint8_t x_border = p_osd->x_border;
+    uint8_t y_border = p_osd->y_border;
 
 	for(;size;size--,src++) {
 		switch (*src) {
@@ -28,13 +30,26 @@ int vio_drv_osd_write_(void *p, t_osd* p_osd, uint8_t* src, size_t size)
                     *screen = ' ';
 			break;
 			default:
+                if (x < x_border) {
+                    x = x_border;
+                    screen += x_border;
+                }
+                if (y < y_border) {
+                    y = y_border;
+                    screen += y_border * w;
+                }
 				*screen = *src;
-				screen++; x++;
+				screen++;
+                x++;
 			break;
 		}
-		if (x == w) {
-			y++; x = 0;
-			if (y == h) {
+		if (x >= (w-x_border)) {
+            for(;x<w;x++,screen++)
+                *screen = ' ';
+			y++;
+            x = x_border;
+            screen += x_border;
+			if (y == (h - x_border)) {
 				y--; screen = screen - w;
 				vio_osd_move_screen(p, 1);
 			}

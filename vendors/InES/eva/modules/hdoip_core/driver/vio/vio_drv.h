@@ -44,6 +44,8 @@ typedef struct {
 #define VIO_CONFIG_VRP  		(0x100)
 #define VIO_CONFIG_OSD  		(0x200)
 
+#define VIO_TG_CONFIG_ENCODE    (0x001)
+#define VIO_TG_CONFIG_DECODE    (0x010)
 
 /** inline functions
  */
@@ -105,4 +107,6 @@ int vio_drv_set_sync(t_vio* handle);
 void vio_drv_get_timing(t_vio* handle, t_video_timing* p_vt);
 void vio_drv_get_advcnt(t_vio* handle, uint32_t* advcnt);
 
+void vio_copy_adv7441_timing(t_video_timing* timing, void* handle_adv);
+void vio_config_tg(t_vio* handle, int config);
 #endif /*VIO_DRV_H_*/

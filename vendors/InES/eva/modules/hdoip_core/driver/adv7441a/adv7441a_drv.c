@@ -388,8 +388,8 @@ int adv7441a_get_audio_timing(t_adv7441a* handle)
  *
  * @param handle pointer to the adv7441a handle
  * @return error code
- */
-static int adv7441a_get_video_timing(t_adv7441a* handle) 
+ */ /*
+int adv7441a_get_video_timing(t_adv7441a* handle) 
 {
 	uint32_t tmp;
 
@@ -403,6 +403,70 @@ static int adv7441a_get_video_timing(t_adv7441a* handle)
 	handle->vid_st.field1 = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_0BH) & 0x0F;
 	handle->vid_st.field1 = ((handle->vid_st.field1)<<8) | adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD_1_HEIGHT);
 	handle->vid_st.pixel_clk = adv7441a_hdmi_map_read(handle,ADV7441A_REG_TMDSFREQ);
+
+	return ERR_ADV7441A_SUCCESS;
+} */
+
+int adv7441a_get_video_timing(t_adv7441a* handle) 
+{
+    handle->vid_st.interlaced =  (adv7441a_usr_map_read(handle, ADV7441A_REG_RB_STANDARD_IDENT_1) & ADV7441A_BIT_STDI_INTLCD)  && ADV7441A_BIT_STDI_INTLCD;  // 1 = interlaced timing detected
+    handle->vid_st.vsync_pol  = !((adv7441a_usr_map_read(handle, ADV7441A_REG_CP_HVF_CONTROL_1) & ADV7441A_BIT_PIN_INV_VS)     && ADV7441A_BIT_PIN_INV_VS);  // 1 = high active
+    handle->vid_st.hsync_pol  = !((adv7441a_usr_map_read(handle, ADV7441A_REG_CP_HVF_CONTROL_1) & ADV7441A_BIT_PIN_INV_HS)     && ADV7441A_BIT_PIN_INV_HS);  // 1 = high active
+    handle->vid_st.field_pol  =  (adv7441a_usr_map_read(handle, ADV7441A_REG_CP_HVF_CONTROL_1) & ADV7441A_BIT_PIN_INV_F)       && ADV7441A_BIT_PIN_INV_F;    // 1 = high is odd field
+
+    // Horizontal Measurements
+    if (adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_07H) & ADV7441A_BIT_DE_REGEN_FILTER_LOCKED) // Horizontal measurements are valid
+    {
+        handle->vid_st.h_total_line_width      = (((adv7441a_hdmi_map_read(handle, ADV7441A_REG_TOTAL_LINE_WIDTH_MSB)  & 0x0F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_TOTAL_LINE_WIDTH));
+        handle->vid_st.h_line_width            = (((adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_07H)          & 0x0F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_LINE_WIDTH));
+        handle->vid_st.h_front_porch_width     = (((adv7441a_hdmi_map_read(handle, ADV7441A_REG_HSYNC_FRONT_PORCH_MSB) & 0x03) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_HSYNC_FRONT_PORCH));
+        handle->vid_st.h_sync_width            = (((adv7441a_hdmi_map_read(handle, ADV7441A_REG_HSYNC_PULSE_WIDTH_MSB) & 0x03) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_HSYNC_PULSE_WIDTH));
+        handle->vid_st.h_back_porch_width      = (((adv7441a_hdmi_map_read(handle, ADV7441A_REG_HSYNC_BACK_PORCH_MSB)  & 0x03) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_HSYNC_BACK_PORCH));
+    }
+    else
+    {
+        return ERR_ADV7441A_VID_PARAM_NOT_VALID;
+    }    
+
+    // Vertical Measurements (all units are number of lines)
+    if (adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_07H) & ADV7441A_BIT_VERT_FILTER_LOCKED) // Vertical measurements are valid
+    {
+        // Field 0
+        handle->vid_st.f0_total_height         = (((adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD0_TOTAL_HEIGHT_MSB)     & 0x1F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD0_TOTAL_HEIGHT));
+        handle->vid_st.f0_height               = (((adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD_0_HEIGHT_MSB)          & 0x0F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD_0_HEIGHT)); //>>1;
+        handle->vid_st.f0_front_porch_width    = ((((adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD0_VS_FRONT_PORCH_MSB)  & 0x1F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD0_VS_FRONT_PORCH))>>1);
+        handle->vid_st.f0_vs_pulse_width       = ((((adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD0_VS_PULSE_WIDTH_MSB)  & 0x1F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD0_VS_PULSE_WIDTH))>>1);
+        handle->vid_st.f0_back_porch_width     = ((((adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD0_VS_BACK_PORCH_MSB)   & 0x1F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD0_VS_BACK_PORCH))>>1);
+
+        // Field 1
+        if (handle->vid_st.interlaced) {
+            handle->vid_st.f1_total_height         = (((adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD1_TOTAL_HEIGHT_MSB)    & 0x0F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD1_TOTAL_HEIGHT));
+            handle->vid_st.f1_height               = (((adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_0BH)               & 0x0F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD_1_HEIGHT)); //>>1;
+            handle->vid_st.f1_front_porch_width    = ((((adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD1_VS_FRONT_PORCH_MSB) & 0x1F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD1_VS_FRONT_PORCH))>>1);
+            handle->vid_st.f1_vs_pulse_width       = ((((adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD1_VS_PULSE_WIDTH_MSB) & 0x1F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD1_VS_PULSE_WIDTH))>>1);
+            handle->vid_st.f1_back_porch_width     = ((((adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD1_VS_BACK_PORCH_MSB)  & 0x1F) << 8) + adv7441a_hdmi_map_read(handle, ADV7441A_REG_FIELD1_VS_BACK_PORCH))>>1);
+        }
+        else {
+            handle->vid_st.f1_total_height         = 0;
+            handle->vid_st.f1_height               = 0;
+            handle->vid_st.f1_front_porch_width    = 0;
+            handle->vid_st.f1_vs_pulse_width       = 0;
+            handle->vid_st.f1_back_porch_width     = 0;
+        }
+
+    }
+    else
+    {
+        return ERR_ADV7441A_VID_PARAM_NOT_VALID;
+    }
+
+	// Change vsync pin to output field signal if interlaced timing measured 
+    if (handle->vid_st.interlaced) {
+	    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_OUTPUT_SELECTION, 0x02 | ADV7441A_BIT_DE_OUT_SEL | ADV7441A_BIT_HS_OUT_SEL);
+    }
+    else {
+        adv7441a_usr_map_write(handle, ADV7441A_REG_CP_OUTPUT_SELECTION, 0x02 | ADV7441A_BIT_DE_OUT_SEL | ADV7441A_BIT_VS_OUT_SEL | ADV7441A_BIT_HS_OUT_SEL);
+    }
 
 	return ERR_ADV7441A_SUCCESS;
 }
@@ -646,9 +710,9 @@ int adv7441a_proc_video_in(char *buf, char **start, off_t offset, int count, int
 	len += sprintf(buf+len,"[%03d] ADV7441A HDMI audio             : %d\n",cnt++,(adv7441a_handle->status & ADV7441A_STATUS_AUDIO)!=0);
 
 	if(adv7441a_handle->status & ADV7441A_STATUS_CONNECTION) {
-		len += sprintf(buf+len,"\n[%03d] ADV7441A HDMI width             : %d\n",cnt++,adv7441a_handle->vid_st.line_width);
-		len += sprintf(buf+len,"[%03d] ADV7441A HDMI field0            : %d\n",cnt++,adv7441a_handle->vid_st.field0);
-		len += sprintf(buf+len,"[%03d] ADV7441A HDMI field1            : %d\n",cnt++,adv7441a_handle->vid_st.field1);
+		len += sprintf(buf+len,"\n[%03d] ADV7441A HDMI width             : %d\n",cnt++,adv7441a_handle->vid_st.h_line_width);
+		len += sprintf(buf+len,"[%03d] ADV7441A HDMI field0            : %d\n",cnt++,adv7441a_handle->vid_st.f0_height);
+		len += sprintf(buf+len,"[%03d] ADV7441A HDMI field1            : %d\n",cnt++,adv7441a_handle->vid_st.f1_height);
 		len += sprintf(buf+len,"[%03d] ADV7441A HDMI pixel clk         : %d\n",cnt++,adv7441a_handle->vid_st.pixel_clk);
 	}
 

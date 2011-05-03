@@ -243,6 +243,24 @@ int vso_drv_handler(t_vso* handle, t_queue* event_queue)
 	// started streaming
 	vso_drv_put_event(handle, event_queue, status, VSO_ST_ACTIVE, VSO_DRV_STATUS_ST_ACTIVE, E_VSO_ST_ACTIVE, 0);
 
-
 	return ERR_VSO_SUCCESS;
+}
+
+
+void vso_set_vsync_blanking(t_vso* handle, t_video_timing* timing)
+{
+    // Disable continuous vsync blanking (enable only for debug)
+    vso_clr_ctrl(handle->p_vso, VSO_CTRL_VSYNC_OFF);
+
+    // Select source of vsync blanking (1=field-signal / 0=timer that blanks every second vsync-pulse)
+    vso_clr_ctrl(handle->p_vso, VSO_CTRL_VSYNC_BLANK_SOURCE);
+    vso_set_ctrl(handle->p_vso, VSO_CTRL_FIELD_POL);
+
+    // Enable blanking if interlaced
+    if (timing->interlaced) {
+        vso_set_ctrl(handle->p_vso, VSO_CTRL_INTERLACE);
+    }
+    else {
+        vso_clr_ctrl(handle->p_vso, VSO_CTRL_INTERLACE);
+    }
 }

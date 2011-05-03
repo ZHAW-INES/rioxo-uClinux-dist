@@ -346,7 +346,6 @@ void rscp_client_event(t_node* list, uint32_t event)
         else if(client->task & E_RSCP_CLIENT_PLAY) rscp_media_play(client->media);
         client->task = 0;
     }
-
 }
 
 void rscp_client_force_close(t_node* list)

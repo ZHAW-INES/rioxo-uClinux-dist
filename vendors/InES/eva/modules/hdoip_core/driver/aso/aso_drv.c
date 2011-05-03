@@ -93,10 +93,8 @@ int aso_drv_start(t_aso* handle)
 int aso_drv_stop(t_aso* handle)
 {
     aso_disable(handle->p_aso);
-
     // FIXME:
     //while(aso_get_status(handle->p_aso, ASO_STATUS_IDLE) == 0);
-
     handle->status = handle->status & ~ASO_DRV_STATUS_ACTIV;
     return ERR_ASO_SUCCESS;
 }

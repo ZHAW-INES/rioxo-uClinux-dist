@@ -1,8 +1,7 @@
 #include "vio_drv.h"
-#include "vio_drv_pll.h"
-#include "vio_str.h"
 #include "adv212_str.h"
 #include "vid_const.h"
+#include "adv7441a_drv.h"
 
 /** Sampling conversion
  */
@@ -181,6 +180,10 @@ int vio_drv_reset(t_vio* handle)
     memset(&handle->adv, 0, sizeof(t_adv212));
     memset(&handle->osd, 0, sizeof(t_osd));
     
+    // set OSD border
+    handle->osd.x_border = 6;
+    handle->osd.y_border = 0;
+
     // stop everything
     vio_reset(handle->p_vio);
     adv212_drv_init(handle->p_adv);
@@ -188,6 +191,9 @@ int vio_drv_reset(t_vio* handle)
     
     return ERR_VIO_SUCCESS;
 }
+
+
+
 
 /** Activates the VIO/ADV212 for encoding operation
  * 
@@ -202,6 +208,12 @@ int vio_drv_encode(t_vio* handle)
     int ret = ERR_VIO_SUCCESS;    
 
     REPORT(INFO, ">> VIO-Driver: adv212 encoding mode");
+    
+    // stop everything
+    vio_reset(handle->p_vio);
+
+    // setup timing generator
+    vio_config_tg(handle, VIO_TG_CONFIG_ENCODE);
 
     // store config
     vio_drv_change_mode(handle, VIO_CONFIG_ENCODE);
@@ -210,13 +222,7 @@ int vio_drv_encode(t_vio* handle)
     } else {
         handle->adv.size = vio_bandwidth_to_size(handle->bandwidth, &handle->timing);
     }
-    
-    // stop everything
-    vio_reset(handle->p_vio);
-    
-    // Read current video format and test for validity
-    vio_get_timing(handle->p_vio, &handle->timing);
-    vio_set_timing(handle->p_vio, &handle->timing);
+
     // ... TODO: testing range
     
     // detect settings based on resolution
@@ -233,9 +239,12 @@ int vio_drv_encode(t_vio* handle)
     // setup PLL
     vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_INPUT, 0, jrel[handle->adv.cnt-1], VIO_MUX_PLLC_FREE);    
     
-    // setup osd
+    // setup osd 
+    vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
-    
+
+
+
     // setup muxes
     vio_set_stin(handle->p_vio, VIO_MUX_STIN_ADV212);
     vio_set_vout(handle->p_vio, VIO_MUX_VOUT_LOOP);
@@ -306,7 +315,7 @@ int vio_drv_decode(t_vio* handle)
     }
 
     // setup timing generator
-    vio_set_timing(handle->p_vio, &handle->timing);
+    vio_config_tg(handle, VIO_TG_CONFIG_DECODE);
 
     // setup interface format
     handle->format_proc = advfmt[handle->adv.cnt-1];
@@ -318,11 +327,13 @@ int vio_drv_decode(t_vio* handle)
     	vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_75MHZ, handle->timing.pfreq, jrel[handle->adv.cnt-1], VIO_MUX_PLLC_FREE);
     } else {
     	// stream source is VSO
+
     	vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_75MHZ, handle->timing.pfreq, jrel[handle->adv.cnt-1], VIO_MUX_PLLC_TG);
     }
 
     // setup osd
-    vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
+    vio_osd_clear_screen(handle->p_vio);
+    vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);  
 
     // setup muxes
     vio_set_vout(handle->p_vio, VIO_MUX_VOUT_ADV212);
@@ -386,7 +397,7 @@ int vio_drv_decode_sync(t_vio* handle)
 
     if (handle->adv.cnt > 1) {
         if (handle->config & VIO_CONFIG_DECODE) {
-            if ((ret = adv212_drv_boot_dec_sync(handle->p_adv, handle->p_vio, &handle->adv))) {
+            if ((ret = adv212_drv_boot_dec_sync(handle->p_adv, &handle->adv, handle->p_vio))) {
                 return ret;
             }
             vio_set_cfg(handle->p_vio, VIO_CFG_SCOMM5);
@@ -416,7 +427,7 @@ int vio_drv_plainout(t_vio* handle)
     // ... TODO: testing range
 
     // setup timing generator
-    vio_set_timing(handle->p_vio, &handle->timing);
+    vio_set_timing(handle->p_vio, &handle->timing, 0);
 
     // setup interface format
     vio_set_output_format(handle->p_vio, &handle->timing, vio_format(CS_RGB, SM_444), handle->format_out);
@@ -509,6 +520,8 @@ int vio_drv_plainin(t_vio* handle)
     // setup frame size in words
     vio_set_size(handle->p_vio, vid_pixel_per_frame(&handle->timing)*3/4);
 
+
+
     // setup muxes
     vio_set_stin(handle->p_vio, VIO_MUX_STIN_PLAIN);
     vio_set_vout(handle->p_vio, VIO_MUX_VOUT_LOOP);
@@ -528,6 +541,8 @@ int vio_drv_plainin(t_vio* handle)
     if (handle->config & VIO_CONFIG_OSD) {
         vio_set_cfg(handle->p_vio, VIO_CFG_OVERLAY);
     }
+
+
 
     // 4.) Report
     VIO_REPORT_TIMING(&handle->timing);
@@ -562,7 +577,7 @@ int vio_drv_debug(t_vio* handle)
     vio_reset(handle->p_vio);
     
     // setup timing generator
-    vio_set_timing(handle->p_vio, &handle->timing);
+    vio_set_timing(handle->p_vio, &handle->timing, 0);
 
     // setup interface format
     vio_set_output_format(handle->p_vio, &handle->timing, vio_format(CS_RGB, SM_444), handle->format_out);
@@ -678,7 +693,7 @@ int vio_drv_set_bandwidth(t_vio* handle, int bandwidth)
 {
     handle->bandwidth = bandwidth;
     if (handle->active && ((handle->config & VIO_CONFIG_MODE) == VIO_CONFIG_ENCODE)) {
-        adv212_drv_rc_size(handle->p_adv, vio_bandwidth_to_size(handle->bandwidth, &handle->timing), &handle->adv);
+        adv212_drv_rc_size(handle->p_adv, vio_bandwidth_to_size(handle->bandwidth, &handle->timing), &handle->adv, &handle->timing.interlaced);
     }
     return ERR_VIO_SUCCESS;
 }
@@ -772,6 +787,7 @@ int vio_drv_set_format_proc(t_vio* handle, t_video_format f)
     // TODO: update when already running?
     if (handle->active) {
         vio_set_input_format(handle->p_vio, &handle->timing, handle->format_in, handle->format_proc);
+
         vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out);
     }
     return ERR_VIO_SUCCESS;
@@ -832,7 +848,6 @@ void vio_drv_get_advcnt(t_vio* handle, uint32_t* advcnt)
 void vio_drv_handler(t_vio* handle, t_queue* event)
 {
     PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv); PTR(event);
-    t_video_timing timing;
     uint32_t cfg = vio_get_sta(handle->p_vio, 0xffffffff);
 
     uint32_t pcfg = cfg & ~handle->hw_cfg_old;
@@ -863,9 +878,6 @@ void vio_drv_handler(t_vio* handle, t_queue* event)
         }
     }
 
-    // test for change in timing
-    vio_get_timing(handle->p_vio, &timing);
-
     handle->hw_cfg_old = cfg;
 }
 
@@ -884,5 +896,84 @@ void vio_drv_irq_adv212(t_vio* handle, int nr, t_queue* event)
             //queue_put(event, E_VIO_ADV212_CFERR+nr);
             //vio_drv_halt(handle);
         }
+    }
+}
+
+
+void vio_copy_adv7441_timing(t_video_timing* timing, void* handle)
+{
+    t_adv7441a* handle_adv = (t_adv7441a*) handle;
+
+    timing->width        = handle_adv->vid_st.h_line_width;
+    timing->height       = handle_adv->vid_st.f0_height;
+    timing->height_1     = handle_adv->vid_st.f1_height;
+    timing->hfront       = handle_adv->vid_st.h_front_porch_width;
+    timing->hpulse       = handle_adv->vid_st.h_sync_width;
+    timing->hback        = handle_adv->vid_st.h_back_porch_width;
+    timing->vfront       = handle_adv->vid_st.f0_front_porch_width;
+    timing->vpulse       = handle_adv->vid_st.f0_vs_pulse_width;
+    timing->vback        = handle_adv->vid_st.f0_back_porch_width;
+    timing->vfront_1     = handle_adv->vid_st.f1_front_porch_width;
+    timing->vpulse_1     = handle_adv->vid_st.f1_vs_pulse_width;
+    timing->vback_1      = handle_adv->vid_st.f1_back_porch_width;
+    timing->interlaced   = handle_adv->vid_st.interlaced;
+    timing->vpolarity    = handle_adv->vid_st.vsync_pol;
+    timing->hpolarity    = handle_adv->vid_st.hsync_pol;
+    timing->fpolarity    = handle_adv->vid_st.field_pol;
+
+} 
+
+
+void vio_config_tg(t_vio* handle, int config)
+{
+
+    switch (config) {
+        case (VIO_TG_CONFIG_ENCODE):
+
+            // Set noninverted polarity of timing generator output signals
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_FIELD);
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_VSYNC);
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_HSYNC);
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_AVID);
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_TRIG);
+    
+            if(handle->timing.interlaced == 0) {               
+                // override timing with measured timing      
+                vio_get_timing(handle->p_vio, &handle->timing);
+                // use external timing
+                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_FIELD);
+                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_VSYNC);
+                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_HSYNC);
+                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_AVID);
+            }
+            else {
+                // measure input video frequency
+                vio_get_input_frequency(handle->p_vio, &handle->timing);
+                // use only vsync of timing generator
+                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_FIELD);
+                vio_set_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_VSYNC);
+                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_HSYNC);
+                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_AVID);
+
+
+                // invert timing of vsync if necessary
+                if (handle->timing.vpolarity == 0)
+                    vio_set_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_VSYNC);
+            }
+
+            // set timing generator registers
+            vio_set_timing(handle->p_vio, &handle->timing, 1);
+            break;
+
+        case (VIO_TG_CONFIG_DECODE):
+
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_FIELD);
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_VSYNC);
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_HSYNC);
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_AVID);
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_TRIG);
+            vio_set_timing(handle->p_vio, &handle->timing, 0);
+            break;
+
     }
 }

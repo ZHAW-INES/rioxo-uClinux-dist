@@ -16,7 +16,7 @@
 #define ASO_DRV_I2S_FREQ_TOL                (((uint64_t)1050<<27)/1e6)      /* 1000(source) + 50(local) ppm */
 #define ASO_DRV_I2S_FREQ_FACT_UPPER         ((1<<27) + ASO_DRV_I2S_FREQ_TOL)
 #define ASO_DRV_I2S_FREQ_FACT_LOWER         ((1<<27) - ASO_DRV_I2S_FREQ_TOL)
-#define ASO_DRV_I2S_FREQ_TOL_DIV            (1050/50)                       /* max 50ppm change per frequency step*/
+#define ASO_DRV_I2S_FREQ_TOL_DIV            (10500)                       /* max 0.1ppm change per frequency step*/
 #define ASO_DRV_DISABLE_FIFO_LOW_TH         (0)
 #define ASO_DRV_DEFAULT_FIFO_LOW_TH         (5)
 #define ASO_DRV_DISABLE_FRAMES_BUFFERED     (ASO_REORDERING_RAM_SIZE - 1)

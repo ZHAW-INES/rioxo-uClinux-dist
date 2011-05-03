@@ -16,8 +16,7 @@ inline uint16_t reverse16(uint16_t x)
  * @param font the font used
  */
 void vio_osd_init(void* p, t_osd_font* font)
-{
-   
+{    
     HOI_WR16(p, VIO_OFF_OSD_CHAR_WIDTH, font->width - 1);
     HOI_WR16(p, VIO_OFF_OSD_CHAR_HEIGHT, font->height - 1);
     

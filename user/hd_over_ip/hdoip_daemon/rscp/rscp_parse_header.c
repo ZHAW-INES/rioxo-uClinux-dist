@@ -57,7 +57,9 @@ int rscp_parse_port(char* str, uint32_t* p)
 int rscp_parse_timing(char* line, t_video_timing* timing)
 {
     char* token;
-    // Timing: pfreq width fp p bp pol height fp p bp pol
+    // Timing:   Horizontal       : pfreq width fp p bp pol 
+    //           Vertical Field 0 : height fp p bp pol
+    //           Vertical Field 1 : eight fp p bp pol interlaced    
 
     nextsp(token, line);
     timing->pfreq = atoi(token);
@@ -85,6 +87,21 @@ int rscp_parse_timing(char* line, t_video_timing* timing)
     nextsp(token, line);
     if (strcmp(token, "N") == 0) timing->vpolarity = 0;
     else timing->vpolarity = 1;
+
+    nextsp(token, line);
+    timing->height_1 = atoi(token);
+    nextsp(token, line);
+    timing->vfront_1 = atoi(token);
+    nextsp(token, line);
+    timing->vpulse_1 = atoi(token);
+    nextsp(token, line);
+    timing->vback_1 = atoi(token);
+    nextsp(token, line);
+    if (strcmp(token, "N") == 0) timing->fpolarity = 0;
+    else timing->fpolarity = 1;
+    nextsp(token, line);
+    if (strcmp(token, "P") == 0) timing->interlaced = 0;
+    else timing->interlaced = 1;
 
     return RSCP_SUCCESS;
 }

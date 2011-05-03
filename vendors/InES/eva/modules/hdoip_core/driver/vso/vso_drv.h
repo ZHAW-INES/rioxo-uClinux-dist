@@ -23,5 +23,6 @@ int vso_drv_get_delays(t_vso* handle, uint32_t* vs_delay_us, uint32_t* vsync_del
 uint32_t vso_drv_get_packet_timeout(t_vso* handle);
 int vso_drv_start(t_vso* handle); 
 int vso_drv_stop(t_vso* handle);
+void vso_set_vsync_blanking(t_vso* handle, t_video_timing* timing);
 
 #endif /* VSO_DRV_H_ */

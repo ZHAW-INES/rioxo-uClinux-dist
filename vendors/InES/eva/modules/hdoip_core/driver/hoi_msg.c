@@ -140,6 +140,7 @@ int hoi_drv_msg_vsostat(t_hoi* handle, t_hoi_msg_vsostat* msg)
     msg->packet_lost = vso_get_packet_lost(handle->p_vso);
     msg->packet_in_cnt = vso_get_packet_in_cnt(handle->p_vso);
     msg->status = vso_get_status(handle->p_vso, VSO_ST_MSK);
+    
     return SUCCESS;
 }
 
@@ -167,6 +168,7 @@ int hoi_drv_msg_viostat(t_hoi* handle, t_hoi_msg_viostat* msg)
     msg->vid_out = vio_get_statistic_vid_out(handle->p_vio);
     msg->st_in = vio_get_statistic_st_in(handle->p_vio);
     msg->st_out = vio_get_statistic_st_out(handle->p_vio);
+
     return SUCCESS;
 }
 
@@ -191,6 +193,12 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 
     // setup vsi
     vsi_drv_go(&handle->vsi, &msg->eth);
+
+    if (adv7441a_get_video_timing(&handle->adv7441a)) {
+        REPORT(ERROR, "adv7441a_get_video_timing results not valid");
+    }
+
+    vio_copy_adv7441_timing(&handle->vio.timing, &handle->adv7441a);
 
     // setup vio
     if (msg->compress) {
@@ -226,8 +234,11 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     vso_drv_stop(&handle->vso);
 
     // setup vso (20ms delay, 15ms scomm5 delay, 1ms packet timeout)
-    vid = vid_duration_in_us(&msg->timing);
+    vso_set_vsync_blanking(&handle->vso, &msg->timing);
+    vid = vid_duration_in_us(&msg->timing);  
     delay = msg->delay_ms * 1000 + 2 * vid;
+    if (&msg->timing.interlaced)
+        delay += (vid + 2*vid);  //TODO: if interlaced video starts with wrong field (+vid) / (+2*vid) if field signal is not transmitted correctly (BUG!)
     scomm5 = vid * 1500;
     vsd = vid * 800;
     if ((n = vso_drv_update(&handle->vso, &msg->timing, delay, vsd, scomm5, 1000000))) {
@@ -502,7 +513,16 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
 {
     int min = 0;
     // read video input timing
-    vio_get_timing(handle->p_vio, &msg->timing);
+    if (adv7441a_get_video_timing(&handle->adv7441a)) {
+        REPORT(ERROR, "adv7441a_get_video_timing results not valid");
+    }
+
+    vio_copy_adv7441_timing(&msg->timing, &handle->adv7441a);
+    vio_get_input_frequency(handle->p_vio, &msg->timing);
+    if (!msg->timing.interlaced) {
+        vio_get_timing(handle->p_vio, &msg->timing);
+    }
+
     adv212_drv_advcnt(&msg->timing, &min);
     if (msg->advcnt < min) msg->advcnt = min;
     // read audio input timing (from video board) [ch: 0..15]
@@ -593,6 +613,7 @@ int hoi_drv_msg_poll(t_hoi* handle)
 
     return SUCCESS;
 }
+
 
 //------------------------------------------------------------------------------
 // message
