@@ -71,6 +71,32 @@ static void update_0_0_to_0_1()
     report(INFO "updated registry from version 0.0 to 0.1");
 }
 
+static void update_0_1_to_0_2()
+{
+    char *p;
+    p = reg_get("amx-en");
+    if (p) {
+        if(strcmp(p, "1") == 0) {
+            reg_set("amx-en", "true");
+        } else {
+            reg_set("amx-en", "false");
+        }
+    }
+
+    p = reg_get("web-auth-en");
+    if (p) {
+        if(strcmp(p, "1") == 0) {
+            reg_set("web-auth-en", "true");
+        } else {
+            reg_set("web-auth-en", "false");
+        }
+    }
+
+    reg_set(CFGTAG, "v0.2");
+
+    report(INFO "updated registry from version 0.1 to 0.2");
+}
+
 /** upgrade config
  *
  * upgrades from one version to the next until the newest version is
@@ -84,6 +110,11 @@ void hdoipd_registry_update()
     if (!reg_get(CFGTAG)) {
         // version 0.0
         update_0_0_to_0_1();
+        update = true;
+    }
+
+    if (reg_test(CFGTAG, "v0.1")) {
+        update_0_1_to_0_2();
         update = true;
     }
 
