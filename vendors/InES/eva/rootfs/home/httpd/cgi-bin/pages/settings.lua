@@ -18,8 +18,14 @@ function show(t)
         t.lang_sel = tonumber(t.lang_sel)
         t.auth_en = tonumber(t.auth_en_sel)
 
-        hdoip.pipe.setParam(hdoip.pipe.REG_WEB_LANG, t_lang_conv[t.lang_sel])   
-        hdoip.pipe.setParam(hdoip.pipe.REG_WEB_AUTH_EN, t.auth_en)
+        hdoip.pipe.setParam(hdoip.pipe.REG_WEB_LANG, t_lang_conv[t.lang_sel])
+           
+        if(t.auth_en > 0) then
+            t.auth_en_str = "true"
+        else 
+            t.auth_en_str = "false"
+        end
+        hdoip.pipe.setParam(hdoip.pipe.REG_WEB_AUTH_EN, t.auth_en_str)
 
         if((t.web_user == nil) and (t.auth_en > 0))then
             t.web_user = hdoip.pipe.getParam(hdoip.pipe.REG_WEB_USER)

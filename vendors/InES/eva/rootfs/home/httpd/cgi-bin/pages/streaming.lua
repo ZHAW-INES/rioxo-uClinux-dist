@@ -172,7 +172,7 @@ function show(t)
 	    hdoip.html.Text(label.p_st_net_delay);                                                  hdoip.html.TableInsElement(1);
 	    hdoip.html.FormText(REG_ST_NET_DELAY_LABEL, t.net_delay, 4, 0); 
 	    hdoip.html.Text(label.u_ms);                                                            hdoip.html.TableInsElement(2);
-	    hdoip.html.Text("Auto stream");                                                         hdoip.html.TableInsElement(1);
+	    hdoip.html.Text(label.p_st_auto_stream);                                                hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                            hdoip.html.TableInsElement(2);
     end
 
