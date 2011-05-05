@@ -5,25 +5,50 @@
  * 
  * @param p pointer to i/o base
  * @param p_vt pointer to timing struct
+ * @param triggersource: 1=extern, 0=intern
  */
-void vio_set_timing(void* p, t_video_timing* p_vt)
+void vio_set_timing(void* p, t_video_timing* p_vt, int triggersource)
 {
     int h, v;
     
     h = p_vt->hfront + p_vt->hpulse + p_vt->hback + p_vt->width;
     v = p_vt->vfront + p_vt->vpulse + p_vt->vback + p_vt->height;
-    
+
+    if (p_vt->interlaced) {
+        v += p_vt->vfront_1 + p_vt->vpulse_1 + p_vt->vback_1 + p_vt->height_1 + 1;
+    }
+
+    if (p_vt->interlaced) {
+        // use extern trigger source
+        if (triggersource)
+            vio_set_cfg(p, VIO_CFG_TG_VSEL);
+        else
+            vio_clr_cfg(p, VIO_CFG_TG_VSEL);
+        vio_set_cfg(p, VIO_CFG_INTERLACE);
+    }
+    else {
+        vio_clr_cfg(p, VIO_CFG_TG_VSEL);
+        vio_clr_cfg(p, VIO_CFG_INTERLACE);
+    }
+
     // H x V
     vio_set_rng(p, VIO_OFF_TG_SIZE,  h - 1, v - 1);
-    // HSYNC pulse
-    vio_set_rng(p, VIO_OFF_TG_HSYNC, p_vt->hfront, p_vt->hfront + p_vt->hpulse);
-    // VSYNC pulse
-    vio_set_rng(p, VIO_OFF_TG_VSYNC, 0, p_vt->vpulse);
-    // Active Video (Horizontal)
-    vio_set_rng(p, VIO_OFF_TG_HAVID, p_vt->hfront + p_vt->hpulse + p_vt->hback, 0);
-    // Active Video (Vertical)
-    vio_set_rng(p, VIO_OFF_TG_VAVID, p_vt->vpulse + p_vt->vback, p_vt->vpulse + p_vt->vback + p_vt->height);
 
+    // HSYNC pulse
+    vio_set_rng(p, VIO_OFF_TG_HSYNC, 0, p_vt->hpulse);
+    // Active Video (Horizontal)
+    vio_set_rng(p, VIO_OFF_TG_HAVID, p_vt->hpulse + p_vt->hback, p_vt->hpulse + p_vt->hback + p_vt->width);
+
+    // Field 0 : VSYNC
+    vio_set_rng(p, VIO_OFF_TG_VSYNC, 0, p_vt->vpulse);
+    // Field 0 : AVID Vertical
+    vio_set_rng(p, VIO_OFF_TG_VAVID, p_vt->vpulse + p_vt->vback, p_vt->vpulse + p_vt->vback + p_vt->height);
+    // Field 1 : VSYNC
+    vio_set_rng(p, VIO_OFF_TG_VSYNC2, p_vt->vpulse + p_vt->vback + p_vt->height + p_vt->vfront_1, p_vt->vpulse + p_vt->vback + p_vt->height + p_vt->vfront_1 + p_vt->vpulse_1);        
+    // Field 1 : AVID Vertical
+    vio_set_rng(p, VIO_OFF_TG_VAVID2, p_vt->vpulse + p_vt->vback + p_vt->height + p_vt->vfront_1 + p_vt->vpulse_1 + p_vt->vback_1 + 1, p_vt->vpulse + p_vt->vback + p_vt->height + p_vt->vfront_1 + p_vt->vpulse_1 + p_vt->vback_1 + p_vt->height_1 + 1);
+    // Field signal
+    vio_set_rng(p, VIO_OFF_TG_FIELD, p_vt->vpulse + p_vt->vback + p_vt->height + p_vt->vfront_1 + p_vt->vpulse_1 + p_vt->vback_1 + p_vt->height_1 + (p_vt->vfront_1/2), p_vt->vpulse + p_vt->vback + p_vt->height + (p_vt->vfront/2));
     // Half horizontal pixel count
     vio_set_hsplit(p, (p_vt->width / 2) - 1);
 
@@ -31,16 +56,37 @@ void vio_set_timing(void* p, t_video_timing* p_vt)
     HOI_WR32(p, VIO_OFF_TG_DURATION, (h * v) / 2 - 1);
 }
 
-/** Read Input Video Timing
+/** Read Input Video Frequency
  * 
  * @param p pointer to i/o base
  * @param p_vt pointer to timing struct to be filled
  */
+void vio_get_input_frequency(void* p, t_video_timing* p_vt)
+{
+    p_vt->pfreq = vio_get_fin(p);
+}
+
+/** Read Input Video Timing
+ * 
+ * @param p pointer to i/o base
+ * @param p_vt pointer to timing struct to be filled
+ * @param wait 1 = wait until measured timings are ready
+ */
 void vio_get_timing(void* p, t_video_timing* p_vt)
 {
     int h,v,hp,vp,ha,va,hb,vb;
-            
+    unsigned long time;            
+    
     if (!p_vt) return;
+
+    // wait until measured timings are valid (max 50ms)
+    time = jiffies + (HZ/20); // 50ms
+    HOI_WR32(p, VIO_OFF_TM_READY, 0);
+    while(HOI_RD32(p, VIO_OFF_TM_READY) < 2) {
+        if (time_after(jiffies, time)) {
+            break;
+        }
+    }
 
     v = HOI_RD16(p, VIO_OFF_TM_V);
     h = HOI_RD16(p, VIO_OFF_TM_H);
@@ -50,6 +96,12 @@ void vio_get_timing(void* p, t_video_timing* p_vt)
     hb = HOI_RD16(p, VIO_OFF_TM_HB);
     va = HOI_RD16(p, VIO_OFF_TM_VA);
     ha = HOI_RD16(p, VIO_OFF_TM_HA);
+
+    p_vt->interlaced = 0;
+    p_vt->vpulse_1   = 0;
+    p_vt->vfront_1   = 0;
+    p_vt->vback_1    = 0;
+    p_vt->height_1   = 0;
 
     p_vt->pfreq = vio_get_fin(p);
         
@@ -99,9 +151,14 @@ void vio_set_control(void* p, t_video_timing* p_vt, int ppm, int sel)
 	int32_t h, v, s, t;
     
     if (sel == VIO_MUX_PLLC_TG) {
+
+        if (p_vt->interlaced)
+            v = p_vt->vfront + p_vt->vpulse + p_vt->vback + p_vt->height + p_vt->vfront_1 + p_vt->vpulse_1 + p_vt->vback_1 + p_vt->height_1 + 1;
+        else
+            v = p_vt->vfront + p_vt->vpulse + p_vt->vback + p_vt->height;
+
         h = p_vt->hfront + p_vt->hpulse + p_vt->hback + p_vt->width;
-        v = p_vt->vfront + p_vt->vpulse + p_vt->vback + p_vt->height;
-        
+
         // select control source
         vio_set_pllc(p, sel);
         

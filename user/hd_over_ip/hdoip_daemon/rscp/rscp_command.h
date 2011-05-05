@@ -18,7 +18,6 @@
 #define rscp_err_def_source(x)      rscp_response_error(x, 407, "HW defect")
 #define rscp_err_hdcp(x)            rscp_response_error(x, 408, "HDCP error")
 
-
 void rscp_response_line(t_rscp_connection* msg, int code, char* reason);
 void rscp_response_error(t_rscp_connection* msg, int code, char* reason);
 void rscp_request_line(t_rscp_connection* msg, char* method, char* uri);

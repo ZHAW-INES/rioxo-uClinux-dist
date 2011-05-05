@@ -302,6 +302,7 @@
 #define	ADV7441A_REG_CP_AV_CONTROL                               0x7B
 #define	ADV7441A_BIT_AV_INV_F                                    0x80
 #define	ADV7441A_BIT_AV_INV_V                                    0x40
+#define ADV7441A_BIT_AV_INTERLACED                               0x20
 #define	ADV7441A_BIT_AV_BLANK_EN                                 0x08
 #define	ADV7441A_BIT_AV_POS_SEL                                  0x04
 #define	ADV7441A_BIT_AV_CODE_EN                                  0x02

@@ -108,5 +108,6 @@ label = {
     p_st_aud_port = "Audio UDP Port";
     p_st_datarate = "Datarate";
     p_st_net_delay = "Max. network delay";
+    p_st_auto_stream = "Auto stream";
 }
 

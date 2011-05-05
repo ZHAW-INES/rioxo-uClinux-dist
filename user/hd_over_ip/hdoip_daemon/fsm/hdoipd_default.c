@@ -19,6 +19,7 @@ void hdoipd_set_default()
     reg_set("system-mac", "00:15:12:00:00:42");
     reg_set("system-cmd", "");
 
+    reg_set("auto-stream", "true");
     reg_set("mode-start", "none");
     reg_set("mode-media", "video");
     reg_set("mode-sync", "streamsync");
@@ -36,11 +37,15 @@ void hdoipd_set_default()
     reg_set("rscp-server-port", "554");
 
     reg_set("web-lang", "EN");
-    reg_set("web-auth-en", "0");
+    reg_set("web-auth-en", "false");
     reg_set("web-user", "admin");
     reg_set("web-pass", "admin");
-
     reg_set("hdcp-force", "off");
+    reg_set("amx-en", "true");
+    reg_set("amx-hello-ip", "192.168.1.255");
+    reg_set("amx-hello-port", "1000");
+    reg_set("amx-hello-msg", "HELLO");
+    reg_set("amx-hello-interval", "5");
 }
 
 static void update_0_0_to_0_1()
@@ -65,6 +70,32 @@ static void update_0_0_to_0_1()
     report(INFO "updated registry from version 0.0 to 0.1");
 }
 
+static void update_0_1_to_0_2()
+{
+    char *p;
+    p = reg_get("amx-en");
+    if (p) {
+        if(strcmp(p, "1") == 0) {
+            reg_set("amx-en", "true");
+        } else {
+            reg_set("amx-en", "false");
+        }
+    }
+
+    p = reg_get("web-auth-en");
+    if (p) {
+        if(strcmp(p, "1") == 0) {
+            reg_set("web-auth-en", "true");
+        } else {
+            reg_set("web-auth-en", "false");
+        }
+    }
+
+    reg_set(CFGTAG, "v0.2");
+
+    report(INFO "updated registry from version 0.1 to 0.2");
+}
+
 /** upgrade config
  *
  * upgrades from one version to the next until the newest version is
@@ -78,6 +109,11 @@ void hdoipd_registry_update()
     if (!reg_get(CFGTAG)) {
         // version 0.0
         update_0_0_to_0_1();
+        update = true;
+    }
+
+    if (reg_test(CFGTAG, "v0.1")) {
+        update_0_1_to_0_2();
         update = true;
     }
 

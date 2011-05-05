@@ -10,8 +10,12 @@ uint32_t vid_fps(t_video_timing* p_vt)
 {
     uint32_t h, v, p;
     
+    if (p_vt->interlaced)
+        v = (p_vt->vfront + p_vt->vpulse + p_vt->vback + p_vt->height + p_vt->vfront_1 + p_vt->vpulse_1 + p_vt->vback_1 + p_vt->height_1 + 1) / 2;
+    else
+        v = p_vt->vfront + p_vt->vpulse + p_vt->vback + p_vt->height;
+
     h = p_vt->hfront + p_vt->hpulse + p_vt->hback + p_vt->width;
-    v = p_vt->vfront + p_vt->vpulse + p_vt->vback + p_vt->height;
     
     p = v * h;
       
@@ -20,15 +24,27 @@ uint32_t vid_fps(t_video_timing* p_vt)
 
 uint32_t vid_pixel_per_frame(t_video_timing* p_vt)
 {
-    return p_vt->width * p_vt->height;
+    uint32_t h;
+
+    if (p_vt->interlaced)
+        h = (p_vt->height + p_vt->height_1) / 2;
+    else
+        h = p_vt->height;
+
+
+    return p_vt->width * h;
 }
 
 uint32_t vid_clock_per_frame(t_video_timing* p_vt)
 {
     uint32_t h, v;
-    
+
     h = p_vt->hfront + p_vt->hpulse + p_vt->hback + p_vt->width;
-    v = p_vt->vfront + p_vt->vpulse + p_vt->vback + p_vt->height;
+
+    if (p_vt->interlaced)
+        v = (p_vt->vfront + p_vt->vpulse + p_vt->vback + p_vt->height + p_vt->vfront_1 + p_vt->vpulse_1 + p_vt->vback_1 + p_vt->height_1 + 1) / 2;
+    else
+        v = p_vt->vfront + p_vt->vpulse + p_vt->vback + p_vt->height;
 
     return h * v;
 }

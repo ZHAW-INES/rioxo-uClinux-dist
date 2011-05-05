@@ -14,6 +14,7 @@
 #include "rscp_media.h"
 #include "rscp_listener.h"
 #include "rscp_server.h"
+#include "rscp_client.h"
 #include "rscp_command.h"
 #include "rscp_error.h"
 #include "string.h"
@@ -23,15 +24,18 @@
 // received a request as a server (can answer -> rsp != 0)
 
 
+
 int rmsq_setup(t_rscp_media* _media, void* msg, t_rscp_connection* rsp)
 {
     t_rscp_media *media = _media;
+    t_rscp_server *server = (t_rscp_server*)media->creator;
+
     int ret = RSCP_SERVER_ERROR;
 
     // creator is the rscp_server who started this connection
     // we get the rscp_listener from it
-    media->top = ((t_rscp_server*)media->creator)->owner;
 
+    media->top = server->owner;
     // start new session?
     if (!_media->owner) {
         media = malloc(sizeof(t_rscp_media));
@@ -41,6 +45,8 @@ int rmsq_setup(t_rscp_media* _media, void* msg, t_rscp_connection* rsp)
         }
         memcpy(media, _media, sizeof(t_rscp_media));
         media->owner = _media;
+        server->media = media;
+
         if (media->cookie_size) {
             media->cookie = malloc(media->cookie_size);
             if (!media->cookie) {
@@ -119,15 +125,27 @@ int rmsq_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
     return ret;
 }
 
+
+/** Teardown server request
+ *
+ * Note: the listener(owner) is NOT locked when this function is called
+ * Sessions are removed by this function
+ *
+ */
 int rmsq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SERVER_ERROR;
+    t_rscp_server *server = (t_rscp_server*)media->creator;
 
     // needs to be a session
     if (!media->owner) return RSCP_CLIENT_ERROR;
 
-    if (media->teardown) ret = media->teardown(media, msg, rsp);
+
+    if ((media->teardown) && (media->state != RSCP_INIT)) ret = media->teardown(media, msg, rsp);
     media->state = RSCP_INIT;
+    if(server) {
+    	server->media = 0;
+    }
     if (media->cookie_size) free(media->cookie);
     rscp_listener_remove_session(media->top, media);
     free(media);
@@ -167,7 +185,6 @@ int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 
 ///////////////////////////////////////////////////////////////////////////////
 // received a response as a server (can not answer -> rsp = 0)
-// called from rscp_server.c
 
 /** Teardown server
  *
@@ -179,11 +196,16 @@ int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
 
+    t_rscp_server *server = (t_rscp_server*)media->creator;
     // needs to be a session
     if (!media->owner) return RSCP_CLIENT_ERROR;
 
-    if (media->teardown) ret = media->teardown(media, msg, 0);
+    if ((media->teardown) && (media->state != RSCP_INIT)) ret = media->teardown(media, msg, 0);
     media->state = RSCP_INIT;
+    if(server) {
+    	server->media = 0;
+    }
+
     if (media->cookie_size) free(media->cookie);
     free(media);
     return ret;
@@ -228,16 +250,18 @@ int rmcq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 int rmcq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
-    if (media->teardown) ret = media->teardown(media, msg, rsp);
+
+    if ((media->teardown) && (media->state != RSCP_INIT)) ret = media->teardown(media, msg, rsp);
     media->state = RSCP_INIT;
+
+    ((t_rscp_client*)media->creator)->task = E_RSCP_CLIENT_KILL;
+
     return ret;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // received a response as a client (can not answer -> rsp = 0)
-// called from rcsp_client
-
 
 int rmcr_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
@@ -299,7 +323,8 @@ int rmcr_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 int rmcr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
-    if (media->teardown) ret = media->teardown(media, msg, 0);
+
+    if ((media->teardown) && (media->state != RSCP_INIT)) ret = media->teardown(media, msg, 0);
     media->state = RSCP_INIT;
     return ret;
 }
@@ -319,8 +344,12 @@ int rscp_media_ready(t_rscp_media* media)
 int rscp_media_setup(t_rscp_media* media)
 {
     int ret = RSCP_NULL_POINTER;
-    if (media) {
-        if (media->dosetup) ret = media->dosetup(media);
+    if (media && media->creator) {
+        if (media->state != RSCP_PLAYING) {
+            if (media->dosetup) ret = media->dosetup(media);
+        } else {
+            ret = RSCP_WRONG_STATE;
+        }
     }
     return ret;
 }
@@ -328,8 +357,11 @@ int rscp_media_setup(t_rscp_media* media)
 int rscp_media_play(t_rscp_media* media)
 {
     int ret = RSCP_NULL_POINTER;
-    if (media) {
-        if (media->doplay) ret = media->doplay(media);
+
+    if (media && media->creator) {
+        if (media->state == RSCP_READY) {
+            if (media->doplay) ret = media->doplay(media);
+
      /*   //check if kill / teardown is set because of HDCP error
         if (client->kill)  rscp_client_close(media->creator);             //HDCP
         else if (client->teardown) rscp_client_teardown(media->creator);  //HDCP
@@ -339,7 +371,9 @@ int rscp_media_play(t_rscp_media* media)
         //if (client->kill)  rscp_client_close(client);
         //else if (client->teardown) rscp_client_teardown(client);
 
-
+        } else {
+            ret = RSCP_WRONG_STATE;
+        }
     }
     return ret;
 }
@@ -347,7 +381,8 @@ int rscp_media_play(t_rscp_media* media)
 int rscp_media_event(t_rscp_media* media, uint32_t event)
 {
     int ret = RSCP_NULL_POINTER;
-    if (media) {
+
+    if (media && media->creator) {
     	if (media->state != RSCP_INIT) {
 			if (media->event) ret = media->event(media, event);
 			switch (ret) {

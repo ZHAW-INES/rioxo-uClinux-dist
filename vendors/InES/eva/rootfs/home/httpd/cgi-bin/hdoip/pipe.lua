@@ -2,12 +2,14 @@
 module (..., package.seeall)
 require ("hdoip.convert")
 
+REG_SYS_UPDATE = "system-update"
 REG_SYS_IF = "system-ifname"
 REG_SYS_NAME = "system-name"
 REG_SYS_IP = "system-ip"
 REG_SYS_MAC = "system-mac"
 REG_SYS_SUB = "system-subnet"
 REG_SYS_GW = "system-gateway"
+REG_AUTO_STREAM = "auto-stream"
 REG_MODE_START = "mode-start"
 REG_ST_MODE_MEDIA = "mode-media"
 REG_ST_URI = "remote-uri"

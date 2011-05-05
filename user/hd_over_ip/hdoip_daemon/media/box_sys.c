@@ -22,9 +22,9 @@ int box_sys_hello(t_rscp_media UNUSED *media, intptr_t UNUSED m, t_rscp_connecti
 {
     if ((rsp->address == box.address) && box.address) {
         report(INFO "hello received from remote device");
-        unlock("box_sys_hello");
-            hdoipd_launch(hdoipd_start_vrb, 0, 50, 3, 1000);
-        lock("box_sys_hello");
+        if(hdoipd.auto_stream) {
+            hdoipd_set_task_start_vrb();
+        }
     }
     return 0;
 }

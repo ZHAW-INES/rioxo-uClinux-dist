@@ -29,6 +29,5 @@
 #include "box_sys.h"
 
 int hdoipd_media_callback(t_rscp_media* media, int (*f)(t_rscp_media*, void*), void* d);
-void hdoipd_launch(int (*f)(void* d), void* d, int timeout_ms, int repeat, int intervall_ms);
 
 #endif /* HDOIPD_CALLBACK_H_ */

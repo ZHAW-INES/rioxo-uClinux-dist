@@ -20,12 +20,13 @@ typedef struct {
     t_node*             idx;            //!< node containing this connection
     void*               owner;
     t_rscp_connection   con;
+    bool				kill;
+    t_rscp_media*		media;
 } t_rscp_server;
 
 extern const t_map_set srv_method[];
 
 t_rscp_server* rscp_server_create(int fd, uint32_t addr);
-void rscp_server_free(t_rscp_server* server);
 
 int rscp_server_thread(t_rscp_server* handle);
 

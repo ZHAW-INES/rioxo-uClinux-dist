@@ -9,6 +9,7 @@
 #include "hoi_drv.h"
 
 #include "adv7441a_drv_edid.h" // TODO no edid for init
+#include "adv7441a_drv.h"
 
 // demo workaround:
 #include <linux/types.h>
@@ -42,7 +43,7 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
         adv9889_drv_init(&handle->adv9889, &handle->i2c_tx, &handle->vio);
     }
     if (lddrv & DRV_ADV7441) {
-        adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, (char*)adv7441a_edid_table);
+        adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, &handle->vio, (char*)adv7441a_edid_table);
     }
 
     handle->drivers = msg->drivers & DRV_ALL;
@@ -201,6 +202,19 @@ int hoi_drv_msg_vsostat(t_hoi* handle, t_hoi_msg_vsostat* msg)
     msg->packet_lost = vso_get_packet_lost(handle->p_vso);
     msg->packet_in_cnt = vso_get_packet_in_cnt(handle->p_vso);
     msg->status = vso_get_status(handle->p_vso, VSO_ST_MSK);
+    
+    return SUCCESS;
+}
+
+int hoi_drv_msg_asoreg(t_hoi* handle, t_hoi_msg_asoreg* msg)
+{
+    msg->config = aso_get_ctrl(handle->p_aso, 0xFFFFFFFF);
+    msg->status = aso_get_status(handle->p_aso, 0xFFFFFFFF);
+    msg->start = eti_get_aud_start_desc(handle->p_esi);
+    msg->stop = eti_get_aud_stop_desc(handle->p_esi);
+    msg->read = eti_get_aud_read_desc(handle->p_esi);
+    msg->write = eti_get_aud_write_desc(handle->p_esi);
+
     return SUCCESS;
 }
 
@@ -228,6 +242,7 @@ int hoi_drv_msg_viostat(t_hoi* handle, t_hoi_msg_viostat* msg)
     msg->vid_out = vio_get_statistic_vid_out(handle->p_vio);
     msg->st_in = vio_get_statistic_st_in(handle->p_vio);
     msg->st_out = vio_get_statistic_st_out(handle->p_vio);
+
     return SUCCESS;
 }
 
@@ -252,6 +267,12 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 
     // setup vsi
     vsi_drv_go(&handle->vsi, &msg->eth);
+
+    if (adv7441a_get_video_timing(&handle->adv7441a)) {
+        REPORT(ERROR, "adv7441a_get_video_timing results not valid");
+    }
+
+    vio_copy_adv7441_timing(&handle->vio.timing, &handle->adv7441a);
 
     // setup vio
     if (msg->compress) {
@@ -287,8 +308,11 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     vso_drv_stop(&handle->vso);
 
     // setup vso (20ms delay, 15ms scomm5 delay, 1ms packet timeout)
-    vid = vid_duration_in_us(&msg->timing);
+    vso_set_vsync_blanking(&handle->vso, &msg->timing);
+    vid = vid_duration_in_us(&msg->timing);  
     delay = msg->delay_ms * 1000 + 2 * vid;
+    if (&msg->timing.interlaced)
+        delay += (vid + 2*vid);  //TODO: if interlaced video starts with wrong field (+vid) / (+2*vid) if field signal is not transmitted correctly (BUG!)
     scomm5 = vid * 1500;
     vsd = vid * 800;
     if ((n = vso_drv_update(&handle->vso, &msg->timing, delay, vsd, scomm5, 1000000))) {
@@ -563,7 +587,16 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
 {
     int min = 0;
     // read video input timing
-    vio_get_timing(handle->p_vio, &msg->timing);
+    if (adv7441a_get_video_timing(&handle->adv7441a)) {
+        REPORT(ERROR, "adv7441a_get_video_timing results not valid");
+    }
+
+    vio_copy_adv7441_timing(&msg->timing, &handle->adv7441a);
+    vio_get_input_frequency(handle->p_vio, &msg->timing);
+    if (!msg->timing.interlaced) {
+        vio_get_timing(handle->p_vio, &msg->timing);
+    }
+
     adv212_drv_advcnt(&msg->timing, &min);
     if (msg->advcnt < min) msg->advcnt = min;
     // read audio input timing (from video board) [ch: 0..15]
@@ -700,12 +733,13 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_STSYNC,    hoi_drv_msg_stsync);
         call(HOI_MSG_SYNCDELAY, hoi_drv_msg_syncdelay);
 
+
         call(HOI_MSG_ETHSTAT,        hoi_drv_msg_ethstat);
         call(HOI_MSG_VSOSTAT,        hoi_drv_msg_vsostat);
         call(HOI_MSG_VIOSTAT,        hoi_drv_msg_viostat);
         call(HOI_MSG_ASOREG,         hoi_drv_msg_asoreg);
-	    call(HOI_MSG_HDCP_INIT,      hoi_drv_msg_hdcp_init);
-	    call(HOI_MSG_HDCPSTAT,       hoi_drv_msg_hdcpstat);
+	call(HOI_MSG_HDCP_INIT,      hoi_drv_msg_hdcp_init);
+	call(HOI_MSG_HDCPSTAT,       hoi_drv_msg_hdcpstat);
 
         call(HOI_MSG_GETVERSION,hoi_drv_msg_getversion);
 

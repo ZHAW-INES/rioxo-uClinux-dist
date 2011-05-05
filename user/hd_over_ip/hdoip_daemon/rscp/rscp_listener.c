@@ -39,23 +39,33 @@ static void listener_unlock(t_rscp_listener* handle, const char* s)
     report2("rscp_listener:pthread_mutex_unlock(%x:%d, %s)", handle, pthread_self(), s);
     pthread_mutex_unlock(&handle->mutex);
 }
-/** called by start_server (function below)
- *
- * */
-void* rscp_listener_run_server(t_rscp_server* con)
-{
-    rscp_server_thread(con);  // start server thread
 
-    shutdown(con->con.fdw, SHUT_RDWR);
+
+void* rscp_listener_run_server(t_rscp_server* server)
+{
+	t_rscp_listener* listener = server->owner;
+    rscp_server_thread(server);
 
     // remove from list & delete server
-    listener_lock(con->owner, "rscp_listener_run_server");
-        list_remove(con->idx);
-        rscp_server_free(con);
-    listener_unlock(con->owner, "rscp_listener_run_server");
+    lock("rscp_listener_run_server");
+		listener_lock(listener, "rscp_listener_run_server");
+			list_remove(server->idx);
+			if (server->con.fdr != -1) {
+				shutdown(server->con.fdr, SHUT_RDWR);
+				server->con.fdr = -1;
+			}
 
+			if(server->media) {
+				bstmap_removep(&listener->sessions, server->media->sessionid);
+				rmsr_teardown(server->media, 0, 0);
+			}
+
+			free(server);
+		listener_unlock(listener, "rscp_listener_run_server");
+    unlock("rscp_listener_run_server");
     return 0;
 }
+
 /** start server
  *
  * */
@@ -91,6 +101,7 @@ void rscp_listener_close_server(t_rscp_server* con, t_rscp_listener *handle)
             if (shutdown(con->con.fdw, SHUT_RDWR) == -1) {
                 report("close connection error: %s", strerror(errno));
             }
+            con->con.fdw = -1;
         }
     listener_unlock(handle, "rscp_listener_close_server");
 }
@@ -282,16 +293,33 @@ int rscp_listener_cond(char UNUSED *key, char* value, void* d)
 {
     return ((t_rscp_media*)value)->owner == d;
 }
-void rscp_listener_traverse_event(char UNUSED *key, char* value, void* e)
+
+struct t_listener_event {
+	uint32_t event;
+	t_rscp_listener* handle;
+};
+
+void rscp_listener_traverse_event(char UNUSED *key, char* value, void* _cookie)
 {
-    rscp_media_event((t_rscp_media*)value, (uint32_t)e);
+	struct t_listener_event *cookie = _cookie;
+	t_rscp_media* media = (t_rscp_media*)value;
+	t_rscp_server* server = media->creator;
+
+	if (server && server->kill) {
+	    rscp_listener_add_kill(cookie->handle, media);
+	} else {
+	    rscp_media_event(media, cookie->event);
+	}
 }
 
 void rscp_listener_event(t_rscp_listener* handle, uint32_t event)
 {
+	struct t_listener_event le;
     t_rscp_media* media;
     listener_lock(handle, "rscp_listener_event");
-        bstmap_traverse(handle->sessions, rscp_listener_traverse_event, (void*)event);
+    	le.event = event;
+    	le.handle = handle;
+        bstmap_traverse(handle->sessions, rscp_listener_traverse_event, &le);
         // event may add medias to the kill list
         while ((media = queue_get(handle->kills))) {
             // when we close the sessions, we also must remove it from the listener

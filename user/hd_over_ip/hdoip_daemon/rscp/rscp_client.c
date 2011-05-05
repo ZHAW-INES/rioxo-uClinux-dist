@@ -23,8 +23,6 @@
 #include "rscp_parse_header.h"
 #include "hdoipd.h"
 
-/** To separate requests and responses
- * */
 void* rscp_client_thread(void* _client);
 void* rscp_client_req_thread(void* _client);
 
@@ -52,6 +50,7 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
     }
 
     memset(client, 0, sizeof(t_rscp_client));
+    client->task = 0;
 
     if (media) {
         if (media->creator) {
@@ -106,6 +105,7 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
         dest_addr.sin_family = AF_INET;
         dest_addr.sin_port = port;
         dest_addr.sin_addr.s_addr = addr.s_addr;
+
         //try to connect server
         if (connect(fd, (struct sockaddr*)&dest_addr, sizeof(struct sockaddr)) == -1) {
             close(fd);
@@ -156,27 +156,36 @@ int rscp_client_close(t_rscp_client* client)
 {
     if (!client) return RSCP_NULL_POINTER;
 
+
     // remove client
     if (client->idx) {
         list_remove(client->idx);
         client->idx = 0;
+    } else {
+        report(ERROR "RSCP Client [%d] already closed", client->nr);
+        return RSCP_NULL_POINTER;
     }
+
+    client->task = E_RSCP_CLIENT_KILL;
+    shutdown(client->con.fdw, SHUT_RDWR);
 
     // detach client from media
     if (client->media) {
-        client->media->state = RSCP_INIT;
+        report(" i RSCP Client [%d] detach media %s", client->nr, client->media->name);
+        rmcr_teardown(client->media, 0, 0);
         client->media->creator = 0;
         client->media = 0;
+
+        report(" i RSCP Client [%d] join pthread", client->nr);
+
+        unlock("rscp_client_close");
+            pthread_join(client->th1, 0);
+            pthread_join(client->th2, 0);
+        lock("rscp_client_close");
+
+        close(client->con.fdr);
+        close(client->con2.fdr);
     }
-
-    shutdown(client->con.fdw, SHUT_RDWR);
-
-    report(" i RSCP Client [%d] join pthread", client->nr);
-
-    unlock("rscp_client_close");
-        pthread_join(client->th1, 0);
-        pthread_join(client->th2, 0);
-    lock("rscp_client_close");
 
     report(" - RSCP Client [%d]", client->nr);
 
@@ -215,6 +224,13 @@ int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp
     return n;
 }
 
+int rscp_client_set_play(t_rscp_client* client)
+{
+    client->task |= E_RSCP_CLIENT_PLAY;
+
+    return RSCP_SUCCESS;
+}
+
 int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt)
 {
     int n;
@@ -240,9 +256,17 @@ int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt)
     return n;
 }
 
+int rscp_client_set_teardown(t_rscp_client* client)
+{
+	client->task |= E_RSCP_CLIENT_TEARDOWN;
+
+	return RSCP_SUCCESS;
+}
+
 int rscp_client_teardown(t_rscp_client* client)
 {
     u_rscp_header buf;
+    int nr = client->nr;
 
     report(" > RSCP Client [%s %d] TEARDOWN", client->media->name, client->nr);
 
@@ -260,6 +284,13 @@ int rscp_client_teardown(t_rscp_client* client)
     return RSCP_SUCCESS;
 }
 
+int rscp_client_set_kill(t_rscp_client* client)
+{
+	client->task |= E_RSCP_CLIENT_KILL;
+
+	return RSCP_SUCCESS;
+}
+
 int rscp_client_kill(t_rscp_client* client)
 {
     report(" > RSCP Client [%d] kill", client->nr);
@@ -275,7 +306,7 @@ int rscp_client_kill(t_rscp_client* client)
 int rscp_client_update(t_rscp_client* client, uint32_t event)
 {
 #ifdef REPORT_RSCP
-    report(" > RSCP Client [%s %d] UPDATE", client->media->name, client->nr);
+    report(" > RSCP Client [%d] UPDATE", client->nr);
 #endif
 
     rscp_request_update(&client->con, client->uri, client->media->sessionid, event);
@@ -296,16 +327,13 @@ int rscp_client_hello(t_rscp_client* client)
     return RSCP_SUCCESS;
 }
 
-/** close (all??) the connection proper
- *
- * */
 void rscp_client_deactivate(t_node* list)
 {
     t_rscp_client* client;
 
     while ((client = list_peek(list))) {
         if (client->media->state != RSCP_INIT) {
-            // proper teardown
+            // proper teradown
             rscp_client_teardown(client);
         } else {
             // delete client
@@ -313,24 +341,29 @@ void rscp_client_deactivate(t_node* list)
         }
     }
 }
-/** distribute events to all activ clients
- *
- * */
+
 void rscp_client_event(t_node* list, uint32_t event)
 {
     t_rscp_client* client;
+    node_anchor(task_list);
+
     LIST_FOR(client, list) {
         if (client->media) rscp_media_event(client->media, event);
+        if (client->task)  queue_put(&task_list, client);
+    }
+
+    while(client = queue_get(&task_list)) {
+        if(client->task & E_RSCP_CLIENT_KILL) rscp_client_close(client);
+        else if(client->task & E_RSCP_CLIENT_TEARDOWN) rscp_client_teardown(client);
+        else if(client->task & E_RSCP_CLIENT_PLAY) rscp_media_play(client->media);
+        client->task = 0;
     }
 }
-/** force the closing of (all??) the connections
- *
- * */
+
 void rscp_client_force_close(t_node* list)
 {
     t_rscp_client* client;
     while ((client = list_peek(list))) {
-        rmcr_teardown(client->media, 0, &client->con);
         rscp_client_close(client);
     }
 }
@@ -351,7 +384,6 @@ void* rscp_client_thread(void* _client)
         tst = line;
         //check if received message is a request or a response
         if (!str_starts_with(&tst, RSCP_VERSION)) {  //if request...
-
             do {
                 msgprintf(&client->con2, "%s\r\n", line);
                 if (*line == 0) break;
@@ -363,7 +395,6 @@ void* rscp_client_thread(void* _client)
             rscp_write(&client->con2);  //write to pipe 2 ??
 
         } else {	//if response
-
             do {
                 msgprintf(&client->con1, "%s\r\n", line);
                 if (*line == 0) break;
@@ -373,10 +404,9 @@ void* rscp_client_thread(void* _client)
                 break;
             }
             rscp_write(&client->con1);  //write to pipe 1 ??
-
         }
     }
-
+    client->task = E_RSCP_CLIENT_KILL;
     report(" - RSCP Client [%d] filter: (%d) %s", client->nr, n, strerror(errno));
 
     close(client->con1.fdw);
@@ -400,7 +430,7 @@ void* rscp_client_req_thread(void* _client)
         report(" + RSCP Client [%d] request ep", client->nr);
     //unlock("rscp_client_req_thread-start");
 
-    while (1) {
+    while (!(client->task & E_RSCP_CLIENT_KILL)) {
         n = rscp_parse_request(&client->con2, client_method, &method, (void*)&buf, &common);
 
         // connection closed...
@@ -408,18 +438,18 @@ void* rscp_client_req_thread(void* _client)
 
         lock("rscp_client_req_thread");
 
+        if(!(client->task & E_RSCP_CLIENT_KILL) && (client->media)) {
 #ifdef REPORT_RSCP
-        report(" < RSCP Client [%d] %s", client->nr, common.rq.method);
+            report(" < RSCP Client [%d] %s", client->nr, common.rq.method);
 #endif
-
-        // process request (function responses for itself)
-        n = ((frscpm*)method->fnc)(client->media, (void*)&buf, &client->con);
-        if (n != RSCP_SUCCESS) {
-            report(" ? execute method \"%s\" error (%d)", common.rq.method, n);
-            unlock("rscp_client_req_thread");
-            break;
+            // process request (function responses for itself)
+            n = ((frscpm*)method->fnc)(client->media, (void*)&buf, &client->con);
+            if (n != RSCP_SUCCESS) {
+                report(" ? execute method \"%s\" error (%d)", common.rq.method, n);
+                unlock("rscp_client_req_thread");
+                break;
+            }
         }
-
         unlock("rscp_client_req_thread");
 
     }

@@ -72,6 +72,7 @@ int rscp_receive_body(t_rscp_connection* con, char* buf, size_t length)
 
     return length;
 }
+
 /** Read the received chars in the socket
  *
  * */
@@ -92,12 +93,12 @@ int rscp_receive(t_rscp_connection* con, char** line, int timeout)
         sol = con->in.buf;
         con->in.sol = sol;
         eol = sol + s;
-        if (timeout&&0) {
+        if (timeout) {
             FD_ZERO(&rfds);
             FD_SET(con->fdr, &rfds);
             tv.tv_sec = timeout;
             tv.tv_usec = 0;
-            ret = select(1, &rfds, NULL, NULL, &tv);
+            ret = select(con->fdr+1, &rfds, NULL, NULL, &tv);
             if (ret == -1) {
                 report(ERROR "rscp_receive() select failed");
                 return -1;
@@ -137,7 +138,7 @@ int rscp_receive(t_rscp_connection* con, char** line, int timeout)
  * */
 void rscp_send(t_rscp_connection* con)
 {
-    if (send(con->fdw, con->out.buf, con->out.eol - con->out.buf, 0) == -1) {
+    if (send(con->fdw, con->out.buf, con->out.eol - con->out.buf, MSG_NOSIGNAL) == -1) {
     //if (write(con->fdw, con->out.buf, con->out.eol - con->out.buf) == -1) {
         perrno("rscp_send() send failed");
     }
@@ -157,6 +158,7 @@ void rscp_send(t_rscp_connection* con)
     con->out.eol = con->out.sol = con->out.buf;
     con->out.buf[0] = 0;
 }
+
 /** Sends message to receiver, function equal to rscp_send
  *
  * */
@@ -177,11 +179,11 @@ void rscp_write(t_rscp_connection* con)
         fflush(rscp_fd);
     }
 #endif
-
     con->sequence++;  //increment sequence nr.
     con->out.eol = con->out.sol = con->out.buf;
     con->out.buf[0] = 0;
 }
+
 /** Creates the two pipes to write in the responses/requests ??
  *
  * */

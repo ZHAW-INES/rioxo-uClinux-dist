@@ -79,6 +79,7 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     vtb.remote.address = rsp->address;
     vtb.remote.aud_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.aud_port, hdoipd.local.aud_port);
+
     rscp_response_setup(rsp, &m->transport, media->sessionid, &m->hdcp);
 
     // start hdcp session key exchange if necessary
@@ -216,6 +217,7 @@ void vtb_audio_pause(t_rscp_media *media)
 #endif
         hdoipd_set_vtb_state(VTB_AUD_IDLE);
     }
+
 }
 
 

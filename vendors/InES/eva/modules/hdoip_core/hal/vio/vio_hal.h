@@ -45,6 +45,7 @@
 #define vio_get_advcnt(p)       (HOI_REG_RD((p), VIO_OFF_CONFIG, VIO_CFG_MODE) >> VIO_CFG_MODE_SHIFT) 
 #define vio_get_size(p)         HOI_RD32((p), VIO_OFF_FRAME_LENGTH)
 #define vio_get_hsplit(p)       HOI_RD32((p), VIO_OFF_HSPLIT)
+#define vio_get_timer(p)        HOI_RD32((p), VIO_OFF_TIMER)
 
 #define vio_get_statistic_fvsnyc(p)     HOI_RD32((p), VIO_OFF_FVSYNC_CNT)
 #define vio_get_statistic_vid_in(p)     HOI_RD32((p), VIO_OFF_VID_IN_CNT)
@@ -61,11 +62,12 @@ static inline void vio_reset(void* p)
 
 /** VIO prototype
  */
-void vio_set_timing(void* p, t_video_timing* p_vt);
+void vio_set_timing(void* p, t_video_timing* p_vt, int triggersource);
 void vio_set_control(void* p, t_video_timing* p_vt, int ppm, int sel);
 void vio_set_transform(void* p, uint32_t o, t_color_transform m, uint32_t cfg, bool vpol, bool hpol);
 
 void vio_get_timing(void* p, t_video_timing* p_vt);
+void vio_get_input_frequency(void* p, t_video_timing* p_vt);
 uint32_t vio_get_fin(void* p);
 uint32_t vio_get_fout(void* p);
 int32_t vio_get_tg_error(void* p);

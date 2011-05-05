@@ -62,10 +62,6 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     vrb.alive_ping = 1;
     vrb.timeout = 0;
 
-    media->result = RSCP_RESULT_READY;
-    vrb.alive_ping = 1;
-    vrb.timeout = 0;
-
     return RSCP_SUCCESS;
 }
 
@@ -105,7 +101,8 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     return RSCP_SUCCESS;
 }
 
-int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown *m, t_rscp_connection UNUSED *rsp)
+
+int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown *m, t_rscp_connection *rsp)
 {
     report(INFO "vrb_audio_teardown");
 
@@ -194,9 +191,7 @@ int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
             }
 
             // restart
-            unlock("vrb_audio_update");
-                hdoipd_launch(hdoipd_start_vrb, media, 250, 3, 1000);
-            lock("vrb_audio_update");
+            rscp_client_set_play(media->creator);
 
             return RSCP_PAUSE;
         break;
@@ -205,7 +200,6 @@ int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
             vrb_audio_pause(media);
             osd_printf("vtb.audio stoped streaming...\n");
             report(ERROR "vtb.audio stoped streaming");
-
             return RSCP_PAUSE;
         break;
     }
@@ -266,7 +260,7 @@ int vrb_audio_event(t_rscp_media *media, uint32_t event)
             } else {
                 vrb.alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
-                rscp_client_update(media->creator, EVENT_TICK);
+                rscp_client_update(client, EVENT_TICK);
             }
             if (vrb.timeout <= TICK_TIMEOUT) {
                 vrb.timeout++;
@@ -274,14 +268,14 @@ int vrb_audio_event(t_rscp_media *media, uint32_t event)
                 report(INFO "vrb_audio_event: timeout");
                 // timeout -> kill connection
                 vrb.timeout = 0;
-                rscp_client_kill(client);
+                rscp_client_set_kill(client);
                 osd_printf("vrb.audio connection lost...\n");
             }
         break;
 
         case EVENT_VIDEO_SINK_OFF:
             // Note: after teardown call media/client is not anymore a valid struct
-            rscp_client_teardown(client);
+            rscp_client_set_teardown(client);
             client = 0;
         break;
     }

@@ -15,6 +15,9 @@
 #define ADV9889_OFF_N_2                 (0x01)
 #define ADV9889_OFF_N_1                 (0x02)
 #define ADV9889_OFF_N_0                 (0x03)
+#define ADV9889_OFF_CTS_2               (0x07)
+#define ADV9889_OFF_CTS_1               (0x08)
+#define ADV9889_OFF_CTS_0               (0x09)
 #define ADV9889_OFF_AUDIO      			(0x0a)
 #define ADV9889_OFF_I2S					(0x0c)
 #define ADV9889_OFF_I2S_WIDTH			(0x0d)
@@ -162,7 +165,8 @@
 #define ADV9889_CLOCK_9839              0x10
 
 // ADV9889_OFF_PWR_DOWN
-#define ADV9889_PWR_DOWN_ON             0x38
+
+#define ADV9889_PWR_DOWN_ON             0x3C
 #define ADV9889_PWR_DOWN_OFF            0x00
 
 #endif /* ADV9889_REG_H_ */

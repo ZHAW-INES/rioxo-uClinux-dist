@@ -24,12 +24,16 @@
 #define VIO_OFF_TG_THRESHOLD        (0x0038)
 #define VIO_OFF_TG_SCALE            (0x003c)
 #define VIO_OFF_TG_CAPTURE          (0x0040)
+#define VIO_OFF_TG_VSYNC2           (0x005C)
+#define VIO_OFF_TG_VAVID2           (0x0060)
+#define VIO_OFF_TG_FIELD            (0x0064)
 // Statistic
 #define VIO_OFF_VID_IN_CNT          (0x0044)
 #define VIO_OFF_VID_OUT_CNT         (0x0048)
 #define VIO_OFF_ST_IN_CNT           (0x004c)
 #define VIO_OFF_ST_OUT_CNT          (0x0050)
 #define VIO_OFF_FVSYNC_CNT          (0x0058)
+#define VIO_OFF_TIMER               (0x0068)
 // Frame length
 #define VIO_OFF_FRAME_LENGTH        (0x0054)
 // PLL
@@ -60,7 +64,7 @@
 #define VIO_OFF_TM_HB               (0x016a)
 #define VIO_OFF_TM_VA               (0x016c)
 #define VIO_OFF_TM_HA               (0x016e)
-
+#define VIO_OFF_TM_READY            (0x0170)
 
 /** pixel transformation byte offset
  * 
@@ -109,6 +113,17 @@
 #define VIO_CFG_SCOMM5_HW           (1<<18)
 #define VIO_CFG_VIN_TIMING          (1<<20)
 #define VIO_CFG_TG_VSEL             (1<<21)
+#define VIO_CFG_VIN_TIMING_FIELD    (1<<22)
+#define VIO_CFG_VIN_TIMING_VSYNC    (1<<23)
+#define VIO_CFG_VIN_TIMING_HSYNC    (1<<24)
+#define VIO_CFG_VIN_TIMING_AVID     (1<<25)
+#define VIO_CFG_VIN_TM_POL_FIELD    (1<<26)
+#define VIO_CFG_VIN_TM_POL_VSYNC    (1<<27)
+#define VIO_CFG_VIN_TM_POL_HSYNC    (1<<28)
+#define VIO_CFG_VIN_TM_POL_AVID     (1<<29)
+#define VIO_CFG_VIN_TM_POL_TRIG     (1<<30)
+
+
 // VIO_OFF_STATUS
 #define VIO_STA_IN_CLOCK_EXT        (1<<0)
 #define VIO_STA_IN_CLKBAD_BASE      (1<<1)

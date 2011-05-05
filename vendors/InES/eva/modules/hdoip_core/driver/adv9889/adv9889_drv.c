@@ -83,6 +83,7 @@ int adv9889_drv_init(t_adv9889* handle, t_i2c* p_i2c, t_vio* p_vio)
     handle->bksv_cnt        = 0;
 
 	// shut down...
+    adv9889_write(handle, ADV9889_OFF_PWR_DOWN, ADV9889_PWR_DOWN_ON);
 	adv9889_write(handle, ADV9889_OFF_SYSTEM, ADV9889_SYSTEM_DOWN);
 
     // must be written for proper operation [AD9889B Programmer Guide 24.5.2007]
@@ -360,7 +361,7 @@ int adv9889_irq_handler(t_adv9889* handle, t_queue* event_queue)
 
     if (irq2 & ADV9889_INT2_HDCP_ERR) {
         tmp = adv9889_read(handle, ADV9889_OFF_HDCP_STATE); 
-        //REPORT(INFO, "[HDMI OUT] HDCP error : %d (state : %d)", (tmp&0xF0)>>4, (tmp%0xF));
+
         REPORT(INFO, "[HDMI OUT] HDCP error : %d (state : %d)", (tmp&0xF0)>>4, (tmp&0xF));
 
         if(handle->hdcp_state != HDCP_OFF) {

@@ -56,8 +56,20 @@ end
 query.err = hdoip.pipe.open()
 query.lang = hdoip.pipe.getParam(hdoip.pipe.REG_WEB_LANG)
 query.auth_en = hdoip.pipe.getParam(hdoip.pipe.REG_WEB_AUTH_EN)
+query.daemon_state = hdoip.pipe.getParam(hdoip.pipe.REG_STATUS_STATE)
 query.system_mode = hdoip.pipe.getParam(hdoip.pipe.REG_MODE_START)
-query.daemon_state = hdoip.pipe.getParam(hdoip.pipe.REG_STATUS_STATE) 
+
+if(query.system_mode == "vtb") then
+    query.mode_vtb = true;
+else 
+    query.mode_vtb = false;
+end
+
+if(query.system_mode == "vrb") then
+    query.mode_vrb = true;
+else 
+    query.mode_vrb = false;
+end  
 
 -----------------------------------------------
 -- Language select
@@ -97,10 +109,10 @@ end
 
 -----------------------------------------------
 -- Web authentification
-if(query.auth_en == "") then
-    query.auth_en = 1
+if(query.auth_en == "false") then
+    query.auth_en = 0
 else
-    query.auth_en = tonumber(query.auth_en)
+    query.auth_en = 1
 end
 
 if(query.auth_en > 0) then

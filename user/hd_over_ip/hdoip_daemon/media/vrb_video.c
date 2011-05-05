@@ -16,7 +16,6 @@
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "edid.h"
-//#include "../../../hdcp/receiver/receiver.h"
 #include "hdcp.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
@@ -110,7 +109,7 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     return RSCP_SUCCESS;
 }
 
-int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rscp_connection UNUSED *rsp)
+int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rscp_connection *rsp)
 {
     report(INFO "vrb_video_teardown");
 
@@ -178,9 +177,7 @@ void vrb_video_pause(t_rscp_media *media)
                 hdoipd.local.vid_port, 0);
 #endif
         hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
-
         hdoipd_set_vtb_state(VTB_VID_IDLE);
-
     }
 }
 
@@ -200,9 +197,7 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
             }
 
             // restart
-            unlock("vrb_video_update");
-                hdoipd_launch(hdoipd_start_vrb, media, 250, 3, 1000);
-            lock("vrb_video_update");
+            rscp_client_set_play(media->creator);
             return RSCP_PAUSE;
         break;
 
@@ -211,7 +206,6 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
             osd_permanent(true);
             osd_printf("vtb.video stoped streaming...\n");
             report(ERROR "vtb.video stoped streaming");
-
             return RSCP_PAUSE;
         break;
     }
@@ -291,7 +285,7 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
             } else {
                 vrb.alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
-                rscp_client_update(media->creator, EVENT_TICK);
+                rscp_client_update(client, EVENT_TICK);
             }
             if (vrb.timeout <= TICK_TIMEOUT) {
                 vrb.timeout++;
@@ -299,7 +293,7 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
                 report(INFO "vrb_video_event: timeout");
                 // timeout -> kill connection
                 vrb.timeout = 0;
-                rscp_client_kill(client);
+                rscp_client_set_kill(client);
                 osd_permanent(true);
                 osd_printf("vrb.video connection lost...\n");
             }
@@ -307,7 +301,7 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
 
         case EVENT_VIDEO_SINK_OFF:
             // Note: after teardown call media/client is not anymore a valid struct
-            rscp_client_teardown(client);
+            rscp_client_set_teardown(client);
         break;
 
     }

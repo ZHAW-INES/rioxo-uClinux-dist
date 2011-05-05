@@ -4,6 +4,9 @@
 #include "stdhal.h"
 #include "adv212_reg.h"
 
+// Timeout = 0.25s
+#define ADV212_BOOT_TIMEOUT         25000000
+
 /* !!! ADV212 is Big Endian !!!
  * 
  * HDATA-BUS:
@@ -31,7 +34,7 @@ void adv212_set_rc_size(void* p, uint32_t size);
 uint32_t adv212_get_irq(void* p);
 
 int adv212_boot_sync(void* p);
-int adv212_boot_sync_wait(void* p);
+int adv212_boot_sync_wait(void* p, void* vio);
 int adv212_boot_sync_ack(void* p);
 
 

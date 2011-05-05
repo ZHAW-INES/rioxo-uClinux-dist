@@ -62,8 +62,8 @@
 #define HOI_MSG_REPAIR              (0x7000002b)
 #define HOI_MSG_HPDON               (0x7000002c)
 #define HOI_MSG_HPDOFF              (0x7000002d)
-#define HOI_MSG_ASOREG		        (0x7000002e)
-#define HOI_MSG_HDCP_INIT	        (0x7000002f)
+#define HOI_MSG_ASOREG		    (0x7000002e)
+#define HOI_MSG_HDCP_INIT	    (0x7000002f)
 #define HOI_MSG_HDCPSTAT            (0x70000030)
 #define HOI_MSG_HDCP_ENAUDIO	    (0x70000031)
 #define HOI_MSG_HDCP_ENVIDEO	    (0x70000032)
@@ -71,6 +71,7 @@
 #define HOI_MSG_HDCP_DISVIDEO	    (0x70000034)
 #define HOI_MSG_HDCP_ENAD9889	    (0x70000035)
 #define HOI_MSG_HDCP_DISAD9889	    (0x70000036)
+
 #define HOI_MSG_POLL                (0x700000ff)
 
 
@@ -116,7 +117,7 @@
 typedef struct {
     uint32_t            id;
     uint32_t            size;
-} __attribute__ ((__packed__)) t_hoi_msg;
+} t_hoi_msg;
 
 #define hoi_msg_switch_init(p, id) hoi_msg_init(p, id, t_hoi_msg)
 #define hoi_msg_loop_init(p) hoi_msg_init(p, HOI_MSG_LOOP, t_hoi_msg)
@@ -141,7 +142,7 @@ typedef struct {
 typedef struct {
     hoi_msg_extends;
     uint32_t            drivers;        //!< (wr) Driver Bitmap for active drivers
-} __attribute__ ((__packed__)) t_hoi_msg_ldrv;
+} t_hoi_msg_ldrv;
 
 #define hoi_msg_ldrv_init(p) hoi_msg_init(p, HOI_MSG_LDRV, t_hoi_msg_ldrv)
 
@@ -159,7 +160,7 @@ typedef struct {
     size_t              aud_tx_len;     //! < buffer size
     void*               aud_rx_buf;     //! < physical address
     size_t              aud_rx_len;     //! < buffer size
-} __attribute__ ((__packed__)) t_hoi_msg_buf;
+} t_hoi_msg_buf;
 
 #define hoi_msg_buf_init(p) hoi_msg_init(p, HOI_MSG_BUF, t_hoi_msg_buf)
 
@@ -169,7 +170,7 @@ typedef struct {
     uint32_t            udp_port_aud;
     uint32_t            ip_address_dst;
     uint32_t            ip_address_src;
-} __attribute__ ((__packed__)) t_hoi_msg_eti;
+} t_hoi_msg_eti;
 
 #define hoi_msg_eti_init(p) hoi_msg_init(p, HOI_MSG_ETI, t_hoi_msg_eti)
 
@@ -184,7 +185,7 @@ typedef struct {
     uint32_t            rx_aud_cnt;
     uint32_t            rx_inv_cnt;
     uint32_t            debug;
-} __attribute__ ((__packed__)) t_hoi_msg_ethstat;
+} t_hoi_msg_ethstat;
 
 #define hoi_msg_ethstat_init(p) hoi_msg_init(p, HOI_MSG_ETHSTAT, t_hoi_msg_ethstat)
 
@@ -196,19 +197,19 @@ typedef struct {
     uint32_t            packet_lost;
     uint32_t            packet_in_cnt;
     uint32_t            status;
-} __attribute__ ((__packed__)) t_hoi_msg_vsostat;
+} t_hoi_msg_vsostat;
 
 #define hoi_msg_vsostat_init(p) hoi_msg_init(p, HOI_MSG_VSOSTAT, t_hoi_msg_vsostat)
 
 typedef struct {
     hoi_msg_extends;
     uint32_t			config;
-    uint32_t            status;
+    uint32_t                    status;
     uint32_t			start;
     uint32_t			stop;
     uint32_t			read;
     uint32_t			write;
-} __attribute__ ((__packed__)) t_hoi_msg_asoreg;
+} t_hoi_msg_asoreg;
 
 #define hoi_msg_asoreg_init(p) hoi_msg_init(p, HOI_MSG_ASOREG, t_hoi_msg_asoreg)
 
@@ -223,7 +224,7 @@ typedef struct {
     uint32_t            st_in;
     uint32_t            st_out;
     uint32_t            fvsync;
-} __attribute__ ((__packed__)) t_hoi_msg_viostat;
+} t_hoi_msg_viostat;
 
 #define hoi_msg_viostat_init(p) hoi_msg_init(p, HOI_MSG_VIOSTAT, t_hoi_msg_viostat)
 
@@ -239,7 +240,7 @@ typedef struct {
     uint32_t            bandwidth;  //!< (wr) bandwidth
     t_video_timing      timing;     //!< (rd) timing of video
     uint32_t            advcnt;     //!< (rd) adv count when compression = true
-} __attribute__ ((__packed__)) t_hoi_msg_vsi;
+} t_hoi_msg_vsi;
 
 #define hoi_msg_vsi_init(p) hoi_msg_init(p, HOI_MSG_VSI, t_hoi_msg_vsi)
 
@@ -251,7 +252,7 @@ typedef struct {
     t_video_timing      timing;     //!< timing of video
     uint32_t            advcnt;     //!< adv count when compression = true
     uint32_t            delay_ms;
-} __attribute__ ((__packed__)) t_hoi_msg_vso;
+} t_hoi_msg_vso;
 
 #define hoi_msg_vso_init(p) hoi_msg_init(p, HOI_MSG_VSO, t_hoi_msg_vso)
 
@@ -264,7 +265,7 @@ typedef struct {
     uint32_t            width;          //!< (wr) sampel bit width
     uint32_t            channel_cnt;    //!< (wr) number of used audio channels
     uint8_t             channel[16];    //!< (wr) mapping of input/transport channel
-} __attribute__ ((__packed__)) t_hoi_msg_asi;
+} t_hoi_msg_asi;
 
 #define hoi_msg_asi_init(p) hoi_msg_init(p, HOI_MSG_ASI, t_hoi_msg_asi)
 
@@ -278,7 +279,7 @@ typedef struct {
     uint32_t            width;          //!< (wr) sampel bit width
     uint32_t            channel_cnt;    //!< (wr) number of used audio channels
     uint8_t             channel[16];    //!< (wr) mapping of transport/output channel
-} __attribute__ ((__packed__)) t_hoi_msg_aso;
+} t_hoi_msg_aso;
 
 #define hoi_msg_aso_init(p) hoi_msg_init(p, HOI_MSG_ASO, t_hoi_msg_aso)
 
@@ -289,7 +290,7 @@ typedef struct {
 typedef struct {
     hoi_msg_extends;
     uint32_t            value;
-} __attribute__ ((__packed__)) t_hoi_msg_param;
+} t_hoi_msg_param;
 
 #define hoi_msg_read_init(p, a) hoi_msg_init(p, a, t_hoi_msg_param)
 #define hoi_msg_write_init(p, a) hoi_msg_init(p, a, t_hoi_msg_param)
@@ -305,7 +306,7 @@ typedef struct {
     size_t              size;       //!< size of buffer
     t_video_timing      timing;     //!< timing of video
     uint32_t            advcnt;     //!< adv count when compression = true
-} __attribute__ ((__packed__)) t_hoi_msg_image;
+} t_hoi_msg_image;
 
 #define hoi_msg_capture_init(p) hoi_msg_init(p, HOI_MSG_CAPTURE, t_hoi_msg_image)
 #define hoi_msg_show_init(p) hoi_msg_init(p, HOI_MSG_SHOW, t_hoi_msg_image)
@@ -321,7 +322,7 @@ typedef struct {
     uint32_t            fpga_svn;
     uint32_t            sysid_date;
     uint32_t            sysid_id;
-} __attribute__ ((__packed__)) t_hoi_msg_version;
+} t_hoi_msg_version;
 
 #define hoi_msg_getversion_init(p) hoi_msg_init(p, HOI_MSG_GETVERSION, t_hoi_msg_version)
 
@@ -333,7 +334,7 @@ typedef struct {
     hoi_msg_extends;
     uint32_t            segment;
     uint8_t             edid[256];
-} __attribute__ ((__packed__)) t_hoi_msg_edid;
+} t_hoi_msg_edid;
 
 #define hoi_msg_rdedid_init(p) hoi_msg_init(p, HOI_MSG_RDEDID, t_hoi_msg_edid)
 #define hoi_msg_wredid_init(p) hoi_msg_init(p, HOI_MSG_WREDID, t_hoi_msg_edid)
@@ -346,7 +347,7 @@ typedef struct {
     hoi_msg_extends;
     uint32_t            available;
     uint8_t             tag[256];
-} __attribute__ ((__packed__)) t_hoi_msg_tag;
+} t_hoi_msg_tag;
 
 #define hoi_msg_rdvidtag_init(p) hoi_msg_init(p, HOI_MSG_RDVIDTAG, t_hoi_msg_tag)
 #define hoi_msg_wrvidtag_init(p) hoi_msg_init(p, HOI_MSG_WRVIDTAG, t_hoi_msg_tag)
@@ -365,7 +366,7 @@ typedef struct {
     uint32_t            audio_width[2]; //!< audio sample width [bit]
     uint32_t            audio_cnt[2];   //!< number of active channels
     uint32_t            audio_map;      //!< bitmap for active audio channels
-} __attribute__ ((__packed__)) t_hoi_msg_info;
+} t_hoi_msg_info;
 
 #define hoi_msg_info_init(p) hoi_msg_init(p, HOI_MSG_INFO, t_hoi_msg_info)
 

@@ -96,12 +96,17 @@ void rscp_header_hdcp(t_rscp_connection* msg, t_rscp_hdcp *hdcp)
 
 void rscp_header_timing(t_rscp_connection* msg, t_video_timing* timing)
 {
-    // Timing: pfreq width fp p bp pol height fp p bp pol
-    msgprintf(msg, "Timing: %d %d %d %d %d %s %d %d %d %d %s\r\n",
+    // Timing:   Horizontal       : pfreq width fp p bp pol 
+    //           Vertical Field 0 : height fp p bp pol
+    //           Vertical Field 1 : eight fp p bp pol interlaced     
+    msgprintf(msg, "Timing: %d %d %d %d %d %s %d %d %d %d %s %d %d %d %d %s %s \r\n",
             timing->pfreq, timing->width, timing->hfront, timing->hpulse, timing->hback,
             (timing->hpolarity ? "P" : "N"),
             timing->height, timing->vfront, timing->vpulse, timing->vback,
-            (timing->vpolarity ? "P" : "N"));
+            (timing->vpolarity ? "P" : "N"),
+            timing->height_1, timing->vfront_1, timing->vpulse_1, timing->vback_1,
+            (timing->fpolarity ? "P" : "N"),
+            (timing->interlaced ? "I" : "P"));
 }
 
 void rscp_header_rtp_format(t_rscp_connection* msg, t_rscp_rtp_format* p)

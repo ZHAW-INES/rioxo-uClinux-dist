@@ -1,4 +1,5 @@
 #include "adv212.h"
+#include "vio_hal.h"
 
 
 /** Macros
@@ -388,15 +389,18 @@ int adv212_boot_sync(void* p)
     return ERR_ADV212_SUCCESS;
 }
 
-int adv212_boot_sync_wait(void* p)
+int adv212_boot_sync_wait(void* p, void* vio)
 {
-    unsigned long time;
+    uint32_t time, dt;
 
-    // wait for irq assertion (max. 1s)
-    time = jiffies + HZ; // 1 second
+
+    dt = 0;
+    time = vio_get_timer(vio);
+
     while(!(adv212_read16(p, ADV212_EIRQFLG) & ADV212_EIRQ_SWIRQ1)) {
         // add timeout? -> return ADV212_BOOT_TIMEOUT
-        if (time_after(jiffies, time)) {
+        dt = vio_get_timer(vio) - time;
+        if (dt > ADV212_BOOT_TIMEOUT) {
             return ERR_ADV212_BOOT_TIMEOUT;
         }
     }

@@ -35,7 +35,8 @@ void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps);
 void hdoipd_debug(uint32_t width, uint32_t height, uint32_t fps);
 
 int hdoipd_start_vrb(void* d);
-void hdoipd_launch(int (*f)(void* d), void* d, int timeout_ms, int repeat, int intervall_ms);
+void hdoipd_task(void);
+void hdoipd_set_task_start_vrb(void);
 
 void hdoipd_set_default();
 void hdoipd_registry_update();

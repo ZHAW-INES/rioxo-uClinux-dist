@@ -23,12 +23,12 @@ typedef struct {
 
 
 void adv212_drv_init(void* p);
-void adv212_drv_rc_size(void* p, uint32_t size, t_adv212* p_adv);
+void adv212_drv_rc_size(void* p, uint32_t size, t_adv212* p_adv, int interlaced);
 int adv212_drv_advcnt(t_video_timing* p_vt, int* adv_cnt);
 int adv212_drv_detect_enc(t_video_timing* p_vt, t_adv212* p_adv);
 int adv212_drv_detect_dec(t_video_timing* p_vt, t_adv212* p_adv);
 int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv);
 int adv212_drv_boot_dec(void* p, t_video_timing* p_vt, t_adv212* p_adv);
-int adv212_drv_boot_dec_sync(void* p, t_adv212* p_adv);
+int adv212_drv_boot_dec_sync(void* p, t_adv212* p_adv, void* p_vio);
 
 #endif /*ADV212_DRV_H_*/

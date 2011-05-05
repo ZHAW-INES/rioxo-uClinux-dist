@@ -42,6 +42,12 @@
  */
 #define VSO_CTRL_RUN			    (1<<0)
 #define VSO_CTRL_CLEAR			    (1<<1)
+#define VSO_CTRL_INTERLACE          (1<<2)
+#define VSO_CTRL_FIELD_POL          (1<<3)
+#define VSO_CTRL_VSYNC_BLANK_SOURCE (1<<4)
+#define VSO_CTRL_VSYNC_OFF          (1<<5)
+
+
 #define VSO_ST_MSK			        (0x3F)
 #define VSO_ST_PAYLOAD_EMPTY		(1<<0)
 #define VSO_ST_PAYLOAD_MTIMEOUT		(1<<1)

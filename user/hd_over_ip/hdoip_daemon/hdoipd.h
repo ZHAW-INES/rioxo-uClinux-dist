@@ -17,9 +17,15 @@
 #include "debug.h"
 #include "rscp_include.h"
 #include "bstmap.h"
+#include "hdoipd_amx.h"
 
-#define CFG_FILE            "/mnt/config/hdoipd.cfg"
-#define CFG_RSP_TIMEOUT     20
+
+#define CFG_FILE                    "/mnt/config/hdoipd.cfg"
+#define CFG_RSP_TIMEOUT             20
+#define OSD_TIMER_INTERVAL_SEC      (1)
+#define OSD_TIMER_INTERVAL_NSEC     (0)
+#define POLL_THREAD_INTERVAL_SEC    (0)
+#define POLL_THREAD_INTERVAL_NSEC   (20000000)
 
 typedef void (f_task)(void* value);
 
@@ -70,7 +76,7 @@ enum {
     RSC_AUDIO1_IN   = 0x000002,     // active audio input (from audio board)
     RSC_AUDIO_IN    = 0x000003,     // active audio input
     RSC_VIDEO_IN    = 0x000010,     // active video input
-    RSC_VIDEO_IN_HDCP=0x000020,		// HDCP required
+    RSC_VIDEO_IN_HDCP=0x000020,	    // HDCP required
     RSC_VIDEO_SINK  = 0x000100,     // a video sink is connected
     RSC_ETH_LINK    = 0x000200,     // a ethernet link is on
     RSC_AUDIO_OUT   = 0x001000,     // active audio output
@@ -100,6 +106,11 @@ enum {
     EVENT_TICK          = 0x10000000    // a tick event
 };
 
+// tasks commands
+enum {
+    TASK_START_VRB      = 0x000000001   // Start VRB
+};
+
 typedef struct {
     uint32_t            address;        // remote ip address
     uint8_t             mac[6];         // mac address
@@ -119,6 +130,10 @@ typedef struct {
     t_bstmap*           set_listener;   // listen for write
     t_bstmap*           get_listener;   // listen for read
 
+    uint32_t            task_commands;
+    int                 task_repeat;
+    int                 task_timeout;
+
     uint32_t            drivers;
     int                 capabilities;   // reported capabilities
     int                 state;          // daemon state
@@ -137,6 +152,8 @@ typedef struct {
     uint64_t            tick;
     int                 eth_alive;
     int                 eth_timeout;
+    bool                auto_stream;
+    t_hdoip_amx			amx;
 } t_hdoipd;
 
 

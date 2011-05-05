@@ -10,8 +10,8 @@ int vsi_drv_stop(t_vsi* handle)
 {
     PTR(handle); PTR(handle->p_vsi);
 	vsi_disable(handle->p_vsi);
-    
-	while(vsi_get_status(handle->p_vsi, VSI_ST_FSM_IDLE) == 0); 
+
+	while(vsi_get_status(handle->p_vsi, VSI_ST_FSM_IDLE) == 0);
     handle->status = handle->status & ~VSI_DRV_STATUS_ACTIV;
 
 	return ERR_VSI_SUCCESS;

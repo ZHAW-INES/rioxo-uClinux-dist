@@ -365,7 +365,7 @@
 #define	ADV7441A_BIT_PACKET_ERROR_MB1                            0x02
 #define	ADV7441A_BIT_AUDIO_PKT_ERR_M1                            0x01
 
-#define	ADV7441A_REG_HDMI_STATUS_6                               0x72
+#define	ADV7441A_REG_HDMI_INT_STATUS_6                           0x72
 #define	ADV7441A_BIT_DEEP_COLOR_CHNG_ST                          0x80
 #define	ADV7441A_BIT_VCLK_CHNG_ST                                0x40
 #define	ADV7441A_BIT_AKSV_UPDATE_ST                              0x20

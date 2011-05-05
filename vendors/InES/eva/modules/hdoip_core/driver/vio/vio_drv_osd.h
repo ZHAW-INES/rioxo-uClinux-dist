@@ -14,6 +14,8 @@
  */
 typedef struct {
 	uint32_t	x, y;			//!< current position
+    uint8_t     x_border;
+    uint8_t     y_border;
 } t_osd;
 
 int vio_drv_osd_seek_(t_osd* p_osd, int32_t off);
