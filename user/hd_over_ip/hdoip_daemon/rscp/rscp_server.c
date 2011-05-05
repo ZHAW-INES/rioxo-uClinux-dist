@@ -115,7 +115,6 @@ int rscp_server_thread(t_rscp_server* handle)
     return n;
 }
 
-
 /** Teardown connection
  *
  * Note: caller must remove session

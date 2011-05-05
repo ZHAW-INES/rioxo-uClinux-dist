@@ -54,7 +54,40 @@ int hoi_drv_buf(void* ar, size_t arl, void* vr, size_t vrl, void* at, size_t atl
 
     return hoi_msg(&msg);
 }
+//-----------------------------------------------------------------------------
+// HDCP
+//send hdcp keys to kernel
+int hoi_drv_hdcp(uint32_t hdcp_keys[])
+{
+    t_hoi_msg_hdcp_init msg;
 
+    hoi_msg_hdcp_init(&msg);
+    msg.key0 = hdcp_keys[0];
+    msg.key1 = hdcp_keys[1];
+    msg.key2 = hdcp_keys[2];
+    msg.key3 = hdcp_keys[3];
+    msg.riv0 = hdcp_keys[4];
+    msg.riv1 = hdcp_keys[5];
+
+    return hoi_msg(&msg);
+}
+
+//get hdcp status
+int hoi_drv_hdcpstat(uint32_t *eto_hdcp_audio,uint32_t *eto_hdcp_video,uint32_t *eti_hdcp_audio, uint32_t *eti_hdcp_video)
+{
+    int ret;
+    t_hoi_msg_hdcpstat msg;
+
+    hoi_msg_hdcpstat_init(&msg);
+    ret = hoi_msg(&msg);
+    *eto_hdcp_audio = msg.status_eto_audio;
+    *eto_hdcp_video = msg.status_eto_video;
+    *eti_hdcp_audio = msg.status_eti_audio;
+    *eti_hdcp_video = msg.status_eti_video;
+
+    return ret;
+}
+//-----------------------------------------------------------------------------
 int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src, uint32_t vid, uint32_t aud)
 {
     t_hoi_msg_eti msg;
@@ -360,7 +393,6 @@ int hoi_drv_wraudtag(void* buffer)
     t_hoi_msg_tag msg;
 
     hoi_msg_wraudtag_init(&msg);
-    memcpy(msg.tag, buffer, 256);
     ret = hoi_msg(&msg);
 
     return ret;
@@ -384,3 +416,11 @@ HOI_CMDSW(osdoff);
 HOI_CMDSW(hpdon);
 HOI_CMDSW(hpdoff);
 HOI_CMDSW(repair);
+
+HOI_CMDSW(hdcp_viden);       //enable hdcp video encryption
+HOI_CMDSW(hdcp_auden);       //enable hdcp audio encryption
+HOI_CMDSW(hdcp_viddis);      //disable hdcp video encryption
+HOI_CMDSW(hdcp_auddis);      //disable hdcp audio encryption
+HOI_CMDSW(hdcp_adv9889dis);  //disable AD9889 hdcp encryption
+HOI_CMDSW(hdcp_adv9889en);   //enable AD9889 hdcp encryption
+

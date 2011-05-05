@@ -3,6 +3,8 @@
  *
  *  Created on: 22.11.2010
  *      Author: alda
+ *
+ *  Functions to send/receive data
  */
 
 #include "rscp.h"
@@ -41,7 +43,8 @@ bool rscp_receive_crlf(char** s, char* eol)
     *s = eol;
     return false;
 }
-
+/** Not yet used, only header of protocol is used
+ * */
 int rscp_receive_body(t_rscp_connection* con, char* buf, size_t length)
 {
     int i;
@@ -69,7 +72,9 @@ int rscp_receive_body(t_rscp_connection* con, char* buf, size_t length)
 
     return length;
 }
-
+/** Read the received chars in the socket
+ *
+ * */
 int rscp_receive(t_rscp_connection* con, char** line, int timeout)
 {
     int ret = 0;
@@ -127,6 +132,9 @@ int rscp_receive(t_rscp_connection* con, char** line, int timeout)
     return RSCP_SUCCESS;
 }
 
+/** Sends message to receiver, function equal to rscp_write
+ *
+ * */
 void rscp_send(t_rscp_connection* con)
 {
     if (send(con->fdw, con->out.buf, con->out.eol - con->out.buf, 0) == -1) {
@@ -149,7 +157,9 @@ void rscp_send(t_rscp_connection* con)
     con->out.eol = con->out.sol = con->out.buf;
     con->out.buf[0] = 0;
 }
-
+/** Sends message to receiver, function equal to rscp_send
+ *
+ * */
 void rscp_write(t_rscp_connection* con)
 {
     //if (send(con->fdw, con->out.buf, con->out.eol - con->out.buf, 0) == -1) {
@@ -168,11 +178,13 @@ void rscp_write(t_rscp_connection* con)
     }
 #endif
 
-    con->sequence++;
+    con->sequence++;  //increment sequence nr.
     con->out.eol = con->out.sol = con->out.buf;
     con->out.buf[0] = 0;
 }
-
+/** Creates the two pipes to write in the responses/requests ??
+ *
+ * */
 int rscp_split(t_rscp_connection* con, t_rscp_connection* con1, t_rscp_connection* con2)
 {
     int pfd1[2], pfd2[2]; // 0=read, 1=write

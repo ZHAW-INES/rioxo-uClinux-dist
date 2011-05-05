@@ -3,6 +3,9 @@
  *
  *  Created on: 22.11.2010
  *      Author: alda
+ *
+ * - Interface to rscp
+ * - RSCP state machine
  */
 #include <stdlib.h>
 #include <stdio.h>
@@ -164,6 +167,7 @@ int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 
 ///////////////////////////////////////////////////////////////////////////////
 // received a response as a server (can not answer -> rsp = 0)
+// called from rscp_server.c
 
 /** Teardown server
  *
@@ -232,6 +236,7 @@ int rmcq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 
 ///////////////////////////////////////////////////////////////////////////////
 // received a response as a client (can not answer -> rsp = 0)
+// called from rcsp_client
 
 
 int rmcr_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
@@ -299,12 +304,6 @@ int rmcr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
     return ret;
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-// state manipulation (local)
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // state manipulation (local)
 
@@ -331,6 +330,16 @@ int rscp_media_play(t_rscp_media* media)
     int ret = RSCP_NULL_POINTER;
     if (media) {
         if (media->doplay) ret = media->doplay(media);
+     /*   //check if kill / teardown is set because of HDCP error
+        if (client->kill)  rscp_client_close(media->creator);             //HDCP
+        else if (client->teardown) rscp_client_teardown(media->creator);  //HDCP
+     */
+
+        //original from rscp_client.c -> rscp_client_event()
+        //if (client->kill)  rscp_client_close(client);
+        //else if (client->teardown) rscp_client_teardown(client);
+
+
     }
     return ret;
 }

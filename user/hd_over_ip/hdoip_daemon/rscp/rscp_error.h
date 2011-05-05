@@ -22,7 +22,8 @@ typedef enum {
     RSCP_UNSUPPORTED_METHOD,
     RSCP_UNKNOWN_HEADER,
     RSCP_NULL_POINTER,
-    RSCP_TIMEOUT
+    RSCP_TIMEOUT,
+    RSCP_HDCP_ERROR
 } e_error;
 
 #endif /* RSCP_ERROR_H_ */

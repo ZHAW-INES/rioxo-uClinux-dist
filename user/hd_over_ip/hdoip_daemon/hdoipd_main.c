@@ -165,21 +165,6 @@ void* event_read_thread(void UNUSED *d)
     }
 }
 
-/*void* hdcp_thread(void UNUSED *d)
-{
-
-//start server
-
-
-    while(1) {
-      //start hdcp server
-      char riv[17];
-      char session_key[33];
-      receiver("55000", session_key, riv); 
-      //transmitter(port_nr, ip_nr, session_key, riv);
-    }
-}*/
-
 void* poll_thread(void UNUSED *d)
 {
     while (1) {

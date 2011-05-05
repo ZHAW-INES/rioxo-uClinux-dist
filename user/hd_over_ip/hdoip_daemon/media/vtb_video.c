@@ -12,7 +12,7 @@
 #include "box_sys.h"
 #include "edid.h"
 #include "rscp_server.h"
-#include "../../../hdcp/transmitter/transmitter.h"
+#include "hdcp.h"
 
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
@@ -24,11 +24,12 @@ static struct {
     int                 alive_ping;
 } vtb;
 
-
 int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
     int n;
     char *p;
+    int sockfd;                   // for hdcp socket
+    struct sockaddr_in cli_addr;  // for hdcp socket
 
     //hdcp information should be ready in m
 
@@ -93,17 +94,11 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     vtb.timeout = 0;
     vtb.alive_ping = 1;
 
-
-    p = reg_get("hdcp-force");
-    printf("Value HDCP force: %s/n",p);
-
-    hdoipd.hdcp_hdmi_forced==1; //TODO: this value must be set from the hdmi chip
-    //adapt hdcp status if necessary
-    if ((hdoipd.hdcp_extern_forced==1)||(hdoipd.hdcp_hdmi_forced==1)||((strcmp(p, "1")==0))){
-    	m->hdcp.hdcp_on=1;
-    }
-    else{
-    	m->hdcp.hdcp_on=0;
+    // open hdcp socket if necessary
+    if ((n = hdcp_open_socket(&m->hdcp, &sockfd, &cli_addr)) != RSCP_SUCCESS){
+        report(" ? Could not open hdcp socket");
+        rscp_err_hdcp(rsp);
+        return RSCP_REQUEST_ERROR;
     }
 
     vtb.remote.address = rsp->address;
@@ -111,34 +106,13 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     m->transport.server_port = PORT_RANGE(hdoipd.local.vid_port, hdoipd.local.vid_port);
     rscp_response_setup(rsp, &m->transport, media->sessionid, &m->hdcp); //respond message to setup message
 
-    // Start hdcp function here!!!
-    /*
-     * - check if HDCP is necessary
-     * - if hdcp is necessary, check if it is already enabled
-     * - get port number
-     * - start server and SKE if necessary
-     * - if successful, write keys to HW, else go back to ?idle? state
-     *
-     * */
-    //if ((m->hdcp.hdcp_on=1)||(hdcp_value_from_registiry=1)){
-      printf("hdcp_on1: %d\n",m->hdcp.hdcp_on);
-      printf("hdcp_port1: %d\n",m->hdcp.port_nr);
-      if (m->hdcp.hdcp_on == 1){
-    	//TODO: check if already enabled
-    	char port_nr_string[10];
-    	char ip; //Not necessary in transmitter function
-    	char riv[17];
-    	char session_key[33];
-    	sprintf(port_nr_string,"%d",m->hdcp.port_nr);
-    	transmitter(port_nr_string,ip,session_key,riv); //start server for SKE
-    	//TODO: check if SKE was successful
-    	//write keys down to HW
-
-
+    // start hdcp session key exchange if necessary
+    char video[]="video";
+    if ((n = hdcp_ske_server(&m->hdcp, &sockfd, &cli_addr, &video)) != RSCP_SUCCESS){
+            report(" ? Session key exchange failed");
+            rscp_err_hdcp(rsp);
+            return RSCP_REQUEST_ERROR;
     }
-
-
-
 
     REPORT_RTX("TX", hdoipd.local, "->", vtb.remote, vid);
 
@@ -178,6 +152,15 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
         rscp_err_no_source(rsp);
         return RSCP_REQUEST_ERROR;
     }
+
+    //check if Video HDCP status is unchanged, else return ERROR
+    if ((reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP)) && !(get_hdcp_status() & HDCP_ETO_VIDEO_EN)) {
+        report(" ? Video HDCP status has changed after SKE");
+        rscp_err_hdcp(rsp);
+        return RSCP_REQUEST_ERROR;
+    }
+    // if hdoipd_rsc(RSC_VIDEO_IN_HDCP) || hdcp is active -> error
+
 
     // test for valid resolution
 

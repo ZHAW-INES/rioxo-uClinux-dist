@@ -216,8 +216,7 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, char* edid)
 	adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_3,0x00); 
 	adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_4,0x00); 
 	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_1, ADV7441A_BIT_AUDIO_INFO_MB1); 
-	//adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_2, ADV7441A_BIT_HDMI_ENCRPT_MB1 | ADV7441A_BIT_AUDIO_C_PCKT_MB1 | ADV7441A_BIT_AUDIO_PLL_LCK_MB1); 
-	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_2, ADV7441A_BIT_AUDIO_C_PCKT_MB1 | ADV7441A_BIT_AUDIO_PLL_LCK_MB1); 
+	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_2, ADV7441A_BIT_HDMI_ENCRPT_MB1 | ADV7441A_BIT_AUDIO_C_PCKT_MB1 | ADV7441A_BIT_AUDIO_PLL_LCK_MB1); 
  	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_3, ADV7441A_BIT_VIDEO_PLL_LCK_MB1 | ADV7441A_BIT_V_LOCKED_MB1 | ADV7441A_BIT_TMDS_CLK_A_MB1); 
 	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_4, 0x00); 
  	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_5, ADV7441A_BIT_CTS_PASS_THRS_M1); 
@@ -423,7 +422,8 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
                 REPORT(INFO, "[HDMI IN] vertical synch filter not locked");
             }
         }
-   
+              // REPORT(INFO, "[HDMI IN] link is encrypted\n");	//test
+       	      // queue_put(event_queue, E_ADV7441A_HDCP);		//test
         /* Encryption enabled/disabled */
     	if(hdmi_status2 & ADV7441A_BIT_HDMI_ENCRPT_ST) {            
             int2_clr |= ADV7441A_BIT_HDMI_ENCRPT_CLR;

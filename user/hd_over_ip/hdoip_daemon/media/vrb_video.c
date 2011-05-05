@@ -16,7 +16,8 @@
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "edid.h"
-#include "../../../hdcp/receiver/receiver.h"
+//#include "../../../hdcp/receiver/receiver.h"
+#include "hdcp.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout)
@@ -48,32 +49,12 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, vid);
 
-    //start HDCP code!? If (hdcp= on) {....}
-    /* - if hdcp is necessary, check if it is already enabled
-     * - get port number
-     * - start server and SKE if necessary
-     * - if successful, write keys to HW, else go back to ?idle? state
-     *
-     * */
-    printf("hdcp_on1: %d\n",m->hdcp.hdcp_on);
-    printf("hdcp_port1: %d\n",m->hdcp.port_nr);
-    sleep(2); //wait 2 sec to allow the server to start up
-    //TODO: replace to sleep command (with a loop?!)
-    printf("hdcp_extern_forced: %d\n",hdoipd.hdcp_extern_forced);
-    /*check if hdcp is needed, only check the external command*/
-    if (hdoipd.hdcp_extern_forced == 1){
-  	  //TODO: check if already enabled
-  	  char port_nr_string[10];
-  	  char riv[17];
-  	  char session_key[33];
-  	  char *ip;
-  	  ip=reg_get("remote-uri");
-  	  ip += 7;
-  	  printf("Remote-uri: %s\n",ip);
-  	  sprintf(port_nr_string, "%d",m->hdcp.port_nr);
-  	  receiver(port_nr_string,ip,session_key,riv); //start server for SKE
-  	  //TODO: check if SKE was successful
-  	  //write keys down to HW
+    // start hdcp session key exchange if necessary
+    char video[]="video";
+    if ((n = hdcp_ske_client(&m->hdcp, &video)) != RSCP_SUCCESS){
+        report(" ? Session key exchange failed");
+        rscp_err_hdcp(rsp);
+        return RSCP_REQUEST_ERROR;
     }
 
 #ifdef ETI_PATH
@@ -167,6 +148,10 @@ int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
                         break;
             case 406:   media->result = RSCP_RESULT_SERVER_NO_VIDEO_IN;
                         break;
+            case 408:   media->result = RSCP_RESULT_SERVER_HDCP_ERROR;
+             	 	 	//set kill bit
+              	  	  	//set teardown bit
+                        break;
             case 400:
             default:    media->result = RSCP_RESULT_SERVER_ERROR;
                         break;
@@ -256,20 +241,10 @@ int vrb_video_dosetup(t_rscp_media *media)
     t_rscp_client *client = media->creator;
     t_rscp_hdcp hdcp;
     //hdcp.hdcp_on = 0;
-    hdcp.port_nr = 55000;	  //set port number
-    hdoipd.hdcp_hdmi_forced=0;//this value has to be set by the hdmi chip
-    hdoipd.hdcp_extern_forced=0;
+    hdcp.port_nr = 57000;	  //set port number
 
-    p = reg_get("hdcp-force");
-    printf("Value HDCP force: %s/n",p);
-    /*check if hdcp is needed*/
-    if ((hdoipd.hdcp_hdmi_forced==1)||(hdoipd.hdcp_extern_forced==1)||((strcmp(p, "1")==0))){
-      hdcp.hdcp_on = 1;
-    }
-    else{
-      hdcp.hdcp_on = 0;
-    }
-    printf("hdcp_dccp_on: %d/n",hdcp.hdcp_on);
+    hdcp.hdcp_on = reg_test("hdcp-force", "on");
+    printf("hdcp_on: %d/n",hdcp.hdcp_on);
 
     if (!client) return RSCP_NULL_POINTER;
 

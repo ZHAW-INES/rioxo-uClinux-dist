@@ -40,7 +40,7 @@ void hdoipd_set_default()
     reg_set("web-user", "admin");
     reg_set("web-pass", "admin");
 
-    reg_set("hdcp-force", "0");
+    reg_set("hdcp-force", "off");
 }
 
 static void update_0_0_to_0_1()

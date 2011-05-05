@@ -29,7 +29,7 @@ int vso_drv_start(t_vso* handle)
     if((handle->status & VSO_DRV_STATUS_TIMING_SET) == 0) {
         return ERR_VSO_TIMING_NOT_SET;
     }*/
-	
+    REPORT(INFO, "VSO_DRV_START");
 	vso_enable(handle->p_vso);
     handle->status = handle->status | VSO_DRV_STATUS_ACTIV;
 	return ERR_VSO_SUCCESS;

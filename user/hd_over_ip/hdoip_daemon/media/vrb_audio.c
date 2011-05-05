@@ -42,6 +42,14 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, aud);
 
+    // start hdcp session key exchange if necessary
+    char audio[]="audio";
+    if ((n = hdcp_ske_client(&m->hdcp, &audio)) != RSCP_SUCCESS){
+        report(" ? Session key exchange failed");
+        rscp_err_hdcp(rsp);
+        return RSCP_REQUEST_ERROR;
+    }
+
 #ifdef ETI_PATH
     // TODO: separete Audio/Video
     hoi_drv_eti(hdoipd.local.address, vrb.remote.address,
@@ -135,6 +143,10 @@ int vrb_audio_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
                         break;
             case 406:   media->result = RSCP_RESULT_SERVER_NO_VIDEO_IN;
                         break;
+            case 408:   media->result = RSCP_RESULT_SERVER_HDCP_ERROR;
+             	 	 	//set kill bit
+              	  	  	//set teardown bit
+                        break;
             case 400:
             default:    media->result = RSCP_RESULT_SERVER_ERROR;
                         break;
@@ -220,8 +232,10 @@ int vrb_audio_dosetup(t_rscp_media *media)
     t_rscp_transport transport;
     t_rscp_client *client = media->creator;
     t_rscp_hdcp hdcp;
-    hdcp.hdcp_on = 0;
-    hdcp.port_nr = 789;
+    hdcp.port_nr = 57000;
+
+    hdcp.hdcp_on = reg_test("hdcp-force", "on");
+    printf("hdcp_audio_on: %d/n",hdcp.hdcp_on);
 
     if (!client) return RSCP_NULL_POINTER;
 

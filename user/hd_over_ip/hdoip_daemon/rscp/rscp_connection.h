@@ -34,6 +34,10 @@ typedef struct {
 } t_rscp_connection;
 
 // TODO: send content if not enough size and retry snprintf?
+
+/** Print message to buffer
+ *
+ * */
 #define msgprintf(c, ...) \
 { \
     t_rscp_connection * _c_ = (c); \

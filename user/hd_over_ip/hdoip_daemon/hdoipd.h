@@ -56,12 +56,21 @@ enum {
     VRB_AUD_MASK    = 0x06
 };
 
+// hdcp enabled / disabled in HW
+enum {
+    HDCP_ETI_VIDEO_EN       = 0x01,  //eti video enabled in HW
+    HDCP_ETI_AUDIO_EN       = 0x02,  //eti audio enabled in HW
+    HDCP_ETO_VIDEO_EN       = 0x04,  //eto video enabled in HW
+    HDCP_ETO_AUDIO_EN       = 0x08   //eto audio enabled in HW
+};
+
 // what is
 enum {
     RSC_AUDIO0_IN   = 0x000001,     // active audio input (from video board)
     RSC_AUDIO1_IN   = 0x000002,     // active audio input (from audio board)
     RSC_AUDIO_IN    = 0x000003,     // active audio input
     RSC_VIDEO_IN    = 0x000010,     // active video input
+    RSC_VIDEO_IN_HDCP=0x000020,		// HDCP required
     RSC_VIDEO_SINK  = 0x000100,     // a video sink is connected
     RSC_ETH_LINK    = 0x000200,     // a ethernet link is on
     RSC_AUDIO_OUT   = 0x001000,     // active audio output
@@ -128,8 +137,6 @@ typedef struct {
     uint64_t            tick;
     int                 eth_alive;
     int                 eth_timeout;
-    int			hdcp_hdmi_forced;
-    int			hdcp_extern_forced;
 } t_hdoipd;
 
 

@@ -62,8 +62,17 @@
 #define HOI_MSG_REPAIR              (0x7000002b)
 #define HOI_MSG_HPDON               (0x7000002c)
 #define HOI_MSG_HPDOFF              (0x7000002d)
-#define HOI_MSG_ASOREG				(0x7000002e)
+#define HOI_MSG_ASOREG		        (0x7000002e)
+#define HOI_MSG_HDCP_INIT	        (0x7000002f)
+#define HOI_MSG_HDCPSTAT            (0x70000030)
+#define HOI_MSG_HDCP_ENAUDIO	    (0x70000031)
+#define HOI_MSG_HDCP_ENVIDEO	    (0x70000032)
+#define HOI_MSG_HDCP_DISAUDIO	    (0x70000033)
+#define HOI_MSG_HDCP_DISVIDEO	    (0x70000034)
+#define HOI_MSG_HDCP_ENAD9889	    (0x70000035)
+#define HOI_MSG_HDCP_DISAD9889	    (0x70000036)
 #define HOI_MSG_POLL                (0x700000ff)
+
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
@@ -117,6 +126,13 @@ typedef struct {
 #define hoi_msg_repair_init(p) hoi_msg_init(p, HOI_MSG_REPAIR, t_hoi_msg)
 #define hoi_msg_hpdon_init(p) hoi_msg_init(p, HOI_MSG_HPDON, t_hoi_msg)
 #define hoi_msg_hpdoff_init(p) hoi_msg_init(p, HOI_MSG_HPDOFF, t_hoi_msg)
+// HDCP messages
+#define hoi_msg_hdcp_viden_init(p) hoi_msg_init(p, HOI_MSG_HDCP_ENVIDEO, t_hoi_msg)
+#define hoi_msg_hdcp_auden_init(p) hoi_msg_init(p, HOI_MSG_HDCP_ENAUDIO, t_hoi_msg)
+#define hoi_msg_hdcp_viddis_init(p) hoi_msg_init(p, HOI_MSG_HDCP_DISVIDEO, t_hoi_msg)
+#define hoi_msg_hdcp_auddis_init(p) hoi_msg_init(p, HOI_MSG_HDCP_DISAUDIO, t_hoi_msg)
+#define hoi_msg_hdcp_adv9889dis_init(p) hoi_msg_init(p, HOI_MSG_HDCP_DISAD9889, t_hoi_msg)
+#define hoi_msg_hdcp_adv9889en_init(p) hoi_msg_init(p, HOI_MSG_HDCP_ENAD9889, t_hoi_msg)
 
 
 //------------------------------------------------------------------------------
@@ -353,6 +369,30 @@ typedef struct {
 
 #define hoi_msg_info_init(p) hoi_msg_init(p, HOI_MSG_INFO, t_hoi_msg_info)
 
+//------------------------------------------------------------------------------
+// hdcp init
+typedef struct {
+    hoi_msg_extends;
+    uint32_t          	key0;
+    uint32_t          	key1;
+    uint32_t          	key2;
+    uint32_t          	key3;
+    uint32_t          	riv0;
+    uint32_t          	riv1;
+} __attribute__ ((__packed__)) t_hoi_msg_hdcp_init;
+
+#define hoi_msg_hdcp_init(p) hoi_msg_init(p, HOI_MSG_HDCP_INIT, t_hoi_msg_hdcp_init)
+//------------------------------------------------------------------------------
+// Get hdcp status (enabled/disabled)
+typedef struct {
+    hoi_msg_extends;
+    uint32_t            status_eto_video;
+    uint32_t            status_eto_audio;
+    uint32_t            status_eti_video;
+    uint32_t            status_eti_audio;
+} __attribute__ ((__packed__)) t_hoi_msg_hdcpstat;
+
+#define hoi_msg_hdcpstat_init(p) hoi_msg_init(p, HOI_MSG_HDCPSTAT, t_hoi_msg_hdcpstat)
 
 //------------------------------------------------------------------------------
 //

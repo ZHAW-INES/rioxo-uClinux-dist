@@ -26,6 +26,7 @@
 #include "asi_drv.h"
 #include "aso_drv.h"
 #include "vrp_drv.h"
+#include "hdcp_drv.h"
 #include "tag_drv.h"
 #include "tmr_hal.h"
 #include "ver_hal.h"
@@ -71,6 +72,7 @@ typedef struct {
     t_aso               aso;
     t_eto               eto;
     t_eti               eti;
+    //t_hdcp				hdcp;
     t_adv9889           adv9889;
     t_adv7441a          adv7441a;
     t_sync_means        sync;

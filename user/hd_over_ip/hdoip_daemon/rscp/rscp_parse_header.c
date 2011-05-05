@@ -3,6 +3,9 @@
  *
  *  Created on: 22.11.2010
  *      Author: alda
+ *
+ *  Functions to parse the received message string back to the struct values
+ *  Every line of the RSCP message has its own parsing function.
  */
 
 #include <stdio.h>
@@ -206,8 +209,6 @@ int rscp_parse_hdcp(char* line, t_rscp_hdcp *hdcp)
 
 	 hdcp->hdcp_on = a;
 	 hdcp->port_nr = b;
-	 //TODO: set port to global variable
-	 hdoipd.hdcp_extern_forced=a;
 
     return RSCP_SUCCESS;
 }

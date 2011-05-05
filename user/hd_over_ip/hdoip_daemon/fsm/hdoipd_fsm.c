@@ -297,12 +297,6 @@ void hdoipd_goto_vrb()
                     hdoipd_launch(hdoipd_start_vrb, 0, 50, 3, 1000);
                 lock("hdoipd_goto_vrb");
 
-		//start hdcp server
-		//char riv[17];
-  		//char session_key[33];
-		//receiver(55000, session_key, riv);
-		//pthread_t thh;
-		//pthread(thh, hdcp_thread, 0);
             }
         } else {
             report(ERROR "already in state vrb");
@@ -569,13 +563,18 @@ void hdoipd_event(uint32_t event)
         break;
 
         case E_ADV7441A_HDCP:
+        	printf("\n ******* Incomming stream is encrypted!! ****** \n");
+        	hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
         //if VRB do nothing
-        //if VTB set HDCP bit in registry
-        //goto setup
+        //if VTB, check if encryption is already activated
+        //	if not, change to idle state and do init
         break;
         case E_ADV7441A_NO_HDCP:
-         //reset HDCP bit in registry
-         //goto setup
+        	printf("\n ******* Incomming stream is !!! NOT !!! encrypted!! ****** \n");
+        	hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
+            //if VRB do nothing
+            //if VTB, check if encryption is already activated
+            //	if encryption is active, disable encryption and ask VRB to disable encryption
         break;
 
         // ...

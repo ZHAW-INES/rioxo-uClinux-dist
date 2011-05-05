@@ -75,4 +75,7 @@
 #define ERR_HOI                                 (0xe9000000)
 #define ERR_HOI_CMD_NOT_SUPPORTED               (ERR_HOI+1)
 
+#define ERR_HDCP                                (0xeC000000)
+#define ERR_HDCP_SUCCESS                        (ERR_HDCP+1)
+
 #endif /* ERR_H_ */

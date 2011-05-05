@@ -1,8 +1,13 @@
-/*
+/**
  * rscp_command.c
  *
  *  Created on: 22.11.2010
  *      Author: alda
+ *
+ *  RSCP response and request methods
+ *  These methods collect the necessary parameters for an RSCP message
+ *  an pack the parameters into a string. This string is sent to the
+ *  server/client. Only the header of the RSCP protocol is used.
  */
 
 #include "rscp.h"
@@ -25,6 +30,9 @@ void rscp_response_error(t_rscp_connection* msg, int code, char* reason)
     rscp_send(msg);
 }
 
+/** First line of an RSCP request message. RSCP_VERSION is last parameter.
+ *  In a response message, RSCP_VERSION is the first parameter
+ * */
 void rscp_request_line(t_rscp_connection* msg, char* method, char* uri)
 {
     msgprintf(msg, "%s %s %s\r\n",
@@ -38,7 +46,9 @@ void rscp_request_cseq(t_rscp_connection* msg, int s)
 {
     msgprintf(msg, "CSeq: %03d\r\n", s);
 }
-
+/** Terminate every message with "\r\n"
+ *
+ * */
 void rscp_eoh(t_rscp_connection* msg)
 {
     msgprintf(msg, "\r\n");
@@ -110,42 +120,28 @@ void rscp_header_rtp_format(t_rscp_connection* msg, t_rscp_rtp_format* p)
     }
 
 }
-/*
-void rscp_request_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, t_rscp_edid *edid)
-{
-    rscp_request_line(msg, "SETUP", uri);
-    rscp_header_transport(msg, transport);
-    if (edid) rscp_header_edid(msg, edid);
-    rscp_eoh(msg);
-    rscp_send(msg);
-}*/
+/** Create message to initiate setup
+ * */
 void rscp_request_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, t_rscp_edid *edid, t_rscp_hdcp *hdcp)
 {
     rscp_request_line(msg, "SETUP", uri);
     rscp_header_transport(msg, transport);
     if (edid) rscp_header_edid(msg, edid);
-    rscp_header_hdcp(msg, hdcp); //input hdcp info
+    rscp_header_hdcp(msg, hdcp); //input hdcp info //if hdcp
     rscp_eoh(msg);
     rscp_send(msg);
 }
+/** Respond to the setup message. Send back the adapted values.
+ * */
 void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session, t_rscp_hdcp *hdcp)
 {
     rscp_response_line(msg, RSCP_SC_OK, "OK");
     rscp_header_session(msg, session);
     rscp_header_transport(msg, transport);
-    rscp_header_hdcp(msg, hdcp); //input hdcp info
+    rscp_header_hdcp(msg, hdcp); //input hdcp info //if hdcp
     rscp_eoh(msg);
     rscp_send(msg);
 }
-/*
-void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session)
-{
-    rscp_response_line(msg, RSCP_SC_OK, "OK");
-    rscp_header_session(msg, session);
-    rscp_header_transport(msg, transport);
-    rscp_eoh(msg);
-    rscp_send(msg);
-}*/
 
 void rscp_request_play(t_rscp_connection* msg, char* uri, char* session, t_rscp_rtp_format* fmt)
 {

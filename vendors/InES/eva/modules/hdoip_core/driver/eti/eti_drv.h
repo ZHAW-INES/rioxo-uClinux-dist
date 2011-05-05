@@ -25,6 +25,7 @@ int eti_drv_set_aes(t_eti* handle, uint32_t key[4], uint32_t riv[2]);
 int eti_drv_get_aes(t_eti* handle, uint32_t key[4], uint32_t riv[2]);
 int eti_drv_aes_aud_en(t_eti* handle);
 int eti_drv_aes_aud_dis(t_eti* handle);
+int eti_drv_aes_stat(t_eti* handle, uint32_t *audio_enc_en, uint32_t *video_enc_en);
 int eti_drv_aes_vid_en(t_eti* handle);
 int eti_drv_aes_vid_dis(t_eti* handle);
 int eti_drv_start_aud(t_eti* handle);

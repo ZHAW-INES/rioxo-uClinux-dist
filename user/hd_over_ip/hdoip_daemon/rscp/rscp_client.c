@@ -3,6 +3,13 @@
  *
  *  Created on: 22.11.2010
  *      Author: alda
+ *
+ *  Functions to establish connection(s) to the server
+ *  Functions to send and receive messages (every sent message
+ *  expects an answer)
+ *  Difference request/response:
+ *  Response: server response to a request from client (normal case)
+ *  Request: request from server (to client) initiated by server
  */
 
 #include <stdio.h>
@@ -16,7 +23,8 @@
 #include "rscp_parse_header.h"
 #include "hdoipd.h"
 
-
+/** To separate requests and responses
+ * */
 void* rscp_client_thread(void* _client);
 void* rscp_client_req_thread(void* _client);
 
@@ -98,7 +106,7 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
         dest_addr.sin_family = AF_INET;
         dest_addr.sin_port = port;
         dest_addr.sin_addr.s_addr = addr.s_addr;
-
+        //try to connect server
         if (connect(fd, (struct sockaddr*)&dest_addr, sizeof(struct sockaddr)) == -1) {
             close(fd);
             perrno(ERROR "RSCP Client [%d]: connection refused", client->nr);
@@ -186,7 +194,7 @@ int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp
 
 
     report(" > RSCP Client [%d] SETUP", client->nr);
-
+    // send setup message
     rscp_request_setup(&client->con, client->uri, transport, edid, hdcp);
 
     rscp_default_response_setup((void*)&buf);
@@ -220,6 +228,7 @@ int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt)
 
     // response
     n = rscp_parse_response(&client->con, tab_response_play, (void*)&buf, 0, CFG_RSP_TIMEOUT);
+
     if (n == RSCP_SUCCESS) {
         rmcr_play(client->media, (void*)&buf, &client->con);
     } else if (n == RSCP_RESPONSE_ERROR) {
@@ -274,7 +283,10 @@ int rscp_client_update(t_rscp_client* client, uint32_t event)
     return RSCP_SUCCESS;
 }
 
-
+/** just say "hello" to the server
+ *  the first message of an message-exchange
+ *
+ * */
 int rscp_client_hello(t_rscp_client* client)
 {
     report(" > RSCP Client [%d] HELLO", client->nr);
@@ -284,14 +296,16 @@ int rscp_client_hello(t_rscp_client* client)
     return RSCP_SUCCESS;
 }
 
-
+/** close (all??) the connection proper
+ *
+ * */
 void rscp_client_deactivate(t_node* list)
 {
     t_rscp_client* client;
 
     while ((client = list_peek(list))) {
         if (client->media->state != RSCP_INIT) {
-            // proper teradown
+            // proper teardown
             rscp_client_teardown(client);
         } else {
             // delete client
@@ -299,7 +313,9 @@ void rscp_client_deactivate(t_node* list)
         }
     }
 }
-
+/** distribute events to all activ clients
+ *
+ * */
 void rscp_client_event(t_node* list, uint32_t event)
 {
     t_rscp_client* client;
@@ -307,7 +323,9 @@ void rscp_client_event(t_node* list, uint32_t event)
         if (client->media) rscp_media_event(client->media, event);
     }
 }
-
+/** force the closing of (all??) the connections
+ *
+ * */
 void rscp_client_force_close(t_node* list)
 {
     t_rscp_client* client;
@@ -317,7 +335,10 @@ void rscp_client_force_close(t_node* list)
     }
 }
 
-
+/** checks if the received message is a request or a response
+ *  if its a request, write to pipe 2, else to pipe 1
+ *
+ * */
 void* rscp_client_thread(void* _client)
 {
     int n;
@@ -325,10 +346,11 @@ void* rscp_client_thread(void* _client)
     t_rscp_client* client = _client;
 
     report(" + RSCP Client [%d] filter", client->nr);
-
+    // receive as long as no errors occur ??
     while ((n = rscp_receive(&client->con1, &line, 0)) == RSCP_SUCCESS) {
         tst = line;
-        if (!str_starts_with(&tst, RSCP_VERSION)) {
+        //check if received message is a request or a response
+        if (!str_starts_with(&tst, RSCP_VERSION)) {  //if request...
 
             do {
                 msgprintf(&client->con2, "%s\r\n", line);
@@ -338,9 +360,9 @@ void* rscp_client_thread(void* _client)
                 report("rscp client filter receive error on request");
                 break;
             }
-            rscp_write(&client->con2);
+            rscp_write(&client->con2);  //write to pipe 2 ??
 
-        } else {
+        } else {	//if response
 
             do {
                 msgprintf(&client->con1, "%s\r\n", line);
@@ -350,7 +372,7 @@ void* rscp_client_thread(void* _client)
                 report("rscp client filter receive error on response");
                 break;
             }
-            rscp_write(&client->con1);
+            rscp_write(&client->con1);  //write to pipe 1 ??
 
         }
     }
@@ -363,6 +385,9 @@ void* rscp_client_thread(void* _client)
     return 0;
 }
 
+/** function processes requests only
+ *
+ * */
 void* rscp_client_req_thread(void* _client)
 {
     int n = 0;
