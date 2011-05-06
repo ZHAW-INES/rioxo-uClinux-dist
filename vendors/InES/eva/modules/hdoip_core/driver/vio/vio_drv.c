@@ -812,9 +812,11 @@ int vio_drv_set_osd(t_vio* handle, bool en)
 int vio_drv_set_hpd(t_vio* handle, bool en)
 {
     if (en) {
+        msleep(150);
         vio_clr_cfg(handle->p_vio, VIO_CFG_HPD);
     } else {
         vio_set_cfg(handle->p_vio, VIO_CFG_HPD);
+        msleep(150);
     }
     return ERR_VIO_SUCCESS;
 }

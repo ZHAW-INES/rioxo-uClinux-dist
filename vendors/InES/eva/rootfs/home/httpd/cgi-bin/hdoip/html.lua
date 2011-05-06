@@ -4,6 +4,7 @@ module (..., package.seeall)
 require ("hdoip.pipe")
 
 local html_css_file = "/main.css"
+local html_css_ie = "/ieonly.css"
 local html_favicon = "/favicon.ico"
 local html_str = "<b>html error</b>"
 local html_table = 0
@@ -212,6 +213,7 @@ function Header(t, title, script_path, addon)
 
     local menu_class = ""
     local css = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".. html_css_file .."\">\n"
+    local css = css .. '<!--[if IE ]><link href="'.. html_css_ie ..'" rel="stylesheet" type="text/css" /><![endif]-->'
     local css = css .. "<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\""..html_favicon.."\">\n"
 
     if(t.cookie == nil) then
