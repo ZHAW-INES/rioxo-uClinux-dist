@@ -65,7 +65,7 @@ end
 
 function Title(str)
     if(str ~= nil) then
-        html_str = html_str .. "<h2>" .. str .. "</h2>\n"
+        html_str = html_str .. '<h2 class="contentheading">' .. str .. '</h2>\n'
     end
 end
 
@@ -80,7 +80,7 @@ end
 
 function ImageLink(dest, img_path, tooltip)
     if(dest ~= nil) then
-        html_str = html_str .. "<a class=\"img\" href=\""..dest.."\">"
+        html_str = html_str .. "<a href=\""..dest.."\">"
         Image(img_path, tooltip)
         html_str = html_str .. "</a>\n"
     end
@@ -224,53 +224,62 @@ function Header(t, title, script_path, addon)
     print ("Content-type: text/html\n")
     html_str = "<html>\n<head>\n".. t.cookie .."<title>" .. title .. "</title>\n" .. addon .. css .. "</head>\n<body>\n"
    
+    html_str = html_str .. '<div id="wrapper">\n<div id="main">\n<div id="box">\n<div id="header">\n'
+    html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b></div><h1 id="logo"><img src="/img/rioxo_logo.png" alt="rioxo&reg;"></h1>\n'
+    
 
-    html_str = html_str .. "<ul id=\"globalnav\">\n"
+    html_str = html_str .. '<div id="mainmenu">\n<ul class=\"menu\">\n'
     
     for i=0, (menu_item_cnt-1), 1 do
-        menu_class = ""
+        menu_class = "passiv"
         if(t.page == i) then
-            menu_class = " class=\"here\""
+            menu_class = 'current'
         end
-        html_str = html_str .. "    <li><a" .. menu_class .." href=\"" .. script_path .. "?page=" .. i .. "\">" .. menu_items[i] .. "</a></li>\n"
+        html_str = html_str .. '    <li id="'..menu_class..'"><a href="' .. script_path .. '?page=' .. i .. '"><span>' .. menu_items[i] .. '</span></a></li>\n'
     end
 
     if(t.auth_en > 0) then
-        html_str = html_str .. '<li style="float:right">'
+        html_str = html_str .. '<li id="right">'
         OneButtonForm(t, script_path, "logout", label.button_logout) 
         html_str = html_str .. '</li>'
     end
 
     if(t.system_mode == "vrb") then
-        html_str = html_str .. '<li style="float:right">'
+        html_str = html_str .. '<li id="right">'
         ImageLink(script_path.."?page=".. t.page .."&refresh=1", img_path.."refresh.png", label.reconnect)
         html_str = html_str .. '</li>'
 
         if(((t.daemon_state == "ready") and (t.refresh == nil) and (t.play == nil)) or (t.stop ~= nil))then    
-            html_str = html_str .. '<li style="float:right">'
+            html_str = html_str .. '<li id="right">'
             ImageLink(script_path.."?page=".. t.page, img_path.."stop_gray.png", label.stop)
             html_str = html_str .. '</li>'
     
-            html_str = html_str .. '<li style="float:right">'
+            html_str = html_str .. '<li id="right">'
             ImageLink(script_path.."?page=".. t.page .."&play=1", img_path.."play.png", label.play)
             html_str = html_str .. '</li>'
         else
-            html_str = html_str .. '<li style="float:right">'
+            html_str = html_str .. '<li id="right">'
             ImageLink(script_path.."?page=".. t.page .."&stop=1", img_path.."stop.png", label.stop)
             html_str = html_str .. '</li>'
     
-            html_str = html_str .. '<li style="float:right">'
+            html_str = html_str .. '<li id="right">'
             ImageLink(script_path.."?page=".. t.page, img_path.."play_gray.png", label.play)
             html_str = html_str .. '</li>'
         end
     end
 
-    html_str = html_str .. "</ul><br><br><b>"..label.device_name..dev_name.."</b>"
+    --html_str = html_str .. "</ul><br><br><b>"..label.device_name..dev_name.."</b>"
+    html_str = html_str .. '</ul>\n</div>\n</div>\n' 
 end
 
 function Bottom(t)
-    Error(t.err)    
-    html_str = html_str .. "</body>\n</html>\n"
+    Error(t.err)
+    html_str = html_str .. '</div>\n</div>\n</div>\n'
+    html_str = html_str .. '<div id="bottom">\n<div id="footer">\n<div id="footerleft">\n'
+    -- TODO: insert footer left
+    html_str = html_str .. '</div><div id="footermain"><div class="moduletable_address">\n'
+    -- TODO: intert footer
+    html_str = html_str .. "</div>\n</div>\n</div>\n</div>\n</div>\n</div>\n</body>\n</html>\n"
     print(html_str)
 end
 
