@@ -381,23 +381,6 @@ void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps)
     }
 }
 
-void hdoipd_debug(uint32_t width, uint32_t height, uint32_t fps)
-{
-    t_video_timing* timing;
-
-    if (hdoipd_goto_ready()) {
-
-        if ((timing = hoi_res_timing(width, height, fps))) {
-            hoi_drv_debug(timing);
-            hdoipd_set_rsc(RSC_VIDEO_OUT|RSC_OSD);
-        } else {
-            report(ERROR "could not start debug %d x %d @ %d Hz", width, height, fps);
-            return;
-        }
-
-    }
-}
-
 /** Restarts VRB when already in VRB state
  *
  * @return 0 on state change, other when state not changed
