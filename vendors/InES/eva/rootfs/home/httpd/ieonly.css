@@ -6,48 +6,24 @@
 	height: 100%; /* IE min-height fix */
 }
 
-
 #mainmenu ul.menu {
 	position:relative;
 	width:970px;
 }
 
-#image,
-#image_home {
-	margin-top:-14px;
-}
-
-#mainmenu ul.menu li a {
-}
 #mainmenu ul.menu li a span {
 	height:48px;
 }
-
 
 #footermain {
 	width:720px !important;
 }
 
-
-
-#topmain .moduletable_home .modulewrapper {
-	height:300px;
-}
-#topmain .moduletable .modulewrapper {
-	height:130px;
-}
-
-
-#mod_search_searchword {
-	height:28px;
-	margin:0 3px 0 0;
-	padding-top:6px;
-	padding-left:10px;
-}
-form.search .button {
-	height:28px;
-	padding:5px 5px 6px 2px;
-}
 #footerleft {
 	height:75px;
+}
+
+
+.contentheading {
+    padding-top:0px;
 }

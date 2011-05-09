@@ -110,7 +110,7 @@ function FormPassword(name, value, size, disabled)
     end
 
     if((disabled == 0) and (disabled ~= nil)) then
-        html_str = html_str .. "<input name=\"" .. name .. "\" type=\"password\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
+        html_str = html_str .. "<input class=\"inputbox\" name=\"" .. name .. "\" type=\"password\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
     else
         Text(value)
     end
@@ -124,7 +124,7 @@ function FormText(name, value, size, disabled)
     end
 
     if((disabled == 0) and (disabled ~= nil)) then
-        html_str = html_str .. "<input name=\"" .. name .. "\" type=\"text\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
+        html_str = html_str .. "<input class=\"inputbox\" name=\"" .. name .. "\" type=\"text\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
     else
         Text(value)
     end
@@ -227,26 +227,12 @@ function Header(t, title, script_path, addon)
     html_str = "<html>\n<head>\n".. t.cookie .."<title>" .. title .. "</title>\n" .. addon .. css .. "</head>\n<body>\n"
    
     html_str = html_str .. '<div id="wrapper">\n<div id="main">\n<div id="box">\n<div id="header">\n'
-    html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b></div><h1 id="logo"><img src="/img/rioxo_logo.png" alt="rioxo&reg;"></h1>\n'
+    html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b></div><h1 id="logo"><a href="http://www.rioxo.ch"><img src="/img/rioxo_logo.png" alt="rioxo&reg;"></a></h1>\n'
     
 
     html_str = html_str .. '<div id="mainmenu">\n<ul class=\"menu\">\n'
     
-    for i=0, (menu_item_cnt-1), 1 do
-        menu_class = "passiv"
-        if(t.page == i) then
-            menu_class = 'current'
-        end
-        html_str = html_str .. '    <li id="'..menu_class..'"><a href="' .. script_path .. '?page=' .. i .. '"><span>' .. menu_items[i] .. '</span></a></li>\n'
-    end
-
-    if(t.auth_en > 0) then
-        html_str = html_str .. '<li id="right">'
-        OneButtonForm(t, script_path, "logout", label.button_logout) 
-        html_str = html_str .. '</li>'
-    end
-
-    if(t.system_mode == "vrb") then
+    if((t.system_mode == "vrb") and (t.login))then
         html_str = html_str .. '<li id="right">'
         ImageLink(script_path.."?page=".. t.page .."&refresh=1", img_path.."refresh.png", label.reconnect)
         html_str = html_str .. '</li>'
@@ -269,6 +255,22 @@ function Header(t, title, script_path, addon)
             html_str = html_str .. '</li>'
         end
     end
+    
+    if(t.login and t.auth_en) then
+        html_str = html_str .. '<li id="right">'
+        OneButtonForm(t, script_path, "logout", label.button_logout) 
+        html_str = html_str .. '</li>'
+    end
+    
+    for i=0, (menu_item_cnt-1), 1 do
+        menu_class = "passiv"
+        if(t.page == i) then
+            menu_class = 'current'
+        end
+        html_str = html_str .. '    <li id="'..menu_class..'"><a href="' .. script_path .. '?page=' .. i .. '"><span>' .. menu_items[i] .. '</span></a></li>\n'
+    end
+
+
 
     --html_str = html_str .. "</ul><br><br><b>"..label.device_name..dev_name.."</b>"
     html_str = html_str .. '</ul>\n</div>\n</div>\n' 
@@ -279,8 +281,7 @@ function Bottom(t)
     html_str = html_str .. '</div>\n</div>\n</div>\n'
     html_str = html_str .. '<div id="bottom">\n<div id="footer">\n<div id="footerleft">\n'
     -- TODO: insert footer left
-    html_str = html_str .. '</div><div id="footermain"><div class="moduletable_address">\n'
-    -- TODO: intert footer
+    html_str = html_str .. '</div><div id="footermain"><div class="moduletable_address"><p>rioxo GmbH | <a href="mailto:mail@rioxo.net">mail@rioxo.net</a></p>\n'
     html_str = html_str .. "</div>\n</div>\n</div>\n</div>\n</div>\n</div>\n</body>\n</html>\n"
     print(html_str)
 end

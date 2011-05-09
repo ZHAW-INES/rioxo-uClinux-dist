@@ -13,7 +13,7 @@ function show(t)
         if((t.in_web_user == t.web_user) and (t.in_web_pass == t.web_pass)) then
             hdoip.cookie.set(t, "username", t.web_user, {})        
             hdoip.cookie.set(t, "password", t.web_pass, {})       
-            login = 1 
+            t.login = true 
         else 
             hdoip.html.AddError(t, label.p_lg_wrong)
         end
@@ -22,7 +22,7 @@ function show(t)
     hdoip.html.Header(t, label.page_name .. label.page_login, script_path)
     hdoip.html.Title(label.page_login)
 
-    if(login == 1) then
+    if(t.login) then
         hdoip.html.Text(label.p_lg_success)
     else 
         hdoip.html.TableHeader(2)

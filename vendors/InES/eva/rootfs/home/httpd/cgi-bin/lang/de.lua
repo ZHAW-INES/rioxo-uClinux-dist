@@ -2,7 +2,7 @@
 module (..., package.seeall)
 
 label = {
-    page_name = "Rioxo : ";
+    page_name = "Rioxo&reg : ";
 
     u_decimal = "[dezimal]";
     u_mbps = "[MBit / s]";
