@@ -94,6 +94,23 @@ typedef struct {
 #define EDID_DT_VFP(p)              (((((uint32_t)p[10])&0xf0)>>4) | (((uint32_t)p[11]&0x0c)<<2))
 #define EDID_DT_VP(p)               (((((uint32_t)p[10])&0x0f)) | (((uint32_t)p[11]&0x03)<<4))
 
+//Video Input Definition
+#define EDID_IND_COLOR_MASK         0x70
+#define EDID_IND_COLOR_UNDEF        0x00
+#define EDID_IND_COLOR_6BIT         0x10
+#define EDID_IND_COLOR_8BIT         0x20
+#define EDID_IND_COLOR_10BIT        0x30
+#define EDID_IND_COLOR_12BIT        0x40
+#define EDID_IND_COLOR_14BIT        0x50
+#define EDID_IND_COLOR_16BIT        0x60
+
+#define EDID_IND_IF_MASK            0x0F
+#define EDID_IND_IF_DVI             0x01
+#define EDID_IND_IF_HDMI_A          0x02
+#define EDID_IND_IF_HDMI_B          0x03
+#define EDID_IND_IF_MDDI            0x04
+#define EDID_IND_IF_DISP_PORT       0x05
+
 int edid_verify(t_edid* edid);
 void edid_report(t_edid* edid);
 void edid_hoi_limit(t_edid* edid);

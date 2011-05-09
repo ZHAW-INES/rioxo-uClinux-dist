@@ -13,6 +13,12 @@
 #include "edid.h"
 #include "rscp_server.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdio.h>
+
+
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
