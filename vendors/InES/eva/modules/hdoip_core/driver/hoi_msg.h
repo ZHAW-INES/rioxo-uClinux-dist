@@ -293,7 +293,6 @@ typedef struct {
 
 #define hoi_msg_capture_init(p) hoi_msg_init(p, HOI_MSG_CAPTURE, t_hoi_msg_image)
 #define hoi_msg_show_init(p) hoi_msg_init(p, HOI_MSG_SHOW, t_hoi_msg_image)
-#define hoi_msg_debug_init(p) hoi_msg_init(p, HOI_MSG_DEBUG, t_hoi_msg_image)
 
 
 //------------------------------------------------------------------------------
@@ -353,7 +352,13 @@ typedef struct {
 
 #define hoi_msg_info_init(p) hoi_msg_init(p, HOI_MSG_INFO, t_hoi_msg_info)
 
+//------------------------------------------------------------------------------
+// debug only
+typedef struct {
+    hoi_msg_extends;
+} t_hoi_msg_debug;
 
+#define hoi_msg_debug_init(p) hoi_msg_init(p, HOI_MSG_DEBUG, t_hoi_msg_debug)
 //------------------------------------------------------------------------------
 //
 

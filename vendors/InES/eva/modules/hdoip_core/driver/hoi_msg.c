@@ -404,8 +404,6 @@ int hoi_drv_msg_debug(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
-    vio_drv_debugx(&handle->vio, &msg->timing);
-
     return ret;
 }
 
