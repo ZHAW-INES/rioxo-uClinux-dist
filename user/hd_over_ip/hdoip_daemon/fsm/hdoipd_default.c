@@ -36,6 +36,8 @@ void hdoipd_set_default()
     reg_set("audio-port", "3402");
     reg_set("rscp-server-port", "554");
 
+    reg_set("hdcp-force", "false");
+
     reg_set("web-lang", "EN");
     reg_set("web-auth-en", "false");
     reg_set("web-user", "admin");
