@@ -98,6 +98,7 @@ static ssize_t hdoip_core_read(struct file *filp, char __user *buf, size_t count
 {
     t_hoi_dev *hdev = filp->private_data;
     ssize_t ret;
+    uint32_t event;
 
     if ((ret = mutex_lock_interruptible(&hdev->sem))) return ret;
 
@@ -112,7 +113,7 @@ static ssize_t hdoip_core_read(struct file *filp, char __user *buf, size_t count
         if ((ret = mutex_lock_interruptible(&hdev->sem))) return ret;
     }
 
-    uint32_t event = queue_get(hdev->hoi.event);
+    event = queue_get(hdev->hoi.event);
     copy_to_user(buf, &event, 4);
 
     mutex_unlock(&hdev->sem);

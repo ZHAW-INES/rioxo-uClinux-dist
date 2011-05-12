@@ -218,6 +218,7 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
 {
     int n;
     int delay, scomm5, vid, vsd;
+    uint32_t ien;
 
     // setup vio
     if (msg->compress & DRV_CODEC) {
@@ -249,7 +250,7 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     // !!! workaround !!!
     // ADV212 chips are sensitive to timing
     // switch of all nios2-irq
-    uint32_t ien = __builtin_rdctl(3);
+    ien = __builtin_rdctl(3);
     __builtin_wrctl(3, 0);
 
     if ((n = vso_drv_start(&handle->vso))) {
@@ -279,6 +280,7 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
 int hoi_drv_msg_vso_repaire(t_hoi* handle)
 {
     int n;
+    uint32_t ien;
 
     // stop/flush vso
     vso_drv_stop(&handle->vso);
@@ -291,7 +293,7 @@ int hoi_drv_msg_vso_repaire(t_hoi* handle)
     // !!! workaround !!!
     // ADV212 chips are sensitive to timing
     // switch of all nios2-irq
-    uint32_t ien = __builtin_rdctl(3);
+    ien = __builtin_rdctl(3);
     __builtin_wrctl(3, 0);
 
     if ((n = vso_drv_start(&handle->vso))) {
@@ -315,13 +317,14 @@ int hoi_drv_msg_vso_repaire(t_hoi* handle)
 
 int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
 {
+    struct hdoip_aud_params aud_params;
+
     asi_drv_flush_buf(&handle->asi);
 
     // activate ethernet output
     eto_drv_start_aud(&handle->eto);
 
     // setup asi
-    struct hdoip_aud_params aud_params;
     aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
     aud_params.ch_cnt_right = msg->channel_cnt - aud_params.ch_cnt_left;
     aud_params.fs = msg->fs;
@@ -336,12 +339,12 @@ int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
 int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
 {
     int vid = 0;
+    struct hdoip_aud_params aud_params;
 
     // sync...
     aso_drv_stop(&handle->aso);
 
     // setup aso ()
-    struct hdoip_aud_params aud_params;
     aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
     aud_params.ch_cnt_right = msg->channel_cnt - aud_params.ch_cnt_left;
     aud_params.fs = msg->fs;

@@ -70,6 +70,8 @@ void adv9889_drv_default_reg(t_adv9889* handle)
 
 int adv9889_drv_init(t_adv9889* handle, t_i2c* p_i2c, t_vio* p_vio)
 {
+    int status;
+
     REPORT(INFO, ">> ADV9889-Driver: Initialize HDMI-TX");
 
     handle->p_i2c           = p_i2c;
@@ -94,7 +96,7 @@ int adv9889_drv_init(t_adv9889* handle, t_i2c* p_i2c, t_vio* p_vio)
     adv9889_write(handle, ADV9889_OFF_INTEN2, ADV9889_INT2_HDCP_ERR | ADV9889_INT2_BKSV);
 
     // try power-up
-    int status = adv9889_read(handle, ADV9889_OFF_STATUS);
+    status = adv9889_read(handle, ADV9889_OFF_STATUS);
     if ((status & ADV9889_STATUS_ON) == ADV9889_STATUS_ON) {
         REPORT(INFO, "adv9889 activated");
         adv9889_drv_powerup(handle);
@@ -140,7 +142,7 @@ int adv9889_drv_powerup(t_adv9889* handle)
 
 int adv9889_drv_hdmi(t_adv9889* handle)
 {
-    uint8_t *ext = 0;
+    uint8_t *ext = 0, *cur, *stop;
     int is_hdmi = 0;
 
     for (int i=0;(i<handle->edid[126])&&!ext;i++) {
@@ -153,8 +155,8 @@ int adv9889_drv_hdmi(t_adv9889* handle)
     // no CEA-861 -> can't be HDMI
     if (!ext) return 0;
 
-    uint8_t *cur = ext + 4;
-    uint8_t *stop = ext + ext[2];
+    cur = ext + 4;
+    stop = ext + ext[2];
 
     while ((cur<stop) && !is_hdmi) {
         if ((cur[0] & 0xe0) == VENDOR_BLOCK) {
@@ -287,8 +289,8 @@ int adv9889_drv_handler(t_adv9889* handle, t_queue* event_queue)
                                             /* If HDMI TX is part of a repeater store BSTATUS info from EDID
                                                memory 1st time this state is reached */
                                             if(handle->bksv_cnt == 0) {
-                                                i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0xF9, handle->bstatus[0], 1);
-                                                i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0xFA, handle->bstatus[1], 1);
+                                                i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0xF9, &(handle->bstatus[0]), 1);
+                                                i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0xFA, &(handle->bstatus[1]), 1);
                                             }
  
                                             /* TODO Compare BKSVs with Revocation List */
@@ -388,8 +390,8 @@ int adv9889_irq_handler(t_adv9889* handle, t_queue* event_queue)
             case HDCP_REPEATER:         /* If HDMI TX is part of a repeater store BSTATUS info from EDID
                                            memory 1st time this state is reached */
                                         if(handle->bksv_cnt == 0) {
-                                            i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0xF9, handle->bstatus[0], 1);
-                                            i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0xFA, handle->bstatus[1], 1);
+                                            i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0xF9, &(handle->bstatus[0]), 1);
+                                            i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0xFA, &(handle->bstatus[1]), 1);
                                         }
                                         if((adv9889_read(handle, ADV9889_OFF_HDCP_STATE) & 0xF) == 4) {
                                             handle->hdcp_state = HDCP_VID_ACTIVE;
@@ -399,9 +401,9 @@ int adv9889_irq_handler(t_adv9889* handle, t_queue* event_queue)
                                         handle->bksv_cnt = (adv9889_read(handle, ADV9889_OFF_BKSV_CNT) & 0x7F);
                                         /* Read BKSVs from EDID memory */
                                         if(handle->bksv_cnt >= 13) {
-                                            i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0, handle->bksv[5], 13*5);
+                                            i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0, &(handle->bksv[5]), 13*5);
                                         } else {
-                                            i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0, handle->bksv[5], handle->bksv_cnt*5);
+                                            i2c_drv_rreg8b(handle->p_i2c, ADV9889_ADDRESS_EDID, 0, &(handle->bksv[5]), handle->bksv_cnt*5);
                                         }
                                         /* TODO Compare BKSVs with Revocation List */
                                         handle->hdcp_state = HDCP_REPEATER_WAIT; 

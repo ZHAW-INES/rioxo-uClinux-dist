@@ -93,11 +93,9 @@ int vso_drv_init(t_vso* handle, void* p_vso)
  */
 int vso_drv_set_buf(t_vso* handle, void* start_ptr, size_t size)
 {
-    PTR(handle);
-    PTR(handle->p_vso);
-    PTR(start_ptr);
-
     t_rbf_dsc dsc;
+
+    PTR(handle);    PTR(handle->p_vso);    PTR(start_ptr);
 
     rbf_dsc(&dsc, start_ptr, size);
     vso_set_dsc(handle->p_vso, &dsc);
@@ -161,14 +159,13 @@ int vso_drv_get_delays(t_vso* handle, uint32_t* vs_delay_us, uint32_t* vsync_del
  */
 int vso_drv_update(t_vso* handle, t_video_timing* vid_timing, uint32_t vs_delay_us, uint32_t vsync_delay_ns, uint32_t scomm5_delay_ns, uint32_t packet_timeout_ns) 
 {
-    PTR(handle);
-    PTR(handle->p_vso);
-    PTR(vid_timing);
+    uint32_t duration_us, duration_ns;
+    uint32_t p_vso;
 
-    uint32_t duration_us, duration_ns; 
-	uint32_t p_vso = (uint32_t) handle->p_vso;
+    PTR(handle);     PTR(handle->p_vso);    PTR(vid_timing);
 
-	
+	p_vso = (uint32_t) handle->p_vso;
+
 	/* set video timing */
 	duration_us = vid_duration_in_us(vid_timing);
 	duration_ns = vid_duration_in_ns(vid_timing);
@@ -222,11 +219,11 @@ static int vso_drv_put_event(t_vso* handle, t_queue* event_queue, uint32_t statu
  */
 int vso_drv_handler(t_vso* handle, t_queue* event_queue) 
 {
-    PTR(handle);
-    PTR(handle->p_vso);
-    PTR(event_queue);
+    uint32_t status;
 
-	uint32_t status = vso_get_status(handle->p_vso, VSO_ST_MSK);
+    PTR(handle);    PTR(handle->p_vso);    PTR(event_queue);
+
+	status = vso_get_status(handle->p_vso, VSO_ST_MSK);
 
     /* Error: choked */
 	vso_drv_put_event(handle, event_queue, status, VSO_ST_CHOKED, VSO_DRV_STATUS_CHOKED, E_VSO_CHOKED, 0);

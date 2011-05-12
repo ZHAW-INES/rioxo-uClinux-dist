@@ -693,7 +693,7 @@ int vio_drv_set_bandwidth(t_vio* handle, int bandwidth)
 {
     handle->bandwidth = bandwidth;
     if (handle->active && ((handle->config & VIO_CONFIG_MODE) == VIO_CONFIG_ENCODE)) {
-        adv212_drv_rc_size(handle->p_adv, vio_bandwidth_to_size(handle->bandwidth, &handle->timing), &handle->adv, &handle->timing.interlaced);
+        adv212_drv_rc_size(handle->p_adv, vio_bandwidth_to_size(handle->bandwidth, &handle->timing), &handle->adv, (int)&handle->timing.interlaced);
     }
     return ERR_VIO_SUCCESS;
 }
@@ -849,11 +849,13 @@ void vio_drv_get_advcnt(t_vio* handle, uint32_t* advcnt)
 
 void vio_drv_handler(t_vio* handle, t_queue* event)
 {
-    PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv); PTR(event);
-    uint32_t cfg = vio_get_sta(handle->p_vio, 0xffffffff);
+    uint32_t cfg, pcfg, ncfg;
 
-    uint32_t pcfg = cfg & ~handle->hw_cfg_old;
-    uint32_t ncfg = ~cfg & handle->hw_cfg_old;
+    PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv); PTR(event);
+    cfg = vio_get_sta(handle->p_vio, 0xffffffff);
+
+    pcfg = cfg & ~handle->hw_cfg_old;
+    ncfg = ~cfg & handle->hw_cfg_old;
 
     if (pcfg) {
         if (pcfg & VIO_STA_PLL_LOST) {

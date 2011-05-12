@@ -360,7 +360,7 @@ int adv7441a_get_video_timing(t_adv7441a* handle)
  */
 int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue) 
 { 
-	uint8_t hdmi_status2, hdmi_status3, hdmi_status5, hdmi_status6, hdmi_status1, hdmi_status4;
+	uint8_t hdmi_status2, hdmi_status3, hdmi_status5, hdmi_status6;
 	uint8_t hdmi_raw2, hdmi_raw3;
     uint8_t int2_clr = 0, int3_clr = 0, int5_clr = 0, int6_clr = 0, reg_04 = 0;
 

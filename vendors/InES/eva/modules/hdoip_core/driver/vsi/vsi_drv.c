@@ -66,8 +66,9 @@ int vsi_drv_init(t_vsi* handle, void* p_vsi)
  */
 int vsi_drv_set_buf(t_vsi* handle, void* start_ptr, size_t size)
 {
-    PTR(handle); PTR(handle->p_vsi); PTR(start_ptr);
     t_rbf_dsc dsc;
+
+    PTR(handle); PTR(handle->p_vsi); PTR(start_ptr);
 
     rbf_dsc(&dsc, start_ptr, size);
     vsi_set_dsc(handle->p_vsi, &dsc);
@@ -89,9 +90,10 @@ int vsi_drv_flush_buf(t_vsi* handle)
 
 int vsi_drv_update(t_vsi* handle, struct hdoip_eth_params* eth_params)
 {
+    uint32_t activ, err;
+
     PTR(handle); PTR(handle->p_vsi); PTR(eth_params);
-    uint32_t activ = handle->status & VSI_DRV_STATUS_ACTIV;
-    uint32_t err;
+    activ = handle->status & VSI_DRV_STATUS_ACTIV;
 
     if(activ != 0) {
         vsi_drv_stop(handle);
@@ -167,8 +169,10 @@ int vsi_drv_set_eth_params(t_vsi* handle, struct hdoip_eth_params* eth_params)
  */
 int vsi_drv_handler(t_vsi* handle, t_queue* event_queue) 
 {
+    uint32_t status;
+
     PTR(handle); PTR(handle->p_vsi); PTR(event_queue);
-	uint32_t status = vsi_get_status(handle->p_vsi, VSI_ST_MSK);
+	status = vsi_get_status(handle->p_vsi, VSI_ST_MSK);
 
 	if (handle->status & VSI_DRV_STATUS_ACTIV) {
 /*        static int xx=0;
