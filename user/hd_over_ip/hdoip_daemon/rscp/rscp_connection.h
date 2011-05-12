@@ -23,14 +23,14 @@ typedef struct {
 } t_rscp_buffer;
 
 typedef struct {
-    int             fdw, fdr;
-    int             sequence;
-    t_rscp_buffer   in;
-    t_rscp_buffer   out;
-    uint32_t        address;
-    int             ecode;
-    char*           ereason;
-    int             doc;
+    int             fdw, fdr;       // TCP socket of this connection (read(RX) and write(TX))
+    int             sequence;       // Count of sent messages
+    t_rscp_buffer   in;             // Message buffer
+    t_rscp_buffer   out;            // Message buffer
+    uint32_t        address;        // Remote IP
+    int             ecode;          // Error code
+    char*           ereason;        // Error reason
+    int             doc;            // (?)
 } t_rscp_connection;
 
 // TODO: send content if not enough size and retry snprintf?

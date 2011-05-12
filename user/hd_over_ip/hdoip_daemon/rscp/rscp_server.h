@@ -16,12 +16,12 @@
 #include "rscp_connection.h"
 
 typedef struct {
-    int                 nr;
-    t_node*             idx;            //!< node containing this connection
-    void*               owner;
-    t_rscp_connection   con;
-    bool				kill;
-    t_rscp_media*		media;
+    int                 nr;             // number of this server thread
+    t_node*             idx;            // node containing this connection
+    void*               owner;          // pointer to listener that creates server thread (t_rscp_listener)
+    t_rscp_connection   con;            // TCP connection of this thread
+    bool				kill;           // flag to kill the actual server thread by rscp_listener
+    t_rscp_media*		media;          // associated media
 } t_rscp_server;
 
 extern const t_map_set srv_method[];

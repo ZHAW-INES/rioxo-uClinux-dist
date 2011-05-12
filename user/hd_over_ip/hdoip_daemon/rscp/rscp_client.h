@@ -29,15 +29,15 @@ enum {
 };
 
 typedef struct {
-    int                 nr;
-    pthread_t           th1, th2;
-    uint32_t            task;
-    char                uri[200];       //!< remote resource name
-    t_rscp_connection   con;
-    t_rscp_connection   con1;           //!< request/response multiplexer
-    t_rscp_connection   con2;
-    t_rscp_media        *media;
-    t_node              *idx;
+    int                 nr;             // number of this client thread
+    pthread_t           th1, th2;       // structure of the 2 client threads
+    uint32_t            task;           // defines a client task (play, teardown, kill). Executed by rscp_client_event()
+    char                uri[200];       // remote uri
+    t_rscp_connection   con;            // TCP connection (?)
+    t_rscp_connection   con1;           // Copy of con for receive (?)
+    t_rscp_connection   con2;           // Copy of con for write (?)
+    t_rscp_media        *media;         // associated media
+    t_node              *idx;           // pointer to the node in the client list (hdoipd.client)
 } t_rscp_client;
 
 extern const t_map_set client_method[];
