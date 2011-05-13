@@ -30,6 +30,7 @@
  */
 #define vio_start(p)            vio_set_cfg((p), VIO_CFG_RUN)
 #define vio_stop(p)             vio_clr_cfg((p), VIO_CFG_RUN)
+#define vio_hdp_reset(p)        vio_set_cfg((p), VIO_CFG_HPD_RESET)
 #define vio_set_stin(p, sel)    vio_set_mux((p), VIO_MUX_STIN_MASK, sel)
 #define vio_set_vout(p, sel)    vio_set_mux((p), VIO_MUX_VOUT_MASK, sel)
 #define vio_set_pllc(p, sel)    vio_set_mux((p), VIO_MUX_PLLC_MASK, sel)

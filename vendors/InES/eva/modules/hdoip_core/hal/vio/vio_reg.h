@@ -122,6 +122,7 @@
 #define VIO_CFG_VIN_TM_POL_HSYNC    (1<<28)
 #define VIO_CFG_VIN_TM_POL_AVID     (1<<29)
 #define VIO_CFG_VIN_TM_POL_TRIG     (1<<30)
+#define VIO_CFG_HPD_RESET           (1<<31)
 
 
 // VIO_OFF_STATUS
@@ -135,6 +136,8 @@
 #define VIO_STA_JDATA3_SYNC_LOST    (1<<7)
 #define VIO_STA_PLL_LOCKED          (1<<8)
 #define VIO_STA_PLL_LOST            (1<<9)
+#define VIO_STA_HPD                 (1<<10)
+
 // VIO_OFF_MUX
 #define VIO_MUX_VOUT_MASK           (0x03)
 #define VIO_MUX_VOUT_LOOP           (0x00)
