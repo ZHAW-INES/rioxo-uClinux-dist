@@ -63,6 +63,7 @@
 #define HOI_MSG_HPDON               (0x7000002c)
 #define HOI_MSG_HPDOFF              (0x7000002d)
 #define HOI_MSG_ASOREG				(0x7000002e)
+#define HOI_MSG_HPDRESET            (0x7000002f)
 #define HOI_MSG_POLL                (0x700000ff)
 
 // Driver Bit Mask
@@ -117,6 +118,8 @@ typedef struct {
 #define hoi_msg_repair_init(p) hoi_msg_init(p, HOI_MSG_REPAIR, t_hoi_msg)
 #define hoi_msg_hpdon_init(p) hoi_msg_init(p, HOI_MSG_HPDON, t_hoi_msg)
 #define hoi_msg_hpdoff_init(p) hoi_msg_init(p, HOI_MSG_HPDOFF, t_hoi_msg)
+#define hoi_msg_hpdreset_init(p) hoi_msg_init(p, HOI_MSG_HPDRESET, t_hoi_msg)
+
 
 
 //------------------------------------------------------------------------------

@@ -22,6 +22,8 @@
 #include <asm/system.h>
 #include <asm/traps.h>
 
+#include "wdg_hal.h"
+
 //------------------------------------------------------------------------------
 // Load driver
 
@@ -407,6 +409,21 @@ int hoi_drv_msg_debug(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
+    /* Watchdog test
+    if(wdg_get_cfg(handle->p_wdg, WDG_BIT_CFG_EN) == 0) {
+        wdg_set_time(handle->p_wdg, 100000000);
+        wdg_enable(handle->p_wdg);
+        REPORT(INFO, "[Watchdog] enabled");
+    } else {
+        wdg_reset(handle->p_wdg);
+        REPORT(INFO, "[Watchdog] reset");
+        REPORT(INFO, "[Watchdog] time % d ticks", wdg_get_time(handle->p_wdg));
+    }
+    */
+
+    vio_hdp_reset(handle->p_vio);
+    REPORT(INFO, "[HDMI IN] HPD reset");
+
     return ret;
 }
 
@@ -449,6 +466,11 @@ int hoi_drv_msg_hpdoff(t_hoi* handle)
     return SUCCESS;
 }
 
+int hoi_drv_msg_hpdreset(t_hoi* handle)
+{
+    vio_hdp_reset(handle->p_vio);
+    return SUCCESS;
+}
 
 //------------------------------------------------------------------------------
 // TAG I/O
@@ -674,6 +696,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         callsw(HOI_MSG_REPAIR,  hoi_drv_msg_vso_repaire);
         callsw(HOI_MSG_HPDON,   hoi_drv_msg_hpdon);
         callsw(HOI_MSG_HPDOFF,  hoi_drv_msg_hpdoff);
+        callsw(HOI_MSG_HPDRESET,hoi_drv_msg_hpdreset);
 
         callsw(HOI_MSG_POLL,    hoi_drv_msg_poll);
 
