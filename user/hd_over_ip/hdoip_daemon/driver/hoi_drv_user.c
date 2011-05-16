@@ -382,4 +382,5 @@ HOI_CMDSW(osdon);
 HOI_CMDSW(osdoff);
 HOI_CMDSW(hpdon);
 HOI_CMDSW(hpdoff);
+HOI_CMDSW(hpdreset);
 HOI_CMDSW(repair);

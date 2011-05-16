@@ -59,6 +59,7 @@ int hoi_drv_osdon();
 int hoi_drv_osdoff();
 int hoi_drv_hpdon();
 int hoi_drv_hpdoff();
+int hoi_drv_hpdreset();
 int hoi_drv_loop();
 int hoi_drv_repair();
 
