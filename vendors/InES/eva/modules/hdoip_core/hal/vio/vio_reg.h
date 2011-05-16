@@ -111,7 +111,8 @@
 #define VIO_CFG_INTERLACE           (1<<16)
 #define VIO_CFG_WAITVS              (1<<17)
 #define VIO_CFG_SCOMM5_HW           (1<<18)
-#define VIO_CFG_VIN_TIMING          (1<<20)
+#define VIO_CFG_TG_VSYNC_RESET      (1<<19)
+#define VIO_CFG_HPD_RESET           (1<<20)
 #define VIO_CFG_TG_VSEL             (1<<21)
 #define VIO_CFG_VIN_TIMING_FIELD    (1<<22)
 #define VIO_CFG_VIN_TIMING_VSYNC    (1<<23)
@@ -122,8 +123,7 @@
 #define VIO_CFG_VIN_TM_POL_HSYNC    (1<<28)
 #define VIO_CFG_VIN_TM_POL_AVID     (1<<29)
 #define VIO_CFG_VIN_TM_POL_TRIG     (1<<30)
-#define VIO_CFG_HPD_RESET           (1<<31)
-
+#define VIO_CFG_TG_FREE_RUN         (1<<31)
 
 // VIO_OFF_STATUS
 #define VIO_STA_IN_CLOCK_EXT        (1<<0)
