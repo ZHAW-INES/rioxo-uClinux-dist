@@ -207,6 +207,12 @@ void hdoipd_factory_default(t_hoic_cmd UNUSED *cmd)
     reg_set("system-mac", s);                           /* MAC restore */
 }
 
+void hdoipd_debug(t_hoic_cmd UNUSED *cmd)
+{
+    printf("hdoipd_debug()\n");
+    hoi_drv_debug();
+}
+
 #define hdoipdreq(x, y) case x: y((void*)cmd); break
 #define hdoipdreq_rsp(x, y) case x: y((void*)cmd, rsp); break
 void hdoipd_request(uint32_t* cmd, int rsp)
@@ -233,6 +239,7 @@ void hdoipd_request(uint32_t* cmd, int rsp)
         hdoipdreq(HOIC_PARAM_SET, hdoipd_set_param);
         hdoipdreq(HOIC_REMOTE_UPDATE, hdoipd_remote_update);
         hdoipdreq(HOIC_FACTORY_DEFAULT, hdoipd_factory_default);
+        hdoipdreq(HOIC_DEBUG, hdoipd_debug);
         hdoipdreq_rsp(HOIC_GETVERSION, hdoipd_get_version);
         hdoipdreq_rsp(HOIC_READ, hdoipd_read);
         hdoipdreq_rsp(HOIC_PARAM_GET, hdoipd_get_param);

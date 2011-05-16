@@ -33,7 +33,7 @@ void hdoipd_osd_activate()
         if (!(hdoipd_rsc(RSC_VIDEO_IN | RSC_VIDEO_OUT))) {
             report(CHANGE "activate 640x480 debug output screen for osd");
             if ((timing = hoi_res_timing(640, 480, 60))) {
-                hoi_drv_debug(timing);
+                //hoi_drv_debug(timing);
                 hdoipd_set_rsc(RSC_VIDEO_OUT);
             }
         }

@@ -83,39 +83,13 @@ else
 end
 
 -----------------------------------------------
--- General functions
-if(query.logout ~= nil) then
-    hdoip.cookie.delete(query, "username", {})
-    hdoip.cookie.delete(query, "password", {})
-    query.page = PAGE_ID_LOGIN
-end
-
-if(query.stop ~= nil) then
-    hdoip.pipe.ready()
-end
-
-if(query.play ~= nil) then
-    hdoip.pipe.play()
-end
-
-if(query.refresh ~= nil) then
-    hdoip.pipe.ready()
-    hdoip.pipe.play()
-end
-
-if(init_err ~= "") then
-    hdoip.html.AddError(query, init_err)
-end
-
------------------------------------------------
 -- Web authentification
 if(query.auth_en == "false") then
-    query.auth_en = 0
+    query.auth_en = false
+    query.login = true
 else
-    query.auth_en = 1
-end
-
-if(query.auth_en > 0) then
+    query.auth_en = true
+    
     local user = hdoip.cookie.get("username")
     local pass = hdoip.cookie.get("password")
     query.web_user = hdoip.pipe.getParam(hdoip.pipe.REG_WEB_USER)
@@ -123,9 +97,39 @@ if(query.auth_en > 0) then
 
     if((user ~= query.web_user) or (pass ~= query.web_pass)) then
         query.page = 20
+        query.login = false
+    else 
+        query.login = true
     end
 end
 
+-----------------------------------------------
+-- General functions
+if(query.logout ~= nil) then
+    hdoip.cookie.delete(query, "username", {})
+    hdoip.cookie.delete(query, "password", {})
+    query.page = PAGE_ID_LOGIN
+    query.login = false
+end
+
+if(query.login) then
+	if(query.stop ~= nil) then
+	    hdoip.pipe.ready()
+	end
+	
+	if(query.play ~= nil) then
+	    hdoip.pipe.play()
+	end
+	
+	if(query.refresh ~= nil) then
+	    hdoip.pipe.ready()
+	    hdoip.pipe.play()
+	end
+	
+	if(init_err ~= "") then
+	    hdoip.html.AddError(query, init_err)
+	end
+end
 -----------------------------------------------
 -- Page select
 if(query.page == 0) then

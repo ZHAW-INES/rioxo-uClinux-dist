@@ -2,7 +2,7 @@
 module (..., package.seeall)
 
 label = {
-    page_name = "Rioxo : ";
+    page_name = "Rioxo&reg : ";
 
     u_decimal = "[dezimal]";
     u_mbps = "[MBit / s]";
@@ -108,5 +108,6 @@ label = {
     p_st_datarate = "Datenrate";
     p_st_net_delay = "Max. Netzwerkverz&ouml;gerung";
     p_st_auto_stream = "Auto Stream";
+    p_st_force_hdcp = "HDCP erzwingen"; 
 
 }

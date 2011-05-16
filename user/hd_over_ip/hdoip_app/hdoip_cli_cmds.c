@@ -221,6 +221,18 @@ int hdoip_cli_getversion(int fd, int fdr, char** argv, int argc)
     return 0;
 }
 
+int hdoip_cli_default(int fd, int fdr, char** argv, int argc)
+{
+    hoic_factory_default(fd); 
+    return 0;
+}
+
+int hdoip_cli_debug(int fd, int fdr, char** argv, int argc)
+{
+    hoic_debug(fd);
+    return 0;
+}
+
 /* Command definitions */
 const t_hdoip_cli_cmd_arr cmd_arr[] = {
         { "help",           0, hdoip_cli_help,          ""},
@@ -241,6 +253,8 @@ const t_hdoip_cli_cmd_arr cmd_arr[] = {
         { "reboot",         0, hdoip_cli_reboot,        ""},
         { "read",           1, hdoip_cli_read,          "hex-address"},
         { "remote-update",  1, hdoip_cli_remote_update, "file"},
-        { "version",        0, hdoip_cli_getversion,    ""}
+        { "version",        0, hdoip_cli_getversion,    ""},
+        { "factory-default",0, hdoip_cli_default,       ""},
+        { "debug"          ,0, hdoip_cli_debug,         ""},
     };
 const int cmd_cnt = sizeof(cmd_arr)/sizeof(t_hdoip_cli_cmd_arr);

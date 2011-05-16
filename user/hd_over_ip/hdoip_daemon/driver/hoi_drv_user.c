@@ -290,13 +290,12 @@ int hoi_drv_show(bool compress, void* buffer, t_video_timing* timing, uint32_t a
     return ret;
 }
 
-int hoi_drv_debug(t_video_timing* timing)
+int hoi_drv_debug(void)
 {
     int ret;
-    t_hoi_msg_image msg;
+    t_hoi_msg_debug msg;
 
     hoi_msg_debug_init(&msg);
-    memcpy(&msg.timing, timing, sizeof(t_video_timing));
     ret = hoi_msg(&msg);
 
     return ret;

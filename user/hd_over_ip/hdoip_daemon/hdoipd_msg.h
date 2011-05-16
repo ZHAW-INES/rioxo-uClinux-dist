@@ -60,6 +60,9 @@
 #define HOIC_PARAM_GET          (0x3800000a)
 #define HOIC_PARAM_SET          (0x3800000b)
 
+// Debug
+#define HOIC_DEBUG              (0x39000001)
+
 //------------------------------------------------------------------------------
 //
 
@@ -125,6 +128,7 @@ static inline void hoic_sw(int fd, uint32_t id)
 #define hoic_reboot(fd) hoic_sw(fd, HOIC_REBOOT)
 #define hoic_repair(fd) hoic_sw(fd, HOIC_REPAIR)
 #define hoic_factory_default(fd) hoic_sw(fd, HOIC_FACTORY_DEFAULT)
+#define hoic_debug(fd) hoic_sw(fd, HOIC_DEBUG)
 
 
 

@@ -167,6 +167,13 @@ void task_get_aso_status(char** p)
     *p = buf;
 }
 
+void task_get_hdcp_status(char** p)
+{
+    // TODO: return actual value
+    sprintf(buf, "not encrypted");
+    *p = buf;
+}
+
 void task_get_vio_status(char** p)
 {
     t_hoi_msg_viostat *stat;
@@ -486,6 +493,7 @@ void hdoipd_register_task()
     get_listener("vso-status", task_get_vso_status);
     get_listener("vio-status", task_get_vio_status);
     get_listener("aso-status", task_get_aso_status);
+    get_listener("hdcp-status", task_get_hdcp_status);
     get_listener("sync-delay", task_get_sync_delay);
     get_listener("stream-state", task_get_rscp_state);
 

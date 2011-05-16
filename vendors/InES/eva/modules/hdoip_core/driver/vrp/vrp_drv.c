@@ -23,8 +23,10 @@ int vrp_drv_off(t_vrp* handle)
 
 int vrp_drv_capture_image(t_vrp* handle, void* buffer, size_t size)
 {
-    PTR(handle); PTR(handle->p_vrp); PTR(buffer);
     uint32_t jiffies_out;
+
+    PTR(handle); PTR(handle->p_vrp); PTR(buffer);
+
     vrp_idle(handle->p_vrp);
     vrp_set_buffer(handle->p_vrp, buffer, size-4);
     vrp_do_record(handle->p_vrp, 1);
@@ -54,8 +56,10 @@ int vrp_drv_show_image(t_vrp* handle, void* buffer, t_video_timing* p_vt)
 
 int vrp_drv_capture_jpeg2000(t_vrp* handle, void* buffer, size_t size, size_t bandwidth)
 {
-    PTR(handle); PTR(handle->p_vrp); PTR(buffer);
     uint32_t jiffies_out;
+
+    PTR(handle); PTR(handle->p_vrp); PTR(buffer);
+
     vrp_idle(handle->p_vrp);
     vrp_set_buffer(handle->p_vrp, buffer, size-4);
     vrp_do_record(handle->p_vrp, 1);
@@ -73,8 +77,10 @@ int vrp_drv_capture_jpeg2000(t_vrp* handle, void* buffer, size_t size, size_t ba
 
 int vrp_drv_show_jpeg2000(t_vrp* handle, void* buffer, t_video_timing* p_vt, int advcnt)
 {
-    PTR(handle); PTR(handle->p_vrp); PTR(buffer); PTR(p_vt);
     int ret;
+
+    PTR(handle); PTR(handle->p_vrp); PTR(buffer); PTR(p_vt);
+
     vrp_idle(handle->p_vrp);
     vio_drv_set_cfg(handle->vio, VIO_CONFIG_VRP);
     if ((ret = vio_drv_decodex(handle->vio, p_vt, advcnt))) {

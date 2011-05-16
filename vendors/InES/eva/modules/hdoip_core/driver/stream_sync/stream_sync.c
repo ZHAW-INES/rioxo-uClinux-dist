@@ -223,8 +223,10 @@ uint32_t stream_sync_get_delay(t_sync_means* sm) {
  * @return am ringbuffer with the size 'size'sm->means = stream_sync_am_init(size_means);
  */
 t_arith_mean* stream_sync_am_init(uint32_t size) {
+    t_arith_mean *am;
+
     size++;
-    t_arith_mean* am = kzalloc(sizeof(t_arith_mean) + size * sizeof(int32_t), GFP_KERNEL);
+    am = kzalloc(sizeof(t_arith_mean) + size * sizeof(int32_t), GFP_KERNEL);
 
     if (!am) return 0;
 

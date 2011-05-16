@@ -16,18 +16,18 @@ function show(t)
 
     if(t.sent ~= nil) then
         t.lang_sel = tonumber(t.lang_sel)
-        t.auth_en = tonumber(t.auth_en_sel)
+        t.auth_en_checkbox = tonumber(t.auth_en_sel)
 
         hdoip.pipe.setParam(hdoip.pipe.REG_WEB_LANG, t_lang_conv[t.lang_sel])
            
-        if(t.auth_en > 0) then
+        if(t.auth_en_checkbox > 0) then
             t.auth_en_str = "true"
         else 
             t.auth_en_str = "false"
         end
         hdoip.pipe.setParam(hdoip.pipe.REG_WEB_AUTH_EN, t.auth_en_str)
 
-        if((t.web_user == nil) and (t.auth_en > 0))then
+        if((t.web_user == nil) and (t.auth_en))then
             t.web_user = hdoip.pipe.getParam(hdoip.pipe.REG_WEB_USER)
         end
 
@@ -45,9 +45,18 @@ function show(t)
                 hdoip.html.AddError(t, label.p_set_err_old_password)
             end
         end
+        
     else 
+        if(t.auth_en) then
+            t.auth_en_checkbox = 1
+        else 
+            t.auth_en_checkbox = 0
+        end
+        
         t.lang_sel = t_lang_short[t.lang] 
     end
+    
+
  
     hdoip.html.Header(t, label.page_name .. label.page_settings, script_path)
 
@@ -58,7 +67,7 @@ function show(t)
     hdoip.html.TableBottom()
     hdoip.html.Title(label.p_set_auth);                              
     hdoip.html.TableHeader(1)
-    hdoip.html.FormRadio("auth_en_sel", t_auth_en, 2, t.auth_en);            hdoip.html.TableInsElement(1);
+    hdoip.html.FormRadio("auth_en_sel", t_auth_en, 2, t.auth_en_checkbox);   hdoip.html.TableInsElement(1);
     hdoip.html.TableBottom()
     hdoip.html.Title(label.p_set_change_user);                              
     hdoip.html.TableHeader(2)

@@ -21,18 +21,18 @@
 #define RSCP_BACKLOG    (20)
 
 typedef struct {
-    int nr;
-    pthread_t th;               //!< Server thread (accepts connection)
-    t_node* cons;               //!< Connections
-    t_bstmap* media;            //!< media associated with this listener
-    t_bstmap* sessions;         //!< active sessions associated with this listener
-    t_node* kills;              //!< media to be killed
+    int nr;                     // number of this listener threads
+    pthread_t th;               // structure of this thread
+    t_node* cons;               // list of TCP connections (rscp server threads). 1 entry for each client and media. (t_rscp_server)
+    t_bstmap* media;            // map of local medias. E.g. 1x video, 1x audio, 1x box_sys (origin media)
+    t_bstmap* sessions;         // map of active medias associated with this listener
+    t_node* kills;              // list of media (TCP connection) listener has to kill (remove from session list and rscp_server_close())
 
-    pthread_mutex_t mutex;      //!< protects connections
-    bool run;                   //!< run flag
+    pthread_mutex_t mutex;      // protects connections
+    bool run;                   // run flag if listener thread is running
 
-    int port;
-    int sockfd;
+    int port;                   // TCP port listener is listening
+    int sockfd;                 // TCP socket
 } t_rscp_listener;
 
 

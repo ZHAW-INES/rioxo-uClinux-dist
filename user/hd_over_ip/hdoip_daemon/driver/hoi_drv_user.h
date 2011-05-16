@@ -30,7 +30,7 @@ int hoi_drv_asi(uint32_t cfg, hdoip_eth_params* eth, uint32_t fs, uint32_t width
 int hoi_drv_aso(uint32_t fs, uint32_t fs_tol, uint32_t width, uint32_t cnt, uint8_t* sel, uint32_t delay_ms, uint32_t cfg);
 int hoi_drv_capture(bool compress, void* buffer, size_t size, t_video_timing* timing, uint32_t* advcnt);
 int hoi_drv_show(bool compress, void* buffer, t_video_timing* timing, uint32_t advcnt);
-int hoi_drv_debug(t_video_timing* timing);
+int hoi_drv_debug(void);
 int hoi_drv_bw(uint32_t bandwidth);
 
 int hoi_drv_info(t_video_timing* timing, uint32_t *advcnt);

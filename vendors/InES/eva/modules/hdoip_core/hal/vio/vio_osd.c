@@ -16,14 +16,16 @@ inline uint16_t reverse16(uint16_t x)
  * @param font the font used
  */
 void vio_osd_init(void* p, t_osd_font* font)
-{    
+{
+    uint16_t *tab;
+
     HOI_WR16(p, VIO_OFF_OSD_CHAR_WIDTH, font->width - 1);
     HOI_WR16(p, VIO_OFF_OSD_CHAR_HEIGHT, font->height - 1);
     
     memset(OFFSET(p, VIO_OFF_OSD_SCREEN), ' ', 0x4000);
     memset(OFFSET(p, VIO_OFF_OSD_CHAR), 0, 0x2000);
     
-    uint16_t* tab = &((uint16_t*)OFFSET(p, VIO_OFF_OSD_CHAR))[font->start*16];
+    tab = &((uint16_t*)OFFSET(p, VIO_OFF_OSD_CHAR))[font->start*16];
     
     // copy <num> 32 Byte tabel entrys (16x16 Bit)
     memcpy(tab, font->bitmap, font->length * 32);

@@ -119,6 +119,27 @@ void edid_report(t_edid* edid)
         report(CONT "edid size = %d cm x %d cm", x, y);
     }
 
+    report(CONT "edid video input definition: 0x%02x", edid->video_input_definition);
+    if(edid->video_input_definition & 0x80) {
+        report(CONT "edid DIGITAL input interfaces supported:");
+        if(edid->video_input_definition & EDID_IND_IF_MASK) {
+            switch(edid->video_input_definition & EDID_IND_IF_MASK)
+            {
+                case EDID_IND_IF_DVI:       report(CONT "DVI ");
+                                            break;
+                case EDID_IND_IF_HDMI_A:    report(CONT "HDMI-a ");
+                                            break;
+                case EDID_IND_IF_HDMI_B:    report(CONT "HDMI-b ");
+                                            break;
+                case EDID_IND_IF_MDDI:      report(CONT "MDDI ");
+                                            break;
+                case EDID_IND_IF_DISP_PORT: report(CONT "Display Port ");
+                                            break;
+            }
+        }
+    }
+    report(CONT "edid feature: 0x%02x", edid->feature);
+
     float gamma = (float)(edid->gamma+100) / 100.0;
     report(CONT "edid gamma = %.2f", gamma);
 

@@ -24,6 +24,10 @@ function show(t)
         
         t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
         t.aud_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_PORT)
+        
+        if(hdoip.pipe.getParam(hdoip.pipe.REG_FORCE_HDCP) == "true") then
+            t.hdcp_force = true
+        end 
        
         if(t.mode_vtb) then 
             t.st_bw = hdoip.pipe.getParam(hdoip.pipe.REG_ST_BW)
@@ -57,6 +61,15 @@ function show(t)
         else
             hdoip.html.AddError(t, label.err_ip_not_valid)
         end
+        
+        t.hdcp_force = tonumber(t.hdcp_force)
+        
+        if(t.hdcp_force ~= nil) then
+            t.hdcp_force_str = "true" 
+        else
+            t.hdcp_force_str = "false"
+        end 
+        hdoip.pipe.setParam(hdoip.pipe.REG_FORCE_HDCP, t.hdcp_force_str)
  
         if(t.save_aud_port ~= nil) then 
             if(tonumber(t.aud_port) ~= nil) then
@@ -135,6 +148,8 @@ function show(t)
     -- Common fields
     hdoip.html.Text(label.p_st_connect);                                                    hdoip.html.TableInsElement(1);
     hdoip.html.FormIP(REG_ST_URI_LABEL, t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3);        hdoip.html.TableInsElement(2);
+    hdoip.html.Text(label.p_st_force_hdcp);                                                 hdoip.html.TableInsElement(1);
+    hdoip.html.FormCheckbox("hdcp_force", 1, "", t.hdcp_force)                              hdoip.html.TableInsElement(2);
 
     hdoip.html.Text(label.p_st_vid_port);                                                   hdoip.html.TableInsElement(1);
     if(t.edit_vid_port ~= nil) then

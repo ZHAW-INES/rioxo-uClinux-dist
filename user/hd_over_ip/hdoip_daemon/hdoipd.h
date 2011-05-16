@@ -149,37 +149,37 @@ typedef struct {
 } t_hdcp;
 
 typedef struct {
-    int                 drv;            // used driver hdoipd
-    t_bstmap*           registry;       // name=value
-    t_bstmap*           verify;         //
-    t_bstmap*           set_listener;   // listen for write
-    t_bstmap*           get_listener;   // listen for read
+    int                 drv;            // file descriptor to the hdoip_core driver
+    t_bstmap*           registry;       // registry
+    t_bstmap*           verify;         // listener to verify value
+    t_bstmap*           set_listener;   // listener for write
+    t_bstmap*           get_listener;   // listener for read
 
-    uint32_t            task_commands;
-    int                 task_repeat;
-    int                 task_timeout;
+    uint32_t            task_commands;  // task to do by poll thread (e.g. start vrb)
+    int                 task_repeat;    // amount of trys to do task
+    int                 task_timeout;   // time between trys (in 20ms ticks)
 
-    uint32_t            drivers;
+    uint32_t            drivers;        // loaded drivers (ADV7441a, AD9889 etc.)
     int                 capabilities;   // reported capabilities
     int                 state;          // daemon state
     int                 rsc_state;      // resource input states
     int                 vtb_state;      // vtb state
     int                 vrb_state;      // vrb state
     int                 update;         // pending updates
-    pthread_mutex_t     mutex;
+    pthread_mutex_t     mutex;          // mutex of the structure
 
-    void*               canvas;
-    t_rscp_listener     listener;
-    t_node*             client;
-    int                 fd;
-    t_hdoip_eth         local;
-    int                 osd_timeout;
-    uint64_t            tick;
-    int                 eth_alive;
-    int                 eth_timeout;
-    bool                auto_stream;
-    t_hdoip_amx			amx;
-    t_hdcp 				hdcp;
+    void*               canvas;         // pointer to picture
+    t_rscp_listener     listener;       // RSCP listener
+    t_node*             client;         // list of all RSCP clients
+    t_hdoip_eth         local;          // local mac, ip, video port and audio port
+    int                 osd_timeout;    // time till osd will be deactivate (in seconds)
+    uint64_t            tick;           // counts the EVENT_TICKS, UNUSED!
+    int                 eth_alive;      // amount of ticks (EVENT_TICK) till rscp alive packet is sent
+    int                 eth_timeout;    // amount of ticks till connection timeout is detected
+
+    bool                auto_stream;    // flag if device should do auto stream after boot
+    t_hdoip_amx         amx;            // AMX control releated structure
+    t_hdcp 		hdcp;
 } t_hdoipd;
 
 

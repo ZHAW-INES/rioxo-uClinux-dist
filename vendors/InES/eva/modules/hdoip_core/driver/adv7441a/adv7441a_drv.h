@@ -30,5 +30,6 @@ int adv7441a_set_tmds_equa(t_adv7441a* handle);
 int adv7441a_proc_video_in(char *buf, char **start, off_t offset, int count, int *eof, void *data);
 int adv7441a_get_video_timing(t_adv7441a* handle);
 int adv7441a_get_audio_timing(t_adv7441a* handle);
+int adv7441a_drv_dumb_reg(t_adv7441a* handle);
 
 #endif /* ADV7441A_DRV_H_ */

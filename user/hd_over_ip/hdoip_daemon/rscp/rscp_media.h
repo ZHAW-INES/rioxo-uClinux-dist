@@ -47,28 +47,28 @@ typedef int (frscpe)(void* media, uint32_t event);
 
 // Media session
 typedef struct t_rscp_media {
-    void*   creator;            //!<
-    void*   top;
-    struct t_rscp_media* owner; //!< Owner Media
-    t_node* children;           //!< Child Medias
-    char*   name;
-    char    sessionid[20];      //!< Session string
-    int     state;              //!< Media state (INIT, READY, PLAYING)
-    int     result;
-    size_t  cookie_size;
-    void*   cookie;             //!< Media related data
-    frscpm* hdcp;				//!<
-    frscpm* error;              //!< (media*, rscp-code, connection)
-    frscpm* setup;              //!< (c->s) request or response
-    frscpm* play;               //!< (c->s) request or response
-    frscpm* pause;              //!< (c->s|s->c) rsp=0: response / else: request
-    frscpm* teardown;           //!< (c->s|s->c) rsp=0: response / else: request
-    frscpm* hello;              //!< (s->c)
-    frscpm* update;             //!< (s->c) (events)
-    frscpl* ready;              //!< local
-    frscpl* dosetup;            //!< local
-    frscpl* doplay;             //!< local
-    frscpe* event;              //!< local (events)
+    void*   creator;            // Pointer to client or server thread creates this media (t_rscp_server / t_rscp_client)
+    void*   top;                // UNUSED
+    struct t_rscp_media* owner; // Pointer to origin media (video, audio or box_sys)
+    t_node* children;           // UNUSED
+    char*   name;               // "audio", "video" or "" (box_sys)
+    char    sessionid[20];      // Session string (ID)
+    int     state;              // Media state (INIT, READY, PLAYING)
+    int     result;             // Media status
+    size_t  cookie_size;        // Size of cookie
+    void*   cookie;             // Media related data
+    frscpm* hdcp;
+    frscpm* error;              // (media*, rscp-code, connection)
+    frscpm* setup;              // (c->s) request or response
+    frscpm* play;               // (c->s) request or response
+    frscpm* pause;              // (c->s|s->c) rsp=0: response / else: request
+    frscpm* teardown;           // (c->s|s->c) rsp=0: response / else: request
+    frscpm* hello;              // (s->c)
+    frscpm* update;             // (s->c) (events)
+    frscpl* ready;              // local
+    frscpl* dosetup;            // local
+    frscpl* doplay;             // local
+    frscpe* event;              // local (events)
 } t_rscp_media;
 
 // rscp media server
