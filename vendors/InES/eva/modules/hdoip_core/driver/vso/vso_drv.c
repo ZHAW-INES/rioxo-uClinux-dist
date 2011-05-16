@@ -251,7 +251,7 @@ void vso_set_vsync_blanking(t_vso* handle, t_video_timing* timing)
 
     // Select source of vsync blanking (1=field-signal / 0=timer that blanks every second vsync-pulse)
     vso_clr_ctrl(handle->p_vso, VSO_CTRL_VSYNC_BLANK_SOURCE);
-    vso_set_ctrl(handle->p_vso, VSO_CTRL_FIELD_POL);
+    vso_clr_ctrl(handle->p_vso, VSO_CTRL_FIELD_POL);
 
     // Enable blanking if interlaced
     if (timing->interlaced) {
