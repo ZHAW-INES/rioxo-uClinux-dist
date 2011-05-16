@@ -32,6 +32,7 @@ INCLUDE += hal/vid
 INCLUDE += hal/vsi
   FILES += hal/vsi/vsi_hal.o
 INCLUDE += hal/vso
+INCLUDE += hal/wdg
 INCLUDE += hal/asi
   FILES += hal/asi/asi_hal.o
 INCLUDE += hal/aso
