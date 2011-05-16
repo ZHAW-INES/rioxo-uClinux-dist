@@ -51,6 +51,7 @@ typedef struct {
     void                *p_adv212;
     void                *p_vrp;
     void                *p_tmr;
+    void                *p_wdg;
     void                *p_ver;
     void                *p_sysid;
 

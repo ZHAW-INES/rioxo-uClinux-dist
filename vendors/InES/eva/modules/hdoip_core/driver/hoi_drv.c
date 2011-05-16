@@ -28,6 +28,7 @@ void hoi_drv_init(t_hoi* handle)
     handle->p_adv212        = ioremap(BASE_ADV212,      0xffffffff);
     handle->p_vrp           = ioremap(BASE_VRP,         0xffffffff);
     handle->p_tmr           = ioremap(BASE_TIMER,       0xffffffff);
+    handle->p_wdg           = ioremap(BASE_WATCHDOG,    0xffffffff);
     handle->p_irq           = ioremap(BASE_EXT_IRQ,     0xffffffff);
     handle->p_esi           = ioremap(BASE_ETI,         0xffffffff);
     handle->p_eso           = ioremap(BASE_ETO,         0xffffffff);

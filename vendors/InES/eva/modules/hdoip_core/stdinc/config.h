@@ -22,6 +22,7 @@
 
 // Base address
 #define BASE_TIMER          (na_acb_timer)
+#define BASE_WATCHDOG       (na_acb_watchdog)
 #define BASE_VRP            (na_acb_vrp)
 #define BASE_VIO            (na_acb_video_process)
 #define BASE_ADV212	        (na_hdata_bus)
