@@ -70,6 +70,16 @@ enum {
     HDCP_ETO_AUDIO_EN       = 0x08   //eto audio enabled in HW
 };
 
+//received HDCP messages
+enum {
+    HDCP_START				=0,		//start hdcp session key exchange
+    HDCP_AKE_SEND_CERT		=3,		//certificate received
+    HDCP_AKE_SEND_RRX		=6,		//send rrx
+    HDCP_AKE_SEND_HPRIME	=7,		//received H to check HMAC
+    HDCP_LC_SEND_LPRIME		=10		//received HMAC from locality check
+};
+
+
 // what is
 enum {
     RSC_AUDIO0_IN   = 0x000001,     // active audio input (from video board)
@@ -103,6 +113,7 @@ enum {
     EVENT_VIDEO_SINK_OFF= 0x00000200,   // Video input deactivated
     EVENT_VIDEO_STIN_OFF= 0x00001000,   // Ethernet Video Stream Input stoped
     EVENT_AUDIO_STIN_OFF= 0x00002000,   // Ethernet Audio Stream Input stoped
+    EVENT_HDCP_ON		= 0x00010000,   // ADV7441 receives HDCP encrypted content
     EVENT_TICK          = 0x10000000    // a tick event
 };
 
@@ -122,6 +133,20 @@ typedef struct {
     f_task*             fnc;
     void*               value;
 } t_task;
+
+// hdcp variables
+typedef struct {
+	uint32_t			enc_state;		//encryption enabled disabled
+    uint32_t            state;			//hdcp statemachine
+    char                rtx[17];		//rtx (random number)
+    uint32_t			repeater;		//repeater (true or false)
+    char				km[33];			//masterkey
+    char 				rrx[19];		//random number from receiver
+    char				rn[17];			//random number from locality check
+    char 				kd[65];			//
+    char 				ks[33];			//the session key
+    char				riv[17];		//riv, random number for HW encryption
+} t_hdcp;
 
 typedef struct {
     int                 drv;            // used driver hdoipd
@@ -154,6 +179,7 @@ typedef struct {
     int                 eth_timeout;
     bool                auto_stream;
     t_hdoip_amx			amx;
+    t_hdcp 				hdcp;
 } t_hdoipd;
 
 

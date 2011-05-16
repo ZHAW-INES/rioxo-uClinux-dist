@@ -32,6 +32,14 @@ const t_map_fnc tab_request_setup[] ={
         { "HDCP", rscp_parse_hdcp,  offsetof(t_rscp_req_setup, hdcp) },
         MAP_FNC_NULL
 };
+// HDCP attributes
+const t_map_fnc tab_request_hdcp[] ={
+        { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_hdcp, cseq) },
+        { "Session", rscp_parse_str, offsetof(t_rscp_req_hdcp, session) },
+        { "ID", rscp_parse_str, offsetof(t_rscp_req_hdcp, id) },
+        { "Content", rscp_parse_str, offsetof(t_rscp_req_hdcp, content) },
+        MAP_FNC_NULL
+};
 
 // PLAY attributes
 const t_map_fnc tab_request_play[] ={
@@ -45,6 +53,15 @@ const t_map_fnc tab_request_play[] ={
 const t_map_fnc tab_request_teardown[] ={
         { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_teardown, cseq) },
         { "Session", rscp_parse_str, offsetof(t_rscp_req_teardown, session) },
+        MAP_FNC_NULL
+};
+
+// HDCP attributes
+const t_map_fnc tab_response_hdcp[] ={
+        { "CSeq", rscp_parse_ui32, offsetof(t_rscp_rsp_hdcp, cseq) },
+        { "Session", rscp_parse_str, offsetof(t_rscp_rsp_hdcp, session) },
+        { "ID", rscp_parse_str, offsetof(t_rscp_rsp_hdcp, id) },
+        { "Content", rscp_parse_str, offsetof(t_rscp_rsp_hdcp, content) },
         MAP_FNC_NULL
 };
 
@@ -95,6 +112,7 @@ const t_map_fnc tab_request_hello[] ={
 // the methodes
 const t_map_set srv_method[] = {
     { "SETUP", (void*)tab_request_setup, (void*)rmsq_setup },
+    { "HDCP", (void*)tab_request_hdcp, (void*)rmsq_hdcp },
     { "PLAY", (void*)tab_request_play, (void*)rmsq_play },
     { "TEARDOWN", (void*)tab_request_teardown, (void*)rmsq_teardown },
     { "HELLO", (void*)tab_request_hello, (void*)rmsq_hello },

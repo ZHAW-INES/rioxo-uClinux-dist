@@ -148,6 +148,19 @@ void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, ch
     rscp_send(msg);
 }
 
+/** Create a HDCP message for session key exchange
+ * */
+void rscp_request_hdcp(t_rscp_connection* msg, char* session, char* uri, char* id, char* content)
+{
+    rscp_request_line(msg, "HDCP", uri);
+    rscp_header_session(msg, session);
+    msgprintf(msg, "ID: %s\r\n", id);
+    msgprintf(msg, "Content: %s\r\n", content);
+    rscp_eoh(msg);
+    rscp_send(msg);
+
+}
+
 void rscp_request_play(t_rscp_connection* msg, char* uri, char* session, t_rscp_rtp_format* fmt)
 {
     rscp_request_line(msg, "PLAY", uri);
@@ -206,4 +219,18 @@ void rscp_response_teardown(t_rscp_connection* msg, char* session)
     rscp_header_session(msg, session);
     rscp_eoh(msg);
     rscp_send(msg);
+}
+/** Respond to HDCP message for session key exchange
+ * */
+void rscp_response_hdcp(t_rscp_connection* msg, char* session, char* id, char* content)
+{
+	rscp_response_line(msg, RSCP_SC_OK, "OK");
+    rscp_header_session(msg, session);
+    if (id) {
+        msgprintf(msg, "ID: %s\r\n", id);
+        msgprintf(msg, "Content: %s\r\n", content);
+    }
+    rscp_eoh(msg);
+    rscp_send(msg);
+
 }

@@ -24,6 +24,38 @@ static struct {
     int                 alive_ping;
 } vtb;
 
+int vtb_video_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
+{
+    hdcp_ske_s(media, m, rsp);
+
+  /*  report(INFO "ID: %s CONTENT: %s ###########",m->id, m->content);
+	int message = atoi(m->id);
+	printf("The converted string: %d",message);
+	char message1[] ="Message 1 ret";
+	char message2[] ="Message 2 ret";
+	char ret[100];
+	switch (message) {
+	        case HDCP_START:
+	        	generate_rtx(&ret);
+	        	strcpy(hdoipd.hdcp.rtx, ret);
+	        	//TODO: set and check state
+	            rscp_response_hdcp(rsp, media->sessionid, m->id, &ret); //respond to setup message
+	            report(INFO "hdcp.rtx1: %s", hdoipd.hdcp.rtx);
+	            return RSCP_SUCCESS;
+	        break;
+	        case HDCP_AKE_SEND_CERT:
+
+	            rscp_response_hdcp(rsp, media->sessionid, m->id, &message2); //respond message to setup message
+	            report(INFO "hdcp.rtx2: %s", hdoipd.hdcp.rtx);
+	            return RSCP_SUCCESS;
+	        break;
+	}
+
+
+    //rscp_response_hdcp(rsp, media->sessionid, m->id, m->content); //respond message to setup message
+    //return RSCP_SUCCESS;*/
+}
+
 int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
     int n;
@@ -95,11 +127,11 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     vtb.alive_ping = 1;
 
     // open hdcp socket if necessary
-    if ((n = hdcp_open_socket(&m->hdcp, &sockfd, &cli_addr)) != RSCP_SUCCESS){
+   /* if ((n = hdcp_open_socket(&m->hdcp, &sockfd, &cli_addr)) != RSCP_SUCCESS){
         report(" ? Could not open hdcp socket");
         rscp_err_hdcp(rsp);
         return RSCP_REQUEST_ERROR;
-    }
+    }*/
 
     vtb.remote.address = rsp->address;
     vtb.remote.vid_port = PORT_RANGE_START(m->transport.client_port);
@@ -107,12 +139,12 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     rscp_response_setup(rsp, &m->transport, media->sessionid, &m->hdcp); //respond message to setup message
 
     // start hdcp session key exchange if necessary
-    char video[]="video";
+   /* char video[]="video";
     if ((n = hdcp_ske_server(&m->hdcp, &sockfd, &cli_addr, &video)) != RSCP_SUCCESS){
             report(" ? Session key exchange failed");
             rscp_err_hdcp(rsp);
             return RSCP_REQUEST_ERROR;
-    }
+    }*/
 
     REPORT_RTX("TX", hdoipd.local, "->", vtb.remote, vid);
 
@@ -154,10 +186,11 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     }
 
     //check if Video HDCP status is unchanged, else return ERROR
+    report("TEST HDCP before video play!!!!!!!!!");
     if ((reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP)) && !(get_hdcp_status() & HDCP_ETO_VIDEO_EN)) {
         report(" ? Video HDCP status has changed after SKE");
-        rscp_err_hdcp(rsp);
-        return RSCP_REQUEST_ERROR;
+       /* rscp_err_hdcp(rsp);
+        return RSCP_REQUEST_ERROR;*/
     }
     // if hdoipd_rsc(RSC_VIDEO_IN_HDCP) || hdcp is active -> error
 
@@ -256,6 +289,9 @@ int vtb_video_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_co
 int vtb_video_event(t_rscp_media *media, uint32_t event)
 {
     switch (event) {
+    //	case EVENT_HDCP_ON:                                     //ADV7441 HDCP event received
+    //		if (get_hdcp_status() & HDCP_ETO_VIDEO_EN) break;  //check if HDCP is already running
+    //		report(INFO "ETO_VIDEO not yet enabled -> pause");
         case EVENT_VIDEO_IN_ON:
             if (rscp_media_splaying(media)) {
                 vtb_video_pause(media);
@@ -300,6 +336,7 @@ t_rscp_media vtb_video = {
     .name = "video",
     .owner = 0,
     .cookie = 0,
+    .hdcp = (frscpm*)vtb_video_hdcp,
     .setup = (frscpm*)vtb_video_setup,
     .play = (frscpm*)vtb_video_play,
     .teardown = (frscpm*)vtb_video_teardown,

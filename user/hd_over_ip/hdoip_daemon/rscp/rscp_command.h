@@ -33,6 +33,7 @@ void rscp_request_teardown(t_rscp_connection* msg, char* uri, char* session);
 void rscp_request_update(t_rscp_connection* msg, char* uri, char* session, uint32_t event);
 void rscp_request_pause(t_rscp_connection* msg, char* uri, char* session);
 void rscp_request_hello(t_rscp_connection* msg, char* uri);
+void rscp_request_hdcp(t_rscp_connection* msg, char* session, char* uri, char* id, char* content);
 
 void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session, t_rscp_hdcp* hdcp);
 void rscp_response_play(t_rscp_connection* msg, char* session, t_rscp_rtp_format* fmt, t_video_timing* timing);

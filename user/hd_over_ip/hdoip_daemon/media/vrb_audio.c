@@ -43,12 +43,13 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, aud);
 
     // start hdcp session key exchange if necessary
-    char audio[]="audio";
+  /*  char audio[]="audio";
     if ((n = hdcp_ske_client(&m->hdcp, &audio)) != RSCP_SUCCESS){
         report(" ? Session key exchange failed");
-        rscp_err_hdcp(rsp);
-        return RSCP_REQUEST_ERROR;
-    }
+        //rscp_err_hdcp(rsp);
+        //return RSCP_REQUEST_ERROR;
+        return n;
+    }*/
 
 #ifdef ETI_PATH
     // TODO: separete Audio/Video
@@ -128,6 +129,8 @@ int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown *m, t_rscp_conne
 
 int vrb_audio_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
 {
+	t_rscp_client *client = media->creator;
+
     if(rsp) {
         report(" ? client failed (%d): %d - %s", m, rsp->ecode, rsp->ereason);
         osd_printf("vrb.audio streaming could not be established: %d - %s\n", rsp->ecode, rsp->ereason);
@@ -141,8 +144,8 @@ int vrb_audio_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
             case 406:   media->result = RSCP_RESULT_SERVER_NO_VIDEO_IN;
                         break;
             case 408:   media->result = RSCP_RESULT_SERVER_HDCP_ERROR;
-             	 	 	//set kill bit
-              	  	  	//set teardown bit
+            			rscp_client_set_teardown(client);
+            			hdoipd_set_task_start_vrb();
                         break;
             case 400:
             default:    media->result = RSCP_RESULT_SERVER_ERROR;

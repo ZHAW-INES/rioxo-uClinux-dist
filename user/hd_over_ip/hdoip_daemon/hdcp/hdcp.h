@@ -13,7 +13,16 @@
 #include "hdoipd.h"
 #include "rscp_error.h"
 #include "hdoipd_fsm.h"
+#include "rsaes-oaep/rsaes.h"
+#include "rsassa_pkcs1/rsassa.h"
+#include "aes128/aes_encrypt.h"
+#include "sha256/sha256.h"
+#include "protocol/protocol.h"
+#include <debug.h>
 
+int check_certificate(char* certificate, int* repeater, char* km, char* enc_km);
+int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp);
+int generate_rtx(char* rtx);
 int hdcp_open_socket(t_rscp_hdcp* m, int* sockfd, struct sockaddr_in* cli_addr );
 int hdcp_ske_server(t_rscp_hdcp* m, int* sockfd, struct sockaddr_in* cli_addr, char* media_type);
 int hdcp_ske_client(t_rscp_hdcp* m, char* media_type);

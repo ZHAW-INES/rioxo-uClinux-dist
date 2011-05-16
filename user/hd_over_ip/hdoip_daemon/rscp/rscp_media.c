@@ -158,6 +158,16 @@ int rmsq_hello(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
     if (media->hello) ret = media->hello(media, msg, rsp);
     return ret;
 }
+// call hdcp function
+int rmsq_hdcp(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
+{
+    int ret = RSCP_SUCCESS;
+    if (media->hdcp) {
+    	report(INFO "START PARSING HDCP ****###############3");
+    	ret = media->hdcp(media, msg, rsp);
+    }
+    return ret;
+}
 
 // rscp media server
 int rmsq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
@@ -357,20 +367,16 @@ int rscp_media_setup(t_rscp_media* media)
 int rscp_media_play(t_rscp_media* media)
 {
     int ret = RSCP_NULL_POINTER;
+    t_rscp_client *client = media->creator;
 
     if (media && media->creator) {
         if (media->state == RSCP_READY) {
             if (media->doplay) ret = media->doplay(media);
-
-     /*   //check if kill / teardown is set because of HDCP error
-        if (client->kill)  rscp_client_close(media->creator);             //HDCP
-        else if (client->teardown) rscp_client_teardown(media->creator);  //HDCP
-     */
-
-        //original from rscp_client.c -> rscp_client_event()
-        //if (client->kill)  rscp_client_close(client);
-        //else if (client->teardown) rscp_client_teardown(client);
-
+            //check if kill / teardown is set because of HDCP error
+            if(client->task & E_RSCP_CLIENT_KILL) rscp_client_close(client);
+            else if (client->task & E_RSCP_CLIENT_TEARDOWN) rscp_client_teardown(client);
+            //if(((t_rscp_client*)media->creator)->task & E_RSCP_CLIENT_KILL) rscp_client_close((t_rscp_client*)media->creator);
+            //else if (((t_rscp_client*)media->creator)->task & E_RSCP_CLIENT_KILL) rscp_client_teardown((t_rscp_client*)media->creator);
         } else {
             ret = RSCP_WRONG_STATE;
         }

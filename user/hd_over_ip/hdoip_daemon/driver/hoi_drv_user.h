@@ -63,10 +63,14 @@ int hoi_drv_hpdon();
 int hoi_drv_hpdoff();
 int hoi_drv_loop();
 int hoi_drv_repair();
-int hoi_drv_hdcp_viden();
-int hoi_drv_hdcp_auden();
-int hoi_drv_hdcp_viddis();
-int hoi_drv_hdcp_auddis();
+int hoi_drv_hdcp_viden_eti();
+int hoi_drv_hdcp_viden_eto();
+int hoi_drv_hdcp_auden_eti();
+int hoi_drv_hdcp_auden_eto();
+int hoi_drv_hdcp_viddis_eti();
+int hoi_drv_hdcp_viddis_eto();
+int hoi_drv_hdcp_auddis_eti();
+int hoi_drv_hdcp_auddis_eto();
 
 int hoi_drv_poll();
 int hoi_drv_getversion(t_hoic_getversion* cmd);

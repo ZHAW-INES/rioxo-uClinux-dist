@@ -41,7 +41,6 @@ typedef enum {
     RSCP_RESULT_SERVER_HDCP_ERROR
 } e_rscp_media_result;
 
-//
 typedef int (frscpm)(void* media, void* msg, void* rsp);
 typedef int (frscpl)(void* media);
 typedef int (frscpe)(void* media, uint32_t event);
@@ -58,6 +57,7 @@ typedef struct t_rscp_media {
     int     result;
     size_t  cookie_size;
     void*   cookie;             //!< Media related data
+    frscpm* hdcp;				//!<
     frscpm* error;              //!< (media*, rscp-code, connection)
     frscpm* setup;              //!< (c->s) request or response
     frscpm* play;               //!< (c->s) request or response
@@ -78,9 +78,11 @@ int rmsq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_hello(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
+int rmsq_hdcp(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 
 int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsr_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
+
 
 
 // rscp media client

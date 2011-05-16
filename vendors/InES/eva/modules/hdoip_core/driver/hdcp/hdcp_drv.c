@@ -19,16 +19,19 @@ int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv98
     	//check if video encryption status is okay, otherwise stop video
     	if ((h_adv7441a->status & ADV7441A_STATUS_ENCRYPTED)  && !(video_enc_en_eto) && (h_vsi->status & VSI_DRV_STATUS_ACTIV))
     	{
-    	    vsi_drv_stop(h_vsi);	 //stop transmitting video
-    	    REPORT(INFO, "HDMI VIDEO SOURCE CHANGED, HDCP ERROR!");
+    	   // vsi_drv_stop(h_vsi);	 //stop transmitting video
+    	    //asi_drv_stop(h_asi);	 //stop transmitting audio   ///test
+    	  //  REPORT(INFO, "HDMI VIDEO SOURCE CHANGED, HDCP ERROR!");
     	}
     	//check if audio encryption status is okay, otherwise stop audio
     	if ((h_adv7441a->status & ADV7441A_STATUS_ENCRYPTED)  && !(audio_enc_en_eto) && (h_asi->status & ASI_DRV_STATUS_ACTIV))
     	{
-    	    asi_drv_stop(h_asi);	 //stop transmitting audio
-    	    REPORT(INFO, "HDMI AUDIO SOURCE CHANGED, HDCP ERROR!");
+    		//vsi_drv_stop(h_vsi);	 //stop transmitting video  //test
+    		//asi_drv_stop(h_asi);	 //stop transmitting audio
+    	 //   REPORT(INFO, "HDMI AUDIO SOURCE CHANGED, HDCP ERROR!");
     	}
     }
+
     //NOT YET ENABLED BECAUSE NO KEYS AVAILABLE FOR AD9889
     if (*h_drivers & DRV_ADV9889) {  //HDMI transmitter?
     	//check if video encryption status is okay, otherwise stop video

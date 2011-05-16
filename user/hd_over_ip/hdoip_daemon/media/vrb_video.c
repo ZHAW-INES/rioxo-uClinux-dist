@@ -49,12 +49,33 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, vid);
 
     // start hdcp session key exchange if necessary
-    char video[]="video";
+
+    //test start****************************
+    //u_rscp_header buf;
+   // t_rscp_header_common common;
+    report("RSCP Client Start HDCP");
+    // send setup message
+    //char id[]="0";
+    //char number[]="12345678abcd";
+    rscp_client_hdcp(client);
+
+    //rscp_default_response_setup((void*)&buf);
+
+    // response
+   // n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
+
+
+
+    //test end*********************************
+
+
+   /* char video[]="video";
     if ((n = hdcp_ske_client(&m->hdcp, &video)) != RSCP_SUCCESS){
         report(" ? Session key exchange failed");
-        rscp_err_hdcp(rsp);
-        return RSCP_REQUEST_ERROR;
-    }
+        //rscp_err_hdcp(rsp);
+        //return RSCP_REQUEST_ERROR;
+        return n;
+    }*/
 
 #ifdef ETI_PATH
     // setup ethernet input
@@ -134,6 +155,8 @@ int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rsc
 
 int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
 {
+	t_rscp_client *client = media->creator;
+
     if(rsp) {
         report(" ? client failed (%d): %d - %s", m, rsp->ecode, rsp->ereason);
         osd_permanent(true);
@@ -148,8 +171,8 @@ int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
             case 406:   media->result = RSCP_RESULT_SERVER_NO_VIDEO_IN;
                         break;
             case 408:   media->result = RSCP_RESULT_SERVER_HDCP_ERROR;
-             	 	 	//set kill bit
-              	  	  	//set teardown bit
+                        rscp_client_set_teardown(client);
+                        hdoipd_set_task_start_vrb();
                         break;
             case 400:
             default:    media->result = RSCP_RESULT_SERVER_ERROR;

@@ -34,6 +34,14 @@ void rscp_default_response_setup(t_rscp_rsp_setup* p)
 
 }
 
+void rscp_default_response_hdcp(t_rscp_rsp_hdcp* p)
+{
+    p->cseq = 0;
+    p->session[0] = 0;
+    p->id[0] =0;
+    p->content[0]= 0;
+}
+
 void rscp_default_response_play(t_rscp_rsp_play* p)
 {
     p->cseq = 0;

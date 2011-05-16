@@ -507,6 +507,9 @@ void hdoipd_fsm_vrb(uint32_t event)
 void hdoipd_fsm_vtb(uint32_t event)
 {
     switch (event) {
+       // case E_ADV7441A_HDCP:
+           // rscp_listener_event(&hdoipd.listener, EVENT_HDCP_ON);
+       // break;
         case E_ADV7441A_NC:
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
         break;
@@ -590,17 +593,11 @@ void hdoipd_event(uint32_t event)
 
         case E_ADV7441A_HDCP:
         	printf("\n ******* Incomming stream is encrypted!! ****** \n");
-        	hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
-        //if VRB do nothing
-        //if VTB, check if encryption is already activated
-        //	if not, change to idle state and do init
+            hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
         break;
         case E_ADV7441A_NO_HDCP:
         	printf("\n ******* Incomming stream is !!! NOT !!! encrypted!! ****** \n");
         	hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
-            //if VRB do nothing
-            //if VTB, check if encryption is already activated
-            //	if encryption is active, disable encryption and ask VRB to disable encryption
         break;
 
         // ...

@@ -29,6 +29,7 @@
 #include "../aes128/aes_encrypt.h"
 #include "../sha256/sha256.h"
 #include "../protocol/protocol.h"
+#include <debug.h>
 
 
 /*  Edit this define to enable/disable the HDCP time limit checks
@@ -37,6 +38,7 @@
  *      DISABLE */
 #define TIME_LIMIT DISABLE
 
+/*Check receivers certificate*/
 
 /******************************************************************************
 ****************************** main program ***********************************
@@ -157,12 +159,12 @@ int transmitter(int sockfd, char* ip_nr, char* session_key, char* riv, uint32_t 
     strcat(ks,temp);  
   }
 
-  printf("The random numbers:\n"); 
-  printf("rtx : %s\n",rtx);  
-  printf("riv : %s\n",riv);  
-  printf("seed: %s\n",seed);  
-  printf("km  : %s\n",km);  
-  printf("ks  : %s\n\n",ks); 
+  if (debug) printf("The random numbers:\n");
+  if (debug) printf("rtx : %s\n",rtx);
+  if (debug) printf("riv : %s\n",riv);
+  if (debug) printf("seed: %s\n",seed);
+  if (debug) printf("km  : %s\n",km);
+  if (debug) printf("ks  : %s\n\n",ks);
 
   printf("\n********************************************************************************");
   printf("\n*********************** HDCP TRANSMITTER START *********************************");

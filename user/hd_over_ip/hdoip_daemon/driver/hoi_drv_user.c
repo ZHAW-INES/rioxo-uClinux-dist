@@ -417,10 +417,14 @@ HOI_CMDSW(hpdon);
 HOI_CMDSW(hpdoff);
 HOI_CMDSW(repair);
 
-HOI_CMDSW(hdcp_viden);       //enable hdcp video encryption
-HOI_CMDSW(hdcp_auden);       //enable hdcp audio encryption
-HOI_CMDSW(hdcp_viddis);      //disable hdcp video encryption
-HOI_CMDSW(hdcp_auddis);      //disable hdcp audio encryption
+HOI_CMDSW(hdcp_viden_eti);       //enable hdcp eti video encryption
+HOI_CMDSW(hdcp_viden_eto);       //enable hdcp eto video encryption
+HOI_CMDSW(hdcp_auden_eti);       //enable hdcp eti audio encryption
+HOI_CMDSW(hdcp_auden_eto);       //enable hdcp eto audio encryption
+HOI_CMDSW(hdcp_viddis_eti);      //disable hdcp eti video encryption
+HOI_CMDSW(hdcp_viddis_eto);      //disable hdcp eto video encryption
+HOI_CMDSW(hdcp_auddis_eti);      //disable hdcp eti audio encryption
+HOI_CMDSW(hdcp_auddis_eto);      //disable hdcp eto audio encryption
 HOI_CMDSW(hdcp_adv9889dis);  //disable AD9889 hdcp encryption
 HOI_CMDSW(hdcp_adv9889en);   //enable AD9889 hdcp encryption
 

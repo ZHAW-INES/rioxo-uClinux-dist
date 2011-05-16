@@ -336,6 +336,8 @@ int receiver(char* port_nr, char* ip_nr, char* session_key, char* riv, uint32_t 
     temp[8]='\0';
     keys[j+4]=strtoul(temp, NULL, 16);
   }
+  //close(sockfd);
+  shutdown(sockfd, 2);
   return 1; //success
 }
 

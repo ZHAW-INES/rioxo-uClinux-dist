@@ -70,11 +70,11 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     hdoipd_set_vtb_state(VTB_AUD_IDLE);
 
     // open hdcp socket if necessary
-    if ((n = hdcp_open_socket(&m->hdcp, &sockfd, &cli_addr)) != RSCP_SUCCESS){
+   /* if ((n = hdcp_open_socket(&m->hdcp, &sockfd, &cli_addr)) != RSCP_SUCCESS){
         report(" ? Could not open hdcp socket");
         rscp_err_hdcp(rsp);
         return RSCP_REQUEST_ERROR;
-    }
+    }*/
 
     vtb.remote.address = rsp->address;
     vtb.remote.aud_port = PORT_RANGE_START(m->transport.client_port);
@@ -83,12 +83,12 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     rscp_response_setup(rsp, &m->transport, media->sessionid, &m->hdcp);
 
     // start hdcp session key exchange if necessary
-    char audio[]="audio";
+   /* char audio[]="audio";
     if ((n = hdcp_ske_server(&m->hdcp, &sockfd, &cli_addr, &audio)) != RSCP_SUCCESS){
             report(" ? Session key exchange failed");
             rscp_err_hdcp(rsp);
             return RSCP_REQUEST_ERROR;
-    }
+    }*/
 
     REPORT_RTX("TX", hdoipd.local, "->", vtb.remote, aud);
 
@@ -133,10 +133,11 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     }
 
     //check if audio HDCP status is unchanged, else return ERROR
+    report("TEST HDCP AUDIO STATUS BEFORE AUDIO PLAY!!!!!!!!\n");
     if ((reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP)) && !(get_hdcp_status() & HDCP_ETO_AUDIO_EN)) {
         report(" ? Audio HDCP status has changed after SKE");
-        rscp_err_hdcp(rsp);
-        return RSCP_REQUEST_ERROR;
+      /*  rscp_err_hdcp(rsp);
+        return RSCP_REQUEST_ERROR;*/
     }
 
     // start ethernet output
@@ -162,8 +163,8 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     if ( ((nfo->audio_width[0]<8) || (nfo->audio_width[0]>32)) ||
          ((nfo->audio_fs[0]<32000) || (nfo->audio_fs[0]>96000)) ||
          ((nfo->audio_cnt[0]<1) || (nfo->audio_cnt[0]>8)) ) {
-        rscp_err_def_source(rsp);
-        return RSCP_REQUEST_ERROR;
+          rscp_err_def_source(rsp);
+          return RSCP_REQUEST_ERROR;
     }
 
     // send timing
@@ -236,6 +237,9 @@ int vtb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
 int vtb_audio_event(t_rscp_media *media, uint32_t event)
 {
     switch (event) {
+	  //  case EVENT_HDCP_ON:                                     //ADV7441 HDCP event received
+      // 		if (get_hdcp_status() & HDCP_ETO_AUDIO_EN) break;  //check if HDCP is already running
+      // 		report(INFO "ETO_VIDEO not yet enabled -> pause");
         case EVENT_AUDIO_IN0_ON:
             if (rscp_media_splaying(media)) {
                 vtb_audio_pause(media);

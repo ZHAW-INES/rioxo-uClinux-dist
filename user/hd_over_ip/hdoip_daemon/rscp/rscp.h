@@ -19,7 +19,7 @@
 //------------------------------------------------------------------------------
 // Constants
 
-#define RSCP_VERSION                "RSCPX/1.0"
+#define RSCP_VERSION                "RSCP/1.0"
 #define RSCP_SCHEME                 "rscp"
 
 
@@ -117,6 +117,9 @@ typedef struct {
 typedef struct {
     uint32_t            hdcp_on; //on=1, off=0
     uint32_t            port_nr;
+  //  char				ake_init[10];
+  //  char				ake_send_cert[525];
+  //  char				ake_no_stored[130];
 } t_rscp_hdcp;
 
 //------------------------------------------------------------------------------
@@ -132,6 +135,13 @@ typedef struct {
     t_rscp_edid         edid;
     t_rscp_hdcp			hdcp;
 } t_rscp_req_setup;
+
+typedef struct {
+    uint32_t            cseq;
+    char                session[50];
+    char				id[10];
+    char 				content[530];
+} t_rscp_req_hdcp;
 
 typedef struct {
     uint32_t            cseq;
@@ -178,6 +188,13 @@ typedef struct {
 typedef struct {
     uint32_t            cseq;
     char                session[50];
+    char				id[10];
+    char 				content[530];
+} t_rscp_rsp_hdcp;
+
+typedef struct {
+    uint32_t            cseq;
+    char                session[50];
     t_video_timing      timing;
     t_rscp_rtp_format   format;
 } t_rscp_rsp_play;
@@ -191,6 +208,7 @@ typedef struct {
 typedef union {
     t_rscp_req_option   req_option;
     t_rscp_req_setup    req_setup;
+    t_rscp_req_hdcp     req_hdcp;
     t_rscp_req_play     req_play;
     t_rscp_req_teardown req_teardown;
     t_rscp_req_hello    req_hello;
