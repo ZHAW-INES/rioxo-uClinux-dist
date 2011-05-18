@@ -22,8 +22,10 @@ function show(t)
            
         if(t.auth_en_checkbox > 0) then
             t.auth_en_str = "true"
+            t.auth_en = true
         else 
             t.auth_en_str = "false"
+            t.auth_en = false
         end
         hdoip.pipe.setParam(hdoip.pipe.REG_WEB_AUTH_EN, t.auth_en_str)
 
@@ -31,7 +33,7 @@ function show(t)
             t.web_user = hdoip.pipe.getParam(hdoip.pipe.REG_WEB_USER)
         end
 
-        if(t.pass_old ~= "") then
+        if((t.pass_old ~= "") and (t.new_pass ~= nil) and (t.new_user ~= nil))then
             if(t.pass_old == t.web_pass) then
                 if((t.new_pass == t.new_pass2) and (t.new_pass ~= ""))then
                     hdoip.pipe.setParam(hdoip.pipe.REG_WEB_PASS, t.new_pass)
@@ -55,9 +57,7 @@ function show(t)
         
         t.lang_sel = t_lang_short[t.lang] 
     end
-    
-
- 
+   
     hdoip.html.Header(t, label.page_name .. label.page_settings, script_path)
 
     hdoip.html.FormHeader(script_path, main_form)
@@ -69,22 +69,22 @@ function show(t)
     hdoip.html.TableHeader(1)
     hdoip.html.FormRadio("auth_en_sel", t_auth_en, 2, t.auth_en_checkbox);   hdoip.html.TableInsElement(1);
     hdoip.html.TableBottom()
-    hdoip.html.Title(label.p_set_change_user);                              
-    hdoip.html.TableHeader(2)
     
-    hdoip.html.Text(label.username);                        hdoip.html.TableInsElement(1);
-    hdoip.html.FormText("new_user", t.web_user, 30, 0)      hdoip.html.TableInsElement(1);
-    hdoip.html.Text(label.p_set_old_password);              hdoip.html.TableInsElement(1);
-    hdoip.html.FormPassword("pass_old", "", 30, 0)          hdoip.html.TableInsElement(1);
-    hdoip.html.Text(label.p_set_new_password);              hdoip.html.TableInsElement(1);
-    hdoip.html.FormPassword("new_pass", "", 30, 0)          hdoip.html.TableInsElement(1);
-    hdoip.html.Text(label.p_set_new_password_retype);       hdoip.html.TableInsElement(1);
-    hdoip.html.FormPassword("new_pass2", "", 30, 0)         hdoip.html.TableInsElement(1);
-    hdoip.html.TableBottom()
+    if(t.auth_en) then
+	    hdoip.html.Title(label.p_set_change_user);                              
+	    hdoip.html.TableHeader(2)
+	    hdoip.html.Text(label.username);                        hdoip.html.TableInsElement(1);
+	    hdoip.html.FormText("new_user", t.web_user, 30, 0)      hdoip.html.TableInsElement(1);
+	    hdoip.html.Text(label.p_set_old_password);              hdoip.html.TableInsElement(1);
+	    hdoip.html.FormPassword("pass_old", "", 30, 0)          hdoip.html.TableInsElement(1);
+	    hdoip.html.Text(label.p_set_new_password);              hdoip.html.TableInsElement(1);
+	    hdoip.html.FormPassword("new_pass", "", 30, 0)          hdoip.html.TableInsElement(1);
+	    hdoip.html.Text(label.p_set_new_password_retype);       hdoip.html.TableInsElement(1);
+	    hdoip.html.FormPassword("new_pass2", "", 30, 0)         hdoip.html.TableInsElement(1);
+	    hdoip.html.TableBottom()
+    end
  
-
     hdoip.html.FormBottom(t)
-
     hdoip.html.Bottom(t)
 end
 
