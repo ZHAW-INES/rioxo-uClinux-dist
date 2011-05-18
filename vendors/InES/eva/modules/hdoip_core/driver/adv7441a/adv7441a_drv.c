@@ -162,8 +162,9 @@ int adv7441a_set_edid(t_adv7441a* handle, char* edid)
  */
 int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid)
 {
+
     REPORT(INFO, "+--------------------------------------------------+");
-    REPORT(INFO, "| ADV7441A-Driver: Initialize HDMI-RX        |");
+    REPORT(INFO, "| ADV7441A-Driver: Initialize HDMI-RX              |");
     REPORT(INFO, "+--------------------------------------------------+");
 
     handle->p_i2c = p_i2c;
@@ -175,41 +176,156 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
 
     adv7441a_sw_reset(handle);
 
-    adv7441a_usr_map_write(handle,ADV7441A_REG_OUTPUT_CONTROL, 0x0C); // should be 0x10
-    adv7441a_usr_map_write(handle,ADV7441A_REG_PRIMARY_MODE, 0x06);
-    adv7441a_usr_map_write(handle,ADV7441A_REG_VERTICAL_SCALE_VALUE_1, 0x40);
-    adv7441a_usr_map_write(handle,ADV7441A_REG_POLARITY, 0x00); // should be 0xC0
-    adv7441a_usr_map_write(handle,ADV7441A_REG_CP_OUTPUT_SELECTION, 0xE2);
-    adv7441a_usr_map_write(handle,ADV7441A_REG_CSC_23, 0xF2);
-    adv7441a_usr_map_write(handle,ADV7441A_REG_DPP_CP_105, 0xA0);
-    adv7441a_usr_map_write(handle,ADV7441A_REG_CP_CLAMP_POS_HS_CTRL_4, 0x08);
-    adv7441a_usr_map_write(handle,ADV7441A_REG_CP_AV_CONTROL, 0x0D);
-    adv7441a_usr_map_write(handle,ADV7441A_REG_CP_HVF_CONTROL_1, 0x0F);
-    adv7441a_usr_map_write(handle,ADV7441A_REG_CP_HVF_CONTROL_2, 0xFF);
-    adv7441a_usr_map_write(handle,ADV7441A_REG_CP_HVF_CONTROL_3, 0xFF);
-    adv7441a_usr_map_write(handle,ADV7441A_REG_DRIVE_STRENGTH, 0x3F);
+    /* ************************************** *
+        User map (0x42)
+     * ************************************** */
 
-    adv7441a_usr_map2_write(handle, 0xF0 , 0x10);
-    adv7441a_usr_map2_write(handle, 0xF1 , 0x0F);
-    adv7441a_usr_map2_write(handle, 0xF4 , 0x20);
+    /* Extended output control (0x04) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_EXTENDED_OUTPUT_CONTROL,
+        ADV7441A_BIT_RANGE | /* reset value */
+        ADV7441A_BIT_EN_SFL_PIN | /* reset value */
+        ADV7441A_BIT_BL_C_VBI | /* reset value */
+        ADV7441A_BIT_TIM_OE |
+        ADV7441A_BIT_INT2_EN);
 
+    /* VID_STD Register (0x06) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_VIDEO_STANDARD, 0x02);
+
+    /* Automatic setting of the PLL (charge pump current & VCO range) (0x47) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_AUTOPLL_PARM_CTRL, ADV7441A_BIT_CALC_VCO_RANGE_EN | ADV7441A_BIT_CALC_PLL_QPUMP_EN);
+
+    /* SET ADC[0-3]_SW to 0 => ADCs not connected */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_ADC_SWITCH_1, 0x00); /* (0xC3) ADC0 & ADC 1 */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_ADC_SWITCH_2, 0x00); /* (0xC4) ADC2 */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_AFE_CONTROL_1, 0x00); /* (0xF3) ADC3 */
+
+    /* Power down ADC[0-3] (0x3A) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_ADC_CONTROL,
+        ADV7441A_BIT_PDN_ADC0 |
+        ADV7441A_BIT_PDN_ADC1 |
+        ADV7441A_BIT_PDN_ADC2 |
+        ADV7441A_BIT_PDN_ADC3);
+
+    /* -------------------------------- ADI recommend write (user map) -------------------------------- */
+    /* Set output format and enable output pins (0x03)
+        0x00 : 10 bit 4:2:2
+        0x04 : 20 bit 4:2:2
+        0x08 : 16 bit 4:2:2
+        0x0A : 8  bit 4:2:2 ITU-R BT.656
+        0x10 : 30 bit 4:4:4
+        0x14 : 24 bit 4:4:4 */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_OUTPUT_CONTROL, 0x10);
+
+    /* PRIM_MODE Register (0x05)
+        0x04 : HDMI SD
+        0x05 : HDMI ED / HD
+        0x06 : HDMI VGA to SXGA */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_PRIMARY_MODE, 0x06);
+
+    /* Set crystal mode and LLC output active (0x1D) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_VERTICAL_SCALE_VALUE_1, ADV7441A_BIT_EN28XTAL);
+
+    /* Sets polarity (LLC1, FIELD, VS, HS) (0x37) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_POLARITY, 0x01);
+
+    /* Set CP output selection register (0x6B) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_OUTPUT_SELECTION, 0x02 | ADV7441A_BIT_DE_OUT_SEL |
+        ADV7441A_BIT_VS_OUT_SEL |
+        ADV7441A_BIT_HS_OUT_SEL);
+
+    /* Set CSC Coeff to automatic mode (CSC_23) (0x68) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CSC_23, 0xF0 | ADV7441A_BIT_RGB_OUT);
+
+    /* NEW! Enable HDMI and Analog in (0xBA) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_DPP_CP_105, 0xA0);
+
+    /* Set digital fine clamp setting for HDMI Mode (0xC8) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_CLAMP_POS_HS_CTRL_4, 0x08);
+
+    /* Set CP AV controll register (0x7B) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_AV_CONTROL, 0x04 | ADV7441A_BIT_AV_BLANK_EN | ADV7441A_BIT_DE_WITH_AVCODE);
+
+    /* 0x7C - 0x7E => reset value */
+
+    /* Drive strength for HS, VS, f and clock set to maximum (0xF4) */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_DRIVE_STRENGTH, 0x3F);
+
+    /* ************************************** *
+        User map 2 (0x62)
+     * ************************************** */
+
+    /* Set equalizer settings */
+    adv7441a_usr_map2_write(handle, 0xF0, 0x10);
+    adv7441a_usr_map2_write(handle, 0xF1, 0x0F);
+    adv7441a_usr_map2_write(handle, 0xF4, 0x20);
+
+
+    /* ************************************** *
+        HDMI map
+     * ************************************** */
+
+    /* Set Mute mask (disable all) */
+    adv7441a_hdmi_map_write(handle,ADV7441A_REG_MUTE_MASK_19_16, 0x00); /* (0x14) */
+    adv7441a_hdmi_map_write(handle,ADV7441A_REG_MUTE_MASK_15_8, 0x00); /* (0x15) */
+    adv7441a_hdmi_map_write(handle,ADV7441A_REG_MUTE_MASK_7_0, 0x00); /* (0x16) */
+
+    /* HDMI Port select => Port A (0x00) */
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_00H, 0x00);
+
+    /* Set CTS change Threshold (0x10) */
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_10H, 0x1F);
+
+    /* Disable audio pll, MCLK fs, MCLK N (0x1C) */
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1CH, 0x20); /* PLL enable write 0x60, disable write 0x20 */
+
+    /* Audio Mute options and conversion mode (0x1D) */
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, ADV7441A_BIT_UP_CONVERSION_MODE);
+
+    /* Reset audio PLL */
+    adv7441a_drv_aud_pll_reset(handle);
+
+    /* ************************************** *
+        Repeater map 1 (0x66)
+     * ************************************** */
+
+    /* ADV7441A has been implemented in a HDMI receiver mode
+     * Disabling Enhanced Link Verification feature (HDCP) */
+    adv7441a_ksv_map_write(handle, ADV7441A_REG_BCAPS, 0x80);
+
+    /* ************************************** *
+        User map 1 (0x46)
+     * ************************************** */
+
+    /* Int 1 & int 2 configuration */
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_CONFIGURATION_0, 0xD1); /* active until cleared, active low */
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_CONFIGURATION_1, 0xC1);
+
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_1,0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_2,0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_3,0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_4,0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_1, 0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_2, ADV7441A_BIT_HDMI_ENCRPT_MB1 | ADV7441A_BIT_AUDIO_C_PCKT_MB1 | ADV7441A_BIT_AUDIO_PLL_LCK_MB1);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_3, ADV7441A_BIT_VIDEO_PLL_LCK_MB1 | ADV7441A_BIT_V_LOCKED_MB1 | ADV7441A_BIT_TMDS_CLK_A_MB1);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_4, 0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_5, ADV7441A_BIT_CTS_PASS_THRS_M1);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_6, ADV7441A_BIT_NEW_SAMP_RT_MB1);
 
-    //adv7441a_hdmi_map_write(handle, ADV7441A_REG_MUTE_MASK_15_8, 0xEC);
-    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1CH, 0x18);
-    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, 0x04);
-    adv7441a_hdmi_map_write(handle, ADV7441A_REG_PLL_DIVIDER, 0x42);
-    adv7441a_hdmi_map_write(handle, 0x3D, 0x40);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_2_MASKB_1,0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_2_MASKB_2,0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_2_MASKB_3,0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_2_MASKB_4,0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_1, 0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_2, 0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_3, 0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_4, 0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_5, 0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_6, 0x00);
 
-    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_0DH, 0x0F);
-    adv7441a_hdmi_map_write(handle, 0x47, 0x05);
-    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_5A, ADV7441A_BIT_AUDIO_PLL_RESET | ADV7441A_BIT_PACKET_DET_RESET);
+    /* Initialize EDID for port A */
+    adv7441a_set_edid(handle, edid);
 
+    msleep(110);
     vio_drv_set_hpd(handle->p_vio, true);
 
     return ERR_ADV7441A_SUCCESS;
@@ -281,6 +397,7 @@ int adv7441a_get_audio_timing(t_adv7441a* handle)
         handle->aud_st.fs = tmp_fs;
 	    return ERR_ADV7441A_SUCCESS;
     }
+
 }
 
 /** Reads all video parameters and save it in the handle
@@ -380,7 +497,7 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
 		} else {
             REPORT(INFO, "[HDMI IN] no TMDS clock active\n");
         }
-		adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_5A, ADV7441A_BIT_AUDIO_PLL_RESET);
+		adv7441a_drv_aud_pll_reset(handle);
 	}
 
     /* Video PLL changed */
@@ -406,13 +523,6 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
             adv7441a_drv_aud_pll_reset(handle);
             queue_put(event_queue, E_ADV7441A_NO_AUDIO);
         }
-    }
-
-
-    if(hdmi_raw3 & ADV7441A_BIT_HDMI_MODE_RAW) {
-        REPORT(INFO, "[HDMI IN] Chip in HDMI mode\n");
-    } else {
-        REPORT(INFO, "[HDMI IN] Chip in DVI mode\n");
     }
 
     /* IRQ only valid under following conditions 
@@ -444,6 +554,13 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
         if((hdmi_status3 & ADV7441A_BIT_V_LOCKED_ST) != 0) { 
             int3_clr |= ADV7441A_BIT_V_LOCKED_CLR;
             if((hdmi_raw3 & ADV7441A_BIT_V_LOCKED_RAW) != 0) {
+
+                if(hdmi_raw3 & ADV7441A_BIT_HDMI_MODE_RAW) {
+                    REPORT(INFO, "[HDMI IN] Chip in HDMI mode\n");
+                } else {
+                    REPORT(INFO, "[HDMI IN] Chip in DVI mode\n");
+                }
+
 			    handle->status = handle->status | ADV7441A_STATUS_CONNECTION;
                 REPORT(INFO, "[HDMI IN] vertical synch filter has locked\n");
 			    REPORT(INFO, "[HDMI IN] link on port A established\n");
