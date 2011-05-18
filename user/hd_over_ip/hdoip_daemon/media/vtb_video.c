@@ -17,6 +17,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
+
 
 
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout)
@@ -89,6 +91,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         hoi_drv_wredid(m->edid.edid);
         hoi_drv_hpdreset();
         hoi_drv_hpdon();
+        usleep(110000);
     }
     
     // reserve resource
