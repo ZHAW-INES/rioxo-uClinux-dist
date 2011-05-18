@@ -23,6 +23,7 @@
 #include <asm/traps.h>
 
 #include "wdg_hal.h"
+#include "hdcp_hal.h"
 
 //------------------------------------------------------------------------------
 // Load driver
@@ -409,7 +410,7 @@ int hoi_drv_msg_debug(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
-    /* Watchdog test
+    // Watchdog test
     if(wdg_get_cfg(handle->p_wdg, WDG_BIT_CFG_EN) == 0) {
         wdg_set_time(handle->p_wdg, 100000000);
         wdg_enable(handle->p_wdg);
@@ -419,11 +420,11 @@ int hoi_drv_msg_debug(t_hoi* handle, t_hoi_msg_image* msg)
         REPORT(INFO, "[Watchdog] reset");
         REPORT(INFO, "[Watchdog] time % d ticks", wdg_get_time(handle->p_wdg));
     }
-    */
 
+    /*
     vio_hdp_reset(handle->p_vio);
     REPORT(INFO, "[HDMI IN] HPD reset");
-
+     */
     return ret;
 }
 
@@ -637,6 +638,69 @@ int hoi_drv_msg_poll(t_hoi* handle)
     return SUCCESS;
 }
 
+int hoi_drv_msg_hdcp_get_key(t_hoi* handle, t_hoi_msg_hdcp_key* msg)
+{
+    hdcp_get_master_key(handle->p_hdcp, msg->key);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_hdcp_get_timer(t_hoi* handle, t_hoi_msg_hdcp_timer* msg)
+{
+    msg->config = hdcp_get_cfg(handle->p_hdcp, 0xFFFFFFFF);
+    msg->status = hdcp_get_status(handle->p_hdcp, 0xFFFFFFFF);
+    msg->start_time = hdcp_get_time(handle->p_hdcp);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_hdcp_set_timer(t_hoi* handle, t_hoi_msg_hdcp_timer* msg)
+{
+    hdcp_set_time(handle->p_hdcp, msg->start_time);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_hdcp_timer_enable(t_hoi* handle)
+{
+    hdcp_enable(handle->p_hdcp);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_hdcp_timer_disable(t_hoi* handle)
+{
+    hdcp_disable(handle->p_hdcp);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_hdcp_timer_load(t_hoi* handle)
+{
+    hdcp_load(handle->p_hdcp);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_wdg_enable(t_hoi* handle)
+{
+    wdg_enable(handle->p_wdg);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_wdg_disable(t_hoi* handle)
+{
+    wdg_disable(handle->p_wdg);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_wdg_service(t_hoi* handle)
+{
+    wdg_reset(handle->p_wdg);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_wdg_init(t_hoi* handle, t_hoi_msg_wdg* msg)
+{
+    wdg_disable(handle->p_wdg);
+    wdg_set_time(handle->p_wdg, msg->service_time);
+    wdg_reset(handle->p_wdg);
+    return SUCCESS;
+}
 
 //------------------------------------------------------------------------------
 // message
@@ -648,55 +712,67 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
     uint32_t ret;
 
     switch (msg->id) {
-        call(HOI_MSG_LDRV,      hoi_drv_msg_ldrv);
-        call(HOI_MSG_BUF,       hoi_drv_msg_buf);
-        call(HOI_MSG_ETI,       hoi_drv_msg_eti);
+        call(HOI_MSG_LDRV,                  hoi_drv_msg_ldrv);
+        call(HOI_MSG_BUF,                   hoi_drv_msg_buf);
+        call(HOI_MSG_ETI,                   hoi_drv_msg_eti);
 
-        call(HOI_MSG_INFO,      hoi_drv_msg_info);
+        call(HOI_MSG_INFO,                  hoi_drv_msg_info);
 
-        call(HOI_MSG_CAPTURE,   hoi_drv_msg_capture);
-        call(HOI_MSG_SHOW,      hoi_drv_msg_show);
-        call(HOI_MSG_DEBUG,     hoi_drv_msg_debug);
-        call(HOI_MSG_VSI,       hoi_drv_msg_vsi);
-        call(HOI_MSG_VSO,       hoi_drv_msg_vso);
-        call(HOI_MSG_ASI,       hoi_drv_msg_asi);
-        call(HOI_MSG_ASO,       hoi_drv_msg_aso);
-        call(HOI_MSG_BW,        hoi_drv_msg_bw);
+        call(HOI_MSG_CAPTURE,               hoi_drv_msg_capture);
+        call(HOI_MSG_SHOW,                  hoi_drv_msg_show);
+        call(HOI_MSG_DEBUG,                 hoi_drv_msg_debug);
+        call(HOI_MSG_VSI,                   hoi_drv_msg_vsi);
+        call(HOI_MSG_VSO,                   hoi_drv_msg_vso);
+        call(HOI_MSG_ASI,                   hoi_drv_msg_asi);
+        call(HOI_MSG_ASO,                   hoi_drv_msg_aso);
+        call(HOI_MSG_BW,                    hoi_drv_msg_bw);
 
-        call(HOI_MSG_OFF,       hoi_drv_msg_off);
-        call(HOI_MSG_IFMT,      hoi_drv_msg_ifmt);
-        call(HOI_MSG_OFMT,      hoi_drv_msg_ofmt);
-        call(HOI_MSG_PFMT,      hoi_drv_msg_pfmt);
-        call(HOI_MSG_RDVIDTAG,  hoi_drv_msg_rdvidtag);
-        call(HOI_MSG_RDAUDTAG,  hoi_drv_msg_rdaudtag);
-        call(HOI_MSG_WRVIDTAG,  hoi_drv_msg_wrvidtag);
-        call(HOI_MSG_WRAUDTAG,  hoi_drv_msg_wraudtag);
-        call(HOI_MSG_RDEDID,    hoi_drv_msg_rdedid);
-        call(HOI_MSG_WREDID,    hoi_drv_msg_wredid);
+        call(HOI_MSG_OFF,                   hoi_drv_msg_off);
+        call(HOI_MSG_IFMT,                  hoi_drv_msg_ifmt);
+        call(HOI_MSG_OFMT,                  hoi_drv_msg_ofmt);
+        call(HOI_MSG_PFMT,                  hoi_drv_msg_pfmt);
+        call(HOI_MSG_RDVIDTAG,              hoi_drv_msg_rdvidtag);
+        call(HOI_MSG_RDAUDTAG,              hoi_drv_msg_rdaudtag);
+        call(HOI_MSG_WRVIDTAG,              hoi_drv_msg_wrvidtag);
+        call(HOI_MSG_WRAUDTAG,              hoi_drv_msg_wraudtag);
+        call(HOI_MSG_RDEDID,                hoi_drv_msg_rdedid);
+        call(HOI_MSG_WREDID,                hoi_drv_msg_wredid);
 
-        call(HOI_MSG_GETMTIME,  hoi_drv_msg_get_mtime);
-        call(HOI_MSG_SETMTIME,  hoi_drv_msg_set_mtime);
-        call(HOI_MSG_GETSTIME,  hoi_drv_msg_get_stime);
-        call(HOI_MSG_SETSTIME,  hoi_drv_msg_set_stime);
-        call(HOI_MSG_TIMER,     hoi_drv_msg_tmr);
-        call(HOI_MSG_STSYNC,    hoi_drv_msg_stsync);
-        call(HOI_MSG_SYNCDELAY, hoi_drv_msg_syncdelay);
+        call(HOI_MSG_GETMTIME,              hoi_drv_msg_get_mtime);
+        call(HOI_MSG_SETMTIME,              hoi_drv_msg_set_mtime);
+        call(HOI_MSG_GETSTIME,              hoi_drv_msg_get_stime);
+        call(HOI_MSG_SETSTIME,              hoi_drv_msg_set_stime);
+        call(HOI_MSG_TIMER,                 hoi_drv_msg_tmr);
+        call(HOI_MSG_STSYNC,                hoi_drv_msg_stsync);
+        call(HOI_MSG_SYNCDELAY,             hoi_drv_msg_syncdelay);
 
-        call(HOI_MSG_ETHSTAT,   hoi_drv_msg_ethstat);
-        call(HOI_MSG_VSOSTAT,   hoi_drv_msg_vsostat);
-        call(HOI_MSG_VIOSTAT,   hoi_drv_msg_viostat);
-        call(HOI_MSG_ASOREG,    hoi_drv_msg_asoreg);
+        call(HOI_MSG_ETHSTAT,               hoi_drv_msg_ethstat);
+        call(HOI_MSG_VSOSTAT,               hoi_drv_msg_vsostat);
+        call(HOI_MSG_VIOSTAT,               hoi_drv_msg_viostat);
+        call(HOI_MSG_ASOREG,                hoi_drv_msg_asoreg);
 
 
-        call(HOI_MSG_GETVERSION,hoi_drv_msg_getversion);
+        call(HOI_MSG_GETVERSION,            hoi_drv_msg_getversion);
 
-        callsw(HOI_MSG_LOOP,    hoi_drv_msg_loop);
-        callsw(HOI_MSG_OSDON,   hoi_drv_msg_osdon);
-        callsw(HOI_MSG_OSDOFF,  hoi_drv_msg_osdoff);
-        callsw(HOI_MSG_REPAIR,  hoi_drv_msg_vso_repaire);
-        callsw(HOI_MSG_HPDON,   hoi_drv_msg_hpdon);
-        callsw(HOI_MSG_HPDOFF,  hoi_drv_msg_hpdoff);
-        callsw(HOI_MSG_HPDRESET,hoi_drv_msg_hpdreset);
+        callsw(HOI_MSG_LOOP,                hoi_drv_msg_loop);
+        callsw(HOI_MSG_OSDON,               hoi_drv_msg_osdon);
+        callsw(HOI_MSG_OSDOFF,              hoi_drv_msg_osdoff);
+        callsw(HOI_MSG_REPAIR,              hoi_drv_msg_vso_repaire);
+        callsw(HOI_MSG_HPDON,               hoi_drv_msg_hpdon);
+        callsw(HOI_MSG_HPDOFF,              hoi_drv_msg_hpdoff);
+        callsw(HOI_MSG_HPDRESET,            hoi_drv_msg_hpdreset);
+
+        call(HOI_MSG_HDCP_GET_KEY,          hoi_drv_msg_hdcp_get_key);
+        call(HOI_MSG_HDCP_TIMER_GET,        hoi_drv_msg_hdcp_get_timer);
+        call(HOI_MSG_HDCP_TIMER_SET,        hoi_drv_msg_hdcp_set_timer);
+        callsw(HOI_MSG_HDCP_TIMER_ENABLE,   hoi_drv_msg_hdcp_timer_enable);
+        callsw(HOI_MSG_HDCP_TIMER_DISABLE,  hoi_drv_msg_hdcp_timer_disable);
+        callsw(HOI_MSG_HDCP_TIMER_LOAD,     hoi_drv_msg_hdcp_timer_load);
+
+        call(HOI_MSG_WDG_INIT,              hoi_drv_msg_wdg_init);
+        callsw(HOI_MSG_WDG_ENABLE,          hoi_drv_msg_wdg_enable);
+        callsw(HOI_MSG_WDG_DISABLE,         hoi_drv_msg_wdg_disable);
+        callsw(HOI_MSG_WDG_SERVICE,         hoi_drv_msg_wdg_service);
 
         callsw(HOI_MSG_POLL,    hoi_drv_msg_poll);
 

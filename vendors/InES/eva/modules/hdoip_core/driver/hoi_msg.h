@@ -65,6 +65,16 @@
 #define HOI_MSG_ASOREG				(0x7000002e)
 #define HOI_MSG_HPDRESET            (0x7000002f)
 #define HOI_MSG_POLL                (0x700000ff)
+#define HOI_MSG_HDCP_GET_KEY        (0x70000100)
+#define HOI_MSG_HDCP_TIMER_ENABLE   (0x70000101)
+#define HOI_MSG_HDCP_TIMER_DISABLE  (0x70000102)
+#define HOI_MSG_HDCP_TIMER_LOAD     (0x70000103)
+#define HOI_MSG_HDCP_TIMER_GET      (0x70000104)
+#define HOI_MSG_HDCP_TIMER_SET      (0x70000105)
+#define HOI_MSG_WDG_INIT            (0x70000106)
+#define HOI_MSG_WDG_ENABLE          (0x70000107)
+#define HOI_MSG_WDG_DISABLE         (0x70000108)
+#define HOI_MSG_WDG_SERVICE         (0x70000109)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
@@ -119,8 +129,12 @@ typedef struct {
 #define hoi_msg_hpdon_init(p) hoi_msg_init(p, HOI_MSG_HPDON, t_hoi_msg)
 #define hoi_msg_hpdoff_init(p) hoi_msg_init(p, HOI_MSG_HPDOFF, t_hoi_msg)
 #define hoi_msg_hpdreset_init(p) hoi_msg_init(p, HOI_MSG_HPDRESET, t_hoi_msg)
-
-
+#define hoi_msg_hdcp_timer_enable_init(p) hoi_msg_init(p, HOI_MSG_HDCP_TIMER_ENABLE, t_hoi_msg)
+#define hoi_msg_hdcp_timer_disable_init(p) hoi_msg_init(p, HOI_MSG_HDCP_TIMER_DISABLE, t_hoi_msg)
+#define hoi_msg_hdcp_timer_load_init(p) hoi_msg_init(p, HOI_MSG_HDCP_TIMER_LOAD, t_hoi_msg)
+#define hoi_msg_wdg_enable_init(p) hoi_msg_init(p, HOI_MSG_WDG_ENABLE, t_hoi_msg)
+#define hoi_msg_wdg_disable_init(p) hoi_msg_init(p, HOI_MSG_WDG_DISABLE, t_hoi_msg)
+#define hoi_msg_wdg_service_init(p) hoi_msg_init(p, HOI_MSG_WDG_SERVICE, t_hoi_msg)
 
 //------------------------------------------------------------------------------
 // additional driver load/unload command
@@ -356,6 +370,33 @@ typedef struct {
 #define hoi_msg_info_init(p) hoi_msg_init(p, HOI_MSG_INFO, t_hoi_msg_info)
 
 //------------------------------------------------------------------------------
+// HDCP
+typedef struct {
+    hoi_msg_extends;
+    uint32_t    key[4];
+} t_hoi_msg_hdcp_key;
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t    config;
+    uint32_t    status;
+    uint32_t    start_time;
+} t_hoi_msg_hdcp_timer;
+
+#define hoi_msg_hdcp_get_key_init(p) hoi_msg_init(p, HOI_MSG_HDCP_GET_KEY, t_hoi_msg_hdcp_key)
+#define hoi_msg_hdcp_get_timer_init(p) hoi_msg_init(p, HOI_MSG_HDCP_TIMER_GET, t_hoi_msg_hdcp_timer)
+#define hoi_msg_hdcp_set_timer_init(p) hoi_msg_init(p, HOI_MSG_HDCP_TIMER_SET, t_hoi_msg_hdcp_timer)
+
+//------------------------------------------------------------------------------
+// Watch dog
+typedef struct {
+    hoi_msg_extends;
+    uint32_t    service_time;
+} t_hoi_msg_wdg;
+
+#define hoi_msg_wdg_init_init(p) hoi_msg_init(p, HOI_MSG_WDG_INIT, t_hoi_msg_wdg)
+
+//------------------------------------------------------------------------------
 // debug only
 typedef struct {
     hoi_msg_extends;
@@ -371,6 +412,8 @@ static inline void _hoi_msg_init(t_hoi_msg* msg, uint32_t id, uint32_t size)
     msg->id = id;
     msg->size = size;
 }
+
+
 
 
 #endif /* HOI_MSG_H_ */
