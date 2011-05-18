@@ -693,7 +693,7 @@ int vio_drv_set_bandwidth(t_vio* handle, int bandwidth)
 {
     handle->bandwidth = bandwidth;
     if (handle->active && ((handle->config & VIO_CONFIG_MODE) == VIO_CONFIG_ENCODE)) {
-        adv212_drv_rc_size(handle->p_adv, vio_bandwidth_to_size(handle->bandwidth, &handle->timing), &handle->adv, (int)&handle->timing.interlaced);
+        adv212_drv_rc_size(handle->p_adv, vio_bandwidth_to_size(handle->bandwidth, &handle->timing), &handle->adv, &handle->timing.interlaced);
     }
     return ERR_VIO_SUCCESS;
 }
@@ -932,6 +932,13 @@ void vio_config_tg(t_vio* handle, int config)
     switch (config) {
         case (VIO_TG_CONFIG_ENCODE):
 
+
+            // Timing Generator outputs only if input trigger is active
+            vio_set_cfg(handle->p_vio, VIO_CFG_TG_FREE_RUN);
+
+            // vio_set_cfg(handle->p_vio, VIO_CFG_TG_VSYNC_RESET);
+
+
             // Set noninverted polarity of timing generator output signals
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_FIELD);
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_VSYNC);
@@ -957,6 +964,7 @@ void vio_config_tg(t_vio* handle, int config)
                 vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_HSYNC);
                 vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_AVID);
 
+                vio_clr_cfg(handle->p_vio, VIO_CFG_TG_VSYNC_RESET);
 
                 // invert timing of vsync if necessary
                 if (handle->timing.vpolarity == 0)
@@ -968,6 +976,11 @@ void vio_config_tg(t_vio* handle, int config)
             break;
 
         case (VIO_TG_CONFIG_DECODE):
+
+            vio_clr_cfg(handle->p_vio, VIO_CFG_TG_VSYNC_RESET);
+
+            // Timing Generator is free running
+            vio_clr_cfg(handle->p_vio, VIO_CFG_TG_FREE_RUN);
 
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_FIELD);
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_VSYNC);

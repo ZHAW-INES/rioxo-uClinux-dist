@@ -306,11 +306,6 @@ int adv212_drv_advcnt(t_video_timing* p_vt, int* adv_cnt)
     int width = p_vt->width + p_vt->hback + p_vt->hpulse + p_vt->hfront;
     int height = p_vt->height + p_vt->vback + p_vt->vpulse + p_vt->vfront;
     int sps = (int)((int64_t)p_vt->pfreq * 2 * (int64_t)img_size / ((int64_t)width * (int64_t)height));
-
-    if (p_vt->interlaced){
-        img_size *= 2;
-        height *= 2;
-    }
     
     *adv_cnt = 0;
 
@@ -378,10 +373,6 @@ void adv212_drv_init(void* p)
  */
 int adv212_size_per_chip(t_adv212* p_adv, int interlaced)
 {
-    // Workaround: chips crashes if datarate is too high
-    if (interlaced && (p_adv->size > ADV212_CFG_MAX_DATARATE_I))
-        p_adv->size = ADV212_CFG_MAX_DATARATE_I;
-
     return p_adv->size / p_adv->cnt;
 }
 

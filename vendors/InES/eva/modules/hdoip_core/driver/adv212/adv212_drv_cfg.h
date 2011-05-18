@@ -13,7 +13,7 @@
 #define ADV212_CFG_CODE             (ADV212_COD_FORMAT_J2C)
 #define ADV212_CFG_TLEVEL           (ADV212_XFORMLEV_5)
 #define ADV212_CFG_CBSIZE_P         (ADV212_CBSIZE_64x64)
-#define ADV212_CFG_CBSIZE_I         (ADV212_CBSIZE_64x32)
+#define ADV212_CFG_CBSIZE_I         (ADV212_CBSIZE_128x32)
 #define ADV212_CFG_WAVLET           (ADV212_IRREVERSIBLE_9x7)
 #define ADV212_CFG_IF               (ADV212_PICFG_VCLK_P | \
                                      ADV212_PICFG_VSYNC_P | \
