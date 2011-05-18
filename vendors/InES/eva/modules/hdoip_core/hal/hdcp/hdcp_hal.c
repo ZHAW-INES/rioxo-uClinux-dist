@@ -5,11 +5,13 @@
  *      Author: stth
  */
 
-#include <stdio.h>
 #include "hdcp_hal.h"
 
-void hdcp_get_master_key(void *p, char master_key[32])
+void hdcp_get_master_key(void *p, uint32_t master_key[4])
 {
-    snprintf(master_key, sizeof(master_key), "%08x%08x%08x%08x",hdcp_get_master_key0(p),hdcp_get_master_key1(p),hdcp_get_master_key2(p),hdcp_get_master_key3(p));
+    master_key[0] = hdcp_get_master_key0(p);
+    master_key[1] = hdcp_get_master_key1(p);
+    master_key[2] = hdcp_get_master_key2(p);
+    master_key[3] = hdcp_get_master_key3(p);
 }
 

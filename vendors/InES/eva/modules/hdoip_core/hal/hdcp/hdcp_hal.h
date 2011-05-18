@@ -20,6 +20,6 @@
 #define hdcp_get_master_key2(p)  HOI_RD32((p), HDCP_OFF_MASTER_KEY2)
 #define hdcp_get_master_key3(p)  HOI_RD32((p), HDCP_OFF_MASTER_KEY3)
 
-void hdcp_get_master_key(void *p, char master_key[32]);
+void hdcp_get_master_key(void *p, uint32_t master_key[4]);
 
 #endif /* HDCP_HAL_H_ */
