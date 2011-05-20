@@ -66,6 +66,7 @@ int hoi_drv_repair();
 int hoi_drv_hdcp_timer_enable();
 int hoi_drv_hdcp_timer_disable();
 int hoi_drv_hdcp_timer_load();
+int hoi_drv_hdcp_get_timer(t_hoi_msg_hdcp_timer *msg);
 int hoi_drv_hdcp_set_timer(uint32_t start_time);
 int hoi_drv_hdcp_get_key(uint32_t key[4]);
 

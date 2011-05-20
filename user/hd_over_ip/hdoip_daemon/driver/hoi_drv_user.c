@@ -367,6 +367,12 @@ int hoi_drv_wraudtag(void* buffer)
 
 //------------------------------------------------------------------------------
 // HDCP
+int hoi_drv_hdcp_get_timer(t_hoi_msg_hdcp_timer *msg)
+{
+    hoi_msg_hdcp_get_timer_init(msg);
+    return hoi_msg(msg);
+}
+
 int hoi_drv_hdcp_set_timer(uint32_t start_time)
 {
     t_hoi_msg_hdcp_timer msg;
