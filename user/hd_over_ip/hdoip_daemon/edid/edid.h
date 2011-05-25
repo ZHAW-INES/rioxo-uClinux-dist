@@ -215,5 +215,8 @@ typedef struct {
 int edid_verify(t_edid* edid);
 void edid_report(t_edid* edid);
 void edid_hoi_limit(t_edid* edid);
+int edid_write_file(t_edid* edid);
+int edid_read_file(t_edid* edid);
+int edid_compare(t_edid* edid1, t_edid* edid2);
 
 #endif /* EDID_H_ */

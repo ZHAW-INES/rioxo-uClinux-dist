@@ -6,13 +6,89 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <string.h>
+#include <errno.h>
 #include "debug.h"
 #include "edid.h"
 #include "edid_report.h"
 #include "cea_861.h"
 
 static uint8_t edid_header[8] = {0,0xff,0xff,0xff,0xff,0xff,0xff,0};
+
+char *file = "/tmp/edid";
+char *file_hex = "/tmp/edid_hex";
+
+
+int edid_compare(t_edid* edid1, t_edid* edid2)
+{
+    int i;
+    uint8_t *buf1 = (uint8_t *) edid1;
+    uint8_t *buf2 = (uint8_t *) edid2;
+
+    for(i=0 ; i < 256 ; i++) {
+        if(buf1[i] != buf2[i]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int edid_read_file(t_edid* edid)
+{
+    int fd, ret;
+
+    fd = open(file, O_RDONLY, 0600);
+
+    if(fd > -1) {
+        ret = read(fd, (void *) edid, sizeof(uint8_t) * 256);
+        if(ret == -1) {
+            return ret;
+        }
+    } else {
+        return -2;
+    }
+    close(fd);
+
+    return 0;
+}
+
+int edid_write_file(t_edid* edid)
+{
+    int ret, fd;
+    uint8_t *buf = (uint8_t*) edid;
+
+    fd = open(file, O_CREAT | O_RDWR, 0600);
+
+    if(fd > -1) {
+        ret = write(fd, &(buf[0]), sizeof(uint8_t) * 256);
+
+        if(ret == -1) {
+            return -1;
+        }
+    } else {
+        return -1;
+    }
+    close(fd);
+
+#ifdef EDID_WRITE_HEX_FILE
+    int fd_hex = fopen(file_hex, "w");
+
+    if(fd_hex != NULL) {
+        for(int i=0 ; i<256 ; i+=8) {
+            fprintf(fd_hex, "%02x %02x %02x %02x %02x %02x %02x %02x\n", buf[i],buf[i+1],buf[i+2],buf[i+3],buf[i+4],buf[i+5],buf[i+6],buf[i+7]);
+        }
+    } else {
+        return -1;
+    }
+
+    fclose(fd_hex);
+#endif // EDID_WRITE_HEX_FILE
+    return 0;
+}
 
 int edid_verify(t_edid* edid)
 {

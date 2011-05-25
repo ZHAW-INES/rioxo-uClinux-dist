@@ -34,7 +34,8 @@ static struct {
 
 int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
-    int n;
+    int n,ret;
+    t_edid edid_old;
 
     report(INFO "vtb_video_setup");
     
@@ -79,14 +80,31 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
 
     // limit incoming edid
     // TODO: ...
-    edid_report((void*)m->edid.edid);
+
 
     if (!hdoipd_tstate(VTB_VID_MASK)) {
         // TODO: dont reload when already the same, store edid in file for next boot
-        //       have a list of all contributing edid source (to test if it is allready included in our edid)
+        //       have a list of all contributing edid source (to test if it is already included in our edid)
         //
         // video source not  in use -> update
-        hoi_drv_wredid(m->edid.edid);
+        ret = edid_read_file(&edid_old);
+        if(ret == 0) {  // old EDID read
+            if(edid_compare(&edid_old, (void*)m->edid.edid) == 0) { // new EDID
+                report(" i [EDID] new E-EDID received");
+                edid_write_file((void*)m->edid.edid);
+                hoi_drv_wredid(m->edid.edid);
+                edid_report((void*)m->edid.edid);
+            } else {
+                report(" i [EDID] same E-EDID");
+            }
+        } else if(ret == -2) { // file doesn't exist
+            report(" i [EDID] no E-EDID saved");
+            edid_write_file((void*)m->edid.edid);
+            hoi_drv_wredid(m->edid.edid);
+            edid_report((void*)m->edid.edid);
+        } else {
+            perrno("edid_read_file() failed");
+        }
     }
     
     // reserve resource
