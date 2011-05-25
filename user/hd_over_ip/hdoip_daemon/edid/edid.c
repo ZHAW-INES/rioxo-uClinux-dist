@@ -4,11 +4,13 @@
  *  Created on: 31.01.2011
  *      Author: alda
  */
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include "edid.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "debug.h"
+#include "edid.h"
+#include "edid_report.h"
+#include "cea_861.h"
 
 static uint8_t edid_header[8] = {0,0xff,0xff,0xff,0xff,0xff,0xff,0};
 
@@ -21,7 +23,7 @@ int edid_verify(t_edid* edid)
         return -1;
     }
 
-    for (int i=0;i<256;i++) {
+    for (int i=0;i<128;i++) {
         checksum += p8[i];
     }
 
@@ -29,80 +31,15 @@ int edid_verify(t_edid* edid)
         return -1;
     }
 
+
     return 0;
 }
 
-char* edid_report_str(uint8_t* p)
-{
-    static char tmp[14];
-    memcpy(tmp, &p[5], 13);
-    for (int i=0;i<13;i++) {
-        if (p[5+i] == 0x0a) {
-            tmp[i] = 0;
-        } else {
-            tmp[i] = p[5+i];
-        }
-    }
-    tmp[13] = 0;
-    return tmp;
-}
 
-void edid_report_dsc(uint8_t* p)
-{
-    if (EDID_IS_DSC(p)) {
-        // Descriptor
-        switch (EDID_DSC_TAG(p)) {
-            case EDID_TAG_SERIAL:
-                report(CONT "serial: %s", edid_report_str(p));
-            break;
-            case EDID_TAG_ASCII:
-                report(CONT "text: %s", edid_report_str(p));
-            break;
-            case EDID_TAG_DRL:
-                report(CONT "Display Range Limits");
-            break;
-            case EDID_TAG_PRODUCT_NAME:
-                report(CONT "product name: %s", edid_report_str(p));
-            break;
-            case EDID_TAG_COLOR_POINT:
-                report(CONT "Color Point Data");
-            break;
-            case EDID_TAG_STID:
-                report(CONT "Standard Timing Identifier Definition");
-            break;
-            case EDID_TAG_DCM:
-                report(CONT "Color Management Data Definition");
-            break;
-            case EDID_TAG_CVT:
-                report(CONT "CVT");
-            break;
-            case EDID_TAG_EST3:
-                report(CONT "Established Timings III");
-            break;
-            case EDID_TAG_DUMMY:
-                report(CONT "dummy");
-            break;
-        }
-    } else {
-        // Detailed timing
-        report(CONT "  %d x %d @ %d Hz H(%d-%d-%d) V(%d-%d-%d)",
-                EDID_DT_WIDTH(p),
-                EDID_DT_HEIGHT(p),
-                EDID_DT_PFREQ(p),
-                EDID_DT_HBLANK(p),
-                EDID_DT_HFP(p),
-                EDID_DT_HP(p),
-                EDID_DT_VBLANK(p),
-                EDID_DT_VFP(p),
-                EDID_DT_VP(p)
-                );
-    }
-}
 
 void edid_report(t_edid* edid)
 {
-    report(CONT "edid verify: %s", (edid_verify(edid) ? "valid" : "error"));
-
+    report(CONT "edid verify: %s", ((edid_verify(edid) == 0) ? "valid" : "error"));
     report(CONT "edid version is %d.%d", edid->edid_version, edid->edid_revision);
 
     uint8_t x = edid->hsize;
@@ -161,25 +98,9 @@ void edid_report(t_edid* edid)
     if (edid->timings & EDID_ET_800x600_75) report(CONT "  800 x 600 @ 75Hz");
     if (edid->timings & EDID_ET_800x600_72) report(CONT "  800 x 600 @ 72Hz");
 
+    report(CONT "edid standard timings:");
     for (int i=0;i<8;i++) {
-        uint16_t t = edid->std_timings[i];
-        if ((t&EDID_ST_AR) == EDID_ST_AR_16x10) {
-            report(CONT "  %d x %d @ %dHz", EDID_ST_HRES_DEC(t),
-                                       EDID_ST_HRES_DEC(t)*10/16,
-                                       EDID_ST_HZ_DEC(t));
-        } else if ((t&EDID_ST_AR) == EDID_ST_AR_4x3) {
-            report(CONT "  %d x %d @ %dHz", EDID_ST_HRES_DEC(t),
-                                       EDID_ST_HRES_DEC(t)*3/4,
-                                       EDID_ST_HZ_DEC(t));
-        } else if ((t&EDID_ST_AR) == EDID_ST_AR_5x4) {
-            report(CONT "  %d x %d @ %dHz", EDID_ST_HRES_DEC(t),
-                                       EDID_ST_HRES_DEC(t)*4/5,
-                                       EDID_ST_HZ_DEC(t));
-        } else {
-            report(CONT "  %d x %d @ %dHz", EDID_ST_HRES_DEC(t),
-                                       EDID_ST_HRES_DEC(t)*9/16,
-                                       EDID_ST_HZ_DEC(t));
-        }
+        edid_report_std_timing(edid->std_timings[i]);
     }
 
     edid_report_dsc(edid->detailed_timing[0].tmp);
@@ -188,6 +109,27 @@ void edid_report(t_edid* edid)
     edid_report_dsc(edid->detailed_timing[3].tmp);
 
     report(CONT "edid extension count = %d", edid->extension_count);
+
+    if(edid->extension_count == 1) {
+        report(CONT "extension block : ");
+        switch(edid->extension_block[0]) {
+            case EDID_EXT_TAG_CEA:  printf("CEA 861 Series Extension\n");
+                                    cea_861_report((t_ext_cea_861*) edid->extension_block);
+                                    break;
+            case EDID_EXT_TAG_VTB:  printf("Video Timing Block Extension\n");
+                                    break;
+            case EDID_EXT_TAG_DI:   printf("Display Information Extension\n");
+                                    break;
+            case EDID_EXT_TAG_LS:   printf("Localized String Extension\n");
+                                    break;
+            case EDID_EXT_TAG_DPVL: printf("Digital Packet Video Link Extension\n");
+                                    break;
+            case EDID_EXT_TAG_BLOCK_MAP: printf("Extension Block Map\n");
+                                    break;
+            case EDID_EXT_TAG_MANUFACT: printf("Extension defined by the display manufacturer\n");
+                                    break;
+        }
+    }
 }
 
 void edid_hoi_limit(t_edid* edid)
