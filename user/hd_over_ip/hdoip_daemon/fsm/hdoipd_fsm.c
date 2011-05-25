@@ -535,6 +535,9 @@ void hdoipd_event(uint32_t event)
         case E_ADV7441A_NC:
             hdoipd_clr_rsc(RSC_VIDEO_IN);
         break;
+        case E_ADV7441A_CONNECT:
+            // TODO handle event
+        break;
         case E_ADV7441A_NEW_RES:
             hdoipd_set_rsc(RSC_VIDEO_IN);
         break;
