@@ -209,7 +209,6 @@ void hdoipd_factory_default(t_hoic_cmd UNUSED *cmd)
 
 void hdoipd_debug(t_hoic_cmd UNUSED *cmd)
 {
-    printf("hdoipd_debug()\n");
     hoi_drv_debug();
 }
 

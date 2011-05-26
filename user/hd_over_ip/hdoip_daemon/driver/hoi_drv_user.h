@@ -61,6 +61,7 @@ int hoi_drv_osdon();
 int hoi_drv_osdoff();
 int hoi_drv_hpdon();
 int hoi_drv_hpdoff();
+int hoi_drv_hpdreset();
 int hoi_drv_loop();
 int hoi_drv_repair();
 int hoi_drv_hdcp_viden_eti();
@@ -71,6 +72,18 @@ int hoi_drv_hdcp_viddis_eti();
 int hoi_drv_hdcp_viddis_eto();
 int hoi_drv_hdcp_auddis_eti();
 int hoi_drv_hdcp_auddis_eto();
+
+int hoi_drv_hdcp_timer_enable();
+int hoi_drv_hdcp_timer_disable();
+int hoi_drv_hdcp_timer_load();
+int hoi_drv_hdcp_get_timer(t_hoi_msg_hdcp_timer *msg);
+int hoi_drv_hdcp_set_timer(uint32_t start_time);
+int hoi_drv_hdcp_get_key(uint32_t key[4]);
+
+int hoi_drv_wdg_enable();
+int hoi_drv_wdg_disable();
+int hoi_drv_wdg_service();
+int hoi_drv_wdg_init(uint32_t service_time);
 
 int hoi_drv_poll();
 int hoi_drv_getversion(t_hoic_getversion* cmd);

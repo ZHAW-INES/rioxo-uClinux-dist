@@ -57,7 +57,10 @@
 
 static inline void vio_reset(void* p)
 {
-	HOI_WR32(p, VIO_OFF_CONFIG, VIO_CFG_PLL_RUN);
+    uint32_t tmp;
+    tmp = vio_get_cfg(p, 0xFFFFFFFF);
+    tmp = tmp & VIO_CFG_HPD;
+	HOI_WR32(p, VIO_OFF_CONFIG, VIO_CFG_PLL_RUN | tmp);
 	HOI_WR32(p, VIO_OFF_MUX, 0);
 }
 

@@ -432,22 +432,22 @@ void task_set_bw(char* p)
 
 void task_set_ip(char* p)
 {
-	update_vector |= HOID_TSK_UPD_SYS_IP | HOID_TSK_EXEC_RESTART;
+	update_vector |= HOID_TSK_UPD_SYS_IP | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
 }
 
 void task_set_subnet(char* p)
 {
-	update_vector |= HOID_TSK_UPD_SYS_SUBNET;
+	update_vector |= HOID_TSK_UPD_SYS_SUBNET | HOID_TSK_UPD_AMX;
 }
 
 void task_set_gateway(char* p)
 {
-	update_vector |= HOID_TSK_UPD_SYS_GATEWAY;
+	update_vector |= HOID_TSK_UPD_SYS_GATEWAY | HOID_TSK_UPD_AMX;
 }
 
 void task_set_mac(char* p)
 {
-	update_vector |= HOID_TSK_UPD_SYS_MAC | HOID_TSK_EXEC_RESTART;
+	update_vector |= HOID_TSK_UPD_SYS_MAC | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
 }
 
 void task_set_remote(char* p)
@@ -480,6 +480,11 @@ void task_set_auto_stream(char* p)
     update_vector |= HOID_TSK_UPD_AUTO_STREAM | HOID_TSK_EXEC_RESTART_VRB;
 }
 
+void task_set_network_delay(char* p)
+{
+    update_vector |= HOID_TSK_EXEC_RESTART_VRB;
+}
+
 void hdoipd_register_task()
 {
     get_listener("system-state", task_get_system_state);
@@ -504,6 +509,7 @@ void hdoipd_register_task()
     set_listener("system-subnet", task_set_subnet);
     set_listener("system-gateway", task_set_gateway);
     set_listener("system-mac", task_set_mac);
+    set_listener("network-delay", task_set_network_delay);
     set_listener("mode-start", task_set_mode_start);
     set_listener("mode-media", task_set_mode_media);
     set_listener("remote-uri", task_set_remote);

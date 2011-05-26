@@ -10,6 +10,7 @@ const char* event_str(uint32_t e)
 {
     switch (e) {
         case E_ADV7441A_NC: return "no HDMI connected";
+        case E_ADV7441A_CONNECT: return "HDMI connected";
         case E_ADV7441A_NEW_RES: return "resolution change";
         case E_ADV7441A_NEW_AUDIO: return "new audio content received";
         case E_ADV7441A_NO_AUDIO: return "no audio avaible";

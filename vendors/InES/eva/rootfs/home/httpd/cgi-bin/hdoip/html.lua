@@ -12,7 +12,7 @@ local html_table_str = "<b>table error</b>"
 local html_table_backup = ""
 local html_table_col = 0
 local html_table_col_cnt = 0
-
+ 
 function escape(str)
     str = string.gsub(str, "\n", "\r\n")
     str = string.gsub(str, "([^0-9a-zA-Z ])", function (c) return string.format("%%%02X", string.byte(c)) end)
@@ -281,7 +281,8 @@ function Bottom(t)
     html_str = html_str .. '</div>\n</div>\n</div>\n'
     html_str = html_str .. '<div id="bottom">\n<div id="footer">\n<div id="footerleft">\n'
     -- TODO: insert footer left
-    html_str = html_str .. '</div><div id="footermain"><div class="moduletable_address"><p>rioxo GmbH | <a href="mailto:mail@rioxo.net">mail@rioxo.net</a></p>\n'
+    --html_str = html_str .. '</div><div id="footermain"><div class="moduletable_address"><p>rioxo GmbH | <a href="mailto:mail@rioxo.net">mail@rioxo.net</a></p>\n'
+    html_str = html_str .. '</div><div id="footermain"><div class="moduletable_address">\n'
     html_str = html_str .. "</div>\n</div>\n</div>\n</div>\n</div>\n</div>\n</body>\n</html>\n"
     print(html_str)
 end

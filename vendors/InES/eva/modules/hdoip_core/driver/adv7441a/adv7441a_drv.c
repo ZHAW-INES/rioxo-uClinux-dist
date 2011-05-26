@@ -522,7 +522,7 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
 		if(hdmi_raw3 & ADV7441A_BIT_TMDS_CLK_A_RAW) {
 			/* Set TMDS equalizer settings */
             REPORT(INFO, "[HDMI IN] TMDS clock active on Port A\n");
-//            queue_put(event_queue, E_ADV7441A_CONNECT);
+            queue_put(event_queue, E_ADV7441A_CONNECT);
 		} else {
             REPORT(INFO, "[HDMI IN] no TMDS clock active\n");
         }
@@ -543,6 +543,11 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
     if((hdmi_status2 & ADV7441A_BIT_AUDIO_PLL_LCK_ST) != 0) {
         int2_clr |= ADV7441A_BIT_AUDIO_PLL_LCK_CLR;
         if((hdmi_raw2 & ADV7441A_BIT_AUDIO_PLL_LCK_RAW) != 0) {
+            if((handle->status & ADV7441A_STATUS_AUDIO) == 0) {
+                handle->status = handle->status | ADV7441A_STATUS_AUDIO;
+                adv7441a_audio_unmute(handle);
+                queue_put(event_queue, E_ADV7441A_NEW_AUDIO);
+            }
 			REPORT(INFO, "[HDMI IN] Audio PLL locked\n");
         } else {
     		REPORT(INFO, "[HDMI IN] Audio PLL unlocked\n");
@@ -624,6 +629,10 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
                 REPORT(INFO, "[HDMI IN] Audio width = %d Bit", handle->aud_st.bit_width);
                 REPORT(INFO, "[HDMI IN] Audio count = %d", handle->aud_st.channel_cnt);
                 REPORT(INFO, "[HDMI IN] Audio mute = %d\n", handle->aud_st.mute);
+
+                if((handle->status & ADV7441A_STATUS_AUDIO) != 0) {
+                    queue_put(event_queue, E_ADV7441A_NO_AUDIO);
+                }
 
                 handle->status = handle->status | ADV7441A_STATUS_AUDIO;
                 adv7441a_audio_unmute(handle);
