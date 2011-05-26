@@ -163,7 +163,7 @@ int rmsq_hdcp(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
     int ret = RSCP_SUCCESS;
     if (media->hdcp) {
-    	report(INFO "START PARSING HDCP ****###############3");
+    	report(INFO "START PARSING HDCP ****###############");
     	ret = media->hdcp(media, msg, rsp);
     }
     return ret;

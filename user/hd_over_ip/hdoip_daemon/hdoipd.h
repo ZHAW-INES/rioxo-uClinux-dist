@@ -70,6 +70,12 @@ enum {
     HDCP_ETO_AUDIO_EN       = 0x08   //eto audio enabled in HW
 };
 
+//HDCP states
+enum {
+    HDCP_SKE_EXECUTED		= 0x01,		//start hdcp session key exchange
+    HDCP_ENABLED			= 0x02		//hdcp is enabled/disabled
+};
+
 //received HDCP messages
 enum {
     HDCP_START				=0,		//start hdcp session key exchange
@@ -138,14 +144,16 @@ typedef struct {
 typedef struct {
 	uint32_t			enc_state;		//encryption enabled disabled
     uint32_t            state;			//hdcp statemachine
-    char                rtx[17];		//rtx (random number)
-    uint32_t			repeater;		//repeater (true or false)
-    char				km[33];			//masterkey
-    char 				rrx[19];		//random number from receiver
-    char				rn[17];			//random number from locality check
-    char 				kd[65];			//
-    char 				ks[33];			//the session key
-    char				riv[17];		//riv, random number for HW encryption
+    uint32_t			ske_executed;	//session key exchange executed previously?
+    uint32_t 			keys[6];		//ks and riv ready to write to kernel
+    //the secret values from flash
+	char				certrx[1046];	//public certificate
+	char				p[129];			//private key
+	char				q[129];			//private key
+	char				dp[129];		//private key
+	char				dq[129];		//private key
+	char				qInv[129];		//private key
+	char				lc128[33];		//secret global constant
 } t_hdcp;
 
 typedef struct {

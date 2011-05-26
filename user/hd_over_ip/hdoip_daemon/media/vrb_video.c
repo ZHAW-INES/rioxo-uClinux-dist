@@ -48,25 +48,38 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, vid);
 
-    // start hdcp session key exchange if necessary
+    /*start hdcp session key exchange if necessary */
+    report("Check if HDCP is necessary and start ske");
+    hdoipd.hdcp.enc_state = m->hdcp.hdcp_on;
 
-    //test start****************************
-    //u_rscp_header buf;
-   // t_rscp_header_common common;
-    report("RSCP Client Start HDCP");
-    // send setup message
-    //char id[]="0";
-    //char number[]="12345678abcd";
-    rscp_client_hdcp(client);
+    if ((m->hdcp.hdcp_on == 1) && !(hdoipd.hdcp.ske_executed)){
+		if (rscp_client_hdcp(client) != RSCP_SUCCESS){
+			report(" ? Session key exchange failed");
+			rscp_err_hdcp(rsp);
+			return RSCP_REQUEST_ERROR;
+		}
 
-    //rscp_default_response_setup((void*)&buf);
+    }
+    /*if (m->hdcp.hdcp_on == 1){
+		if (hdoipd.hdcp.ske_executed) {
+			report(INFO "SKE EXECUTED: %d",hdoipd.hdcp.ske_executed);
+			hoi_drv_hdcp(&hdoipd.hdcp.keys); 	// write keys to kernel
+			report(INFO "Video encryption enabled (eti)!");
+			hoi_drv_hdcp_viden_eti();
+		}
+		else {
+			if (rscp_client_hdcp(client) != RSCP_SUCCESS){
+				report(" ? Session key exchange failed");
+				rscp_err_hdcp(rsp);
+				return RSCP_REQUEST_ERROR;
+			}
+			//rscp_client_hdcp(client); 			// start session key exchange
+			hoi_drv_hdcp(&hdoipd.hdcp.keys); 	// write keys to kernel
+			report(INFO "Video encryption enabled (eti)!");
+			hoi_drv_hdcp_viden_eti();
+		}
+	}*/
 
-    // response
-   // n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
-
-
-
-    //test end*********************************
 
 
    /* char video[]="video";
@@ -96,6 +109,19 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 {
     uint32_t compress = 0;
     report(INFO "vrb_video_play");
+
+    //Test if HDCP parameters were set correctly
+	if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETI_VIDEO_EN)){
+		if (hdoipd.hdcp.ske_executed){
+			hoi_drv_hdcp(&hdoipd.hdcp.keys); 	/* write keys to kernel */
+			report(INFO "Video encryption enabled (eti)!");
+			hoi_drv_hdcp_viden_eti();
+		}
+		else {
+			report(INFO "No valid HDCP ske executed!");
+			return RSCP_ERRORNO;
+		}
+	}
 
     media->result = RSCP_RESULT_PLAYING;
 
@@ -132,7 +158,11 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 
 int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rscp_connection *rsp)
 {
-    report(INFO "vrb_video_teardown");
+	if(rsp) {
+		report(INFO "vrb_video_teardown (requested)");
+	} else {
+		report(INFO "vrb_video_teardown");
+	}
 
     media->result = RSCP_RESULT_TEARDOWN;
 
@@ -206,6 +236,7 @@ void vrb_video_pause(t_rscp_media *media)
 
 int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
+	t_rscp_client *client = media->creator;
     switch (m->event) {
 
         case EVENT_TICK:
@@ -222,6 +253,20 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
             // restart
             rscp_client_set_play(media->creator);
             return RSCP_PAUSE;
+        break;
+
+        case EVENT_HDCP_ON:
+        	report(INFO "HDCP ERROR EVENT RECEIVED (VIDEO)");
+            /*if (rscp_media_splaying(media)) {
+                vrb_video_pause(media);
+            }
+
+            // restart
+            rscp_client_set_play(media->creator);
+            return RSCP_PAUSE;*/
+        	rscp_client_set_teardown(client);
+        	hdoipd_set_task_start_vrb();
+        	return RSCP_PAUSE;
         break;
 
         case EVENT_VIDEO_IN_OFF:
@@ -261,7 +306,6 @@ int vrb_video_dosetup(t_rscp_media *media)
     hdcp.port_nr = 57000;	  //set port number
 
     hdcp.hdcp_on = reg_test("hdcp-force", "on");
-    printf("hdcp_on: %d/n",hdcp.hdcp_on);
 
     if (!client) return RSCP_NULL_POINTER;
 

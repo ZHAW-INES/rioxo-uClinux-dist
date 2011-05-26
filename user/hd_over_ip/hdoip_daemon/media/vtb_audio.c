@@ -22,6 +22,13 @@ static struct {
     int                 alive_ping;
 } vtb;
 
+
+
+int vtb_audio_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
+{
+    hdcp_ske_s(media, m, rsp, &vtb.timeout);
+}
+
 int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
     int n;
@@ -76,6 +83,12 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         return RSCP_REQUEST_ERROR;
     }*/
 
+    //check if hdcp is forced by HDMI, user or client (over RSCP)
+    if (reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
+    	m->hdcp.hdcp_on = 1;
+    	hdoipd.hdcp.enc_state = HDCP_ENABLED;
+    }
+
     vtb.remote.address = rsp->address;
     vtb.remote.aud_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.aud_port, hdoipd.local.aud_port);
@@ -118,26 +131,34 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     }
 
     // no multicast currently -> must be idle
-    if (!hdoipd_tstate(VTB_AUD_IDLE)) {
+ /*   if (!hdoipd_tstate(VTB_AUD_IDLE)) {
         // we don't have the resource reserved
         report(" ? require state VTB_AUD_IDLE");
         rscp_err_server(rsp);
         return RSCP_REQUEST_ERROR;
-    }
+    }*/
 
-    if (!hdoipd_rsc(RSC_AUDIO_IN)) {
+  /*  if (!hdoipd_rsc(RSC_AUDIO_IN)) {
         // currently no audio input active
         report(" ? require active audio input");
         rscp_err_no_source(rsp);
         return RSCP_REQUEST_ERROR;
-    }
+    }*/
 
     //check if audio HDCP status is unchanged, else return ERROR
-    report("TEST HDCP AUDIO STATUS BEFORE AUDIO PLAY!!!!!!!!\n");
-    if ((reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP)) && !(get_hdcp_status() & HDCP_ETO_AUDIO_EN)) {
-        report(" ? Audio HDCP status has changed after SKE");
-      /*  rscp_err_hdcp(rsp);
-        return RSCP_REQUEST_ERROR;*/
+    report("TEST HDCP status before start audio play!");
+    if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETO_AUDIO_EN)){
+   // if ((reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP)) && !(get_hdcp_status() & HDCP_ETO_AUDIO_EN)) {
+    	if (hdoipd.hdcp.ske_executed){
+    		hoi_drv_hdcp(hdoipd.hdcp.keys); //write keys to kernel
+    		hoi_drv_hdcp_auden_eto();
+    		report(INFO "Audio encryption enabled (eto)!");
+    	}
+    	else {
+    		report(" ? Audio HDCP status has changed after SKE");
+    		rscp_err_hdcp(rsp);
+    		return RSCP_REQUEST_ERROR;
+    	}
     }
 
     // start ethernet output
@@ -237,9 +258,17 @@ int vtb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
 int vtb_audio_event(t_rscp_media *media, uint32_t event)
 {
     switch (event) {
-	  //  case EVENT_HDCP_ON:                                     //ADV7441 HDCP event received
-      // 		if (get_hdcp_status() & HDCP_ETO_AUDIO_EN) break;  //check if HDCP is already running
-      // 		report(INFO "ETO_VIDEO not yet enabled -> pause");
+	    case EVENT_HDCP_ON:                                     //ADV7441 HDCP event received
+       		/*if (get_hdcp_status() & HDCP_ETO_AUDIO_EN) break;  //check if HDCP is already running
+       		report(INFO "ETO_AUDIO not yet enabled -> pause");*/
+            if (rscp_media_splaying(media)) {
+            	if (get_hdcp_status() & HDCP_ETO_AUDIO_EN) break;
+            	else{
+                    vtb_audio_pause(media);
+                    rscp_server_update(media, EVENT_HDCP_ON);
+            	}
+            }
+	    break;
         case EVENT_AUDIO_IN0_ON:
             if (rscp_media_splaying(media)) {
                 vtb_audio_pause(media);
@@ -285,6 +314,7 @@ t_rscp_media vtb_audio = {
     .name = "audio",
     .owner = 0,
     .cookie = 0,
+    .hdcp = (frscpm*)vtb_audio_hdcp,
     .setup = (frscpm*)vtb_audio_setup,
     .play = (frscpm*)vtb_audio_play,
     .teardown = (frscpm*)vtb_audio_teardown,

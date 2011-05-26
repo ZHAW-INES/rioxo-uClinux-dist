@@ -108,6 +108,7 @@ int rscp_receive(t_rscp_connection* con, char** line, int timeout)
             }
         }
         ret = read(con->fdr, eol, RSCP_MSG_MAX_LENGTH - 1 - s);
+
         if (ret == 0) {
             return RSCP_CLOSE;
         } else if (ret == -1) {

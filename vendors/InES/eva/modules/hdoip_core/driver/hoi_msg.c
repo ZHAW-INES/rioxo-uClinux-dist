@@ -124,7 +124,7 @@ int hoi_drv_msg_hdcp_ADV9889_dis(t_hoi* handle){
 // hdcp init (write keys to hardware)
 int hoi_drv_msg_hdcp_init(t_hoi* handle, t_hoi_msg_hdcp_init* msg)
 {
-    /*REPORT(INFO, "hoi_drv_msg_aes_init() -> init aes (key0 : %08x)", msg->key0);
+   /* REPORT(INFO, "hoi_drv_msg_aes_init() -> init aes (key0 : %08x)", msg->key0);
     REPORT(INFO, "hoi_drv_msg_aes_init() -> init aes (key1 : %08x)", msg->key1);
     REPORT(INFO, "hoi_drv_msg_aes_init() -> init aes (key2 : %08x)", msg->key2);
     REPORT(INFO, "hoi_drv_msg_aes_init() -> init aes (key3 : %08x)", msg->key3);
@@ -355,7 +355,8 @@ int hoi_drv_msg_vso_repaire(t_hoi* handle)
 {
     int n;
     uint32_t ien;
-
+// TODO: check if needed
+    /*
     // stop/flush vso
     vso_drv_stop(&handle->vso);
     vso_drv_flush_buf(&handle->vso);
@@ -385,7 +386,7 @@ int hoi_drv_msg_vso_repaire(t_hoi* handle)
 
     __builtin_wrctl(3, ien);
     // !!! back to normal !!!
-
+*/
     return SUCCESS;
 }
 

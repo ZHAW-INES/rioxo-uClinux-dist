@@ -42,6 +42,45 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, aud);
 
+
+    /*start hdcp session key exchange if necessary */
+    report("Check if HDCP is necessary and start ske");
+    hdoipd.hdcp.enc_state = m->hdcp.hdcp_on;
+
+    if ((m->hdcp.hdcp_on == 1) && !(hdoipd.hdcp.ske_executed)){
+		if (rscp_client_hdcp(client) != RSCP_SUCCESS){
+			report(" ? Session key exchange failed");
+			rscp_err_hdcp(rsp);
+			return RSCP_REQUEST_ERROR;
+		}
+
+    }
+
+
+    /*start hdcp session key exchange if necessary */
+   /* report("Check if HDCP is necessary and start ske");
+    hdoipd.hdcp.enc_state = m->hdcp.hdcp_on;
+
+	if (m->hdcp.hdcp_on == 1){
+		if (hdoipd.hdcp.ske_executed) {
+			report(INFO "SKE EXECUTED: %d",hdoipd.hdcp.ske_executed);
+			hoi_drv_hdcp(&hdoipd.hdcp.keys); 	// write keys to kernel
+			report(INFO "Audio encryption enabled (eti)!");
+			hoi_drv_hdcp_auden_eti();
+		}
+		else {
+			if (rscp_client_hdcp(client) != RSCP_SUCCESS){
+				report(" ? Session key exchange failed");
+				rscp_err_hdcp(rsp);
+				return RSCP_REQUEST_ERROR;
+			}
+			//rscp_client_hdcp(client); 			// start session key exchange
+			hoi_drv_hdcp(&hdoipd.hdcp.keys); 	// write keys to kernel
+			report(INFO "Audio encryption enabled (eti)!");
+			hoi_drv_hdcp_auden_eti();
+		}
+	}*/
+
     // start hdcp session key exchange if necessary
   /*  char audio[]="audio";
     if ((n = hdcp_ske_client(&m->hdcp, &audio)) != RSCP_SUCCESS){
@@ -71,6 +110,19 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 {
     uint32_t compress = 0;
     report(INFO "vrb_audio_play");
+
+    //Test if HDCP parameters were set correctly
+	if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETI_AUDIO_EN)){
+		if (hdoipd.hdcp.ske_executed){
+			hoi_drv_hdcp(&hdoipd.hdcp.keys); 	/* write keys to kernel */
+			report(INFO "Audio encryption enabled (eti)!");
+			hoi_drv_hdcp_auden_eti();
+		}
+		else {
+			report(INFO "No valid HDCP ske executed!");
+			return RSCP_ERRORNO;
+		}
+	}
 
     media->result = RSCP_RESULT_PLAYING;
 
@@ -180,6 +232,7 @@ void vrb_audio_pause(t_rscp_media *media)
 
 int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
+	t_rscp_client *client = media->creator;
     switch (m->event) {
 
         case EVENT_TICK:
@@ -198,7 +251,19 @@ int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
 
             return RSCP_PAUSE;
         break;
+        case EVENT_HDCP_ON:
+        	report(INFO "HDCP ERROR EVENT RECEIVED (AUDIO)");
+           /* if (rscp_media_splaying(media)) {
+                vrb_video_pause(media);
+            }
 
+            // restart
+            rscp_client_set_play(media->creator);
+            return RSCP_PAUSE;*/
+        	rscp_client_set_teardown(client);
+        	hdoipd_set_task_start_vrb();
+        	return RSCP_PAUSE;
+        break;
         case EVENT_AUDIO_IN0_OFF:
             vrb_audio_pause(media);
             osd_printf("vtb.audio stoped streaming...\n");
@@ -232,7 +297,6 @@ int vrb_audio_dosetup(t_rscp_media *media)
     hdcp.port_nr = 57000;
 
     hdcp.hdcp_on = reg_test("hdcp-force", "on");
-    printf("hdcp_audio_on: %d/n",hdcp.hdcp_on);
 
     if (!client) return RSCP_NULL_POINTER;
 

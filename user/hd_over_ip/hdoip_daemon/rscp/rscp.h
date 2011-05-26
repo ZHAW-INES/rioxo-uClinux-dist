@@ -140,7 +140,7 @@ typedef struct {
     uint32_t            cseq;
     char                session[50];
     char				id[10];
-    char 				content[530];
+    char 				content[1200];
 } t_rscp_req_hdcp;
 
 typedef struct {
@@ -189,7 +189,7 @@ typedef struct {
     uint32_t            cseq;
     char                session[50];
     char				id[10];
-    char 				content[530];
+    char 				content[1200];
 } t_rscp_rsp_hdcp;
 
 typedef struct {

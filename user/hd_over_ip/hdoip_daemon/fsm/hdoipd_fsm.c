@@ -390,14 +390,26 @@ void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps)
 int hdoipd_start_vrb_cb(t_rscp_media* media, void* d)
 {
     int os = media->state;
+    int ret = RSCP_SUCCESS;
+
     if (rscp_media_sinit(media)) {
+    	report(INFO "hdoipd_start_vrb_cb(%s) => media->state = RSCP_INIT", media->name);
         hdoipd_vrb_setup(media, d);
     } else if (rscp_media_sready(media)) {
-        hdoipd_vrb_play(media, d);
+    	report(INFO "hdoipd_start_vrb_cb(%s) => media->state = RSCP_READY", media->name);
+        ret = hdoipd_vrb_play(media, d);
     } else {
+    	report(INFO "hdoipd_start_vrb_cb(%s) => media->state = RSCP_PLAYING", media->name);
+    	report(INFO "hdoipd_start_vrb_cb(%s) return : 0");
         return 0;
     }
-    return (os == media->state);
+	report(INFO "rscp_media_sinit(%s) return : %d", media->name, (os == media->state));
+
+	if(ret != RSCP_SUCCESS) {
+		return 1;
+	} else {
+		return (os == media->state);
+	}
 }
 int hdoipd_start_vrb(void *d)
 {
@@ -427,6 +439,7 @@ void hdoipd_task(void)
             hdoipd.task_timeout--;
         } else {
             if(hdoipd_start_vrb(0)) {
+            	report(ERROR "task hdoipd_start_vrb() repeat (%d)",hdoipd.task_repeat);
                 if(hdoipd.task_repeat > 0) {
                     hdoipd.task_timeout = 50;
                     hdoipd.task_repeat--;
@@ -434,6 +447,7 @@ void hdoipd_task(void)
                     hdoipd.task_commands &= ~TASK_START_VRB;
                 }
             } else {
+            	report(ERROR "task hdoipd_start_vrb() executed");
                 hdoipd.task_repeat = 0;
                 hdoipd.task_commands &= ~TASK_START_VRB;
             }
@@ -490,9 +504,9 @@ void hdoipd_fsm_vrb(uint32_t event)
 void hdoipd_fsm_vtb(uint32_t event)
 {
     switch (event) {
-       // case E_ADV7441A_HDCP:
-           // rscp_listener_event(&hdoipd.listener, EVENT_HDCP_ON);
-       // break;
+        case E_ADV7441A_HDCP:
+        	//rscp_listener_event(&hdoipd.listener, EVENT_HDCP_ON);
+        break;
         case E_ADV7441A_NC:
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
         break;
@@ -582,7 +596,14 @@ void hdoipd_event(uint32_t event)
         	printf("\n ******* Incomming stream is !!! NOT !!! encrypted!! ****** \n");
         	hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
         break;
-
+        case E_HDCP_STREAMING_ERROR:  /* restart VTB if Kernel detects HDCP streaming error*/
+        	report(INFO "HDCP streaming error !!!!!!!!!!!!!!!!!!!!");
+            if (hdoipd_state(HOID_VTB|HOID_VRB)) {
+                hdoipd_force_ready();
+                report(INFO "HDCP ERROR, restarting system");
+                hdoipd_start();
+            }
+        break;
         // ...
         case E_VSI_FIFO2_FULL:
         break;
@@ -707,6 +728,8 @@ bool hdoipd_init(int drv)
     hdoipd.vrb_state = VRB_OFF;
     hdoipd.client = list_create();
     hdoipd.auto_stream = false;
+    hdoipd.hdcp.ske_executed = 0;
+    hdoipd.hdcp.enc_state = 0;
 
     // allocate resource
     void* vid = malloc(VID_SIZE);

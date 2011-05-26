@@ -32,7 +32,7 @@ static struct {
 
 int vtb_video_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
 {
-    hdcp_ske_s(media, m, rsp);
+    hdcp_ske_s(media, m, rsp, &vtb.timeout);
 
   /*  report(INFO "ID: %s CONTENT: %s ###########",m->id, m->content);
 	int message = atoi(m->id);
@@ -121,9 +121,9 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         //       have a list of all contributing edid source (to test if it is allready included in our edid)
         //
         // video source not  in use -> update
-        hoi_drv_hpdoff();
+        //hoi_drv_hpdoff();
         hoi_drv_wredid(m->edid.edid);
-        hoi_drv_hpdon();
+        //hoi_drv_hpdon();
     }
     
     // reserve resource
@@ -131,6 +131,12 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
 
     vtb.timeout = 0;
     vtb.alive_ping = 1;
+
+    //check if hdcp is forced by HDMI, user or client (over RSCP)
+    if (reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
+    	m->hdcp.hdcp_on = 1;
+    	hdoipd.hdcp.enc_state = HDCP_ENABLED;
+    }
 
     // open hdcp socket if necessary
    /* if ((n = hdcp_open_socket(&m->hdcp, &sockfd, &cli_addr)) != RSCP_SUCCESS){
@@ -176,12 +182,12 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     }
 
     // no multicast currently -> must be idle
-    if (!hdoipd_tstate(VTB_VID_IDLE)) {
+   /* if (!hdoipd_tstate(VTB_VID_IDLE)) {
         // we don't have the resource reserved
         report(" ? require state VTB_IDLE");
         rscp_err_server(rsp);
         return RSCP_REQUEST_ERROR;
-    }
+    }*/
 
     if (!hdoipd_rsc(RSC_VIDEO_IN)) {
         // currently no video input active
@@ -191,13 +197,34 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
         return RSCP_REQUEST_ERROR;
     }
 
-    //check if Video HDCP status is unchanged, else return ERROR
-    report("TEST HDCP before video play!!!!!!!!!");
-    if ((reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP)) && !(get_hdcp_status() & HDCP_ETO_VIDEO_EN)) {
-        report(" ? Video HDCP status has changed after SKE");
-       /* rscp_err_hdcp(rsp);
-        return RSCP_REQUEST_ERROR;*/
+    report("TEST HDCP status before start video play!");
+    if  (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETO_VIDEO_EN)){
+    	if (hdoipd.hdcp.ske_executed){
+    	    hoi_drv_hdcp(hdoipd.hdcp.keys); //write keys to kernel
+    	    hoi_drv_hdcp_viden_eto();
+    	    report(INFO "Video encryption enabled (eto)!");
+    	}
+    	else {
+    	    report(" ? Video HDCP status has changed after SKE");
+    	    rscp_err_hdcp(rsp);
+    	    return RSCP_REQUEST_ERROR;
+    	}
     }
+
+    //check if Video HDCP status is unchanged, else return ERROR
+  /*  report("TEST HDCP status before start video play!");
+    if ((reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP)) && !(get_hdcp_status() & HDCP_ETO_VIDEO_EN)) {
+    	if (hdoipd.hdcp.ske_executed){
+    		hoi_drv_hdcp(hdoipd.hdcp.keys); //write keys to kernel
+    		hoi_drv_hdcp_viden_eto();
+    		report(INFO "Video encryption enabled (eto)!");
+    	}
+    	else {
+    		report(" ? Video HDCP status has changed after SKE");
+    		rscp_err_hdcp(rsp);
+    		return RSCP_REQUEST_ERROR;
+    	}
+    }*/
     // if hdoipd_rsc(RSC_VIDEO_IN_HDCP) || hdcp is active -> error
 
 
@@ -245,7 +272,11 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
 
 int vtb_video_teardown(t_rscp_media* media, t_rscp_req_teardown *m, t_rscp_connection* rsp)
 {
-    report(INFO "vtb_video_teardown");
+	if(rsp) {
+		report(INFO "vtb_video_teardown (requested)");
+	} else {
+		report(INFO "vtb_video_teardown");
+	}
 
     media->result = RSCP_RESULT_TEARDOWN;
 
@@ -280,8 +311,14 @@ void vtb_video_pause(t_rscp_media *media)
     }
 }
 
-int vtb_video_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
+int vtb_video_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_connection *rsp)
 {
+	if(rsp) {
+		//report(INFO "vtb_video_update (requested)");
+	} else {
+		report(INFO "vtb_video_update");
+	}
+
     switch (m->event) {
         case EVENT_TICK:
             // reset timeout
@@ -295,9 +332,21 @@ int vtb_video_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_co
 int vtb_video_event(t_rscp_media *media, uint32_t event)
 {
     switch (event) {
-    //	case EVENT_HDCP_ON:                                     //ADV7441 HDCP event received
-    //		if (get_hdcp_status() & HDCP_ETO_VIDEO_EN) break;  //check if HDCP is already running
-    //		report(INFO "ETO_VIDEO not yet enabled -> pause");
+    	/*case EVENT_HDCP_ON:                                     //ADV7441 HDCP event received
+    		if (get_hdcp_status() & HDCP_ETO_VIDEO_EN) break;  //check if HDCP is already running
+    		report(INFO "ETO_VIDEO not yet enabled -> pause");*/
+
+	    case EVENT_HDCP_ON:                                     //ADV7441 HDCP event received
+       		/*if (get_hdcp_status() & HDCP_ETO_AUDIO_EN) break;  //check if HDCP is already running
+       		report(INFO "ETO_AUDIO not yet enabled -> pause");*/
+            if (rscp_media_splaying(media)) {
+            	if (get_hdcp_status() & HDCP_ETO_VIDEO_EN) break;
+            	else{
+                    vtb_video_pause(media);
+                    rscp_server_update(media, EVENT_HDCP_ON);
+            	}
+            }
+	    break;
         case EVENT_VIDEO_IN_ON:
             if (rscp_media_splaying(media)) {
                 vtb_video_pause(media);

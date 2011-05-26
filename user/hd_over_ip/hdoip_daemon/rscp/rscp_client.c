@@ -230,31 +230,38 @@ int rscp_client_hdcp(t_rscp_client* client)
     int n, i;
     u_rscp_header buf;
     t_rscp_header_common common;
-    char id[]="00";
     char content[]="";
-    uint32_t keys[6];
+    char H[65];
+    char ks[33];
+    char riv[17];
+    char L[65];
+    char *id[16] = {"00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15"};
+    client->media->hdcp_var.repeater = 0;  //repeater value
+    t_rscp_rsp_hdcp* p;
+    p = &buf;
 
-
+    /* Get the encrypted HDCP keys from flash and decrypt them*/
+    hdcp_decrypt_flash_keys();
     report(INFO "Ask server to start session key exchange");
     /* send start hdcp */
-    rscp_request_hdcp(&client->con, &client->media->sessionid, &client->uri, id, content);
+    rscp_request_hdcp(&client->con, &client->media->sessionid, &client->uri, id[0], content);
 
     rscp_default_response_hdcp((void*)&buf);
 
     // response
     n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
-    t_rscp_rsp_hdcp* p;
-    p = &buf;
+
     report(INFO "ID: %s",p->id);
     report(INFO "Content: %s",p->content);
-    strcpy(hdoipd.hdcp.rtx, p->content);  //save rtx
+    if (strcmp(p->id, "02")) return RSCP_HDCP_ERROR;  //check if correct message was received
+    strcpy(client->media->hdcp_var.rtx, p->content);  //save rtx
 
+    /* Add repeater value to certificate */
+    memmove(hdoipd.hdcp.certrx + 1,hdoipd.hdcp.certrx,1045);
+    if (client->media->hdcp_var.repeater == 1) hdoipd.hdcp.certrx[0]='1';
+    else hdoipd.hdcp.certrx[0]='0';
     /* send certificate */
-
-    char id2[]="03";
-    //char number2[]="1745bb8bd04bc83c79578f90c914b8938055aa4ac1fa80393827975af6622de43808dcd5d90b83cb3d89eb00d0944f43f5fabb9c4c996ef78b58f6977b47d08149c81a08f041fa088e120c7344a49356599cf5319f0c68176055cb9deddab3db092a1234f0c71304278f655aebd36258e250d4e5e8e776a60e3c1e9eecd2b9e186397d4e67501000100001d0a61eaabf8a82b0269a134fd91ac2bf28f348bd484fa62bc014a4aa2b214bfb5f4dfac80930d13ec9ce5d83470519a6680ebbecc7e45f0e6396384c9b98e8caf9ca9d40eeb9a572a1741ca97f31996b55d0f30a384e573a2ed05697a22ce841f3e399e2876c9bc895b70b17bf4edb67412ab482964ce6c6004eba97aa215a6589aad32c75339e5fef037a7a0c5ffecd9b005bb2513a0a4c70b2a5dc68f5111cb36ed5c177e2220c3eb408c67bb1cd247b0e0bde74ccd5dd52312f83b1d913bf3c760ea902448e592216cf6d95e768d2b86a67c16aea83608a037141ad703e14031ca6c95e010b043cfb7e03005b9acb70868cd7e11472a033beb74c819628b2f1191b6064fe02a44204329131fddd04a116c0e83bf22623bebecd77628ba648842c873a79e4a693ab20c4b3ad950db7c51ee15e06b2c63a69157ddbf174723ad15cbb991180b518ff91c5167c10b78f5d955dc48e4c083a5df75e2dc88d2c6dddf1f379035f6fddae0043269c1afd9f911c5aa7458321c71aaa714fb231722";
-    char number2[]="11111111111111111111111111";
-    rscp_request_hdcp(&client->con, &client->media->sessionid, &client->uri, id2, number2);
+    rscp_request_hdcp(&client->con, &client->media->sessionid, &client->uri, id[3], &hdoipd.hdcp.certrx);
 
     //rscp_default_response_setup((void*)&buf);
 
@@ -262,86 +269,72 @@ int rscp_client_hdcp(t_rscp_client* client)
     n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
     report(INFO "ID: %s",p->id);
     report(INFO "Content: %s",p->content);
-
-    //receiver private key
-    char pp[]="dc1a02b836ed3ae87474cd72284aee3190e4d06af9f6f8d35029c2849798105dea7b88fd36c50499adab270a5a2af9187b7db0c3cbe35ac29a10f7c99a183eb5";
-    char q[]="db42e942e32a78c96f2b7b74d69baeb93df4e735901cc45ab4228c3c089ba529645729b2c480f9eec694303ed2339fbb6a430389149b8f20b8601f7f303b20c1";
-    char dp[]="73d1a418b79e81df0c58e23aee04efee59266e9dbc473f8c42a496dd1ac043ec8794d5f318bcf7bcbe6c4fb0dcddbc122bf969e8be0337212bdd3de67215cbf9";
-    char dq[]="091de61f0edd043ab3f1a5e77cc8ea61ef6e90728cb47581a3fdcfc0eb46b57e5c1ab7b424318cb2ddf4e970a342dc4069b1b1a2f0856b551bf57b39c9a29bc1";
-    char qInv[]="8958a5a363d9a9ee0e7ea1c0562d59fcf8661c2648219de061e4a8069764c7017747118ea281d200dd5a1b8f7a1b2c685639cfcdd36aff73811d913d48b4434c";
+    if (strcmp(p->id, "04")) return RSCP_HDCP_ERROR;  //check if correct message was received
 
     /* decrypt km */
-    rsaes_decrypt(p->content, &hdoipd.hdcp.km,pp,q,dp,dq,qInv);
-    report(INFO "km: %s",hdoipd.hdcp.km);
-    report(INFO "rtx: %s",hdoipd.hdcp.rtx);
+    rsaes_decrypt(p->content, &client->media->hdcp_var.km, &hdoipd.hdcp.p, &hdoipd.hdcp.q,&hdoipd.hdcp.dp,&hdoipd.hdcp.dq,&hdoipd.hdcp.qInv);
+    report(INFO "km: %s",client->media->hdcp_var.km);
+    report(INFO "rtx: %s",client->media->hdcp_var.rtx);
 
     /* send rrx  */
-    char id6[]="06";
-    char rrx[17];
-    hdcp_generate_random_nr(rrx);
-    strcpy(hdoipd.hdcp.rrx, rrx);  //save rrx
-    rscp_request_hdcp(&client->con, &client->media->sessionid, &client->uri, id6, rrx);
-    // response (only acknowledge, therefore ignore content)
-    n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, 1000); //test
+    hdcp_generate_random_nr(client->media->hdcp_var.rrx);
+
+    rscp_request_hdcp(&client->con, &client->media->sessionid, &client->uri, id[6], &client->media->hdcp_var.rrx);
+    /* response (only acknowledge, therefore ignore content) */
+    n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
+    if (strcmp(p->id, "00")) return RSCP_HDCP_ERROR;  //check if correct message was received
 
     /* send AKE send H_prime */
-    char H[65];
-    char kd[65]="";
-    char id7[]="07";
-    int repeater=1;
-	report(INFO "rtx: %s", hdoipd.hdcp.rtx);
-	report(INFO "km: %s", hdoipd.hdcp.km);
+	report(INFO "rtx: %s", client->media->hdcp_var.rtx);
+	report(INFO "km: %s", client->media->hdcp_var.km);
 
-    hdcp_calculate_h(&hdoipd.hdcp.rtx, repeater, H, &hdoipd.hdcp.km, kd);
-    strcpy(hdoipd.hdcp.kd, kd);  //save kd
-    report(INFO "kd: %s", hdoipd.hdcp.kd);
+    hdcp_calculate_h(&client->media->hdcp_var.rtx, &client->media->hdcp_var.repeater, H, &client->media->hdcp_var.km, &client->media->hdcp_var.kd);
+    report(INFO "kd: %s", client->media->hdcp_var.kd);
     report(INFO "H: %s", H);
-    rscp_request_hdcp(&client->con, &client->media->sessionid, &client->uri, id7, H);
+    rscp_request_hdcp(&client->con, &client->media->sessionid, &client->uri, id[7], H);
 
     // response LC_init
     n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
     report(INFO "ID: %s",p->id);
     report(INFO "Content: %s",p->content);
-    strcpy(hdoipd.hdcp.rn, p->content);
+    if (strcmp(p->id, "09")) return RSCP_HDCP_ERROR;  //check if correct message was received
+    strcpy(client->media->hdcp_var.rn, p->content);
 
     /* generate HMAC of rn and send it back*/
-    char L[65];
-    char id10[]="10";
-    report(INFO "rn: %s", hdoipd.hdcp.rn);
-    report(INFO "rrx: %s", hdoipd.hdcp.rrx);
-    report(INFO "kd: %s", hdoipd.hdcp.kd);
-    hdcp_calculate_l(&hdoipd.hdcp.rn, &hdoipd.hdcp.rrx, &hdoipd.hdcp.kd, L);
+    report(INFO "rn: %s", client->media->hdcp_var.rn);
+    report(INFO "rrx: %s", client->media->hdcp_var.rrx);
+    report(INFO "kd: %s", client->media->hdcp_var.kd);
+    hdcp_calculate_l(&client->media->hdcp_var.rn, &client->media->hdcp_var.rrx, &client->media->hdcp_var.kd, L);
     report(INFO "L: %s", L);
-    rscp_request_hdcp(&client->con, &client->media->sessionid, &client->uri, id10, L);
+    rscp_request_hdcp(&client->con, &client->media->sessionid, &client->uri, id[10], L);
 
     // response contains encrypted session key
     n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
     report(INFO "ID: %s",p->id);
     report(INFO "Content: %s",p->content);
+    if (strcmp(p->id, "11")) return RSCP_HDCP_ERROR;  //check if correct message was received
     /*devide received content into ks and riv*/
     for (i=0;i<17;i++){
-    	hdoipd.hdcp.riv[i]=p->content[32+i];
+    	riv[i]=p->content[32+i];
     }
     p->content[32]='\0';
     // decrypt session key
-    char ks[33];
-    hdcp_ske_dec_ks(&hdoipd.hdcp.rn, &ks, p->content, &hdoipd.hdcp.rtx, &hdoipd.hdcp.rrx, &hdoipd.hdcp.km);
-    strcpy(hdoipd.hdcp.ks, ks);  //save ks
+    hdcp_ske_dec_ks(&client->media->hdcp_var.rn, &ks, p->content, &client->media->hdcp_var.rtx, &client->media->hdcp_var.rrx, &client->media->hdcp_var.km);
     report(INFO "THE SESSION KEY: %s", ks);
-    report(INFO "RIV: %s", hdoipd.hdcp.riv);
-
+    report(INFO "RIV: %s", riv);
+	/* xor session key with lc128 */
+	xor_strings(ks, hdoipd.hdcp.lc128, ks,32);
     /* write keys to HW and enable encryption*/
-    hdcp_convert_sk_char_int(&hdoipd.hdcp.ks, &hdoipd.hdcp.riv, keys);
-    hoi_drv_hdcp(keys); 				//write keys to kernel
+    hdcp_convert_sk_char_int(ks, riv, &hdoipd.hdcp.keys);
+   // hoi_drv_hdcp(&hdoipd.hdcp.keys); 				//write keys to kernel
+    hdoipd.hdcp.ske_executed = HDCP_SKE_EXECUTED;
     //DISABLED -> NO KEYS		    	//hoi_drv_hdcp_adv9889en();   		//enable hdcp encryption in AD9889
-	/*hoi_drv_hdcp_viden_eti();*/
-	report(INFO "Video encryption enabled (eti)!");
+	//hoi_drv_hdcp_viden_eti();
+	//report(INFO "Video encryption enabled (eti)!");
 	//DISABLED -> NO KEYS			    //hoi_drv_hdcp_adv9889en();			//enable hdcp encryption in AD9889
-	/*hoi_drv_hdcp_auden_eti();*/
-	report(INFO "Audio encryption enabled (eti)!");
-
-
-    return n;
+	/*hoi_drv_hdcp_auden_eti();
+	report(INFO "Audio encryption enabled (eti)!");*/
+    return RSCP_SUCCESS;
 }
 
 

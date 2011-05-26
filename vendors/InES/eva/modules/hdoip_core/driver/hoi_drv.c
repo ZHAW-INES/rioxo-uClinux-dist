@@ -189,7 +189,7 @@ void hoi_drv_handler(t_hoi* handle)
     aso_drv_handler(&handle->aso, handle->event);
     eto_drv_handler(&handle->eto, handle->event);
     eti_drv_handler(&handle->eti, handle->event);
-    hdcp_drv_handler(&handle->eti, &handle->eto, &handle->adv7441a, &handle->adv9889, &handle->vsi, &handle->vso, &handle->asi, &handle->aso, &handle->drivers); //hdcp handler
+    hdcp_drv_handler(&handle->eti, &handle->eto, &handle->adv7441a, &handle->adv9889, &handle->vsi, &handle->vso, &handle->asi, &handle->aso, &handle->drivers, handle->event); //hdcp handler
     //int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv9889* h_adv9889, t_vsi* h_vsi ,t_vso* h_vso, t_asi h_asi, t_aso h_aso, uint32_t* h_drivers)
     //hdcp_drv_handler(handle);
     stream_sync(&handle->sync);

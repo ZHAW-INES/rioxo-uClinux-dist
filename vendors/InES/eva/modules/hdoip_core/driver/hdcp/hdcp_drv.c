@@ -8,7 +8,7 @@
  * @param handle pointer
  * @return error code
  */
-int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv9889* h_adv9889, t_vsi* h_vsi ,t_vso* h_vso, t_asi* h_asi, t_aso* h_aso, uint32_t* h_drivers)
+int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv9889* h_adv9889, t_vsi* h_vsi ,t_vso* h_vso, t_asi* h_asi, t_aso* h_aso, uint32_t* h_drivers, t_queue* event_queue)
 {
 	//get aes status
     uint32_t audio_enc_en_eto, video_enc_en_eto, audio_enc_en_eti, video_enc_en_eti;
@@ -19,16 +19,18 @@ int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv98
     	//check if video encryption status is okay, otherwise stop video
     	if ((h_adv7441a->status & ADV7441A_STATUS_ENCRYPTED)  && !(video_enc_en_eto) && (h_vsi->status & VSI_DRV_STATUS_ACTIV))
     	{
-    	   // vsi_drv_stop(h_vsi);	 //stop transmitting video
+    	    vsi_drv_stop(h_vsi);	 //stop transmitting video
     	    //asi_drv_stop(h_asi);	 //stop transmitting audio   ///test
-    	  //  REPORT(INFO, "HDMI VIDEO SOURCE CHANGED, HDCP ERROR!");
+    	    REPORT(INFO, "HDMI VIDEO SOURCE CHANGED, HDCP ERROR!");
+    	    queue_put(event_queue, E_HDCP_STREAMING_ERROR);
     	}
     	//check if audio encryption status is okay, otherwise stop audio
     	if ((h_adv7441a->status & ADV7441A_STATUS_ENCRYPTED)  && !(audio_enc_en_eto) && (h_asi->status & ASI_DRV_STATUS_ACTIV))
     	{
     		//vsi_drv_stop(h_vsi);	 //stop transmitting video  //test
-    		//asi_drv_stop(h_asi);	 //stop transmitting audio
-    	 //   REPORT(INFO, "HDMI AUDIO SOURCE CHANGED, HDCP ERROR!");
+    	   asi_drv_stop(h_asi);	 //stop transmitting audio
+    	   REPORT(INFO, "HDMI AUDIO SOURCE CHANGED, HDCP ERROR!");
+    	  // queue_put(event_queue, E_HDCP_STREAMING_ERROR);
     	}
     }
 

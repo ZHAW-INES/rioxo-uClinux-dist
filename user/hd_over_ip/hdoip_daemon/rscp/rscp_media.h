@@ -24,6 +24,14 @@ typedef enum {
 } e_rscp_media_state;
 
 typedef enum {
+    HDCP_SEND_RTX,
+    HDCP_VERIFY_CERT,
+    HDCP_RECEIVE_RRX,
+    HDCP_RECEIVE_H,
+    HDCP_SEND_KS
+} e_rscp_hdcp_state;
+
+typedef enum {
     RSCP_RESULT_IDLE = 0,
     RSCP_RESULT_READY,
     RSCP_RESULT_PLAYING,
@@ -45,6 +53,17 @@ typedef int (frscpm)(void* media, void* msg, void* rsp);
 typedef int (frscpl)(void* media);
 typedef int (frscpe)(void* media, uint32_t event);
 
+// Media HDCP variables
+typedef struct t_rscp_media_hdcp {
+	int			hdcp_state;		// HDCP state
+    char		km[33];			// masterkey
+    char 		rrx[19];		// random number from receiver
+    char		rn[17];			// random number from locality check
+    char 		kd[65];			//
+    char    	rtx[17];		// rtx (random number)
+    uint32_t	repeater;		// repeater (true or false)
+}t_rscp_media_hdcp;
+
 // Media session
 typedef struct t_rscp_media {
     void*   creator;            // Pointer to client or server thread creates this media (t_rscp_server / t_rscp_client)
@@ -54,6 +73,8 @@ typedef struct t_rscp_media {
     char*   name;               // "audio", "video" or "" (box_sys)
     char    sessionid[20];      // Session string (ID)
     int     state;              // Media state (INIT, READY, PLAYING)
+    int		hdcp_state;			// HDCP state
+    t_rscp_media_hdcp hdcp_var; // HDCP variables (state, keys, etc.)
     int     result;             // Media status
     size_t  cookie_size;        // Size of cookie
     void*   cookie;             // Media related data
