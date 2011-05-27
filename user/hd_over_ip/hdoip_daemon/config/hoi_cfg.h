@@ -20,5 +20,7 @@ void hoi_cfg_system();
 
 int hoi_cfg_write(char* filename);
 int hoi_cfg_read(char* filename);
+int hoi_cfg_get_dns_server(char* dns1, char* dns2);
+int hoi_cfg_set_dns_server(char* dns1, char* dns2);
 
 #endif /* HOI_CFG_H_ */

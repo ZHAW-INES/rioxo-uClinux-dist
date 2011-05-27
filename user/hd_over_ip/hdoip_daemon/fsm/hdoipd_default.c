@@ -17,6 +17,8 @@ void hdoipd_set_default()
     reg_set("system-subnet", "255.255.255.0");
     reg_set("system-gateway", "192.168.1.1");
     reg_set("system-mac", "00:15:12:00:00:42");
+    reg_set("system-dns1", "");
+    reg_set("system-dns2", "");
     reg_set("system-cmd", "");
 
     reg_set("auto-stream", "true");
