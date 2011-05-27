@@ -7,6 +7,8 @@ require("hdoip.network")
 REG_SYS_IF_LABEL = "sys_if"
 REG_SYS_IP_LABEL = "sys_ip"
 REG_SYS_GATEWAY_LABEL = "sys_gw"
+REG_SYS_DNS1_LABEL = "sys_dns1_"
+REG_SYS_DNS2_LABEL = "sys_dns2_"
 REG_SYS_NAME_LABEL = "sys_name"
 REG_SYS_MAC_LABEL = "sys_mac"
 REG_SYS_SUB_LABEL = "sys_sub"
@@ -43,6 +45,20 @@ function show(t)
         t.sys_gw0, t.sys_gw1, t.sys_gw2, t.sys_gw3 = hdoip.network.text2IpValues(str)
         t.sys_mode = t_sys_mode_reg[hdoip.pipe.getParam(hdoip.pipe.REG_MODE_START)]
         t.sys_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_NAME)
+        
+        str = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DNS1)
+        if(str == "") then
+	        t.sys_dns1_0 = ""; t.sys_dns1_1 = ""; t.sys_dns1_2 = ""; t.sys_dns1_3 = ""
+        else 
+            t.sys_dns1_0, t.sys_dns1_1, t.sys_dns1_2, t.sys_dns1_3 = hdoip.network.text2IpValues(str)
+        end 
+        
+        str = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DNS2)
+        if(str == "") then
+            t.sys_dns2_0 = ""; t.sys_dns2_1 = ""; t.sys_dns2_2 = ""; t.sys_dns2_3 = ""
+        else
+            t.sys_dns2_0, t.sys_dns2_1, t.sys_dns2_2, t.sys_dns2_3 = hdoip.network.text2IpValues(str)
+        end 
     else
         t.sys_name = hdoip.html.unescape(t.sys_name)
         hdoip.pipe.setParam(hdoip.pipe.REG_SYS_NAME, t.sys_name)
@@ -71,7 +87,19 @@ function show(t)
             hdoip.html.AddError(t, label.err_gateway_not_valid)
             err = err + 1
         end
-
+        
+        if(hdoip.network.checkIp(t.sys_dns1_0, t.sys_dns1_1, t.sys_dns1_2, t.sys_dns1_3) == 1) then
+            hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DNS1, t.sys_dns1_0.."."..t.sys_dns1_1.."."..t.sys_dns1_2.."."..t.sys_dns1_3) 
+        else
+            hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DNS1, "")
+        end
+        
+        
+        if(hdoip.network.checkIp(t.sys_dns2_0, t.sys_dns2_1, t.sys_dns2_2, t.sys_dns2_3) == 1) then
+            hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DNS2, t.sys_dns2_0.."."..t.sys_dns2_1.."."..t.sys_dns2_2.."."..t.sys_dns2_3) 
+        else
+            hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DNS2, "")
+        end
 
         if(hdoip.pipe.getParam(hdoip.pipe.REG_MODE_START) ~= t_sys_mode_conv[tonumber(t.sys_mode)]) then
             hdoip.pipe.setParam(hdoip.pipe.REG_MODE_START, t_sys_mode_conv[tonumber(t.sys_mode)])
@@ -84,18 +112,22 @@ function show(t)
         hdoip.html.FormHeader(script_path, main_form)
         hdoip.html.Title(label.page_ethernet);           
         hdoip.html.TableHeader(2)
-        hdoip.html.Text(label.p_eth_mac);                                                   hdoip.html.TableInsElement(1);
-        hdoip.html.Text(t.sys_mac);                                                         hdoip.html.TableInsElement(1);
-        hdoip.html.Text(label.p_eth_ip);                                                    hdoip.html.TableInsElement(1);
-        hdoip.html.FormIP(REG_SYS_IP_LABEL,t.sys_ip0,t.sys_ip1,t.sys_ip2,t.sys_ip3);        hdoip.html.TableInsElement(1);
-        hdoip.html.Text(label.p_eth_subnet);                                                hdoip.html.TableInsElement(1);
-        hdoip.html.FormIP(REG_SYS_SUB_LABEL,t.sys_sub0,t.sys_sub1,t.sys_sub2,t.sys_sub3);   hdoip.html.TableInsElement(1);
-        hdoip.html.Text(label.p_eth_gateway);                                               hdoip.html.TableInsElement(1);
-        hdoip.html.FormIP(REG_SYS_GATEWAY_LABEL,t.sys_gw0,t.sys_gw1,t.sys_gw2,t.sys_gw3);   hdoip.html.TableInsElement(1);
-        hdoip.html.Text(label.p_eth_dev_name);                                              hdoip.html.TableInsElement(1);
-        hdoip.html.FormText(REG_SYS_NAME_LABEL, t.sys_name, 30, 0);                         hdoip.html.TableInsElement(1);
-        hdoip.html.Text(label.p_eth_mode);                                                  hdoip.html.TableInsElement(1);
-        hdoip.html.FormRadio(REG_MODE_START_LABEL, t_sys_mode, 3, t.sys_mode)               hdoip.html.TableInsElement(1);
+        hdoip.html.Text(label.p_eth_mac);                                                               hdoip.html.TableInsElement(1);
+        hdoip.html.Text(t.sys_mac);                                                                     hdoip.html.TableInsElement(1);
+        hdoip.html.Text(label.p_eth_ip);                                                                hdoip.html.TableInsElement(1);
+        hdoip.html.FormIP(REG_SYS_IP_LABEL,t.sys_ip0,t.sys_ip1,t.sys_ip2,t.sys_ip3);                    hdoip.html.TableInsElement(1);
+        hdoip.html.Text(label.p_eth_subnet);                                                            hdoip.html.TableInsElement(1);
+        hdoip.html.FormIP(REG_SYS_SUB_LABEL,t.sys_sub0,t.sys_sub1,t.sys_sub2,t.sys_sub3);               hdoip.html.TableInsElement(1);
+        hdoip.html.Text(label.p_eth_gateway);                                                           hdoip.html.TableInsElement(1);
+        hdoip.html.FormIP(REG_SYS_GATEWAY_LABEL,t.sys_gw0,t.sys_gw1,t.sys_gw2,t.sys_gw3);               hdoip.html.TableInsElement(1);
+        hdoip.html.Text("DNS Server 1");                                                                hdoip.html.TableInsElement(1);
+        hdoip.html.FormIP(REG_SYS_DNS1_LABEL,t.sys_dns1_0,t.sys_dns1_1,t.sys_dns1_2,t.sys_dns1_3);      hdoip.html.TableInsElement(1);
+        hdoip.html.Text("DNS Server 2");                                                                hdoip.html.TableInsElement(1);
+        hdoip.html.FormIP(REG_SYS_DNS2_LABEL,t.sys_dns2_0,t.sys_dns2_1,t.sys_dns2_2,t.sys_dns2_3);      hdoip.html.TableInsElement(1);
+        hdoip.html.Text(label.p_eth_dev_name);                                                          hdoip.html.TableInsElement(1);
+        hdoip.html.FormText(REG_SYS_NAME_LABEL, t.sys_name, 30, 0);                                     hdoip.html.TableInsElement(1);
+        hdoip.html.Text(label.p_eth_mode);                                                              hdoip.html.TableInsElement(1);
+        hdoip.html.FormRadio(REG_MODE_START_LABEL, t_sys_mode, 3, t.sys_mode)                           hdoip.html.TableInsElement(1);
 
         hdoip.html.TableBottom()
     
