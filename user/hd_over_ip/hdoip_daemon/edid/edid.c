@@ -115,6 +115,7 @@ int edid_verify(t_edid* edid)
 
 void edid_report(t_edid* edid)
 {
+#ifdef REPORT_EDID
     report(CONT "edid verify: %s", ((edid_verify(edid) == 0) ? "valid" : "error"));
     report(CONT "edid version is %d.%d", edid->edid_version, edid->edid_revision);
 
@@ -206,6 +207,7 @@ void edid_report(t_edid* edid)
                                     break;
         }
     }
+#endif // REPORT_EDID
 }
 
 void edid_hoi_limit(t_edid* edid)
