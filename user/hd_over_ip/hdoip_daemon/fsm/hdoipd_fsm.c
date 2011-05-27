@@ -504,9 +504,6 @@ void hdoipd_fsm_vrb(uint32_t event)
 void hdoipd_fsm_vtb(uint32_t event)
 {
     switch (event) {
-        case E_ADV7441A_HDCP:
-        	//rscp_listener_event(&hdoipd.listener, EVENT_HDCP_ON);
-        break;
         case E_ADV7441A_NC:
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
         break;
@@ -590,17 +587,16 @@ void hdoipd_event(uint32_t event)
         case E_ETO_AUDIO_OFF:
             hdoipd_clr_rsc(RSC_EAO);
         break;
-
         case E_ADV7441A_HDCP:
-        	printf("\n ******* Incomming stream is encrypted!! ****** \n");
+        	report(INFO "\n ******* Incomming stream is encrypted!! ****** ");
             hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
         break;
         case E_ADV7441A_NO_HDCP:
-        	printf("\n ******* Incomming stream is !!! NOT !!! encrypted!! ****** \n");
+        	report(INFO "\n ******* Incomming stream is !!! NOT !!! encrypted!! ****** ");
         	hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
         break;
-        case E_HDCP_STREAMING_ERROR:  /* restart VTB if Kernel detects HDCP streaming error*/
-        	report(INFO "HDCP streaming error !!!!!!!!!!!!!!!!!!!!");
+        case E_HDCP_STREAMING_ERROR:   // restart VTB if Kernel detects HDCP streaming error
+        	report(INFO "*********** HDCP streaming error ***********");
             if (hdoipd_state(HOID_VTB|HOID_VRB)) {
                 hdoipd_force_ready();
                 report(INFO "HDCP ERROR, restarting system");

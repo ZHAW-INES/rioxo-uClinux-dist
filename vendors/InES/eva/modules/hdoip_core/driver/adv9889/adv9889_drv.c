@@ -6,17 +6,6 @@
  */
 #include "adv9889_drv.h"
 
-#define ADV9889_INT1_ON     (ADV9889_INT1_MSEN|ADV9889_INT1_HPD)
-#define ADV9889_STATUS_ON   (ADV9889_STATUS_MSEN|ADV9889_STATUS_HPD)
-
-#define HDMI_IDENTIFIER_1   (0x03)
-#define HDMI_IDENTIFIER_2   (0x0C)
-#define HDMI_IDENTIFIER_3   (0x00)
-#define VENDOR_BLOCK        (0x60)
-#define AV_MUTED            (0x01)
-#define AV_UNMUTED          (0x00)
-#define HDCP_CHECK_LINK_INT (0x32)      /* 50 intervall */
-
 static inline void adv9889_write(t_adv9889* handle, uint8_t a, uint8_t x) {
 	i2c_drv_wreg8(handle->p_i2c, ADV9889_ADDRESS, a, x);
 }

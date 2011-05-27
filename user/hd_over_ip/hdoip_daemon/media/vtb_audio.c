@@ -10,6 +10,7 @@
 #include "hdoipd_fsm.h"
 #include "box_sys.h"
 #include "rscp_server.h"
+#include "hdcp.h"
 
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
@@ -32,8 +33,6 @@ int vtb_audio_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* r
 int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
     int n;
-    int sockfd;                   // for hdcp socket
-    struct sockaddr_in cli_addr;  // for hdcp socket
 
     report(INFO "vtb_audio_setup");
 
@@ -76,15 +75,8 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     // reserve resource
     hdoipd_set_vtb_state(VTB_AUD_IDLE);
 
-    // open hdcp socket if necessary
-   /* if ((n = hdcp_open_socket(&m->hdcp, &sockfd, &cli_addr)) != RSCP_SUCCESS){
-        report(" ? Could not open hdcp socket");
-        rscp_err_hdcp(rsp);
-        return RSCP_REQUEST_ERROR;
-    }*/
-
     //check if hdcp is forced by HDMI, user or client (over RSCP)
-    if (reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
+    if (reg_test("hdcp-force", "true") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
     	m->hdcp.hdcp_on = 1;
     	hdoipd.hdcp.enc_state = HDCP_ENABLED;
     }
@@ -94,14 +86,6 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     m->transport.server_port = PORT_RANGE(hdoipd.local.aud_port, hdoipd.local.aud_port);
 
     rscp_response_setup(rsp, &m->transport, media->sessionid, &m->hdcp);
-
-    // start hdcp session key exchange if necessary
-   /* char audio[]="audio";
-    if ((n = hdcp_ske_server(&m->hdcp, &sockfd, &cli_addr, &audio)) != RSCP_SUCCESS){
-            report(" ? Session key exchange failed");
-            rscp_err_hdcp(rsp);
-            return RSCP_REQUEST_ERROR;
-    }*/
 
     REPORT_RTX("TX", hdoipd.local, "->", vtb.remote, aud);
 
@@ -148,7 +132,6 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     //check if audio HDCP status is unchanged, else return ERROR
     report("TEST HDCP status before start audio play!");
     if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETO_AUDIO_EN)){
-   // if ((reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP)) && !(get_hdcp_status() & HDCP_ETO_AUDIO_EN)) {
     	if (hdoipd.hdcp.ske_executed){
     		hoi_drv_hdcp(hdoipd.hdcp.keys); //write keys to kernel
     		hoi_drv_hdcp_auden_eto();
@@ -204,7 +187,7 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     return RSCP_SUCCESS;
 }
 
-int vtb_audio_teardown(t_rscp_media* media, t_rscp_req_teardown *m, t_rscp_connection* rsp)
+int vtb_audio_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t_rscp_connection* rsp)
 {
     report(INFO "vtb_audio_teardown");
 
@@ -243,7 +226,7 @@ void vtb_audio_pause(t_rscp_media *media)
 }
 
 
-int vtb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
+int vtb_audio_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
     switch (m->event) {
         case EVENT_TICK:
@@ -258,17 +241,6 @@ int vtb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
 int vtb_audio_event(t_rscp_media *media, uint32_t event)
 {
     switch (event) {
-	    case EVENT_HDCP_ON:                                     //ADV7441 HDCP event received
-       		/*if (get_hdcp_status() & HDCP_ETO_AUDIO_EN) break;  //check if HDCP is already running
-       		report(INFO "ETO_AUDIO not yet enabled -> pause");*/
-            if (rscp_media_splaying(media)) {
-            	if (get_hdcp_status() & HDCP_ETO_AUDIO_EN) break;
-            	else{
-                    vtb_audio_pause(media);
-                    rscp_server_update(media, EVENT_HDCP_ON);
-            	}
-            }
-	    break;
         case EVENT_AUDIO_IN0_ON:
             if (rscp_media_splaying(media)) {
                 vtb_audio_pause(media);

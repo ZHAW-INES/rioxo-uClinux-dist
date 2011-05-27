@@ -1,17 +1,18 @@
 /*
  * hdcp.c
  *
- *  Created on: 28.04.2011
- *      Author: itin
+ * HDCP SERVER FUNCTIONS (needed for hdcp session key exchange)
+ *
+ * Created on: 28.04.2011
+ * Author: itin
  */
-
 #include "hdcp.h"
 
-/* HDCP SERVER FUNCTIONS (needed for hdcp session key exchange)
+/** State machine for session key exchange (server side)
+ *  Responds to client requests. If successful, client and server share
+ *  the same session key.
  *
  * */
-
-/*hdcp server session key exchange*/
 int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, int* timeout)
 {
     report(INFO "ID: %s CONTENT: %s",m->id, m->content);
@@ -33,7 +34,7 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, 
 	            hdcp_decrypt_flash_keys();/* Get the encrypted HDCP keys from flash and decrypt them*/
 	        	hdcp_generate_random_nr(&media->hdcp_var.rtx);
 	            rscp_response_hdcp(rsp, &media->sessionid, id[2], &media->hdcp_var.rtx); //respond to setup message
-	            report(INFO "hdcp.rtx1: %s", media->hdcp_var.rtx);
+	            report(INFO "RTX: %s", media->hdcp_var.rtx);
 	            return RSCP_SUCCESS;
 	        break;
 	        case HDCP_AKE_SEND_CERT:	/* check certificate */
@@ -60,12 +61,9 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, 
 	        	if (media->hdcp_state != HDCP_RECEIVE_RRX) return RSCP_HDCP_ERROR;
 	        	*timeout=0;
 	        	//check if H is valid
-	        	report(INFO "rtx: %s", media->hdcp_var.rtx);
-	        	report(INFO "rep: %d", media->hdcp_var.repeater);
-	        	report(INFO "km: %s", media->hdcp_var.km);
 	        	hdcp_calculate_h(&media->hdcp_var.rtx, &media->hdcp_var.repeater, HL, &media->hdcp_var.km, &media->hdcp_var.kd);  //calculate own H
-	        	report(INFO "kd: %s", media->hdcp_var.kd);
-	        	report(INFO "Own H: %s", HL);
+	        	//report(INFO "kd: %s", media->hdcp_var.kd);
+	        	//report(INFO "Own H: %s", HL);
 	        	report(INFO "Received H: %s", m->content);
 	        	if(strcmp(HL,&m->content) != 0) {					//compare received and own H
 	        		report(INFO "HMAC of H is wrong!");
@@ -81,9 +79,8 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, 
 	        	*timeout=0;
 	            report(INFO "rn: %s", media->hdcp_var.rn);
 	            report(INFO "rrx: %s", media->hdcp_var.rrx);
-	            report(INFO "kd: %s", media->hdcp_var.kd);
 	        	hdcp_calculate_l(&media->hdcp_var.rn, &media->hdcp_var.rrx, &media->hdcp_var.kd, HL);
-	        	report(INFO "Own L: %s", HL);
+	        	//report(INFO "Own L: %s", HL);
 	        	report(INFO "Received L: %s", m->content);
 	        	if(strcmp(HL,&m->content) != 0) {		//compare received and own L
 	        		report(INFO "HMAC of L is wrong!");
@@ -96,20 +93,16 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, 
 	        	/* concatenate and send enc session key and riv back */
 	            strcat(Edkey_ks,riv);
 	        	rscp_response_hdcp(rsp, &media->sessionid, id[11], Edkey_ks); 	//respond message SKE_Send_Eks
-	        	report(INFO "THE SESSION KEY: %s", ks);
+	        	//report(INFO "THE SESSION KEY: %s", ks); //SECRET VALUE, SHOW ONLY TO DEBUG
 	        	/* xor session key with lc128 */
 	        	xor_strings(ks, hdoipd.hdcp.lc128, ks,32);
 	        	/* write keys to HW and enable encryption*/
 	        	hdcp_convert_sk_char_int(ks, riv, &hdoipd.hdcp.keys);
-	        	for (i=0;i<6;i++){
+	        	/*for (i=0;i<6;i++){  //SECRET VALUES, SHOW ONLY TO DEBUG
 	        		report(INFO "THE KEYS: %08x",  hdoipd.hdcp.keys[i]);
-	        	}
-	        	hoi_drv_hdcp(hdoipd.hdcp.keys); //write keys to kernel
+	        	}*/
+	        	report(INFO "SESSION KEY EXCHANGE SUCCESSFUL!")
 	        	hdoipd.hdcp.ske_executed = HDCP_SKE_EXECUTED;
-		    	//hoi_drv_hdcp_viden_eto();
-		    	//report(INFO "Video encryption enabled (eto)!");
-		    	/*hoi_drv_hdcp_auden_eto();
-		    	report(INFO "Audio encryption enabled (eto)!");*/
 		    	media->hdcp_state = HDCP_SEND_KS;
 	            return RSCP_SUCCESS;
 	        break;
@@ -234,7 +227,7 @@ int hdcp_check_certificate(char* certificate, int* repeater, char* km, char* enc
 	    }
 	    strcat(seed,temp);
 	}
-	report(INFO "KM: %s",km);
+	//report(INFO "KM: %s",km); //SECRET VALUE, SHOW ONLY TO DEBUG
 	rsaes_encrypt(kpubrx_n,kpubrx_e,km,enc_km,seed);
 
 	return ret;
@@ -402,32 +395,32 @@ int hdcp_decrypt_flash_keys(){
 	p=&str[2*LENGHT_OFFSET+LENGHT_CERTRX+1];
 	str[2*LENGHT_OFFSET+LENGHT_CERTRX+LENGHT_PRIVATE_KEY+1]='\0';
 	strcpy(hdoipd.hdcp.p, p);
-	report(INFO "P: %s", hdoipd.hdcp.p);
+	//report(INFO "P: %s", hdoipd.hdcp.p);  //SECRET VALUE, SHWO ONLY TO DEBUG
 
 	q=&str[3*LENGHT_OFFSET+LENGHT_CERTRX+LENGHT_PRIVATE_KEY+2];
 	str[3*LENGHT_OFFSET+LENGHT_CERTRX+2*LENGHT_PRIVATE_KEY+2]='\0';
 	strcpy(hdoipd.hdcp.q, q);
-	report(INFO "Q: %s", hdoipd.hdcp.q);
+	//report(INFO "Q: %s", hdoipd.hdcp.q); //SECRET VALUE, SHWO ONLY TO DEBUG
 
 	dp=&str[4*LENGHT_OFFSET+LENGHT_CERTRX+2*LENGHT_PRIVATE_KEY+3];
 	str[4*LENGHT_OFFSET+LENGHT_CERTRX+3*LENGHT_PRIVATE_KEY+3]='\0';
 	strcpy(hdoipd.hdcp.dp, dp);
-	report(INFO "DP: %s", hdoipd.hdcp.dp);
+	//report(INFO "DP: %s", hdoipd.hdcp.dp); //SECRET VALUE, SHWO ONLY TO DEBUG
 
 	dq=&str[5*LENGHT_OFFSET+LENGHT_CERTRX+3*LENGHT_PRIVATE_KEY+4];
 	str[5*LENGHT_OFFSET+LENGHT_CERTRX+4*LENGHT_PRIVATE_KEY+4]='\0';
 	strcpy(hdoipd.hdcp.dq, dq);
-	report(INFO "DQ: %s", hdoipd.hdcp.dq);
+	//report(INFO "DQ: %s", hdoipd.hdcp.dq); //SECRET VALUE, SHWO ONLY TO DEBUG
 
 	qInv=&str[6*LENGHT_OFFSET+LENGHT_CERTRX+4*LENGHT_PRIVATE_KEY+5];
 	str[6*LENGHT_OFFSET+LENGHT_CERTRX+5*LENGHT_PRIVATE_KEY+5]='\0';
 	strcpy(hdoipd.hdcp.qInv, qInv);
-	report(INFO "qInv: %s", hdoipd.hdcp.qInv);
+	//report(INFO "qInv: %s", hdoipd.hdcp.qInv);
 
 	lc128=&str[7*LENGHT_OFFSET+ +LENGHT_CERTRX+5*LENGHT_PRIVATE_KEY+6];
 	str[7*LENGHT_OFFSET+LENGHT_CERTRX+5*LENGHT_PRIVATE_KEY+LENGHT_LC128+6]='\0';
 	strcpy(hdoipd.hdcp.lc128, lc128);
-	report(INFO "lc128: %s", hdoipd.hdcp.lc128);
+	//report(INFO "lc128: %s", hdoipd.hdcp.lc128); //SECRET VALUE, SHWO ONLY TO DEBUG
 
 	free(str);
 	return RSCP_SUCCESS;
@@ -449,151 +442,6 @@ int get_hdcp_status(){
 	if (eti_audio_en) temp = temp | HDCP_ETI_AUDIO_EN;
 	if (eto_video_en) temp = temp | HDCP_ETO_VIDEO_EN;
 	if (eto_audio_en) temp = temp | HDCP_ETO_AUDIO_EN;
-	report(INFO "HDCP HW Audio/Video status: %08x\n",temp);
+	report(INFO "HDCP HW Audio/Video status: %08x",temp);
 	return temp;
-}
-
-/**************** OLD STUFF *********************************/
-
-/** Open HDCP socket, bind socket but do not accept connections yet
- *
- *  @param pointer to hdcp struct
- *  @return error code
- */
-int hdcp_open_socket(t_rscp_hdcp* m, int* sockfd, struct sockaddr_in* cli_addr ) // sockfd, (struct sockaddr *) &cli_addr
-{
-    struct sockaddr_in serv_addr;
-
-    //set hdcp bit in registry if necessary
-    if (m->hdcp_on==1){
-    	reg_set("hdcp-force", "on");
-    }
-
-    //check if hdcp is forced by HDMI or over RSCP
-    if (reg_test("hdcp-force", "on") || hdoipd_rsc(RSC_VIDEO_IN_HDCP)) {
-    	m->hdcp_on = 1;
-    	//if (!(get_hdcp_status())){
-    	if (reg_test("hdcp-done", "off")){
-    	    //only start listener if HDCP is needed and not enabled yet
-    	    *sockfd = socket(AF_INET, SOCK_STREAM, 0);  //open a socket
-    	    if (sockfd < 0) error("ERROR opening socket");
-    	    bbzero((char *) &serv_addr, sizeof(serv_addr));
-    	    serv_addr.sin_family = AF_INET;
-    	    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    	    serv_addr.sin_port = htons(m->port_nr);
-    	    if (bind(*sockfd, (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0){
-                printf("error on binding\n");
-      		    return RSCP_HDCP_ERROR;
-      	    }
-    	    listen(*sockfd,3); //get ready for a client to connect
-    	    reg_set("hdcp-done", "on");
-    	}
-    }
-    return RSCP_SUCCESS;
-}
-
-
-
-/** Check if HDCP is needed, start HDCP server and start session key exchange (ske)
- *  If the ske was successful, write the new keys to the hardware
- *
- *  @param pointer to hdcp struct
- *  @return error code
- */
-int hdcp_ske_server(t_rscp_hdcp* m, int* sockfd, struct sockaddr_in* cli_addr, char* media_type){
-	int newsockfd;
-	socklen_t clilen;
-	char ip; //Not necessary in transmitter function
-	char riv[17];
-	char session_key[33];
-	uint32_t hdcp_keys[6];
-
-	if (m->hdcp_on == 1){//if hdcp is needed...
-	    if (get_hdcp_status()){  //session key exchange previously done
-	    	if (!(strcmp(media_type, "video")))	{
-	    		hoi_drv_hdcp_viden_eto();
-	    		printf("Video encryption enabled (eto)!\n"); //... audio encryption is already enabled
-	    	}
-	    	if (!(strcmp(media_type, "audio")))	{
-	    		hoi_drv_hdcp_auden_eto();
-	    		printf("Audio encryption enabled (eto)!\n"); //... video encryption is already enabled
-	    	}
-	    }
-	    else {
-	        //no hdcp encryption running, start SKE
-	    	clilen = sizeof(cli_addr);
-	    	newsockfd = accept(*sockfd, (struct sockaddr*) cli_addr, &clilen);//the new socket (file descriptor) for the client
-	    	if (newsockfd < 0) error("ERROR on accept");
-		    if (transmitter(newsockfd,ip,session_key,riv,hdcp_keys)){
-		        close(newsockfd);
-			    hoi_drv_hdcp(hdcp_keys); //write keys to kernel
-			    if (!(strcmp(media_type, "video")))	{
-			    	hoi_drv_hdcp_viden_eto();
-			        printf("Video encryption enabled (eto)!\n");
-			    }
-			    if (!(strcmp(media_type, "audio")))	{
-			    	hoi_drv_hdcp_auden_eto();
-			        printf("Audio encryption enabled (eto)!\n");
-			    }
-		    }
-		    else{
-		        close(newsockfd);
-			    return RSCP_HDCP_ERROR; //abort if SKE was not successful
-		    }
-	    }
-	}
-	return RSCP_SUCCESS;
-
-}
-
-/** On client side: Check if HDCP is needed and start session key exchange (ske)
- *  If the ske was successful, write the new keys to the hardware
- *
- *  @param pointer to hdcp struct
- *  @param pointer to media_type (audio or video)
- *  @return error code
- */
-int hdcp_ske_client(t_rscp_hdcp* m, char* media_type){
-
-	if (m->hdcp_on == 1){                                  //if hdcp is needed...
-        if (get_hdcp_status()){                        //only start SKE if hdcp is still disabled
-		    if (!(strcmp(media_type, "video")))	{
-		        hoi_drv_hdcp_viden_eti();
-		    	printf("Video encryption enabled (eti)!\n"); //... audio encryption is already enabled
-		    }
-		    if (!(strcmp(media_type, "audio")))	{
-		    	hoi_drv_hdcp_auden_eti();
-		    	printf("Audio encryption enabled (eti)!\n"); //... video encryption is already enabled
-		    }
-		}
-		else {
-		    //no hdcp encryption running, start SKE
-		    char port_nr_string[10];
-		    char riv[17];
-		    char session_key[33];
-		    char *ip;
-		 	uint32_t hdcp_keys[6];
-		    ip=reg_get("remote-uri");
-		  	ip += 7;
-		   	printf("Remote-uri: %s\n",ip);
-		    sprintf(port_nr_string, "%d",m->port_nr);
-		    if (receiver(port_nr_string,ip,session_key,riv,hdcp_keys)){
-		        hoi_drv_hdcp(hdcp_keys); 				//write keys to kernel
-			    if (!(strcmp(media_type, "video")))	{
-//DISABLED -> NO KEYS		    	//hoi_drv_hdcp_adv9889en();   		//enable hdcp encryption in AD9889
-			        hoi_drv_hdcp_viden_eti();
-			    	printf("Video encryption enabled (eti)!\n");
-			    }
-			    if (!(strcmp(media_type, "audio")))	{
-//DISABLED -> NO KEYS			    //hoi_drv_hdcp_adv9889en();			//enable hdcp encryption in AD9889
-			    	hoi_drv_hdcp_auden_eti();
-			    	printf("Audio encryption enabled (eti)!\n");
-			    }
-		    }
-		    else{
-		    	return RSCP_HDCP_ERROR; //abort if SKE was not successful
-		    }
-        }
-    }
-	return RSCP_SUCCESS;
 }

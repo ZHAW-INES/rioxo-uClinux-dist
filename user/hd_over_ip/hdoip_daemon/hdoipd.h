@@ -119,7 +119,6 @@ enum {
     EVENT_VIDEO_SINK_OFF= 0x00000200,   // Video input deactivated
     EVENT_VIDEO_STIN_OFF= 0x00001000,   // Ethernet Video Stream Input stoped
     EVENT_AUDIO_STIN_OFF= 0x00002000,   // Ethernet Audio Stream Input stoped
-    EVENT_HDCP_ON		= 0x00010000,   // ADV7441 receives HDCP encrypted content
     EVENT_TICK          = 0x10000000    // a tick event
 };
 
@@ -187,7 +186,7 @@ typedef struct {
 
     bool                auto_stream;    // flag if device should do auto stream after boot
     t_hdoip_amx         amx;            // AMX control releated structure
-    t_hdcp 		hdcp;
+    t_hdcp 				hdcp;
 } t_hdoipd;
 
 

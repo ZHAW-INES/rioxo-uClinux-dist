@@ -16,7 +16,7 @@
 #define E_ADV7441A_NO_HDCP      (E_ADV7441A_ID + 0x00000006)  /* no HDCP encrypted content */
 #define E_ADV7441A_HDCP_KEY_ERR (E_ADV7441A_ID + 0x00000007)  /* HDCP key error (not read or error) */
 /* HDCP events */
-#define E_HDCP_STREAMING_ERROR (E_ADV7441A_ID + 0x00000008)  /* HDCP Error, streaming without permission */
+#define E_HDCP_STREAMING_ERROR (E_ADV7441A_ID + 0x00000009)  /* HDCP Error, streaming without permission */
 
 /* ETO events */
 #define E_ADV9889_ID            (0x90000000)

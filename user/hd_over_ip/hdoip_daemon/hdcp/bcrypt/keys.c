@@ -10,9 +10,14 @@
 #include "includes.h"
 #include "defines.h"
 #include "functions.h"
+#include "hoi_drv_user.h"
 
 char * getkey(int type){
   char *key, *key2, overflow[2], *ch;
+  char key_str[33]="";
+  char temp[9];
+  int i;
+  uint32_t keys_from_HW[4];
 
 #ifndef WIN32	/* Win32 doesn't have termios.h */
   struct termios term, termsave;
@@ -38,12 +43,18 @@ char * getkey(int type){
     fprintf(stderr, "Encryption key:");
     fgets(key, MAXKEYBYTES + 1, stdin);
   }*/
-  int i;
-  *key="12345678";
-  char key_one[]="12345678";
-   for (i=0;i<8;i++){   
-   *(key + i)=key_one[i];
-   //printf("%c", *(key + i));
+
+  // Read keys to decrypt flash from HW
+
+  hoi_drv_hdcp_get_key(keys_from_HW);
+  //convert keys to string
+  for (i=3;i>-1;i--){
+	  sprintf(temp,"%08x",keys_from_HW[i]);
+	  strcat(key_str, temp);
+  }
+  //printf("THE KEY: %s", key_str); //SECRET VALUE, SHOW ONLY TO DEBUG
+   for (i=0;i<33;i++){
+   *(key + i)=key_str[i];
    }
 
  /* if (memchr(key, (char) 10, MAXKEYBYTES + 1) == NULL) {

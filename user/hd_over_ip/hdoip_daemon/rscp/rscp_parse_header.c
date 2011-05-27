@@ -221,8 +221,7 @@ int rscp_parse_hdcp(char* line, t_rscp_hdcp *hdcp)
 	 next(token, line);
 	 //printf("token1: %s\n",token);
 	 b = str_hdcp(token);
-	 printf("Status: %i\n",a);
-	 printf("PortNr: %i\n",b);
+	 report(INFO "HDCP Status: %i\n",a);
 
 	 hdcp->hdcp_on = a;
 	 hdcp->port_nr = b;

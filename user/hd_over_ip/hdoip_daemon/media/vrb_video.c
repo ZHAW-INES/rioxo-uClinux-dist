@@ -58,37 +58,7 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 			rscp_err_hdcp(rsp);
 			return RSCP_REQUEST_ERROR;
 		}
-
     }
-    /*if (m->hdcp.hdcp_on == 1){
-		if (hdoipd.hdcp.ske_executed) {
-			report(INFO "SKE EXECUTED: %d",hdoipd.hdcp.ske_executed);
-			hoi_drv_hdcp(&hdoipd.hdcp.keys); 	// write keys to kernel
-			report(INFO "Video encryption enabled (eti)!");
-			hoi_drv_hdcp_viden_eti();
-		}
-		else {
-			if (rscp_client_hdcp(client) != RSCP_SUCCESS){
-				report(" ? Session key exchange failed");
-				rscp_err_hdcp(rsp);
-				return RSCP_REQUEST_ERROR;
-			}
-			//rscp_client_hdcp(client); 			// start session key exchange
-			hoi_drv_hdcp(&hdoipd.hdcp.keys); 	// write keys to kernel
-			report(INFO "Video encryption enabled (eti)!");
-			hoi_drv_hdcp_viden_eti();
-		}
-	}*/
-
-
-
-   /* char video[]="video";
-    if ((n = hdcp_ske_client(&m->hdcp, &video)) != RSCP_SUCCESS){
-        report(" ? Session key exchange failed");
-        //rscp_err_hdcp(rsp);
-        //return RSCP_REQUEST_ERROR;
-        return n;
-    }*/
 
 #ifdef ETI_PATH
     // setup ethernet input
@@ -254,21 +224,6 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
             rscp_client_set_play(media->creator);
             return RSCP_PAUSE;
         break;
-
-        case EVENT_HDCP_ON:
-        	report(INFO "HDCP ERROR EVENT RECEIVED (VIDEO)");
-            /*if (rscp_media_splaying(media)) {
-                vrb_video_pause(media);
-            }
-
-            // restart
-            rscp_client_set_play(media->creator);
-            return RSCP_PAUSE;*/
-        	rscp_client_set_teardown(client);
-        	hdoipd_set_task_start_vrb();
-        	return RSCP_PAUSE;
-        break;
-
         case EVENT_VIDEO_IN_OFF:
             vrb_video_pause(media);
             osd_permanent(true);
@@ -297,7 +252,6 @@ int vrb_video_ready(t_rscp_media UNUSED *media)
 int vrb_video_dosetup(t_rscp_media *media)
 {
     int port;
-    char *p;
     t_rscp_transport transport;
     t_rscp_edid edid;
     t_rscp_client *client = media->creator;
@@ -305,7 +259,7 @@ int vrb_video_dosetup(t_rscp_media *media)
     //hdcp.hdcp_on = 0;
     hdcp.port_nr = 57000;	  //set port number
 
-    hdcp.hdcp_on = reg_test("hdcp-force", "on");
+    hdcp.hdcp_on = reg_test("hdcp-force", "true");
 
     if (!client) return RSCP_NULL_POINTER;
 
