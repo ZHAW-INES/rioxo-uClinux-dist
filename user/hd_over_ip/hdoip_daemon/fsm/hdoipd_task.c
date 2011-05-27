@@ -18,6 +18,7 @@ enum {
 	HOID_TSK_UPD_SYS_SUBNET 	= 0x00000001,
 	HOID_TSK_UPD_SYS_GATEWAY 	= 0x00000002,
 	HOID_TSK_UPD_SYS_MAC 		= 0x00000004,
+	HOID_TSK_UPD_SYS_DNS        = 0x00000008,
 	HOID_TSK_UPD_REMOTE_URI 	= 0x00000010,
 	HOID_TSK_UPD_HELLO_URI 		= 0x00000020,
 	HOID_TSK_UPD_MODE_START 	= 0x00000040,
@@ -270,6 +271,11 @@ void task_get_system_update(char** p)
 			system(buf);
 		}
 
+		/* DNS server */
+		if(update_vector & HOID_TSK_UPD_SYS_DNS) {
+		    hoi_cfg_set_dns_server(reg_get("system-dns1"), reg_get("system-dns2"));
+		}
+
 		/* remote URI  */
 		if(update_vector & HOID_TSK_UPD_REMOTE_URI) {
 			report("Updating remote URI...");
@@ -430,6 +436,16 @@ void task_set_bw(char* p)
     if (bw) hoi_drv_bw(bw);
 }
 
+void task_set_system_dns1(char* p)
+{
+    update_vector |= HOID_TSK_UPD_SYS_DNS | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
+}
+
+void task_set_system_dns2(char* p)
+{
+    update_vector |= HOID_TSK_UPD_SYS_DNS | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
+}
+
 void task_set_ip(char* p)
 {
 	update_vector |= HOID_TSK_UPD_SYS_IP | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
@@ -509,6 +525,8 @@ void hdoipd_register_task()
     set_listener("system-subnet", task_set_subnet);
     set_listener("system-gateway", task_set_gateway);
     set_listener("system-mac", task_set_mac);
+    set_listener("system-dns1", task_set_system_dns1);
+    set_listener("system-dns2", task_set_system_dns2);
     set_listener("network-delay", task_set_network_delay);
     set_listener("mode-start", task_set_mode_start);
     set_listener("mode-media", task_set_mode_media);

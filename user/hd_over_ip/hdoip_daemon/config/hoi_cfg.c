@@ -144,7 +144,6 @@ int hoi_cfg_get_dns_server(char *dns1, char *dns2)
             if(strcmp(key, "nameserver") == 0) {
                 value = strtok(0, "\n");
                 if(value != NULL) {
-                    report("value : %s",value);
                     if(i == 0) {
                         strcpy(dns1, value);
                     } else if(i == 1) {
