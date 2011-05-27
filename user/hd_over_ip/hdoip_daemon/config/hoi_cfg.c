@@ -107,7 +107,8 @@ int hoi_cfg_set_dns_server(char* dns1, char* dns2)
     int  len=0, ret = 0;
     int *fd;
 
-    fd = open("/etc/resolv.conf", O_RDWR, 0600);
+    system("/bin/rm /etc/resolv.conf");
+    fd = open("/etc/resolv.conf", O_CREAT|O_RDWR, 0600);
     if(fd) {
         if(strcmp(dns1,"") != 0) {
             sprintf(line, "nameserver %s\n", dns1);
