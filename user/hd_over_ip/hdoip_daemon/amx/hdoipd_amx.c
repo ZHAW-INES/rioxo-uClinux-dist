@@ -27,12 +27,13 @@ int hdoipd_amx_open(t_hdoip_amx *handle, bool enable, int interval, uint32_t ip,
         handle->socket = socket(PF_INET, SOCK_DGRAM, 0);
 
         if(handle->socket) {
-            if((ret = setsockopt(handle->socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast))) == -1) {
+            ret = setsockopt(handle->socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
+            if(ret == -1) {
                 handle->socket = 0;
                 return ret;
             }
-
-            if(ret = connect(handle->socket, (struct sockaddr*)&(handle->addr_in), sizeof(struct sockaddr_in)) == -1) {
+            ret = connect(handle->socket, (struct sockaddr*)&(handle->addr_in), sizeof(struct sockaddr_in));
+            if(ret == -1) {
                 handle->socket = 0;
                 return ret;
             }
