@@ -190,20 +190,20 @@ void edid_report(t_edid* edid)
     if(edid->extension_count == 1) {
         report(CONT "extension block : ");
         switch(edid->extension_block[0]) {
-            case EDID_EXT_TAG_CEA:  printf("CEA 861 Series Extension\n");
+            case EDID_EXT_TAG_CEA:  report(CONT "CEA 861 Series Extension\n");
                                     cea_861_report((t_ext_cea_861*) edid->extension_block);
                                     break;
-            case EDID_EXT_TAG_VTB:  printf("Video Timing Block Extension\n");
+            case EDID_EXT_TAG_VTB:  report(CONT "Video Timing Block Extension\n");
                                     break;
-            case EDID_EXT_TAG_DI:   printf("Display Information Extension\n");
+            case EDID_EXT_TAG_DI:   report(CONT "Display Information Extension\n");
                                     break;
-            case EDID_EXT_TAG_LS:   printf("Localized String Extension\n");
+            case EDID_EXT_TAG_LS:   report(CONT "Localized String Extension\n");
                                     break;
-            case EDID_EXT_TAG_DPVL: printf("Digital Packet Video Link Extension\n");
+            case EDID_EXT_TAG_DPVL: report(CONT "Digital Packet Video Link Extension\n");
                                     break;
-            case EDID_EXT_TAG_BLOCK_MAP: printf("Extension Block Map\n");
+            case EDID_EXT_TAG_BLOCK_MAP: report(CONT "Extension Block Map\n");
                                     break;
-            case EDID_EXT_TAG_MANUFACT: printf("Extension defined by the display manufacturer\n");
+            case EDID_EXT_TAG_MANUFACT: report(CONT "Extension defined by the display manufacturer\n");
                                     break;
         }
     }
