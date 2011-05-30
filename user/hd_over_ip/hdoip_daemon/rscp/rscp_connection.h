@@ -30,7 +30,7 @@ typedef struct {
     uint32_t        address;        // Remote IP
     int             ecode;          // Error code
     char*           ereason;        // Error reason
-    int             doc;            // (?)
+    int             doc;            // plot flags (RSCP_CON_DOC_RX, RSCP_CON_DOC_TX)
 } t_rscp_connection;
 
 // TODO: send content if not enough size and retry snprintf?
