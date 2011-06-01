@@ -19,6 +19,10 @@
 #include "hoi_drv_user.h"
 #include "version.h"
 
+#include <netdb.h>
+extern int h_errno;
+
+
 int hoi_msg(void* param)
 {
     int ret;
@@ -259,7 +263,7 @@ int hoi_drv_show(bool compress, void* buffer, t_video_timing* timing, uint32_t a
 
 int hoi_drv_debug(void)
 {
-    int ret;
+    int ret=0;
     t_hoi_msg_debug msg;
 
     hoi_msg_debug_init(&msg);
