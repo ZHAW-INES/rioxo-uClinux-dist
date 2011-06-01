@@ -714,6 +714,8 @@ bool hdoipd_init(int drv)
 
     hdoipd_registry_update();
 
+    hdoipd.dhcp = reg_test("system-dhcp", "true");
+
     hoi_cfg_system();
 
     hdoipd.local.vid_port = htons(reg_get_int("video-port"));
@@ -721,6 +723,7 @@ bool hdoipd_init(int drv)
     hdoipd.drivers = DRV_ADV9889 | DRV_ADV7441;
 
     hdoipd.auto_stream = reg_test("auto-stream", "true");
+
 
     if(hdoipd_amx_open(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"),
                     inet_addr(reg_get("amx-hello-ip")), htons(reg_get_int("amx-hello-port")))) {

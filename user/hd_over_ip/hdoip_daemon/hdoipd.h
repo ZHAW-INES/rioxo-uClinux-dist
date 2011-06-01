@@ -144,6 +144,7 @@ typedef struct {
     int                 eth_timeout;    // amount of ticks till connection timeout is detected
 
     bool                auto_stream;    // flag if device should do auto stream after boot
+    bool                dhcp;           // flag if DHCP client is used
     t_hdoip_amx         amx;            // AMX control releated structure
 } t_hdoipd;
 
