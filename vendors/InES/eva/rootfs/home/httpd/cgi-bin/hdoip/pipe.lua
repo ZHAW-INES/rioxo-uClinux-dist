@@ -4,7 +4,8 @@ require ("hdoip.convert")
 
 REG_SYS_UPDATE = "system-update"
 REG_SYS_IF = "system-ifname"
-REG_SYS_NAME = "system-name"
+REG_SYS_HOST_NAME = "system-hostname"
+REG_SYS_DEV_CAPTION = "system-dev-caption"
 REG_SYS_IP = "system-ip"
 REG_SYS_DNS1 = "system-dns1"
 REG_SYS_DNS2 = "system-dns2"

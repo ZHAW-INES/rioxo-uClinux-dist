@@ -9,7 +9,8 @@ REG_SYS_IP_LABEL = "sys_ip"
 REG_SYS_GATEWAY_LABEL = "sys_gw"
 REG_SYS_DNS1_LABEL = "sys_dns1_"
 REG_SYS_DNS2_LABEL = "sys_dns2_"
-REG_SYS_NAME_LABEL = "sys_name"
+REG_SYS_HOST_NAME_LABEL = "sys_hostname"
+REG_SYS_DEV_CAPTION_LABEL = "sys_caption"
 REG_SYS_MAC_LABEL = "sys_mac"
 REG_SYS_SUB_LABEL = "sys_sub"
 REG_SYS_DHCP = "sys_dhcp"
@@ -65,7 +66,8 @@ function show(t)
 
     if(t.sent == nil) then
         t.sys_mode = t_sys_mode_reg[hdoip.pipe.getParam(hdoip.pipe.REG_MODE_START)]
-        t.sys_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_NAME)
+        t.sys_hostname = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_HOST_NAME)
+        t.sys_caption = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DEV_CAPTION)
         
         get_network(t)
         
@@ -78,8 +80,12 @@ function show(t)
         
 
     else
-        t.sys_name = hdoip.html.unescape(t.sys_name)
-        hdoip.pipe.setParam(hdoip.pipe.REG_SYS_NAME, t.sys_name)
+        t.sys_hostname = hdoip.html.unescape(t.sys_hostname)
+        hdoip.pipe.setParam(hdoip.pipe.REG_SYS_HOST_NAME, t.sys_hostname)
+        
+        t.sys_caption = hdoip.html.unescape(t.sys_caption)
+        hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DEV_CAPTION, t.sys_caption)
+        
         
         if(t.sys_dhcp == "1") then
             t.sys_dhcp_str = "true"
@@ -163,7 +169,9 @@ function show(t)
         hdoip.html.Text(label.p_eth_dns_server.." 2");                                                          hdoip.html.TableInsElement(1);
         hdoip.html.FormIP(REG_SYS_DNS2_LABEL,t.sys_dns2_0,t.sys_dns2_1,t.sys_dns2_2,t.sys_dns2_3, t.sys_dhcp);  hdoip.html.TableInsElement(1);
         hdoip.html.Text(label.p_eth_dev_name);                                                                  hdoip.html.TableInsElement(1);
-        hdoip.html.FormText(REG_SYS_NAME_LABEL, t.sys_name, 30, 0);                                             hdoip.html.TableInsElement(1);
+        hdoip.html.FormText(REG_SYS_HOST_NAME_LABEL, t.sys_hostname, 30, 0);                                    hdoip.html.TableInsElement(1);
+        hdoip.html.Text(label.p_eth_dev_caption);                                                               hdoip.html.TableInsElement(1);
+        hdoip.html.FormText(REG_SYS_DEV_CAPTION_LABEL, t.sys_caption, 30, 0);                                   hdoip.html.TableInsElement(1);
         hdoip.html.Text(label.p_eth_mode);                                                                      hdoip.html.TableInsElement(1);
         hdoip.html.FormRadio(REG_MODE_START_LABEL, t_sys_mode, 3, t.sys_mode)                                   hdoip.html.TableInsElement(1);
 

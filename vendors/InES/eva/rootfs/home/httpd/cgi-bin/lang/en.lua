@@ -98,6 +98,7 @@ label = {
     p_eth_subnet = "Subnet mask";
     p_eth_mode = "System mode";
     p_eth_dev_name = "Host name";
+    p_eth_dev_caption = "Device caption";
     p_eth_ip_dhcp = "Obtain an IP address from a DHCP server";
     p_eth_ip_static = "Specify an IP address";
     p_eth_dns_server = "DNS server";

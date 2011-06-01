@@ -97,6 +97,7 @@ label = {
     p_eth_subnet = "Subnetzmaske";
     p_eth_mode = "Systemmodus";
     p_eth_dev_name = "Hostname";
+    p_eth_dev_caption = "Beschreibung";
     p_eth_ip_dhcp = "IP-Adresse von einem DHCP-Server beziehen";
     p_eth_ip_static = "Feste IP-Adresse setzen";
     p_eth_dns_server = "DNS-Server";
