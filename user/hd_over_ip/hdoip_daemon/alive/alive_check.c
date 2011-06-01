@@ -182,10 +182,11 @@ int alive_check_server_update(t_alive_check *handle, bool enable, uint16_t port,
 
 void alive_check_init_msg_vrb_alive()
 {
+    uint32_t  hello_uri_length = 200;
     char *s;
-    uint32_t  hello_uri_length = 30;
     char hello_uri[hello_uri_length];
     t_str_uri uri;
+    struct hostent* host;
 
     s = reg_get("hello-uri");
     if (strlen(s) < hello_uri_length)
@@ -194,10 +195,15 @@ void alive_check_init_msg_vrb_alive()
         memcpy(hello_uri, s, hello_uri_length);
         perror("[ALIVE] hello-uri size too long");
     }
+
     str_split_uri(&uri, hello_uri);
 
+    if (!(host = gethostbyname(uri.server))) {
+        perror("[ALIVE] get host by name failed");
+    }
+
     if reg_test("mode-start", "vrb") {
-        if (alive_check_client_open(&hdoipd.alive_check, reg_test("alive-check", "true"), reg_get_int("alive-check-interval"), inet_addr(uri.server), reg_get_int("alive-check-port"), 0, true)) {
+        if (alive_check_client_open(&hdoipd.alive_check, reg_test("alive-check", "true"), reg_get_int("alive-check-interval"), *((uint32_t*)host->h_addr_list[0]), reg_get_int("alive-check-port"), 0, true)) {
             perror("[ALIVE] alive_check_client_open() failed");
         }
     }
