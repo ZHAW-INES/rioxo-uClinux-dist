@@ -53,6 +53,12 @@ void hdoipd_set_default()
     reg_set("amx-hello-msg", "HELLO");
     reg_set("amx-hello-interval", "5");
 
+    reg_set("multicast_en", "false");
+    reg_set("multicast_group", "224.0.1.0");
+
+    reg_set("alive-check", "true");
+    reg_set("alive-check-interval", "5");
+    reg_set("alive-check-port", "2002");
 }
 
 static void update_0_0_to_0_1()
@@ -111,6 +117,15 @@ static void update_0_2_to_0_3()
     reg_set("system-hostname", p);
     reg_set("system-dev-caption", "e.q. blu-ray player");
 
+    p = reg_get("multicast_group_video");
+    if (p) {
+        reg_del("multicast_group_video");
+    }
+
+    p = reg_get("multicast_group_audio");
+    if (p) {
+        reg_del("multicast_group_audio");
+    }
 
     reg_set(CFGTAG, "v0.3");
 
@@ -152,7 +167,7 @@ void hdoipd_registry_update()
         hoi_cfg_write(CFG_FILE);
     }
 
-    if (!reg_test(CFGTAG, "v0.1")) {
+    if (!reg_test(CFGTAG, "v0.3")) {
         report(INFO "unknown config version");
     }
 }

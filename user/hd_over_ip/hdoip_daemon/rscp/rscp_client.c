@@ -98,9 +98,9 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
         memset(&dest_addr, 0, sizeof(struct sockaddr_in));
         dest_addr.sin_family = AF_INET;
         dest_addr.sin_port = port;
-        dest_addr.sin_addr.s_addr = addr.s_addr;
+        dest_addr.sin_addr.s_addr = addr.s_addr;        // remote address
 
-        if (connect(fd, (struct sockaddr*)&dest_addr, sizeof(struct sockaddr)) == -1) {
+        if (connect(fd, (struct sockaddr_in*)&dest_addr, sizeof(struct sockaddr_in)) == -1) {
             close(fd);
             perrno(ERROR "RSCP Client [%d]: connection refused", client->nr);
             ret = RSCP_CLIENT_ERROR;
@@ -160,6 +160,7 @@ int rscp_client_close(t_rscp_client* client)
 
     client->task = E_RSCP_CLIENT_KILL;
     shutdown(client->con.fdw, SHUT_RDWR);
+    close(client->con.fdw);
 
     // detach client from media
     if (client->media) {

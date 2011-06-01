@@ -11,6 +11,7 @@
 #include "vrb_audio.h"
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
+#include "multicast.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout)
@@ -20,6 +21,8 @@ static struct {
     t_hdoip_eth         remote;
     int                 timeout;
     int                 alive_ping;
+    uint32_t            dst_ip;
+    bool                multicast_en;
 } vrb;
 
 int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection* rsp)
@@ -40,12 +43,21 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     vrb.remote.aud_port = PORT_RANGE_START(m->transport.server_port);
     hdoipd.local.aud_port = PORT_RANGE_START(m->transport.client_port);
 
+    vrb.multicast_en = m->transport.multicast || reg_get("multicast_en");
+
+    if (vrb.multicast_en) {
+        vrb.dst_ip = m->transport.multicast_group;
+        join_multicast_group(vrb.dst_ip);
+    }
+    else {
+        vrb.dst_ip = hdoipd.local.address;
+    }
+
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, aud);
 
 #ifdef ETI_PATH
     // TODO: separete Audio/Video
-    hoi_drv_eti(hdoipd.local.address, vrb.remote.address,
-            0, hdoipd.local.aud_port);
+    hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port);
 #endif
 
     hdoipd_set_vtb_state(VTB_AUD_IDLE);
@@ -107,6 +119,10 @@ int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown *m, t_rscp_conne
         hdoipd_set_vtb_state(VTB_AUD_OFF);
     }
 
+    if (vrb.multicast_en) {
+        leave_multicast_group(vrb.dst_ip);
+    }
+
     if (rsp) {
         osd_printf("audio remote off...\n");
     }
@@ -153,11 +169,14 @@ void vrb_audio_pause(t_rscp_media *media)
         hdoipd_hw_reset(DRV_RST_AUD_OUT);
 #endif
 #ifdef ETI_PATH
-        hoi_drv_eti(hdoipd.local.address, vrb.remote.address,
-                0, hdoipd.local.aud_port);
+        hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port);
 #endif
         hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
         hdoipd_set_vtb_state(VTB_AUD_IDLE);
+    }
+
+    if (vrb.multicast_en) {
+        leave_multicast_group(vrb.dst_ip);
     }
 }
 
@@ -185,8 +204,8 @@ int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
 
         case EVENT_AUDIO_IN0_OFF:
             vrb_audio_pause(media);
-            osd_printf("vtb.audio stoped streaming...\n");
-            report(ERROR "vtb.audio stoped streaming");
+            osd_printf("vtb.audio stopped streaming...\n");
+            report(ERROR "vtb.audio stopped streaming");
             return RSCP_PAUSE;
         break;
     }
@@ -218,6 +237,7 @@ int vrb_audio_dosetup(t_rscp_media *media)
     rscp_default_transport(&transport); // TODO: daemon transport configuration
     port = reg_get_int("audio-port");
     transport.client_port = PORT_RANGE(htons(port), htons(port+1));
+    transport.multicast = reg_get("multicast_en");
 
     return rscp_client_setup(client, &transport, 0);
 }

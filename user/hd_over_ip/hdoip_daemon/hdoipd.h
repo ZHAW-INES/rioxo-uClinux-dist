@@ -17,7 +17,7 @@
 #include "debug.h"
 #include "rscp_include.h"
 #include "bstmap.h"
-#include "hdoipd_amx.h"
+#include "alive_check.h"
 
 #define CFG_FILE                    "/mnt/config/hdoipd.cfg"
 #define CFG_RSP_TIMEOUT             20
@@ -144,8 +144,9 @@ typedef struct {
     int                 eth_timeout;    // amount of ticks till connection timeout is detected
 
     bool                auto_stream;    // flag if device should do auto stream after boot
+    t_alive_check       amx;            // AMX control releated structure
+    t_alive_check		alive_check;    // structure to test if server is running
     bool                dhcp;           // flag if DHCP client is used
-    t_hdoip_amx         amx;            // AMX control releated structure
 } t_hdoipd;
 
 

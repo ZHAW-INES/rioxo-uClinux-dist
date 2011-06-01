@@ -169,7 +169,8 @@ typedef struct {
     uint32_t            udp_port_vid;
     uint32_t            udp_port_aud;
     uint32_t            ip_address_dst;
-    uint32_t            ip_address_src;
+    uint32_t            ip_address_src_aud;
+    uint32_t            ip_address_src_vid;
 } t_hoi_msg_eti;
 
 #define hoi_msg_eti_init(p) hoi_msg_init(p, HOI_MSG_ETI, t_hoi_msg_eti)

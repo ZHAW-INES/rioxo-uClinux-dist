@@ -31,6 +31,8 @@ echo 300  > /proc/sys/vm/vfs_cache_pressure
 # /sbin/route add -net 224.0.0.0 netmask 224.0.0.0 dev eth0 # in hdoip_daemon now
 # Allow multicast/broadcast ping
 echo 0 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+# Force IGMP version 2
+echo 2 > /proc/sys/net/ipv4/conf/eth0/force_igmp_version
 
 /sbin/modprobe hdoip_core
 

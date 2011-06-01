@@ -70,6 +70,22 @@ typedef struct t_rscp_media {
     frscpe* event;              // local (events)
 } t_rscp_media;
 
+typedef struct {
+    uint32_t            address;        // remote ip address
+    uint8_t             mac[6];         // mac address
+    uint32_t            vid_port;
+    uint32_t            aud_port;
+} t_hdoip_ethernet;
+
+// Media cookie
+typedef struct {
+    int                 timeout;
+    int                 alive_ping;
+    t_rscp_edid         edid;
+    t_hdoip_ethernet    remote;
+} t_multicast_cookie;
+
+
 // rscp media server
 int rmsq_setup(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp);

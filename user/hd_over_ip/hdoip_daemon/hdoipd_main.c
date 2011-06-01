@@ -231,7 +231,9 @@ int main(int argc, char **argv)
             lock("main-close");
                 close(hdoipd.drv);
 
-                hdoipd_amx_close(&hdoipd.amx);
+                if(hdoipd.amx.enable) {
+                    alive_check_client_close(&hdoipd.amx);
+                }
 
                 report("hdoipd closed");
             unlock("main-close");
