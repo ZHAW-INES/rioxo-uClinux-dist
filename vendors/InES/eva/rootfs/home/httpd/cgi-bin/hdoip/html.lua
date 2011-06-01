@@ -146,14 +146,22 @@ function FormRadio(name, values, size, selected)
     end
 end 
 
-function FormIP(name, value0, value1, value2, value3)
-    FormText(name .. "0", value0, 3, 0)
-    html_str = html_str .. " . "
-    FormText(name .. "1", value1, 3, 0)
-    html_str = html_str .. " . "
-    FormText(name .. "2", value2, 3, 0)
-    html_str = html_str .. " . "
-    FormText(name .. "3", value3, 3, 0)
+function FormIP(name, value0, value1, value2, value3, disable)
+    if((disable ~= nil) and (disable > 0))then
+        if((value0 ~= "") and (value1 ~= "") and (value2 ~= "") and (value3 ~= "")) then
+            Text(value0..'.'..value1..'.'..value2..'.'..value3)
+        else 
+            Text("")
+        end
+    else
+	    FormText(name .. "0", value0, 3, 0)
+	    html_str = html_str .. " . "
+	    FormText(name .. "1", value1, 3, 0)
+	    html_str = html_str .. " . "
+	    FormText(name .. "2", value2, 3, 0)
+	    html_str = html_str .. " . "
+	    FormText(name .. "3", value3, 3, 0)
+    end
 end
 
 function FormCheckbox(name, value, label, checked)

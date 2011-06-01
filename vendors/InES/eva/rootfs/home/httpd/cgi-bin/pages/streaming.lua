@@ -19,8 +19,9 @@ local MEDIA_SEL_VID = "video"
 function show(t)
 
     if(t.sent == nil) then
-        local str = hdoip.pipe.getParam(hdoip.pipe.REG_ST_URI)
-        t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3 = hdoip.network.text2IpValues(string.sub(str, 8))
+        t.st_uri = hdoip.pipe.getParam(hdoip.pipe.REG_ST_URI)
+        t.st_uri = string.sub(t.st_uri, string.len("rscp://")+1, string.len(t.st_uri))
+        --t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3 = hdoip.network.text2IpValues(string.sub(str, 8))
         
         t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
         t.aud_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_PORT)
@@ -54,8 +55,9 @@ function show(t)
         end
 
     else
-        if(hdoip.network.checkIp(t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3) == 1) then
-            local uri = "rscp://"..t.st_uri0.."."..t.st_uri1.."."..t.st_uri2.."."..t.st_uri3
+        --if(hdoip.network.checkIp(t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3) == 1) then
+        if(t.st_uri ~= nil) then
+            local uri = "rscp://"..t.st_uri
             hdoip.pipe.setParam(hdoip.pipe.REG_ST_URI, uri)
             hdoip.pipe.setParam(hdoip.pipe.REG_ST_HELLO_URI, uri)
         else
@@ -147,7 +149,8 @@ function show(t)
     
     -- Common fields
     hdoip.html.Text(label.p_st_connect);                                                    hdoip.html.TableInsElement(1);
-    hdoip.html.FormIP(REG_ST_URI_LABEL, t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3);        hdoip.html.TableInsElement(2);
+--    hdoip.html.FormIP(REG_ST_URI_LABEL, t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3);        hdoip.html.TableInsElement(2);
+    hdoip.html.FormText(REG_ST_URI_LABEL, t.st_uri, 40, 0);                                 hdoip.html.TableInsElement(2);
     hdoip.html.Text(label.p_st_force_hdcp);                                                 hdoip.html.TableInsElement(1);
     hdoip.html.FormCheckbox("hdcp_force", 1, "", t.hdcp_force)                              hdoip.html.TableInsElement(2);
 
