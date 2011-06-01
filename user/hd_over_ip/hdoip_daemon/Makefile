@@ -2,8 +2,10 @@ EXEC = hdoipd
 OBJS = hdoipd_main.o
 
 CFLAGS += -I.
-CFLAGS += -Iedid
 OBJS   +=   edid/edid.o
+OBJS   +=   edid/edid_report.o
+OBJS   +=   edid/cea_861.o
+CFLAGS += -Iedid
 CFLAGS += -Iupdate
 OBJS   +=   update/altremote.o
 OBJS   +=   update/flash.o

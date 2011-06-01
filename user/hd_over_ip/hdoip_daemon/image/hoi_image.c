@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "hoi_image.h"
 #include "hoi_res.h"
+#include "debug.h"
 
 uint8_t* hoi_image_canvas_create(t_video_timing* timing)
 {
@@ -49,7 +50,7 @@ void hoi_image_capture_jpeg2000(FILE* out, size_t size)
     if (!buffer) return;
 
     if ((ret = hoi_drv_capture(true, buffer, size, &timing, &advcnt))) {
-        printf("hoi_drv_capture failed. (error code = %d)", ret);
+        report("hoi_drv_capture failed. (error code = %d)", ret);
         return;
     }
 
@@ -78,7 +79,7 @@ void hoi_image_capture(FILE* out)
     if (!buffer) return;
 
     if ((ret = hoi_drv_capture(false, buffer, size, &timing, &advcnt))) {
-        printf("hoi_drv_capture failed. (error code = %d)", ret);
+        report("hoi_drv_capture failed. (error code = %d)", ret);
         return;
     }
 
@@ -105,7 +106,7 @@ uint8_t* hoi_image_load(FILE* in)
     fread(fmt, 8, 1, in); fmt[8] = 0;
 
     if (strcmp(hdr, "ines") == 0) {
-        printf("image type: %s\n", fmt);
+        report("image type: %s\n", fmt);
 
         if (strcmp(fmt, "j2kstimg") == 0) {
             // jpeg2000 still image
@@ -117,11 +118,11 @@ uint8_t* hoi_image_load(FILE* in)
                 fread(&buffer[1], size*4, 1, in);
                 if ((ret = hoi_drv_show(true, buffer, &timing, advcnt))) {
                     free(buffer);
-                    printf("hoi_drv_show failed. (error code = %d)\n", ret);
+                    report("hoi_drv_show failed. (error code = %d)\n", ret);
                     return 0;
                 }
             } else {
-                printf("not enough memory for image load\n");
+                report("not enough memory for image load\n");
                 return 0;
             }
         } else if (strcmp(fmt, "rawimage") == 0) {
@@ -135,20 +136,20 @@ uint8_t* hoi_image_load(FILE* in)
                 fread(&buffer[1], size*4, 1, in);
                 if ((ret = hoi_drv_show(false, buffer, &timing, 0))) {
                     free(buffer);
-                    printf("hoi_drv_show failed. (error code = %d)\n", ret);
+                    report("hoi_drv_show failed. (error code = %d)\n", ret);
                     return 0;
                 }
             } else {
-                printf("not enough memory for image load\n");
+                report("not enough memory for image load\n");
                 return 0;
             }
         } else {
-            printf("unknown image format\n");
+            report("unknown image format\n");
             return 0;
         }
 
     } else {
-        printf("unknown fileformat <%s>\n", hdr);
+        report("unknown fileformat <%s>\n", hdr);
         return 0;
     }
 

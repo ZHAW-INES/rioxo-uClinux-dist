@@ -538,6 +538,9 @@ void hdoipd_event(uint32_t event)
         case E_ADV7441A_NC:
             hdoipd_clr_rsc(RSC_VIDEO_IN);
         break;
+        case E_ADV7441A_CONNECT:
+            // TODO handle event
+        break;
         case E_ADV7441A_NEW_RES:
             hdoipd_set_rsc(RSC_VIDEO_IN);
         break;
@@ -712,6 +715,8 @@ bool hdoipd_init(int drv)
     hoi_cfg_read(CFG_FILE);
 
     hdoipd_registry_update();
+
+    hdoipd.dhcp = reg_test("system-dhcp", "true");
 
     hoi_cfg_system();
 

@@ -146,6 +146,7 @@ typedef struct {
     bool                auto_stream;    // flag if device should do auto stream after boot
     t_alive_check       amx;            // AMX control releated structure
     t_alive_check		alive_check;    // structure to test if server is running
+    bool                dhcp;           // flag if DHCP client is used
 } t_hdoipd;
 
 

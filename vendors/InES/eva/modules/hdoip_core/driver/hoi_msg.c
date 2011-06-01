@@ -410,21 +410,6 @@ int hoi_drv_msg_debug(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
-    // Watchdog test
-    if(wdg_get_cfg(handle->p_wdg, WDG_BIT_CFG_EN) == 0) {
-        wdg_set_time(handle->p_wdg, 100000000);
-        wdg_enable(handle->p_wdg);
-        REPORT(INFO, "[Watchdog] enabled");
-    } else {
-        wdg_reset(handle->p_wdg);
-        REPORT(INFO, "[Watchdog] reset");
-        REPORT(INFO, "[Watchdog] time % d ticks", wdg_get_time(handle->p_wdg));
-    }
-
-    /*
-    vio_hdp_reset(handle->p_vio);
-    REPORT(INFO, "[HDMI IN] HPD reset");
-     */
     return ret;
 }
 
@@ -655,6 +640,7 @@ int hoi_drv_msg_hdcp_get_timer(t_hoi* handle, t_hoi_msg_hdcp_timer* msg)
 int hoi_drv_msg_hdcp_set_timer(t_hoi* handle, t_hoi_msg_hdcp_timer* msg)
 {
     hdcp_set_time(handle->p_hdcp, msg->start_time);
+    hdcp_load(handle->p_hdcp);
     return SUCCESS;
 }
 

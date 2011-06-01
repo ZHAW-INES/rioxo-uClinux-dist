@@ -25,8 +25,9 @@
 
 int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
-    int n;
+    int n, ret;
     t_multicast_cookie* cookie = media->cookie;
+    t_edid edid_old;
 
     report(INFO "vtb_video_setup");
 
@@ -69,25 +70,32 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         return RSCP_REQUEST_ERROR;
     }
 
-    // limit incoming edid
-
-    // copy edid in cookie
-    cookie->edid.segment = m->edid.segment;
-    memcpy(cookie->edid.edid, m->edid.edid, 256);
-    edid_report((void*)cookie->edid.edid);
-
-    // TODO: merge edid of multiple sinks and reload edid
     if (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE) {
         if (!hdoipd_tstate(VTB_VID_MASK)) {
             // TODO: dont reload when already the same, store edid in file for next boot
-            //       have a list of all contributing edid source (to test if it is allready included in our edid)
+            //       have a list of all contributing edid source (to test if it is already included in our edid)
             //
             // video source not  in use -> update
-            hoi_drv_hpdoff();
-            hoi_drv_wredid(cookie->edid.edid);
-            hoi_drv_hpdon();
+            ret = edid_read_file(&edid_old);
+            if(ret == 0) {  // old EDID read
+                if(edid_compare(&edid_old, (void*)m->edid.edid) == 0) { // new EDID
+                    report(" i [EDID] new E-EDID received");
+                    edid_write_file((void*)m->edid.edid);
+                    hoi_drv_wredid(m->edid.edid);
+                    edid_report((void*)m->edid.edid);
+                } else {
+                    report(" i [EDID] same E-EDID");
+                }
+            } else if(ret == -2) { // file doesn't exist
+                report(" i [EDID] no E-EDID saved");
+                edid_write_file((void*)m->edid.edid);
+                hoi_drv_wredid(m->edid.edid);
+                edid_report((void*)m->edid.edid);
+            } else {
+                perrno("edid_read_file() failed");
+            }
         }
-    
+
         // reserve resource
         hdoipd_set_vtb_state(VTB_VID_IDLE);
     }

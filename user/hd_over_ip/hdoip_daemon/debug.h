@@ -33,6 +33,9 @@
 #define DBGCONSOLE
 #undef DBGCONSOLERSCP
 
+#define EDID_WRITE_HEX_FILE
+#define REPORT_EDID
+
 //------------------------------------------------------------------------------
 //
 

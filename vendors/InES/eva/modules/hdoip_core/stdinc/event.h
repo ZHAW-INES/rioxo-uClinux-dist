@@ -8,6 +8,7 @@
 #define E_ADV7441A_ID		    (0x10000000) /* ADV7441A event ID */
 #define E_ADV7441A_CNT          7
 #define E_ADV7441A_NC		    (E_ADV7441A_ID + 0x00000001)  /* no HDMI connected */
+#define E_ADV7441A_CONNECT      (E_ADV7441A_ID + 0x00000008)  /* HDMI connected */
 #define E_ADV7441A_NEW_RES      (E_ADV7441A_ID + 0x00000002)	/* Resolution change */
 #define E_ADV7441A_NEW_AUDIO    (E_ADV7441A_ID + 0x00000003)  /* new audio content received */ 
 #define E_ADV7441A_NO_AUDIO     (E_ADV7441A_ID + 0x00000004)  /* no audio avaible */

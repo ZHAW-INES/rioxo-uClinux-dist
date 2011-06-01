@@ -368,7 +368,7 @@ void* rscp_client_thread(void* _client)
 
     while ((n = rscp_receive(&client->con1, &line, 0)) == RSCP_SUCCESS) {
         tst = line;
-        if (!str_starts_with(&tst, RSCP_VERSION)) {
+        if (!str_starts_with(&tst, RSCP_VERSION)) { // if response
 
             do {
                 msgprintf(&client->con2, "%s\r\n", line);
@@ -380,7 +380,7 @@ void* rscp_client_thread(void* _client)
             }
             rscp_write(&client->con2);
 
-        } else {
+        } else { // if request
 
             do {
                 msgprintf(&client->con1, "%s\r\n", line);

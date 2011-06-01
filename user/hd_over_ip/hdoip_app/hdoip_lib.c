@@ -5,7 +5,9 @@
  *      Author: alda
  */
 
+#include <string.h>
 #include "hdoip_lib.h"
+
 
 /** types
  */
