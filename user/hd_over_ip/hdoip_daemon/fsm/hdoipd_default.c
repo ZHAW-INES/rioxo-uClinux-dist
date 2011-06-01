@@ -19,6 +19,7 @@ void hdoipd_set_default()
     reg_set("system-mac", "00:15:12:00:00:42");
     reg_set("system-dns1", "");
     reg_set("system-dns2", "");
+    reg_set("system-dhcp", "false");
     reg_set("system-cmd", "");
 
     reg_set("auto-stream", "true");
