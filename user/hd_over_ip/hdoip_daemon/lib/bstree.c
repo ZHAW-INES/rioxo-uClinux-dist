@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "bstree.h"
+#include "debug.h"
 
 static inline void bst_depth(t_bstn* root)
 {
@@ -93,7 +94,7 @@ void* bst_add(t_bstn** root, void* e, bstc* f)
             (*root)->right = 0;
             (*root)->elem = e;
         } else {
-            printf("bst_add.malloc: out of memory");
+            report("bst_add.malloc: out of memory");
         }
         return 0;
     }

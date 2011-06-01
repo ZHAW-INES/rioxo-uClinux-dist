@@ -11,6 +11,7 @@
 #include "altremote.h"
 #include "flash.h"
 #include "update.h"
+#include "debug.h"
 
 #define BLOCK_SIZE          (4096)
 #define FLASH_DEV_NAME      "/dev/mtd0"
@@ -55,8 +56,8 @@ static int update_hdr(t_file_header *hdr, FILE *f)
         }
     } 
 
-    printf("\n ID       : %s\n hdr_size : %d bytes\n", hdr->id, hdr->hdr_length);
-    printf(" version  : %08x\n offset   : %016x\n\n", hdr->version, hdr->offset);
+    report("\n ID       : %s\n hdr_size : %d bytes\n", hdr->id, hdr->hdr_length);
+    report(" version  : %08x\n offset   : %016x\n\n", hdr->version, hdr->offset);
 
     return 0;
 }
@@ -74,41 +75,41 @@ static int update(uint64_t addr, FILE *f)
 
     block = malloc(BLOCK_SIZE);
     if(block == NULL) {
-        printf("Could not allocate buffer\n");
+        report("Could not allocate buffer\n");
         return -1;
     }
 
     if ((ret = flash_dev_open(&dev, FLASH_DEV_NAME, O_RDWR))) {
-        printf("Could not open %s\n", FLASH_DEV_NAME);
+        report("Could not open %s\n", FLASH_DEV_NAME);
         return ret;
     } 
 
     // erase flash 
-    printf("erasing flash...\n");
+    report("erasing flash...\n");
     ret = flash_dev_eraseall(&dev);
     if(ret) {   
-        printf("flash erase failed\n");
+        report("flash erase failed\n");
     }
 
     // write data until block alignment
     uint64_t base = (addr/BLOCK_SIZE)*BLOCK_SIZE; // block base address
     size_t align = addr - base; // offset to base
     if (align) {
-        printf("align needed (untested!)\n");
+        report("align needed (untested!)\n");
         // read mixed block
         flash_dev_read(&dev, block, BLOCK_SIZE, base);
         len = BLOCK_SIZE - align;
         ret = fread(block + align, 1, len, f);
         if (ret != (ssize_t)len) {
             flash_dev_close(&dev);
-            printf("align failed\n");
+            report("align failed\n");
             return ret;
         }
         ret = flash_dev_write_block(&dev, block, len, base);
         off = base + BLOCK_SIZE;
     }
 
-    printf("writing configuration to flash...\n");
+    report("writing configuration to flash...\n");
     rd_size = (size_t) BLOCK_SIZE;
     while (rd_size == BLOCK_SIZE) {
         rd_size = fread(block, 1, BLOCK_SIZE, f);
@@ -133,17 +134,17 @@ int update_flash(char* filename)
     if (f) {
         ret = update_hdr(&hdr, f);
         if (ret != 0) {
-            printf("Failed to read header\n");
+            report("Failed to read header\n");
             return ret;
         }
 
         ret = update(hdr.offset, f);
         if(ret != 0) {
-            printf("Remote update failed\n");
+            report("Remote update failed\n");
             return ret;
         }
         if(altremote_is_loaded()) {
-            printf("\n\n");
+            report("\n\n");
             for(i= 5; i >0 ; i--) {
                 fprintf(stdout, "\nTriggering FPGA reconfiguration in %d\n", i);
                 fflush(stdout);
@@ -151,11 +152,11 @@ int update_flash(char* filename)
             }
             altremote_trigger_reconfig();
         } else {
-            printf("altremote driver is not loaded, could not reset FPGA\n");
+            report("altremote driver is not loaded, could not reset FPGA\n");
         }
         fclose(f);
     } else {
-        printf("Could not open %s\n", filename);
+        report("Could not open %s\n", filename);
     }
 
     return ret;

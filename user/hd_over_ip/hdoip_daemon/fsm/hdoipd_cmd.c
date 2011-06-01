@@ -18,6 +18,7 @@
 #include "rscp_include.h"
 #include "vrb_video.h"
 #include "update.h"
+#include "debug.h"
 
 
 void hdoipd_cmd_canvas(t_hoic_canvas* cmd)
@@ -36,7 +37,7 @@ void hdoipd_load(t_hoic_load* cmd)
             hdoipd.canvas = hoi_image_load(f);
             fclose(f);
         } else {
-            printf("open file <%s> failed\n", cmd->filename);
+            report("open file <%s> failed\n", cmd->filename);
         }
         if (hdoipd.canvas) {
             hdoipd.rsc_state |= RSC_VIDEO_OUT;
@@ -62,7 +63,7 @@ void hdoipd_capture(t_hoic_capture* cmd)
             }
             fclose(f);
         } else {
-            printf("open file <%s> failed\n", cmd->filename);
+            report("open file <%s> failed\n", cmd->filename);
         }
 
         hdoipd_set_state(HOID_READY);
@@ -189,7 +190,7 @@ void hdoipd_read(t_hoic_param* cmd, int rsp)
 void hdoipd_remote_update(t_hoic_kvparam *cmd)
 {
     if(update_flash(cmd->str) != 0) {
-        printf("update_flash() failed\n");
+        report("update_flash() failed\n");
     }
 }
 

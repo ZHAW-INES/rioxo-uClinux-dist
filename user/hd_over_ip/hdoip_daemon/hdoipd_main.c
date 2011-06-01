@@ -28,6 +28,7 @@
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 #include "bstmap.h"
+#include "debug.h"
 
 #define DEV_NODE        "/dev/hdoip_core"
 
@@ -159,7 +160,7 @@ void* event_read_thread(void UNUSED *d)
         if (read(hdoipd.drv, &event, 4)==4) {
             hdoipd_event(event);
         } else {
-            printf("event_read_thread failed\n");
+            report("event_read_thread failed\n");
         }
     }
 }
@@ -230,9 +231,7 @@ int main(int argc, char **argv)
             lock("main-close");
                 close(hdoipd.drv);
 
-                if(hdoipd.amx.enable) {
-                	shutdown(hdoipd.amx.socket, SHUT_RDWR);
-                }
+                hdoipd_amx_close(&hdoipd.amx);
 
                 report("hdoipd closed");
             unlock("main-close");
@@ -242,7 +241,7 @@ int main(int argc, char **argv)
         }
 
     } else {
-        printf("could not open <%s>\n", DEV_NODE);
+        report("could not open <%s>\n", DEV_NODE);
     }
 
     fclose(report_fd);
