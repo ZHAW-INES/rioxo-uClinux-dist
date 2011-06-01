@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Dist builder
-# Wed Jun  1 11:30:53 2011
+# Wed Jun  1 15:32:48 2011
 #
 CONFIG_DISTVERSION="4.0"
 
@@ -1172,7 +1172,8 @@ CONFIG_USER_BUSYBOX_HUSH_CASE=y
 #
 # Bourne Shell Options
 #
-# CONFIG_USER_BUSYBOX_SH_MATH_SUPPORT is not set
+CONFIG_USER_BUSYBOX_SH_MATH_SUPPORT=y
+# CONFIG_USER_BUSYBOX_SH_MATH_SUPPORT_64 is not set
 CONFIG_USER_BUSYBOX_FEATURE_SH_EXTRA_QUIET=y
 # CONFIG_USER_BUSYBOX_CTTYHACK is not set
 
