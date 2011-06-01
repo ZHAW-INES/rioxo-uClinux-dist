@@ -335,7 +335,6 @@ void task_get_system_update(char** p)
             }
         } else { // Update DHCP mode
             hdoipd.dhcp = reg_test("system-dhcp", "true");
-
             if(hdoipd.dhcp) {
                 hoi_cfg_dynamic_ip();
             } else {
