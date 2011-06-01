@@ -153,6 +153,10 @@ CONFIG_NIOS2_HW_MUL=y
 #
 # CONFIG_GENERIC_GPIO is not set
 # CONFIG_AVALON_DMA is not set
+
+#
+# Additional NiosII Device Drivers
+#
 # CONFIG_PCI_ALTPCI is not set
 # CONFIG_ALTERA_REMOTE_UPDATE is not set
 
@@ -221,7 +225,10 @@ CONFIG_INET=y
 # CONFIG_IP_MULTICAST is not set
 # CONFIG_IP_ADVANCED_ROUTER is not set
 CONFIG_IP_FIB_HASH=y
-# CONFIG_IP_PNP is not set
+CONFIG_IP_PNP=y
+CONFIG_IP_PNP_DHCP=y
+# CONFIG_IP_PNP_BOOTP is not set
+# CONFIG_IP_PNP_RARP is not set
 # CONFIG_NET_IPIP is not set
 # CONFIG_NET_IPGRE is not set
 # CONFIG_ARPD is not set
