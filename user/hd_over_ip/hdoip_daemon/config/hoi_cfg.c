@@ -124,7 +124,7 @@ void hoi_cfg_dynamic_ip()
 {
     char tmp[256];
     sysprintf(tmp, "/sbin/ifconfig %s 0.0.0.0", reg_get("system-ifname"));
-    sysprintf(tmp, "/bin/busybox udhcpc -i %s -h %s -p %s",reg_get("system-ifname"),reg_get("system-name"), pid_udhcpc);
+    sysprintf(tmp, "/bin/busybox udhcpc -i %s -h %s -p %s",reg_get("system-ifname"),reg_get("system-hostname"), pid_udhcpc);
 }
 
 // Static IP
