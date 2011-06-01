@@ -12,7 +12,8 @@
 void hdoipd_set_default()
 {
     reg_set("system-ifname", "eth0");
-    reg_set("system-name", "rioxo_0");
+    reg_set("system-hostname", "rioxo_0");
+    reg_set("system-dev-caption", "e.q. blu-ray player");
     reg_set("system-ip", "192.168.1.200");
     reg_set("system-subnet", "255.255.255.0");
     reg_set("system-gateway", "192.168.1.1");
@@ -111,6 +112,13 @@ static void update_0_1_to_0_2()
 static void update_0_2_to_0_3()
 {
     char *p;
+
+    p = reg_get("system-name");
+    reg_del("system-name");
+
+    reg_set("system-hostname", p);
+    reg_set("system-dev-caption", "e.q. blu-ray player");
+
     p = reg_get("multicast_group_video");
     if (p) {
         reg_del("multicast_group_video");

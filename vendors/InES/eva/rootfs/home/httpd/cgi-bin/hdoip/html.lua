@@ -217,7 +217,9 @@ end
 function Header(t, title, script_path, addon)
     local menu_item_cnt = 6
     local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_status; [3] = label.tab_firmware; [4] = label.tab_default; [5] = label.tab_settings;}
-    local dev_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_NAME)
+    local dev_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_HOST_NAME)
+    local dev_caption = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DEV_CAPTION)
+    
 
     local menu_class = ""
     local css = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".. html_css_file .."\">\n"
@@ -235,7 +237,7 @@ function Header(t, title, script_path, addon)
     html_str = "<html>\n<head>\n".. t.cookie .."<title>" .. title .. "</title>\n" .. addon .. css .. "</head>\n<body>\n"
    
     html_str = html_str .. '<div id="wrapper">\n<div id="main">\n<div id="box">\n<div id="header">\n'
-    html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b></div><h1 id="logo"><a href="http://www.rioxo.ch"><img src="/img/rioxo_logo.png" alt="rioxo&reg;"></a></h1>\n'
+    html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.rioxo.ch"><img src="/img/rioxo_logo.png" alt="rioxo&reg;"></a></h1>\n'
     
 
     html_str = html_str .. '<div id="mainmenu">\n<ul class=\"menu\">\n'
