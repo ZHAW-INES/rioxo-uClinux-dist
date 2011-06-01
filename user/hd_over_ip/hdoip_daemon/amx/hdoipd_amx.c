@@ -25,7 +25,6 @@ int hdoipd_amx_open(t_hdoip_amx *handle, bool enable, int interval, uint32_t ip,
 
     if(handle->enable) {
         handle->socket = socket(PF_INET, SOCK_DGRAM, 0);
-
         if(handle->socket) {
             ret = setsockopt(handle->socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
             if(ret == -1) {
@@ -47,10 +46,13 @@ int hdoipd_amx_open(t_hdoip_amx *handle, bool enable, int interval, uint32_t ip,
 
 int hdoipd_amx_close(t_hdoip_amx *handle)
 {
+    int ret = 0;
+
     if(handle->socket != 0) {
-        return shutdown(handle->socket, SHUT_RDWR);
+        ret = shutdown(handle->socket, SHUT_RDWR);
+        close(handle->socket);
     }
-    return 0;
+    return ret;
 }
 
 int hdoipd_amx_update(t_hdoip_amx *handle, bool enable, int interval, uint32_t ip, uint16_t port)
