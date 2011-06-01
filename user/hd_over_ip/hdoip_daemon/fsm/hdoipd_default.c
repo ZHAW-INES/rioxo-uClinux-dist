@@ -107,7 +107,7 @@ static void update_0_2_to_0_3()
 {
     char *p;
     p = reg_get("system-name");
-
+    reg_del("system-name");
     reg_set("system-hostname", p);
     reg_set("system-dev-caption", "e.q. blu-ray player");
 
