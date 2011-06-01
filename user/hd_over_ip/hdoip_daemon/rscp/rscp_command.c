@@ -90,7 +90,7 @@ void rscp_header_edid(t_rscp_connection* msg, t_rscp_edid *edid)
 
 void rscp_header_hdcp(t_rscp_connection* msg, t_rscp_hdcp *hdcp)
 {
-    msgprintf(msg, "HDCP: HDCP-Status=%d;HDCP-Port=%d", hdcp->hdcp_on, hdcp->port_nr);
+    msgprintf(msg, "HDCP: HDCP-Status=%d", hdcp->hdcp_on);
     msgprintf(msg, "\r\n");
 }
 

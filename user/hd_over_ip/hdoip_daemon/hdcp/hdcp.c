@@ -6,7 +6,16 @@
  * Created on: 28.04.2011
  * Author: itin
  */
+#include <debug.h>
 #include "hdcp.h"
+#include "rsaes-oaep/rsaes.h"
+#include "rsassa_pkcs1/rsassa.h"
+#include "aes128/aes_encrypt.h"
+#include "sha256/sha256.h"
+#include "protocol/protocol.h"
+#include "bcrypt/b_main.h"
+#include "hdoipd_fsm.h"
+#include "hoi_drv_user.h"
 
 /** State machine for session key exchange (server side)
  *  Responds to client requests. If successful, client and server share
@@ -16,7 +25,6 @@
 int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, int* timeout)
 {
     report(INFO "ID: %s CONTENT: %s",m->id, m->content);
-    int i;
     char enc_km[257];
 	int message = atoi(m->id);
 	char null[] ="";
@@ -25,15 +33,14 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, 
 	char HL[65];
 	char riv[17];
 	char Edkey_ks[49];
-	uint32_t keys[6];
 
 	switch (message) {
 	        case HDCP_START:
 	        	media->hdcp_state = HDCP_SEND_RTX;
 	        	*timeout=0;
 	            hdcp_decrypt_flash_keys();/* Get the encrypted HDCP keys from flash and decrypt them*/
-	        	hdcp_generate_random_nr(&media->hdcp_var.rtx);
-	            rscp_response_hdcp(rsp, &media->sessionid, id[2], &media->hdcp_var.rtx); //respond to setup message
+	        	hdcp_generate_random_nr(media->hdcp_var.rtx);
+	            rscp_response_hdcp(rsp, media->sessionid, id[2], media->hdcp_var.rtx); //respond to setup message
 	            report(INFO "RTX: %s", media->hdcp_var.rtx);
 	            return RSCP_SUCCESS;
 	        break;
@@ -41,9 +48,9 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, 
 	        	if (media->hdcp_state != HDCP_SEND_RTX) return RSCP_HDCP_ERROR;
 	        	*timeout=0;
 	        	report(INFO "CERTIFICATE: %s", m->content);
-	            if (hdcp_check_certificate(m->content, &media->hdcp_var.repeater, &media->hdcp_var.km, enc_km)!=1)
+	            if (hdcp_check_certificate(m->content, &media->hdcp_var.repeater, media->hdcp_var.km, enc_km)!=1)
 	        		return RSCP_HDCP_ERROR;
-	            rscp_response_hdcp(rsp, &media->sessionid, id[4], enc_km); //respond message to setup message
+	            rscp_response_hdcp(rsp, media->sessionid, id[4], enc_km); //respond message to setup message
 	            report(INFO "repeater: %d enc_km: %s", media->hdcp_var.repeater, enc_km);
 	            media->hdcp_state = HDCP_VERIFY_CERT;
 	            return RSCP_SUCCESS;
@@ -52,7 +59,7 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, 
 	        	if (media->hdcp_state != HDCP_VERIFY_CERT) return RSCP_HDCP_ERROR;
 	        	*timeout=0;
 	        	strcpy(media->hdcp_var.rrx, m->content); //save rrx
-	            rscp_response_hdcp(rsp, &media->sessionid, id[0], null); //respond message to setup message
+	            rscp_response_hdcp(rsp, media->sessionid, id[0], null); //respond message to setup message
 	            report(INFO "Received rrx: %s", media->hdcp_var.rrx);
 	            media->hdcp_state = HDCP_RECEIVE_RRX;
 	            return RSCP_SUCCESS;
@@ -61,16 +68,16 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, 
 	        	if (media->hdcp_state != HDCP_RECEIVE_RRX) return RSCP_HDCP_ERROR;
 	        	*timeout=0;
 	        	//check if H is valid
-	        	hdcp_calculate_h(&media->hdcp_var.rtx, &media->hdcp_var.repeater, HL, &media->hdcp_var.km, &media->hdcp_var.kd);  //calculate own H
+	        	hdcp_calculate_h(media->hdcp_var.rtx, &media->hdcp_var.repeater, HL, media->hdcp_var.km, media->hdcp_var.kd);  //calculate own H
 	        	//report(INFO "kd: %s", media->hdcp_var.kd);
 	        	//report(INFO "Own H: %s", HL);
 	        	report(INFO "Received H: %s", m->content);
-	        	if(strcmp(HL,&m->content) != 0) {					//compare received and own H
+	        	if(strcmp(HL,m->content) != 0) {					//compare received and own H
 	        		report(INFO "HMAC of H is wrong!");
 	        		return RSCP_HDCP_ERROR;
 	        	}
-	        	hdcp_generate_random_nr(&media->hdcp_var.rn);
-	            rscp_response_hdcp(rsp, &media->sessionid, id[9], &media->hdcp_var.rn); 	//respond message LC_Init
+	        	hdcp_generate_random_nr(media->hdcp_var.rn);
+	            rscp_response_hdcp(rsp, media->sessionid, id[9], media->hdcp_var.rn); 	//respond message LC_Init
 	            media->hdcp_state = HDCP_RECEIVE_H;
 	            return RSCP_SUCCESS;
 	        break;
@@ -79,25 +86,25 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, 
 	        	*timeout=0;
 	            report(INFO "rn: %s", media->hdcp_var.rn);
 	            report(INFO "rrx: %s", media->hdcp_var.rrx);
-	        	hdcp_calculate_l(&media->hdcp_var.rn, &media->hdcp_var.rrx, &media->hdcp_var.kd, HL);
+	        	hdcp_calculate_l(media->hdcp_var.rn, media->hdcp_var.rrx, media->hdcp_var.kd, HL);
 	        	//report(INFO "Own L: %s", HL);
 	        	report(INFO "Received L: %s", m->content);
-	        	if(strcmp(HL,&m->content) != 0) {		//compare received and own L
+	        	if(strcmp(HL,m->content) != 0) {		//compare received and own L
 	        		report(INFO "HMAC of L is wrong!");
 	        		return RSCP_HDCP_ERROR;
 	        	}
 	        	/* Encrypt session key and send it back */
-	        	hdcp_ske_enc_ks(&media->hdcp_var.rn, &media->hdcp_var.km, &media->hdcp_var.rrx, &media->hdcp_var.rtx, ks, Edkey_ks);
+	        	hdcp_ske_enc_ks(media->hdcp_var.rn, media->hdcp_var.km, media->hdcp_var.rrx, media->hdcp_var.rtx, ks, Edkey_ks);
 	        	hdcp_generate_random_nr(riv);	/* generate riv */
 	            report(INFO "RIV: %s", riv);
 	        	/* concatenate and send enc session key and riv back */
 	            strcat(Edkey_ks,riv);
-	        	rscp_response_hdcp(rsp, &media->sessionid, id[11], Edkey_ks); 	//respond message SKE_Send_Eks
+	        	rscp_response_hdcp(rsp, media->sessionid, id[11], Edkey_ks); 	//respond message SKE_Send_Eks
 	        	//report(INFO "THE SESSION KEY: %s", ks); //SECRET VALUE, SHOW ONLY TO DEBUG
 	        	/* xor session key with lc128 */
 	        	xor_strings(ks, hdoipd.hdcp.lc128, ks,32);
 	        	/* write keys to HW and enable encryption*/
-	        	hdcp_convert_sk_char_int(ks, riv, &hdoipd.hdcp.keys);
+	        	hdcp_convert_sk_char_int(ks, riv, hdoipd.hdcp.keys);
 	        	/*for (i=0;i<6;i++){  //SECRET VALUES, SHOW ONLY TO DEBUG
 	        		report(INFO "THE KEYS: %08x",  hdoipd.hdcp.keys[i]);
 	        	}*/
@@ -166,7 +173,7 @@ int hdcp_convert_sk_char_int(char* ks, char* riv, uint32_t* keys){
  *  @param pointer to encrypted km
  *  @return error code
  */
-int hdcp_check_certificate(char* certificate, int* repeater, char* km, char* enc_km){
+int hdcp_check_certificate(char* certificate, uint32_t* repeater, char* km, char* enc_km){
 	//kpub_dcp (3072-bit public key with exponent)
 	char n[]="A2C7555754CBAAA77A2792C31A6DC231CF12C224BF897246A48D2083B2DD04DA7E01A919EF7E8C4754C859725C8960629F39D0E480CAA8D41E91E30E2C77556D58A89E3EF2DA783EBAD1053707F288740CBCFB68A47A27AD63A51F67F1458516498AE6341C6E80F5FF1372855DC1DE5F0186558671E8103314702A5F157B5C653C463A1779ED546AA6C9DFEB2A812A802A46A206DBFDD5F3CF74BB665648D77C6A03141E5556E4B6FA382B5DFB879F9E782187C00C633E8D0FE2A719109B15E11187493349B86632287C87F5D22EC5F3662F79EF405AD41485745F064350CDDE84E73C7D8E8A49CC5ACF73A18A13FF37133DAD57D85122D6321FC0684CA05BDD5F78C89F2D3AA2B81E4AE408556405E694FBEB036A0ABE831894D4B6C3F2589C7A24DDD13AB73AB0BBE5D128ABAD2454720E76D28932EA46D378D0A96778C12D18B033DEDB27CCB07CC9A4BDDF2B64103244068121B3BACF3385491E864CBDF23D34EFD6237A9F2CDA84F08383717DDA6E4496CD1D05DE30F61E2F9C999C6007";
 	char e[]="03";
@@ -227,7 +234,7 @@ int hdcp_check_certificate(char* certificate, int* repeater, char* km, char* enc
 	    }
 	    strcat(seed,temp);
 	}
-	//report(INFO "KM: %s",km); //SECRET VALUE, SHOW ONLY TO DEBUG
+	report(INFO "KM: %s",km); //SECRET VALUE, SHOW ONLY TO DEBUG
 	rsaes_encrypt(kpubrx_n,kpubrx_e,km,enc_km,seed);
 
 	return ret;
@@ -283,7 +290,7 @@ int hdcp_ske_enc_ks(char* rn, char* km, char* rrx, char* rtx, char* ks, char* Ed
  *  @param[in]  pointer to kd (derived from km)
  *  @return error code
  * */
-int hdcp_calculate_h(char* rtx, int* repeater, char* H, char* km, char* kd){
+int hdcp_calculate_h(char* rtx, uint32_t* repeater, char* H, char* km, char* kd){
 
 	int i;
 	char plaintext1[33];
@@ -365,7 +372,7 @@ int hdcp_ske_dec_ks(char* rn, char* ks, char* Edkey_ks, char* rtx, char* rrx, ch
 int hdcp_decrypt_flash_keys(){
 
 	int i;
-	unsigned long sz;
+	int sz;
 	char *input;
 	char *str;
 	char *certrx;

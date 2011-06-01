@@ -57,7 +57,7 @@ int hoi_drv_buf(void* ar, size_t arl, void* vr, size_t vrl, void* at, size_t atl
 //-----------------------------------------------------------------------------
 // HDCP
 //send hdcp keys to kernel
-int hoi_drv_hdcp(uint32_t hdcp_keys[])
+int hoi_drv_hdcp(uint32_t* hdcp_keys)
 {
     t_hoi_msg_hdcp_init msg;
 

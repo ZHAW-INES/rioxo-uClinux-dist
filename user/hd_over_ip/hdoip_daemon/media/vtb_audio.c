@@ -27,7 +27,7 @@ static struct {
 
 int vtb_audio_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
 {
-    hdcp_ske_s(media, m, rsp, &vtb.timeout);
+    return hdcp_ske_s(media, m, rsp, &vtb.timeout);
 }
 
 int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
@@ -114,20 +114,21 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
         return RSCP_REQUEST_ERROR;
     }
 
+ /*   report(INFO "AUDIO vtb.state: %08x rsc_state %08x",hdoipd.vtb_state,hdoipd.rsc_state);
     // no multicast currently -> must be idle
- /*   if (!hdoipd_tstate(VTB_AUD_IDLE)) {
+    if (!hdoipd_tstate(VTB_AUD_IDLE)) {
         // we don't have the resource reserved
         report(" ? require state VTB_AUD_IDLE");
         rscp_err_server(rsp);
         return RSCP_REQUEST_ERROR;
     }*/
 
-  /*  if (!hdoipd_rsc(RSC_AUDIO_IN)) {
+    if (!hdoipd_rsc(RSC_AUDIO_IN)) {
         // currently no audio input active
         report(" ? require active audio input");
         rscp_err_no_source(rsp);
         return RSCP_REQUEST_ERROR;
-    }*/
+    }
 
     //check if audio HDCP status is unchanged, else return ERROR
     report("TEST HDCP status before start audio play!");

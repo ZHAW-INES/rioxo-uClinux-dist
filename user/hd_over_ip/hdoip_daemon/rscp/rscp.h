@@ -116,10 +116,6 @@ typedef struct {
 // hdcp status and port number
 typedef struct {
     uint32_t            hdcp_on; //on=1, off=0
-    uint32_t            port_nr;
-  //  char				ake_init[10];
-  //  char				ake_send_cert[525];
-  //  char				ake_no_stored[130];
 } t_rscp_hdcp;
 
 //------------------------------------------------------------------------------

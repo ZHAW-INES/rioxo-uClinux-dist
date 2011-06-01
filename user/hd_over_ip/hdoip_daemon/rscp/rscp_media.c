@@ -373,8 +373,14 @@ int rscp_media_play(t_rscp_media* media)
         if (media->state == RSCP_READY) {
             if (media->doplay) ret = media->doplay(media);
             //check if kill / teardown is set because of HDCP error
-            if(client->task & E_RSCP_CLIENT_KILL) rscp_client_close(client);
-            else if (client->task & E_RSCP_CLIENT_TEARDOWN) rscp_client_teardown(client);
+            if(client->task & E_RSCP_CLIENT_KILL) {
+            	report(INFO "KILL CLIENT");
+            	rscp_client_close(client);
+            }
+            else if (client->task & E_RSCP_CLIENT_TEARDOWN) {
+            	report(INFO "TEARDOWN CLIENT");
+            	rscp_client_teardown(client);
+            }
             //if(((t_rscp_client*)media->creator)->task & E_RSCP_CLIENT_KILL) rscp_client_close((t_rscp_client*)media->creator);
             //else if (((t_rscp_client*)media->creator)->task & E_RSCP_CLIENT_KILL) rscp_client_teardown((t_rscp_client*)media->creator);
         } else {

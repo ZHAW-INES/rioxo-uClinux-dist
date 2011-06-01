@@ -235,7 +235,7 @@ void hdoipd_force_ready()
 
     hdoipd_goto_ready();
 
-    report(INFO, "hdoipd_force_ready() done");
+    report(INFO "hdoipd_force_ready() done");
 }
 
 
@@ -508,6 +508,7 @@ void hdoipd_fsm_vtb(uint32_t event)
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
         break;
         case E_ADV7441A_NEW_RES:
+        	report(INFO "E_ADV7441A_NEW_RES, EVENT_VIDEO_IN_ON")
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
         break;
         case E_ADV7441A_NEW_AUDIO:
@@ -818,6 +819,9 @@ bool hdoipd_init(int drv)
     hdoipd_osd_timer_start();
 #endif
 
+    hoi_drv_wdg_init(1000000000); //set and start watchdog (to 7?? sec.)
+    hoi_drv_wdg_enable();
+    report(INFO "START WATCHDOG");
     return true;
 }
 

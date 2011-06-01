@@ -213,18 +213,12 @@ int rscp_parse_edid(char* line, t_rscp_edid *edid)
 
 int rscp_parse_hdcp(char* line, t_rscp_hdcp *hdcp)
 {
-	int a, b;
+	int a;
 	char* token;
-	next(token, line);
-	 //printf("token0: %s\n",token);
-	 a = str_hdcp(token);
-	 next(token, line);
-	 //printf("token1: %s\n",token);
-	 b = str_hdcp(token);
-	 report(INFO "HDCP Status: %i\n",a);
 
-	 hdcp->hdcp_on = a;
-	 hdcp->port_nr = b;
+	next(token, line);
+	a = str_hdcp(token);
+	hdcp->hdcp_on = a;
 
     return RSCP_SUCCESS;
 }

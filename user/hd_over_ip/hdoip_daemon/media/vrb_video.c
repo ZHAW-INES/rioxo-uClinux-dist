@@ -83,7 +83,7 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     //Test if HDCP parameters were set correctly
 	if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETI_VIDEO_EN)){
 		if (hdoipd.hdcp.ske_executed){
-			hoi_drv_hdcp(&hdoipd.hdcp.keys); 	/* write keys to kernel */
+			hoi_drv_hdcp(hdoipd.hdcp.keys); 	/* write keys to kernel */
 			report(INFO "Video encryption enabled (eti)!");
 			hoi_drv_hdcp_viden_eti();
 		}
@@ -188,10 +188,12 @@ int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
 
 void vrb_video_pause(t_rscp_media *media)
 {
+	report(INFO "vrb_video_pause");
     media->result = RSCP_RESULT_PAUSE_Q;
+    report(INFO "hdoipd.vtb_state: %08x",hdoipd.vtb_state);
 
     if (hdoipd_tstate(VTB_VIDEO)) {
-
+    report(INFO "vrb_video_pause: VTB_VIDEO");
 #ifdef VID_OUT_PATH
         hdoipd_hw_reset(DRV_RST_VID_OUT);
 #endif
@@ -207,24 +209,25 @@ void vrb_video_pause(t_rscp_media *media)
 int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
 	t_rscp_client *client = media->creator;
+	//report(INFO "EVENT NR: %08x", m->event);
     switch (m->event) {
 
         case EVENT_TICK:
             // reset timeout
             vrb.timeout = 0;
         break;
-
         case EVENT_VIDEO_IN_ON:
             // No multicast for now...simply stop before starting new
+        	report(INFO "vrb_video_update; EVENT_VIDEO_IN_ON");
             if (rscp_media_splaying(media)) {
                 vrb_video_pause(media);
             }
-
             // restart
             rscp_client_set_play(media->creator);
             return RSCP_PAUSE;
         break;
         case EVENT_VIDEO_IN_OFF:
+        	report(INFO "vrb_video_update; EVENT_VIDEO_IN_OFF");
             vrb_video_pause(media);
             osd_permanent(true);
             osd_printf("vtb.video stoped streaming...\n");
@@ -256,8 +259,6 @@ int vrb_video_dosetup(t_rscp_media *media)
     t_rscp_edid edid;
     t_rscp_client *client = media->creator;
     t_rscp_hdcp hdcp;
-    //hdcp.hdcp_on = 0;
-    hdcp.port_nr = 57000;	  //set port number
 
     hdcp.hdcp_on = reg_test("hdcp-force", "true");
 

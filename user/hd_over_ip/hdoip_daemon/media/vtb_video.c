@@ -97,23 +97,29 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         ret = edid_read_file(&edid_old);
         if(ret == 0) {  // old EDID read
             if(edid_compare(&edid_old, (void*)m->edid.edid) == 0) { // new EDID
+            	//hdoipd_clr_rsc(RSC_VIDEO_IN); //test
                 report(" i [EDID] new E-EDID received");
                 edid_write_file((void*)m->edid.edid);
                 hoi_drv_wredid(m->edid.edid);
                 edid_report((void*)m->edid.edid);
+                //while(!hdoipd_rsc(RSC_VIDEO_IN)); //test wait for event
             } else {
                 report(" i [EDID] same E-EDID");
             }
         } else if(ret == -2) { // file doesn't exist
+        	//hdoipd_clr_rsc(RSC_VIDEO_IN); //test
             report(" i [EDID] no E-EDID saved");
             edid_write_file((void*)m->edid.edid);
             hoi_drv_wredid(m->edid.edid);
             edid_report((void*)m->edid.edid);
+           // while(!hdoipd_rsc(RSC_VIDEO_IN)); //test wait for event
         } else {
             perrno("edid_read_file() failed");
         }
     }
     
+
+
     // reserve resource
     hdoipd_set_vtb_state(VTB_VID_IDLE);
 
@@ -154,8 +160,9 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
         return RSCP_REQUEST_ERROR;
     }
 
+ /*   report(INFO "VIDEO vtb.state: %08x rsc_state %08x",hdoipd.vtb_state,hdoipd.rsc_state);
     // no multicast currently -> must be idle
-   /* if (!hdoipd_tstate(VTB_VID_IDLE)) {
+    if (!hdoipd_tstate(VTB_VID_IDLE)) {
         // we don't have the resource reserved
         report(" ? require state VTB_IDLE");
         rscp_err_server(rsp);
@@ -290,6 +297,7 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
 {
     switch (event) {
         case EVENT_VIDEO_IN_ON:
+        	report(INFO "EVENT VIDEO IN ON");
             if (rscp_media_splaying(media)) {
                 vtb_video_pause(media);
                 rscp_server_update(media, EVENT_VIDEO_IN_OFF);
@@ -298,6 +306,7 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
             return RSCP_PAUSE;
         break;
         case EVENT_VIDEO_IN_OFF:
+        	report(INFO "EVENT VIDEO IN OFF");
             if (rscp_media_splaying(media)) {
                 vtb_video_pause(media);
                 rscp_server_update(media, EVENT_VIDEO_IN_OFF);

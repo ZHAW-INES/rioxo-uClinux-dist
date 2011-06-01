@@ -20,7 +20,7 @@ const char* event_str(uint32_t e);
 
 int hoi_drv_ldrv(uint32_t drivers);
 int hoi_drv_buf(void* ar, size_t arl, void* vr, size_t vrl, void* at, size_t atl, void* vt, size_t vtl);
-int hoi_drv_hdcp(uint32_t hdcp_keys[]);
+int hoi_drv_hdcp(uint32_t* hdcp_keys);
 int hoi_drv_hdcpstat(uint32_t *eto_hdcp_audio,uint32_t *eto_hdcp_video,uint32_t *eti_hdcp_audio, uint32_t *eti_hdcp_video);
 
 int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src, uint32_t vid, uint32_t aud);

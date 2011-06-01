@@ -79,7 +79,7 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     //Test if HDCP parameters were set correctly
 	if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETI_AUDIO_EN)){
 		if (hdoipd.hdcp.ske_executed){
-			hoi_drv_hdcp(&hdoipd.hdcp.keys); 	/* write keys to kernel */
+			hoi_drv_hdcp(hdoipd.hdcp.keys); 	/* write keys to kernel */
 			report(INFO "Audio encryption enabled (eti)!");
 			hoi_drv_hdcp_auden_eti();
 		}
@@ -178,6 +178,7 @@ int vrb_audio_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
 
 void vrb_audio_pause(t_rscp_media *media)
 {
+	report(INFO "vrb_audio_pause");
     media->result = RSCP_RESULT_PAUSE_Q;
 
     if (hdoipd_tstate(VTB_AUDIO)) {
@@ -246,7 +247,6 @@ int vrb_audio_dosetup(t_rscp_media *media)
     t_rscp_transport transport;
     t_rscp_client *client = media->creator;
     t_rscp_hdcp hdcp;
-    hdcp.port_nr = 57000;
 
     hdcp.hdcp_on = reg_test("hdcp-force", "true");
 

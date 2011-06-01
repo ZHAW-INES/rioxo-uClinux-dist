@@ -38,6 +38,7 @@ void rscp_request_hdcp(t_rscp_connection* msg, char* session, char* uri, char* i
 void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session, t_rscp_hdcp* hdcp);
 void rscp_response_play(t_rscp_connection* msg, char* session, t_rscp_rtp_format* fmt, t_video_timing* timing);
 void rscp_response_teardown(t_rscp_connection* msg, char* session);
+void rscp_response_hdcp(t_rscp_connection* msg, char* session, char* id, char* content);
 
 
 #endif /* RSCP_COMMAND_H_ */

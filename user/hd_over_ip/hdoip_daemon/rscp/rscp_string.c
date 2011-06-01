@@ -117,7 +117,7 @@ int str_hdcp(char* str){
   char *hdcp_stat;
   hdcp_stat = strchr(str,'=');
   i=hdcp_stat-str;
-  for (j=(i+1);j<strlen(str);j++){
+  for (j=(i+1);j<(int)strlen(str);j++){
     sprintf(tempchar,"%c",str[j]);
     strcat(status,tempchar);
   }

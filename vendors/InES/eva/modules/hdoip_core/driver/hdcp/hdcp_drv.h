@@ -16,7 +16,6 @@
 #include "aso_drv.h"
 #include "adv7441a_drv.h"
 #include "adv9889_drv.h"
-
 #include "hoi_msg.h"
 
 // function to compare hdmi and hdcp status

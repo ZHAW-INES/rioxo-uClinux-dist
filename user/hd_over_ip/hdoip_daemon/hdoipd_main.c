@@ -28,7 +28,6 @@
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 #include "bstmap.h"
-#include "../../hdcp/receiver/receiver.h"
 
 #define DEV_NODE        "/dev/hdoip_core"
 
@@ -215,8 +214,6 @@ int main(int argc, char **argv)
 
             pthread(the, event_read_thread, 0);
             pthread(thp, poll_thread, 0);
-	    //start hdcp server
-	    //pthread(thh, hdcp_thread, 0);
 
             for (int i=1; i<argc; i++) {
                 report(" [%d] open named pipe <%s>",i,argv[i]);
