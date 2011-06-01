@@ -7,6 +7,7 @@
 #include "hoi_drv_user.h"
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
+#include "multicast.h"
 #include "rscp_listener.h"
 
 // local buffer
@@ -23,6 +24,8 @@ enum {
 	HOID_TSK_UPD_MODE_START 	= 0x00000040,
 	HOID_TSK_UPD_AUTO_STREAM    = 0x00000080,
 	HOID_TSK_UPD_AMX            = 0x00000100,
+    HOID_TSK_UPD_ALIVE          = 0x00000200,
+    HOID_TSK_UPD_MULTICAST      = 0x00000400,
 	HOID_TSK_EXEC_GOTO_READY	= 0x01000000,
 	HOID_TSK_EXEC_START			= 0x02000000,
 	HOID_TSK_EXEC_RESTART		= 0x03000000,
@@ -126,6 +129,13 @@ void task_get_eth_status(char** p)
             stat->tx_vid_cnt, stat->rx_vid_cnt,
             stat->tx_aud_cnt, stat->rx_aud_cnt,
             stat->tx_inv_cnt, stat->rx_inv_cnt);
+    *p = buf;
+}
+
+void task_get_multicast_client(char ** p)
+{
+    report_available_clients();
+  //  sprintf(buf, "multicast enable: %i", (int) get_multicast_enable());
     *p = buf;
 }
 
@@ -282,11 +292,8 @@ void task_get_system_update(char** p)
 
 		/* AMX update */
 		if(update_vector & HOID_TSK_UPD_AMX) {
-		    report("Updating AMX updated...");
-		    if(hdoipd_amx_update(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"),
-		                        inet_addr(reg_get("amx-hello-ip")), htons(reg_get_int("amx-hello-port")))) {
-		        perror("hdoipd_amx_update() failed");
-		    }
+		    report("Updating AMX...");
+            alive_check_client_update(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"), inet_addr(reg_get("amx-hello-ip")), reg_get_int("amx-hello-port"), 1, true);
 		}
 
 		/* Auto-stream feature */
@@ -299,6 +306,18 @@ void task_get_system_update(char** p)
 		if(update_vector & HOID_TSK_UPD_MODE_START) {
 			report("Updating device modus...");
 		}
+
+        /* multicast */
+        if(update_vector & HOID_TSK_UPD_MULTICAST) {
+		    report("Updating multicast...");
+        }
+
+        /* vrb alive check */
+        if(update_vector & HOID_TSK_UPD_ALIVE) {
+		    report("Updating alive check...");
+            alive_check_server_close(&hdoipd.alive_check);
+            alive_check_init_msg_vrb_alive();
+        }
 
 		// -------------------------------------------------------------
 		// System commands (after update)
@@ -480,6 +499,16 @@ void task_set_auto_stream(char* p)
     update_vector |= HOID_TSK_UPD_AUTO_STREAM | HOID_TSK_EXEC_RESTART_VRB;
 }
 
+void task_set_multicast_update(char* p)
+{
+    update_vector |= HOID_TSK_UPD_MULTICAST | HOID_TSK_EXEC_RESTART_VRB;
+}
+
+void task_set_alive_update(char* p)
+{
+    update_vector |= HOID_TSK_UPD_ALIVE;
+}
+
 void hdoipd_register_task()
 {
     get_listener("system-state", task_get_system_state);
@@ -496,6 +525,7 @@ void hdoipd_register_task()
     get_listener("hdcp-status", task_get_hdcp_status);
     get_listener("sync-delay", task_get_sync_delay);
     get_listener("stream-state", task_get_rscp_state);
+    get_listener("multicast", task_get_multicast_client);
 
     // set-listener are called when a new value is written to the register
     // if the same value is written as already stored the listener isn't called
@@ -513,6 +543,13 @@ void hdoipd_register_task()
     set_listener("amx-hello-ip", task_set_amx_update);
     set_listener("amx-hello-port", task_set_amx_update);
     set_listener("amx-hello-interval", task_set_amx_update);
+    set_listener("multicast_en", task_set_multicast_update);
+    set_listener("multicast_group", task_set_multicast_update);
+    set_listener("alive-check", task_set_alive_update);
+    set_listener("alive-check-interval", task_set_alive_update);
+    set_listener("alive-check-port", task_set_alive_update);
+
+
 
 }
 

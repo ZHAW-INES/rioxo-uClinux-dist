@@ -11,6 +11,7 @@
 #include "hdoipd_fsm.h"
 #include "hoi_image.h"
 #include "hoi_res.h"
+#include "rscp_string.h"
 
 char osdtmp[OSD_BUFFER_LENGTH];
 
@@ -65,14 +66,15 @@ void* hdoipd_osd_timer(void UNUSED *d)
         }
 
         lock("hdoipd_tick_timer");
-            if(hdoipd_amx_handler(&hdoipd.amx, reg_get("amx-hello-msg"))) {
-                perror("[AMX] hdoipd_amx_handler() failed");
-            }
 
-            hdoipd.tick++;
+        alive_check_client_handler(&hdoipd.amx, reg_get("amx-hello-msg"));
+
+        alive_check_handle_msg_vrb_alive(&hdoipd.alive_check);
+
+        hdoipd.tick++;
 #ifdef USE_SYS_TICK
-            rscp_client_event(hdoipd.client, EVENT_TICK);
-            rscp_listener_event(&hdoipd.listener, EVENT_TICK);
+        rscp_client_event(hdoipd.client, EVENT_TICK);
+        rscp_listener_event(&hdoipd.listener, EVENT_TICK);
 #endif
         unlock("hdoipd_tick_timer");
 

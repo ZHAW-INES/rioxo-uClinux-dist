@@ -232,6 +232,7 @@ int main(int argc, char **argv)
 
                 if(hdoipd.amx.enable) {
                 	shutdown(hdoipd.amx.socket, SHUT_RDWR);
+                    close(hdoipd.amx.socket);
                 }
 
                 report("hdoipd closed");

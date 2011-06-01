@@ -54,12 +54,29 @@ int rscp_parse_port(char* str, uint32_t* p)
     return RSCP_SUCCESS;
 }
 
+int rscp_parse_ip(char* str, uint32_t* p)
+{
+    char* s;
+    uint32_t ip = 0;
+    int i;    
+
+    for (i=0;i<3;i++) {
+        if (s = str_next_token(&str, "."))
+            ip |= (uint32_t)(atoi(s) << (8*i));
+    }
+    ip |= (uint32_t)(atoi(str) << (8*3));
+
+    *p = ip;
+
+    return RSCP_SUCCESS;
+}
+
 int rscp_parse_timing(char* line, t_video_timing* timing)
 {
     char* token;
     // Timing:   Horizontal       : pfreq width fp p bp pol 
     //           Vertical Field 0 : height fp p bp pol
-    //           Vertical Field 1 : eight fp p bp pol interlaced    
+    //           Vertical Field 1 : height fp p bp pol interlaced    
 
     nextsp(token, line);
     timing->pfreq = atoi(token);
@@ -173,7 +190,7 @@ int rscp_parse_transport(char* line, t_rscp_transport* p)
         if (str_starts_with(&token, "port=")) rscp_parse_port(token, &p->port);
         else if (str_starts_with(&token, "client_port=")) rscp_parse_port(token, &p->client_port);
         else if (str_starts_with(&token, "server_port=")) rscp_parse_port(token, &p->server_port);
-
+        else if (str_starts_with(&token, "multicast_group=")) rscp_parse_ip(token, &p->multicast_group);
     }
 
     return RSCP_SUCCESS;

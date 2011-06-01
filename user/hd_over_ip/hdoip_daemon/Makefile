@@ -48,8 +48,11 @@ OBJS   +=   media/vrb_audio.o
 OBJS   +=   media/vtb_audio.o
 CFLAGS += -Iconfig
 OBJS   +=   config/hoi_cfg.o
-CFLAGS += -Iamx
-OBJS   +=   amx/hdoipd_amx.o
+CFLAGS += -Imulticast
+OBJS   +=   multicast/multicast.o
+OBJS   +=   multicast/client_list.o
+CFLAGS += -Ialive
+OBJS   +=   alive/alive_check.o
 
 # we need the ioctl defines from hdoip_types.h
 CFLAGS += -I../../../vendors/InES/eva/modules/hdoip_core/driver

@@ -139,6 +139,7 @@ void rscp_server_close(t_rscp_media* media)
         if (shutdown(server->con.fdr, SHUT_RDWR) == -1) {
             report(ERROR "close socket error: %s", strerror(errno));
         }
+        close(server->con.fdr);
         server->con.fdr = -1;
     }
 }

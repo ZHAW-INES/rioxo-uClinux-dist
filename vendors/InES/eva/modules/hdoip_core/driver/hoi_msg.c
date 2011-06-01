@@ -78,7 +78,7 @@ int hoi_drv_msg_eti(t_hoi* handle, t_hoi_msg_eti* msg)
 
     // load filter...
     eti_drv_set_filter(&handle->eti,
-            msg->ip_address_dst, msg->ip_address_src, msg->ip_address_src,
+            msg->ip_address_dst, msg->ip_address_src_aud, msg->ip_address_src_vid,
             msg->udp_port_aud, msg->udp_port_vid);
 
     // flush buffers

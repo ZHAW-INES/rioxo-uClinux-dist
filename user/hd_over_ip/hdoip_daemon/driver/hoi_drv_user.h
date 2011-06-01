@@ -21,7 +21,7 @@ const char* event_str(uint32_t e);
 int hoi_drv_ldrv(uint32_t drivers);
 int hoi_drv_buf(void* ar, size_t arl, void* vr, size_t vrl, void* at, size_t atl, void* vt, size_t vtl);
 
-int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src, uint32_t vid, uint32_t aud);
+int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud, uint32_t vid, uint32_t aud);
 int hoi_drv_vsi(uint32_t compress, uint32_t encrypt, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt);
 int hoi_drv_vso(uint32_t compress, uint32_t encrypt, t_video_timing* timing, uint32_t advcnt, uint32_t delay_ms);
 int hoi_drv_asi(uint32_t cfg, hdoip_eth_params* eth, uint32_t fs, uint32_t width, uint32_t cnt, uint8_t* sel);
@@ -59,21 +59,8 @@ int hoi_drv_osdon();
 int hoi_drv_osdoff();
 int hoi_drv_hpdon();
 int hoi_drv_hpdoff();
-int hoi_drv_hpdreset();
 int hoi_drv_loop();
 int hoi_drv_repair();
-
-int hoi_drv_hdcp_timer_enable();
-int hoi_drv_hdcp_timer_disable();
-int hoi_drv_hdcp_timer_load();
-int hoi_drv_hdcp_get_timer(t_hoi_msg_hdcp_timer *msg);
-int hoi_drv_hdcp_set_timer(uint32_t start_time);
-int hoi_drv_hdcp_get_key(uint32_t key[4]);
-
-int hoi_drv_wdg_enable();
-int hoi_drv_wdg_disable();
-int hoi_drv_wdg_service();
-int hoi_drv_wdg_init(uint32_t service_time);
 
 int hoi_drv_poll();
 int hoi_drv_getversion(t_hoic_getversion* cmd);

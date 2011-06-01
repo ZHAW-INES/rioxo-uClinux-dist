@@ -23,6 +23,7 @@
 #include "hdoipd_fsm.h"
 #include "hdoipd_task.h"
 #include "rscp_include.h"
+#include "rscp_string.h"
 #include "edid.h"
 
 #include "vrb_video.h"
@@ -85,7 +86,7 @@ bool hdoipd_clr_rsc(int state)
             hdoipd_set_rsc(RSC_AUDIO_SYNC);
         }
     }
-    if ((state & RSC_AUDIO_SYNC) && hdoipd_rsc(RSC_VIDEO_OUT)) {
+    if ((state & RSC_AUDIO_SYNC) && hdoipd_rsc(RSC_VIDEO_OUT) && !hdoipd_rsc(RSC_OSD)) {
         if (reg_test("mode-sync", "streamsync")) {
             // TODO: switch sync to
             hdoipd_set_rsc(RSC_VIDEO_SYNC);
@@ -291,9 +292,10 @@ void hdoipd_goto_vrb()
                 box_sys_set_remote(reg_get("remote-uri"));
 
                 // first thing to try is setup a new connection based on registry
-                if(hdoipd.auto_stream) {
-                    hdoipd_set_task_start_vrb();
-                }
+                //if(hdoipd.auto_stream) {
+                //    hdoipd_set_task_start_vrb();
+                //}
+                alive_check_start_vrb_alive();
             }
         } else {
             report(ERROR "already in state vrb");
@@ -458,9 +460,10 @@ void hdoipd_fsm_vrb(uint32_t event)
         case E_ADV9889_CABLE_ON:
             // plug in the cable is a start point for the VRB to
             // work when video or embedded audio is desired ...
-            if(hdoipd.auto_stream) {
-                hdoipd_set_task_start_vrb();
-            }
+            //if(hdoipd.auto_stream) {
+            //    hdoipd_set_task_start_vrb();
+            //}
+            alive_check_start_vrb_alive();
         break;
         case E_ADV9889_CABLE_OFF:
             rscp_client_event(hdoipd.client, EVENT_VIDEO_SINK_OFF);
@@ -660,8 +663,8 @@ void hdoipd_hello()
 
 void hdoipd_start()
 {
-    hdoipd_hello();
-    
+    //hdoipd_hello();
+
     char *s = reg_get("mode-start");
     if (strcmp(s, "vtb") == 0) {
         hdoipd_goto_vtb();
@@ -681,7 +684,6 @@ void hdoipd_start()
 
 bool hdoipd_init(int drv)
 {
-    int ret;
     pthread_mutexattr_t attr;
 
     memset(&hdoipd, 0, sizeof(t_hdoipd));
@@ -719,10 +721,9 @@ bool hdoipd_init(int drv)
 
     hdoipd.auto_stream = reg_test("auto-stream", "true");
 
-    if(hdoipd_amx_open(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"),
-                    inet_addr(reg_get("amx-hello-ip")), htons(reg_get_int("amx-hello-port")))) {
-        perror("[AMX] hdoipd_amx_open() failed");
-    }
+    alive_check_client_open(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"), inet_addr(reg_get("amx-hello-ip")), reg_get_int("amx-hello-port"), 1, true);
+
+    alive_check_init_msg_vrb_alive();
 
     pthread_mutexattr_init(&attr);
     //pthread_mutexattr_setrobust_np(&attr, PTHREAD_MUTEX_ROBUST_NP);
