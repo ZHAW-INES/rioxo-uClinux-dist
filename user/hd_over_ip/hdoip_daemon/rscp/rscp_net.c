@@ -106,7 +106,7 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
 
     /* Read device ip */
     if((ioctl(sock, SIOCGIFADDR, (void*)&ifreq)) == -1 ) {
-            perror("ioctl(SIOCGIFNETMASK) failed");
+            perror("ioctl(SIOCGIFADDR) failed");
             return RSCP_ERRORNO;
     }
 
