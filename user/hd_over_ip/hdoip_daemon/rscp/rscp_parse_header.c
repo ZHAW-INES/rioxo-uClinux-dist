@@ -174,12 +174,11 @@ int rscp_parse_transport(char* line, t_rscp_transport* p)
 
     // transport spec (for now ignore) -> TODO
     next(token, line);
-
     // "unicast" or "multicast"
     next(token, line);
-    if (strcmp(token, "unicast")) {
+    if (!strcmp(token, "unicast")) {
         p->multicast = false;
-    } else if (strcmp(token, "multicast")) {
+    } else if (!strcmp(token, "multicast")) {
         p->multicast = true;
     } else return RSCP_PARSE_ERROR;
 
