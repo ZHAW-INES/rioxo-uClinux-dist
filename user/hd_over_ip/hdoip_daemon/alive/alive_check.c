@@ -42,7 +42,7 @@ int alive_check_client_open(t_alive_check *handle, bool enable, int interval, ui
         }
 
         if ((connect(handle->socket, (struct sockaddr*)&(handle->addr_in), sizeof(struct sockaddr_in))) == -1) {
-            report(ERROR "alive_check: client socket connect error: %s", strerror(errno));
+            // report(ERROR "alive_check: client socket connect error: %s", strerror(errno));
             handle->socket = 0;
             return ALIVE_CHECK_ERROR;
         }
@@ -179,8 +179,12 @@ int alive_check_server_update(t_alive_check *handle, bool enable, uint16_t port,
 //--------------------------------------------
 // specific functions to check if vtb is ready
 
-
-void alive_check_init_msg_vrb_alive()
+/*
+ * Because of DHCP needs some time to get ip address, 
+ * this init function is repeated until ip is available
+ *
+ */
+int alive_check_init_msg_vrb_alive()
 {
     uint32_t  hello_uri_length = 200;
     char *s;
@@ -188,31 +192,39 @@ void alive_check_init_msg_vrb_alive()
     t_str_uri uri;
     struct hostent* host;
 
-    s = reg_get("hello-uri");
-    if (strlen(s) < hello_uri_length)
-        memcpy(hello_uri, s, strlen(s)+1);
-    else {
-        memcpy(hello_uri, s, hello_uri_length);
-        perror("[ALIVE] hello-uri size too long");
-    }
+    if (!(hdoipd.alive_check.init_done)) {
 
-    str_split_uri(&uri, hello_uri);
+        if reg_test("mode-start", "vrb") {
+            // register remote for "hello"
+            if (box_sys_set_remote(reg_get("hello-uri")) == -1) {
+                return ALIVE_CHECK_ERROR;
+            }
+            s = reg_get("hello-uri");
+            if (strlen(s) < hello_uri_length)
+                memcpy(hello_uri, s, strlen(s)+1);
+            else {
+                memcpy(hello_uri, s, hello_uri_length);
+                perror("[ALIVE] hello-uri size too long");
+            }
+            str_split_uri(&uri, hello_uri);
+            if (!(host = gethostbyname(uri.server))) {
+                //herror("gethostbyname");
+                return ALIVE_CHECK_ERROR;
+            }
+            if (alive_check_client_open(&hdoipd.alive_check, reg_test("alive-check", "true"), reg_get_int("alive-check-interval"), *((uint32_t*)host->h_addr_list[0]), reg_get_int("alive-check-port"), 0, true)) {
+                perror("[ALIVE] alive_check_client_open() failed");
+            }
+        }
 
-    if (!(host = gethostbyname(uri.server))) {
-        perror("[ALIVE] get host by name failed");
-    }
-
-    if reg_test("mode-start", "vrb") {
-        if (alive_check_client_open(&hdoipd.alive_check, reg_test("alive-check", "true"), reg_get_int("alive-check-interval"), *((uint32_t*)host->h_addr_list[0]), reg_get_int("alive-check-port"), 0, true)) {
-            perror("[ALIVE] alive_check_client_open() failed");
+        if reg_test("mode-start", "vtb") {
+            if (alive_check_server_open(&hdoipd.alive_check, true, reg_get_int("alive-check-port"), true)) {
+                perror("[ALIVE] alive_check_server_open() failed");
+            }
         }
     }
+    hdoipd.alive_check.init_done = 1;
 
-    if reg_test("mode-start", "vtb") {
-        if (alive_check_server_open(&hdoipd.alive_check, true, reg_get_int("alive-check-port"), true)) {
-            perror("[ALIVE] alive_check_server_open() failed");
-        }
-    }
+    return ALIVE_CHECK_SUCCESS;
 }
 
 void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
@@ -222,9 +234,15 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
     char client_ip[30];
 
     if reg_test("mode-start", "vrb") {
-        memset(&hello_msg, 0, msg_length);
-        sprintf(hello_msg, "%s/%s/%s","HELLO", "VRB", reg_get("system-ip"));
-        alive_check_client_handler(handle, hello_msg);
+        if (hdoipd.alive_check.init_done) {
+            memset(&hello_msg, 0, msg_length);
+            if (reg_test("system-dhcp", "true")) {
+                sprintf(hello_msg, "%s/%s/%s","HELLO", "VRB", reg_get("system-hostname"));
+            } else {
+                sprintf(hello_msg, "%s/%s/%s","HELLO", "VRB", reg_get("system-ip"));
+            }
+            alive_check_client_handler(handle, hello_msg);
+        }
     }
 
     if reg_test("mode-start", "vtb") {

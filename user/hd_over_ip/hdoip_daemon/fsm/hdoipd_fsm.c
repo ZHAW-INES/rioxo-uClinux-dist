@@ -289,12 +289,12 @@ void hdoipd_goto_vrb()
                 hdoipd_set_state(HOID_VRB);
 
                 // register remote for "hello"
-                box_sys_set_remote(reg_get("remote-uri"));
-
+                //box_sys_set_remote(reg_get("remote-uri"));
                 // first thing to try is setup a new connection based on registry
                 //if(hdoipd.auto_stream) {
                 //    hdoipd_set_task_start_vrb();
                 //}
+                hdoipd.alive_check.init_done = 0;
                 alive_check_start_vrb_alive();
             }
         } else {
@@ -727,8 +727,6 @@ bool hdoipd_init(int drv)
     hdoipd.auto_stream = reg_test("auto-stream", "true");
 
     alive_check_client_open(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"), inet_addr(reg_get("amx-hello-ip")), reg_get_int("amx-hello-port"), 1, true);
-
-    alive_check_init_msg_vrb_alive();
 
     pthread_mutexattr_init(&attr);
     //pthread_mutexattr_setrobust_np(&attr, PTHREAD_MUTEX_ROBUST_NP);

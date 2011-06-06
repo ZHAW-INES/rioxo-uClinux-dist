@@ -33,13 +33,13 @@ int box_sys_hello(t_rscp_media UNUSED *media, intptr_t UNUSED m, t_rscp_connecti
     return 0;
 }
 
-void box_sys_set_remote(char* address)
+int box_sys_set_remote(char* address)
 {
     char buf[200];
     t_str_uri uri;
     struct hostent* host;
 
-    if (!address) return;
+    if (!address) return -1;
 
     box.address = 0;
 
@@ -47,20 +47,22 @@ void box_sys_set_remote(char* address)
 
     if (!str_split_uri(&uri, buf)) {
         report("uri error: scheme://server[:port]/name");
-        return;
+        return -1;
     }
 
     host = gethostbyname(uri.server);
 
     if (!host) {
         report("gethostbyname failed");
-        return;
+        return -1;
     }
 
     box.address = *((uint32_t*)host->h_addr_list[0]);
 
     struct in_addr addr; addr.s_addr = box.address;
     report(INFO "box_sys_set_remote(%s)", inet_ntoa(addr));
+
+    return 0;
 }
 
 t_rscp_media box_sys = {

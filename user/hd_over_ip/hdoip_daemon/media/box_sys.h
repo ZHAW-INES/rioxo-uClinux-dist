@@ -12,7 +12,7 @@
 
 extern t_rscp_media box_sys;
 
-void box_sys_set_remote(char* address);
+int box_sys_set_remote(char* address);
 
 #define REPORT_RTX(dir, s, dir2, d, __av)                   \
 {                                                           \

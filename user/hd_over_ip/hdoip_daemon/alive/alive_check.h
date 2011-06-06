@@ -24,6 +24,7 @@ typedef struct {
     int                 broadcast;
     int                 socket;
     int                 interval_cnt;
+    int                 init_done;
     struct sockaddr_in  addr_in;
 
 } t_alive_check;
@@ -41,7 +42,7 @@ int  alive_check_server_update(t_alive_check *handle, bool enable, uint16_t port
 void alive_check_handle_msg_vrb_alive(t_alive_check *handle);
 int  alive_check_test_msg_vrb_alive(char *hello_msg, char *client_ip);
 int  alive_check_response_vrb_alive(char *client_ip);
-void alive_check_init_msg_vrb_alive();
+int  alive_check_init_msg_vrb_alive();
 void alive_check_start_vrb_alive();
 void alive_check_stop_vrb_alive();
 

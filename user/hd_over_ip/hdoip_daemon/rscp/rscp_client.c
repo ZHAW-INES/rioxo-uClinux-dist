@@ -70,7 +70,7 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
         host = gethostbyname(uri.server);
 
         if (!host) {
-            report("gethostbyname failed");
+            //herror("gethostbyname");
             ret = RSCP_CLIENT_ERROR;
         }
     }
