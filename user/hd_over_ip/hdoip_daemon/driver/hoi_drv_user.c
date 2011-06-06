@@ -273,6 +273,20 @@ int hoi_drv_debug(void)
     return ret;
 }
 
+
+int hoi_drv_set_timing(t_video_timing* timing)
+{
+    int ret=0;
+    t_hoi_msg_image msg;
+    
+    memcpy(&msg.timing, timing, sizeof(t_video_timing));
+
+    hoi_msg_set_timing_init(&msg);
+    ret = hoi_msg(&msg);
+
+    return ret;
+}
+
 int hoi_drv_getversion(t_hoic_getversion* cmd)
 {
     int ret;

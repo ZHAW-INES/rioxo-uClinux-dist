@@ -413,6 +413,15 @@ int hoi_drv_msg_debug(t_hoi* handle, t_hoi_msg_image* msg)
     return ret;
 }
 
+int hoi_drv_msg_set_timing(t_hoi* handle, t_hoi_msg_image* msg)
+{
+    uint32_t ret = SUCCESS;
+
+    vio_drv_debugx(&handle->vio, &msg->timing);
+
+    return ret;
+}
+
 int hoi_drv_msg_bw(t_hoi* handle, t_hoi_msg_param* msg)
 {
     vio_drv_set_bandwidth(&handle->vio, msg->value);
@@ -707,6 +716,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_CAPTURE,               hoi_drv_msg_capture);
         call(HOI_MSG_SHOW,                  hoi_drv_msg_show);
         call(HOI_MSG_DEBUG,                 hoi_drv_msg_debug);
+        call(HOI_MSG_SET_TIMING,            hoi_drv_msg_set_timing);
         call(HOI_MSG_VSI,                   hoi_drv_msg_vsi);
         call(HOI_MSG_VSO,                   hoi_drv_msg_vso);
         call(HOI_MSG_ASI,                   hoi_drv_msg_asi);

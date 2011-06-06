@@ -75,6 +75,7 @@
 #define HOI_MSG_WDG_ENABLE          (0x70000107)
 #define HOI_MSG_WDG_DISABLE         (0x70000108)
 #define HOI_MSG_WDG_SERVICE         (0x70000109)
+#define HOI_MSG_SET_TIMING          (0x7000010A)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
@@ -404,6 +405,12 @@ typedef struct {
 } t_hoi_msg_debug;
 
 #define hoi_msg_debug_init(p) hoi_msg_init(p, HOI_MSG_DEBUG, t_hoi_msg_debug)
+
+//------------------------------------------------------------------------------
+// set timing for osd
+
+#define hoi_msg_set_timing_init(p) hoi_msg_init(p, HOI_MSG_SET_TIMING, t_hoi_msg_image)
+
 //------------------------------------------------------------------------------
 //
 

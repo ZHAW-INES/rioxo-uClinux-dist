@@ -845,7 +845,6 @@ void vio_drv_get_advcnt(t_vio* handle, uint32_t* advcnt)
     }
 }
 
-
 void vio_drv_handler(t_vio* handle, t_queue* event)
 {
     uint32_t cfg, pcfg, ncfg;

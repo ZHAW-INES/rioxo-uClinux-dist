@@ -53,7 +53,7 @@ int box_sys_set_remote(char* address)
     host = gethostbyname(uri.server);
 
     if (!host) {
-        report("gethostbyname failed");
+        //herror("gethostbyname");
         return -1;
     }
 
