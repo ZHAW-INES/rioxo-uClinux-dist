@@ -309,19 +309,21 @@ int hoi_cfg_get_default_gw(char *gw)
     ifname = reg_get("system-ifname");
 
     fd = fopen("/proc/net/route", "r");
-    getline(&line, &len, fd);   // skip first line
-    while (getline(&line, &len, fd) != -1) {
-        value = strtok(line, "\t");
-        if(strcmp(ifname, value) == 0) {    // if interface name match
-            value = strtok(0, "\t");
-            if(strcmp("00000000", value) == 0) { // if default gateway
+    if(fd != NULL) {
+        getline(&line, &len, fd);   // skip first line
+        while (getline(&line, &len, fd) != -1) {
+            value = strtok(line, "\t");
+            if(strcmp(ifname, value) == 0) {    // if interface name match
                 value = strtok(0, "\t");
-                gw_ip = hex2int(value, 8);
-                sin.sin_addr.s_addr = gw_ip;
-                value = inet_ntoa(sin.sin_addr);
-                strcpy(gw,value);
-                fclose(fd);
-                return 0;
+                if(strcmp("00000000", value) == 0) { // if default gateway
+                    value = strtok(0, "\t");
+                    gw_ip = hex2int(value, 8);
+                    sin.sin_addr.s_addr = gw_ip;
+                    value = inet_ntoa(sin.sin_addr);
+                    strcpy(gw,value);
+                    fclose(fd);
+                    return 0;
+                }
             }
         }
     }
