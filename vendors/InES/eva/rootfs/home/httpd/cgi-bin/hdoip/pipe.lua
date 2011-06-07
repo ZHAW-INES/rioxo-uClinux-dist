@@ -38,7 +38,11 @@ REG_WEB_LANG = "web-lang"
 REG_WEB_AUTH_EN = "web-auth-en"
 REG_WEB_USER = "web-user"
 REG_WEB_PASS = "web-pass"
-
+REG_AMX_EN = "amx-en"
+REG_AMX_HELLO_IP = "amx-hello-ip"
+REG_AMX_HELLO_PORT = "amx-hello-port"
+REG_AMX_HELLO_MSG = "amx-hello-msg"
+REG_AMX_HELLO_INTERVAL = "amx-hello-interval"
 
 local PIPE_CMD = "/tmp/web.cmd"
 local PIPE_RSP = "/tmp/web.rsp"
