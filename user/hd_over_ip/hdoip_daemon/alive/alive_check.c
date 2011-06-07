@@ -14,8 +14,10 @@
 #include "hdoipd.h"
 #include "rscp_string.h"
 
-int alive_check_client_open(t_alive_check *handle, bool enable, int interval, uint32_t ip, uint16_t port, int broadcast, bool load_new_config)
+int alive_check_client_open(t_alive_check *handle, bool enable, int interval, char *dest, uint16_t port, int broadcast, bool load_new_config)
 {
+    struct hostent* host;
+
     handle->socket                          = 0;
     handle->enable                          = enable;
     handle->interval_cnt                    = 0;
@@ -25,7 +27,17 @@ int alive_check_client_open(t_alive_check *handle, bool enable, int interval, ui
         handle->interval                    = interval;
         handle->broadcast                   = broadcast;
         handle->addr_in.sin_port            = htons(port);
-        handle->addr_in.sin_addr.s_addr     = ip;
+
+        if(strlen(dest) > ALIVE_DEST_LEN) {
+            return ALIVE_CHECK_ERROR;
+        }
+        strcpy(handle->dest, dest);
+
+        if ((host = gethostbyname(handle->dest)) == NULL) {
+            handle->addr_in.sin_addr.s_addr = 0;
+            return ALIVE_CHECK_ERROR;
+        }
+        handle->addr_in.sin_addr.s_addr     = *((uint32_t*)host->h_addr_list[0]);
     }
 
     if (handle->enable) {
@@ -67,7 +79,7 @@ int alive_check_client_close(t_alive_check *handle)
     return ALIVE_CHECK_SUCCESS;
 }
 
-int alive_check_client_update(t_alive_check *handle, bool enable, int interval, uint32_t ip, uint16_t port, int broadcast, bool load_new_config)
+int alive_check_client_update(t_alive_check *handle, bool enable, int interval, char *ip, uint16_t port, int broadcast, bool load_new_config)
 {
     if (alive_check_client_close(handle) == -1) {
         return ALIVE_CHECK_ERROR;
@@ -82,13 +94,13 @@ int alive_check_client_handler(t_alive_check *handle, char *hello_msg)
 {
     if (handle->enable) {
         if (handle->interval_cnt == 0) {
-            if (handle->socket) {
+            if ((handle->socket != 0) && (handle->addr_in.sin_addr.s_addr != 0)) {
                 if (write(handle->socket, hello_msg, strlen(hello_msg)) == -1) {
                     report(ERROR "alive_check: client write error: %s", strerror(errno));
                     return ALIVE_CHECK_ERROR;
                 }
             } else {
-                alive_check_client_update(handle, true, 0,0,0,0,false);
+                alive_check_client_update(handle,true,handle->interval,handle->dest,ntohs(handle->addr_in.sin_port),handle->broadcast,true);
             }
             if (handle->interval > 1) {
                 handle->interval_cnt = handle->interval - 1;
@@ -194,7 +206,7 @@ int alive_check_init_msg_vrb_alive()
     char *s;
     char hello_uri[hello_uri_length];
     t_str_uri uri;
-    struct hostent* host;
+
 
     if (!(hdoipd.alive_check.init_done)) {
 
@@ -211,11 +223,8 @@ int alive_check_init_msg_vrb_alive()
                 perrno("[ALIVE] hello-uri size too long");
             }
             str_split_uri(&uri, hello_uri);
-            if (!(host = gethostbyname(uri.server))) {
-                //herror("gethostbyname");
-                return ALIVE_CHECK_ERROR;
-            }
-            if (alive_check_client_open(&hdoipd.alive_check, reg_test("alive-check", "true"), reg_get_int("alive-check-interval"), *((uint32_t*)host->h_addr_list[0]), reg_get_int("alive-check-port"), 0, true)) {
+
+            if (alive_check_client_open(&hdoipd.alive_check, reg_test("alive-check", "true"), reg_get_int("alive-check-interval"), uri.server, reg_get_int("alive-check-port"), 0, true)) {
                 perrno("[ALIVE] alive_check_client_open() failed");
             }
         }
