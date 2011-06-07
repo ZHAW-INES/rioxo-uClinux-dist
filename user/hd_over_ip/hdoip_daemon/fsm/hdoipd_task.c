@@ -355,7 +355,9 @@ void task_get_system_update(char** p)
 		/* AMX update */
 		if(update_vector & HOID_TSK_UPD_AMX) {
 		    report("Updating AMX...");
-            alive_check_client_update(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"), inet_addr(reg_get("amx-hello-ip")), reg_get_int("amx-hello-port"), 1, true);
+            if(alive_check_client_update(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"), inet_addr(reg_get("amx-hello-ip")), reg_get_int("amx-hello-port"), 1, true) == -1) {
+                report("[AMX] alive_check_client_update() failed");
+            }
 		}
 
 		/* Auto-stream feature */

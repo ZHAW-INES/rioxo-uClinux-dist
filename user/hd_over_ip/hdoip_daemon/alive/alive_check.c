@@ -47,6 +47,7 @@ int alive_check_client_open(t_alive_check *handle, bool enable, int interval, ui
             return ALIVE_CHECK_ERROR;
         }
     }
+
     return ALIVE_CHECK_SUCCESS;
 }
 
@@ -86,6 +87,8 @@ int alive_check_client_handler(t_alive_check *handle, char *hello_msg)
                     report(ERROR "alive_check: client write error: %s", strerror(errno));
                     return ALIVE_CHECK_ERROR;
                 }
+            } else {
+                alive_check_client_update(handle, true, 0,0,0,0,false);
             }
             if (handle->interval > 1) {
                 handle->interval_cnt = handle->interval - 1;
@@ -98,6 +101,7 @@ int alive_check_client_handler(t_alive_check *handle, char *hello_msg)
             handle->interval_cnt--;
         }
     }
+
     return ALIVE_CHECK_SUCCESS;
 }
 
@@ -204,7 +208,7 @@ int alive_check_init_msg_vrb_alive()
                 memcpy(hello_uri, s, strlen(s)+1);
             else {
                 memcpy(hello_uri, s, hello_uri_length);
-                perror("[ALIVE] hello-uri size too long");
+                perrno("[ALIVE] hello-uri size too long");
             }
             str_split_uri(&uri, hello_uri);
             if (!(host = gethostbyname(uri.server))) {
@@ -212,13 +216,13 @@ int alive_check_init_msg_vrb_alive()
                 return ALIVE_CHECK_ERROR;
             }
             if (alive_check_client_open(&hdoipd.alive_check, reg_test("alive-check", "true"), reg_get_int("alive-check-interval"), *((uint32_t*)host->h_addr_list[0]), reg_get_int("alive-check-port"), 0, true)) {
-                perror("[ALIVE] alive_check_client_open() failed");
+                perrno("[ALIVE] alive_check_client_open() failed");
             }
         }
 
         if reg_test("mode-start", "vtb") {
             if (alive_check_server_open(&hdoipd.alive_check, true, reg_get_int("alive-check-port"), true)) {
-                perror("[ALIVE] alive_check_server_open() failed");
+                perrno("[ALIVE] alive_check_server_open() failed");
             }
         }
     }
@@ -298,7 +302,7 @@ void alive_check_start_vrb_alive()
 {
     if(hdoipd.auto_stream) {
         if (alive_check_client_update(&hdoipd.alive_check, true, 0, 0, 0, 0, false)) {
-            perror("[ALIVE] alive_check_client_update() failed");
+            perrno("[ALIVE] alive_check_client_update() failed");
         }
     }
 }

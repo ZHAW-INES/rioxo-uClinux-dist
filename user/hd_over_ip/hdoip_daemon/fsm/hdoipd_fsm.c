@@ -726,7 +726,9 @@ bool hdoipd_init(int drv)
 
     hdoipd.auto_stream = reg_test("auto-stream", "true");
 
+    report(INFO "[AMX] alive_check_client_open()");
     alive_check_client_open(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"), inet_addr(reg_get("amx-hello-ip")), reg_get_int("amx-hello-port"), 1, true);
+
 
     pthread_mutexattr_init(&attr);
     //pthread_mutexattr_setrobust_np(&attr, PTHREAD_MUTEX_ROBUST_NP);
