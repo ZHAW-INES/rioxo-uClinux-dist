@@ -43,7 +43,7 @@ int edid_read_file(t_edid* edid)
 
     fd = open(file, O_RDONLY, 0600);
 
-    if(fd > -1) {
+    if(fd != -1) {
         ret = read(fd, (void *) edid, sizeof(uint8_t) * 256);
         if(ret == -1) {
             return ret;
@@ -63,7 +63,7 @@ int edid_write_file(t_edid* edid)
 
     fd = open(file, O_CREAT | O_RDWR, 0600);
 
-    if(fd > -1) {
+    if(fd != -1) {
         ret = write(fd, &(buf[0]), sizeof(uint8_t) * 256);
 
         if(ret == -1) {
