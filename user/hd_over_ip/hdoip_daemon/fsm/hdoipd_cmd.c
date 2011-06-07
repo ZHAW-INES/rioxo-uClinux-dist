@@ -33,7 +33,7 @@ void hdoipd_load(t_hoic_load* cmd)
 
     if (hdoipd_goto_ready()) {
 
-        if ((f = fopen(cmd->filename, "r"))) {
+        if ((f = fopen(cmd->filename, "r")) != NULL) {
             hdoipd.canvas = hoi_image_load(f);
             fclose(f);
         } else {
@@ -55,7 +55,7 @@ void hdoipd_capture(t_hoic_capture* cmd)
 
     if (hdoipd_goto_ready()) {
 
-        if ((f = fopen(cmd->filename, "w"))) {
+        if ((f = fopen(cmd->filename, "w")) != NULL) {
             if (cmd->compress) {
                 hoi_image_capture_jpeg2000(f, cmd->size);
             } else {
