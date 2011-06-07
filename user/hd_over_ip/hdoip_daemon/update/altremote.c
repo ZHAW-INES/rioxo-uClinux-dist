@@ -61,7 +61,7 @@ int altremote_set_fpga_config_addr(char *config_addr, size_t len)
 		return -1;
 
 	fd = open(ALTREMOTE_FPGA_CONFIG_ADDR_PATH, O_WRONLY);
-	if (fd < 0)
+	if (fd == -1)
 		return -1;
 
 	if (write(fd, config_addr, len) != (ssize_t) len)
@@ -82,7 +82,7 @@ int altremote_get_fpga_config_addr(char *config_addr, size_t len)
 		return -1;
 
 	fd = open(ALTREMOTE_FPGA_CONFIG_ADDR_PATH, O_RDONLY);
-	if (fd < 0)
+	if (fd == -1)
 		return -1;
 	if (read(fd, config_addr, len) != (ssize_t) len) {
 		close(fd);
@@ -104,7 +104,7 @@ int altremote_trigger_reconfig(void)
 {
 	int fd = open(ALTREMOTE_RECONFIG_PATH, O_WRONLY);
 
-	if (fd < 0)
+	if (fd == -1)
 		return -1;
 	write(fd, "1", sizeof("1"));
 

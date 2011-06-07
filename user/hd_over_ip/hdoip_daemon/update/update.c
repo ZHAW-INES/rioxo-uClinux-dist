@@ -131,7 +131,7 @@ int update_flash(char* filename)
     t_file_header hdr;
     FILE* f = fopen(filename, "r");
 
-    if (f) {
+    if (f != NULL) {
         ret = update_hdr(&hdr, f);
         if (ret != 0) {
             report("Failed to read header\n");
