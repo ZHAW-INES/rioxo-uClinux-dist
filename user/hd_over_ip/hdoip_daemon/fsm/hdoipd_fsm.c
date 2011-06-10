@@ -295,6 +295,7 @@ void hdoipd_goto_vrb()
                 //    hdoipd_set_task_start_vrb();
                 //}
                 hdoipd.alive_check.init_done = 0;
+
                 alive_check_start_vrb_alive();
             }
         } else {
@@ -361,7 +362,6 @@ int hdoipd_vrb_play(t_rscp_media *media, void UNUSED *d)
         report(ERROR "hdoipd_vrb_play() only valid in state VRB");
         return -1;
     }
-
     return rscp_media_play(media);
 }
 
@@ -390,14 +390,20 @@ void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps)
 int hdoipd_start_vrb_cb(t_rscp_media* media, void* d)
 {
     int os = media->state;
+    int ret = 0;
+
     if (rscp_media_sinit(media)) {
-        hdoipd_vrb_setup(media, d);
+        if(hdoipd_vrb_setup(media, d) == -1) {
+            ret = 1;
+        }
     } else if (rscp_media_sready(media)) {
-        hdoipd_vrb_play(media, d);
+        if(hdoipd_vrb_play(media, d) == -1) {
+            ret = 1;
+        }
     } else {
         return 0;
     }
-    return (os == media->state);
+    return ret;
 }
 int hdoipd_start_vrb(void *d)
 {
@@ -463,7 +469,9 @@ void hdoipd_fsm_vrb(uint32_t event)
             //if(hdoipd.auto_stream) {
             //    hdoipd_set_task_start_vrb();
             //}
-            alive_check_start_vrb_alive();
+            if(hdoipd.auto_stream) {
+                alive_check_start_vrb_alive();
+            }
         break;
         case E_ADV9889_CABLE_OFF:
             rscp_client_event(hdoipd.client, EVENT_VIDEO_SINK_OFF);
