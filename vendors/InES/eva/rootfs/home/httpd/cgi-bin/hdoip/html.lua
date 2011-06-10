@@ -242,12 +242,12 @@ function Header(t, title, script_path, addon)
 
     html_str = html_str .. '<div id="mainmenu">\n<ul class=\"menu\">\n'
     
-    if((t.system_mode == "vrb") and (t.login))then
+    if((t.mode_vrb) and (t.login))then
         html_str = html_str .. '<li id="right">'
         ImageLink(script_path.."?page=".. t.page .."&refresh=1", img_path.."refresh.png", label.reconnect)
         html_str = html_str .. '</li>'
 
-        if(((t.daemon_state == "ready") and (t.refresh == nil) and (t.play == nil)) or (t.stop ~= nil))then    
+        if(((t.vrb_playing == false) and (t.refresh == nil) and (t.play == nil)) or (t.stop ~= nil))then    
             html_str = html_str .. '<li id="right">'
             ImageLink(script_path.."?page=".. t.page, img_path.."stop_gray.png", label.stop)
             html_str = html_str .. '</li>'

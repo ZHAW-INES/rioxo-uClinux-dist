@@ -67,6 +67,13 @@ end
 
 if(query.system_mode == "vrb") then
     query.mode_vrb = true;
+    
+    query.vrb_playing = hdoip.pipe.getParam(hdoip.pipe.REG_VRB_IS_PLAYING)
+    if(query.vrb_playing == "true") then
+        query.vrb_playing = true
+    else
+        query.vrb_playing = false
+    end
 else 
     query.mode_vrb = false;
 end  
