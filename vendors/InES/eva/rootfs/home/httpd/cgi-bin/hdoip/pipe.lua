@@ -30,6 +30,7 @@ REG_STATUS_VRB = "daemon-vrb-state"
 REG_STATUS_RSC = "daemon-rsc"
 REG_STATUS_ETH = "eth-status"
 REG_STATUS_VSO = "vso-status"
+REG_VRB_IS_PLAYING = "vrb_is_playing"
 REG_FORCE_HDCP = "hdcp-force"
 REG_STATUS_HDCP = "hdcp-status"
 REG_STATUS_SYSTEM = "system-state"
@@ -160,9 +161,10 @@ end
 
 function getVersion(t)
     if((fd_cmd ~= nil) and (fd_rsp ~= nil)) then
-        str = createCmdHeader(PIPE_CMD_GETVERSION, 20)
+        str = createCmdHeader(PIPE_CMD_GETVERSION, 70)
         str = str .. string.format("%08x%08x%08x%08x%08x",0,0,0,0,0)
-        str = hdoip.convert.Str2HexFile(str)
+        
+        str = hdoip.convert.Str2HexFile(str) .. '                                                  '
 
         fd_cmd:write(str)
         fd_cmd:flush()
@@ -192,6 +194,7 @@ function getVersion(t)
         local tmp  = hdoip.convert.bin2dec(string.sub(ret,17,18),2)
         local tmp2 = hdoip.convert.bin2dec(string.sub(ret,19,20),2) 
         t.sw_version_str = string.format("%d.%d",tmp2, tmp) 
+        t.sw_tag = string.format("%s",string.sub(ret,21))
     end
 end
 

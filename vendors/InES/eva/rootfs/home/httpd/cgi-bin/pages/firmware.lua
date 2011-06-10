@@ -63,6 +63,8 @@ function show(t)
         hdoip.html.Text(t.sopc_date_str);                                            hdoip.html.TableInsElement(1)
         hdoip.html.Text(label.p_fw_software_ver);                                    hdoip.html.TableInsElement(1)
         hdoip.html.Text(t.sw_version_str);                                           hdoip.html.TableInsElement(1)
+        hdoip.html.Text(label.p_fw_software_tag);                                    hdoip.html.TableInsElement(1)
+        hdoip.html.Text(t.sw_tag);                                                   hdoip.html.TableInsElement(1)
         hdoip.html.TableBottom()
     end
 
