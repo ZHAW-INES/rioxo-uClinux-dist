@@ -18,7 +18,7 @@ int alive_check_client_open(t_alive_check *handle, bool enable, int interval, ch
 {
     struct hostent* host;
 
-    handle->socket                          = 0;
+    handle->socket                          = -1;
     handle->enable                          = enable;
     handle->interval_cnt                    = 0;
     handle->addr_in.sin_family              = AF_INET;
@@ -43,19 +43,18 @@ int alive_check_client_open(t_alive_check *handle, bool enable, int interval, ch
     if (handle->enable) {
         if ((handle->socket = socket(PF_INET, SOCK_DGRAM, 0)) == -1) {
             report(ERROR "alive_check: server socket error: %s", strerror(errno));
-            handle->socket = 0;
             return ALIVE_CHECK_ERROR;
         }
 
         if ((setsockopt(handle->socket, SOL_SOCKET, SO_BROADCAST, &handle->broadcast, sizeof(handle->broadcast))) == -1) {
             report(ERROR "alive_check: client socket broadcast error: %s", strerror(errno));
-            handle->socket = 0;
+            handle->socket = -1;
             return ALIVE_CHECK_ERROR;
         }
 
         if ((connect(handle->socket, (struct sockaddr*)&(handle->addr_in), sizeof(struct sockaddr_in))) == -1) {
             // report(ERROR "alive_check: client socket connect error: %s", strerror(errno));
-            handle->socket = 0;
+            handle->socket = -1;
             return ALIVE_CHECK_ERROR;
         }
     }
@@ -65,16 +64,11 @@ int alive_check_client_open(t_alive_check *handle, bool enable, int interval, ch
 
 int alive_check_client_close(t_alive_check *handle)
 {
-    if(handle->socket != 0) {
-        if (shutdown(handle->socket, SHUT_RDWR) == -1) {
-            report(ERROR "alive_check: client socket shutdown error: %s", strerror(errno));
-            return ALIVE_CHECK_ERROR;
-        }
-        if (close(handle->socket) == -1) {
-            report(ERROR "alive_check: client socket close error: %s", strerror(errno));
-            return ALIVE_CHECK_ERROR;
-        }
-        handle->socket = 0;
+    if(handle->socket != -1) {
+        shutdown(handle->socket, SHUT_RDWR);
+        close(handle->socket);
+
+        handle->socket = -1;
     }
     return ALIVE_CHECK_SUCCESS;
 }
@@ -94,7 +88,7 @@ int alive_check_client_handler(t_alive_check *handle, char *hello_msg)
 {
     if (handle->enable) {
         if (handle->interval_cnt == 0) {
-            if ((handle->socket != 0) && (handle->addr_in.sin_addr.s_addr != 0)) {
+            if ((handle->socket != -1) && (handle->addr_in.sin_addr.s_addr != 0)) {
                 if (write(handle->socket, hello_msg, strlen(hello_msg)) == -1) {
                     report(ERROR "alive_check: client write error: %s", strerror(errno));
                     return ALIVE_CHECK_ERROR;
@@ -121,7 +115,7 @@ int alive_check_server_open(t_alive_check *handle, bool enable, uint16_t port, b
 {
     int socket_flags;
 
-    handle->socket                          = 0;
+    handle->socket                          = -1;
     handle->enable                          = enable;
     handle->interval                        = 0;
     handle->interval_cnt                    = 0;
@@ -135,17 +129,16 @@ int alive_check_server_open(t_alive_check *handle, bool enable, uint16_t port, b
     if(handle->enable) {
         if ((handle->socket = socket(PF_INET, SOCK_DGRAM, 0)) == -1) {
             report(ERROR "alive_check: server socket error: %s", strerror(errno));
-            handle->socket = 0;
             return ALIVE_CHECK_ERROR;
         }
 
         if ((bind(handle->socket, (struct sockaddr*)&handle->addr_in, sizeof(struct sockaddr_in))) == -1) {
             report(ERROR "alive_check: server bind error: %s", strerror(errno));
-            handle->socket = 0;
+            handle->socket = -1;
             return ALIVE_CHECK_ERROR;
         }
 
-        if (handle->socket) {
+        if (handle->socket != -1) {
             socket_flags = fcntl(handle->socket, F_GETFL, 0);
             fcntl(handle->socket, F_SETFL, (socket_flags | O_NONBLOCK));
         }
@@ -155,7 +148,7 @@ int alive_check_server_open(t_alive_check *handle, bool enable, uint16_t port, b
 
 int alive_check_server_close(t_alive_check *handle)
 {
-    if(handle->socket != 0) {
+    if(handle->socket != -1) {
         if ((shutdown(handle->socket, SHUT_RDWR)) == -1 ) {
             report(ERROR "alive_check: server socket shutdown error: %s", strerror(errno));
             return ALIVE_CHECK_ERROR;
@@ -164,7 +157,7 @@ int alive_check_server_close(t_alive_check *handle)
             report(ERROR "alive_check: server socket close error: %s", strerror(errno));
             return ALIVE_CHECK_ERROR;
         }
-        handle->socket = 0;
+        handle->socket = -1;
     }
     return ALIVE_CHECK_SUCCESS;
 }
@@ -296,7 +289,9 @@ int alive_check_response_vrb_alive(char *client_ip)
     if (client_ip) {
         client = rscp_client_open(hdoipd.client, 0, uri);
         if (client) {
+#ifdef REPORT_ALIVE_HELLO
             report(INFO "alive check: say hello to %s", uri);
+#endif
             rscp_client_hello(client);
             rscp_client_close(client);
             return ALIVE_CHECK_SUCCESS;
@@ -309,10 +304,8 @@ int alive_check_response_vrb_alive(char *client_ip)
 
 void alive_check_start_vrb_alive()
 {
-    if(hdoipd.auto_stream) {
-        if (alive_check_client_update(&hdoipd.alive_check, true, 0, 0, 0, 0, false)) {
-            perrno("[ALIVE] alive_check_client_update() failed");
-        }
+    if (alive_check_client_update(&hdoipd.alive_check, true, 0, 0, 0, 0, false)) {
+        perrno("[ALIVE] alive_check_client_update() failed");
     }
 }
 
