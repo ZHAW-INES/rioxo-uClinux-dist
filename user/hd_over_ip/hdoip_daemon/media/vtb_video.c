@@ -29,7 +29,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     t_multicast_cookie* cookie = media->cookie;
     t_edid edid_old;
 
-    report(INFO "vtb_video_setup");
+    report(VTB_METHOD "vtb_video_setup");
 
     media->result = RSCP_RESULT_READY;
 
@@ -45,6 +45,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         if (hdoipd_tstate(VTB_VID_MASK)) {
             report(" ? vtb busy");
             rscp_err_busy(rsp);
+
             return RSCP_REQUEST_ERROR;
         }
     }
@@ -70,7 +71,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         return RSCP_REQUEST_ERROR;
     }
 
-    if (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE) {
+    if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         if (!hdoipd_tstate(VTB_VID_MASK)) {
             // TODO: dont reload when already the same, store edid in file for next boot
             //       have a list of all contributing edid source (to test if it is already included in our edid)
@@ -79,17 +80,27 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
             ret = edid_read_file(&edid_old);
             if(ret == 0) {  // old EDID read
                 if(edid_compare(&edid_old, (void*)m->edid.edid) == 0) { // new EDID
-                    report(" i [EDID] new E-EDID received");
+                    report(INFO "[EDID] new E-EDID received");
                     edid_write_file((void*)m->edid.edid);
                     hoi_drv_wredid(m->edid.edid);
+
+                    // Clear resources
+                    hdoipd_clr_rsc(RSC_VIDEO_IN);
+                    hdoipd_clr_rsc(RSC_AUDIO0_IN);
+
                     edid_report((void*)m->edid.edid);
                 } else {
-                    report(" i [EDID] same E-EDID");
+                    report(INFO "[EDID] same E-EDID");
                 }
             } else if(ret == -2) { // file doesn't exist
-                report(" i [EDID] no E-EDID saved");
+                report(INFO "[EDID] no E-EDID saved");
                 edid_write_file((void*)m->edid.edid);
                 hoi_drv_wredid(m->edid.edid);
+
+                // Clear resources
+                hdoipd_clr_rsc(RSC_VIDEO_IN);
+                hdoipd_clr_rsc(RSC_AUDIO0_IN);
+
                 edid_report((void*)m->edid.edid);
             } else {
                 perrno("edid_read_file() failed");
@@ -125,7 +136,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
 
     t_multicast_cookie* cookie = media->cookie;
 
-    report(INFO "vtb_video_play");
+    report(VTB_METHOD "vtb_video_play");
 
     media->result = RSCP_RESULT_PLAYING;
 
@@ -136,7 +147,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
         return RSCP_REQUEST_ERROR;
     }
 
-    if(!get_multicast_enable() || (check_client_availability == CLIENT_NOT_AVAILABLE)) {
+    if((!get_multicast_enable()) || (check_client_availability == CLIENT_NOT_AVAILABLE)) {
         if (!hdoipd_tstate(VTB_VID_IDLE)) {
             // we don't have the resource reserved
             report(" ? require state VTB_IDLE");
@@ -150,7 +161,8 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
         report(" ? require active video input");
         media->result = RSCP_RESULT_NO_VIDEO_IN;
         rscp_err_no_source(rsp);
-        hdoipd_set_vtb_state(VTB_VID_OFF);
+        //hdoipd_set_vtb_state(VTB_VID_OFF);
+        hdoipd_set_vtb_state(VTB_VID_IDLE);
         return RSCP_REQUEST_ERROR;
     }
 
@@ -160,10 +172,12 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     if(get_multicast_enable()) {
         eth.ipv4_dst_ip = inet_addr(reg_get("multicast_group"));
         convert_ip_to_multicast_mac(inet_addr(reg_get("multicast_group")), dst_mac);
+        report(INFO "sending multicast to : %s", reg_get("multicast_group"));
     }
     else {
         eth.ipv4_dst_ip = cookie->remote.address;
         for(n=0;n<6;n++) dst_mac[n] = cookie->remote.mac[n];
+        report(INFO "sending unicast to : %s", reg_get("remote-uri"));
     }
 
     eth.ipv4_src_ip = hdoipd.local.address;
@@ -192,7 +206,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     rscp_response_play(rsp, media->sessionid, &fmt, &timing);
 
 #ifdef VID_IN_PATH
-    if (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE) {
+    if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // activate vsi
         if ((n = hoi_drv_vsi(fmt.compress, 0, reg_get_int("bandwidth"), &eth, &timing, &fmt.value))) {
             return RSCP_REQUEST_ERROR;
@@ -211,13 +225,13 @@ int vtb_video_teardown(t_rscp_media* media, t_rscp_req_teardown *m, t_rscp_conne
 {
     t_multicast_cookie* cookie = media->cookie;
 
-    report(INFO "vtb_video_teardown");
+    report(VTB_METHOD "vtb_video_teardown");
 
     media->result = RSCP_RESULT_TEARDOWN;
 
     if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
 #ifdef VID_IN_PATH
-        if (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE) {
+        if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
             hdoipd_hw_reset(DRV_RST_VID_IN);
 #endif
             hdoipd_set_vtb_state(VTB_VID_OFF);
@@ -240,13 +254,13 @@ void vtb_video_pause(t_rscp_media *media)
 {
     t_multicast_cookie* cookie = media->cookie;
 
-    report(INFO "vtb_video_pause");
+    report(VTB_METHOD "vtb_video_pause");
 
     media->result = RSCP_RESULT_PAUSE_Q;
 
     if (hdoipd_tstate(VTB_VIDEO)) {
 #ifdef VID_IN_PATH
-        if (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE) {
+        if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
             hdoipd_hw_reset(DRV_RST_VID_IN);
 #endif
             hdoipd_set_vtb_state(VTB_VID_IDLE);

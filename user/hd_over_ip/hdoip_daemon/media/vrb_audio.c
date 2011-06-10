@@ -29,7 +29,7 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 {
     int n;
     t_rscp_client* client = media->creator;
-    report(INFO "vrb_audio_setup");
+    report(VRB_METHOD "vrb_audio_setup");
 
     if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
         return n;
@@ -73,7 +73,7 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UNUSED *rsp)
 {
     uint32_t compress = 0;
-    report(INFO "vrb_audio_play");
+    report(VRB_METHOD "vrb_audio_play");
 
     media->result = RSCP_RESULT_PLAYING;
 
@@ -107,7 +107,7 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 
 int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown *m, t_rscp_connection *rsp)
 {
-    report(INFO "vrb_audio_teardown");
+    report(VRB_METHOD "vrb_audio_teardown");
 
     media->result = RSCP_RESULT_TEARDOWN;
 
@@ -162,6 +162,7 @@ int vrb_audio_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
 void vrb_audio_pause(t_rscp_media *media)
 {
     media->result = RSCP_RESULT_PAUSE_Q;
+    report(VRB_METHOD "vrb_audio_pause");
 
     if (hdoipd_tstate(VTB_AUDIO)) {
 
@@ -232,6 +233,8 @@ int vrb_audio_dosetup(t_rscp_media *media)
     t_rscp_transport transport;
     t_rscp_client *client = media->creator;
 
+    report(VRB_METHOD "vrb_audio_dosetup");
+
     if (!client) return RSCP_NULL_POINTER;
 
     rscp_default_transport(&transport); // TODO: daemon transport configuration
@@ -245,6 +248,8 @@ int vrb_audio_dosetup(t_rscp_media *media)
 int vrb_audio_doplay(t_rscp_media *media)
 {
     t_rscp_client *client = media->creator;
+
+    report(VRB_METHOD "vrb_audio_doplay");
 
     if (!client) return RSCP_NULL_POINTER;
 

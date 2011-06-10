@@ -35,7 +35,7 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 {
     int n;
     t_rscp_client* client = media->creator;
-    report(INFO "vrb_video_setup");
+    report(VRB_METHOD "vrb_video_setup");
 
     if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
         return n;
@@ -77,7 +77,7 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UNUSED *rsp)
 {
     uint32_t compress = 0;
-    report(INFO "vrb_video_play");
+    report(VRB_METHOD "vrb_video_play");
 
     media->result = RSCP_RESULT_PLAYING;
 
@@ -119,7 +119,7 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 
 int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rscp_connection *rsp)
 {
-    report(INFO "vrb_video_teardown");
+    report(VRB_METHOD "vrb_video_teardown");
 
     media->result = RSCP_RESULT_TEARDOWN;
 
@@ -141,7 +141,9 @@ int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rsc
     }
 
     // start sending hello frames to vtb
-    alive_check_start_vrb_alive();
+    if(hdoipd.auto_stream) {
+        alive_check_start_vrb_alive();
+    }
 
     return RSCP_SUCCESS;
 }
@@ -177,6 +179,7 @@ int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
 void vrb_video_pause(t_rscp_media *media)
 {
     media->result = RSCP_RESULT_PAUSE_Q;
+    report(VRB_METHOD "vrb_video_pause");
 
     if (hdoipd_tstate(VTB_VIDEO)) {
 
@@ -247,6 +250,8 @@ int vrb_video_dosetup(t_rscp_media *media)
     t_rscp_edid edid;
     t_rscp_client *client = media->creator;
 
+    report(VRB_METHOD "vrb_video_dosetup");
+
     if (!client) return RSCP_NULL_POINTER;
 
     rscp_default_transport(&transport); // TODO: daemon transport configuration
@@ -266,6 +271,8 @@ int vrb_video_doplay(t_rscp_media *media)
     char *s;
     t_rscp_rtp_format fmt;
     t_rscp_client *client = media->creator;
+
+    report(VRB_METHOD "vrb_video_doplay");
 
     if (!client) return RSCP_NULL_POINTER;
 
