@@ -299,6 +299,7 @@ int hoi_drv_getversion(t_hoic_getversion* cmd)
     cmd->sysid_date = msg.sysid_date;
     cmd->sysid_id = msg.sysid_id;
     cmd->sw_version = VERSION_SOFTWARE;
+    strcpy(cmd->sw_tag, VERSION_TAG);
 
     return ret;
 }
