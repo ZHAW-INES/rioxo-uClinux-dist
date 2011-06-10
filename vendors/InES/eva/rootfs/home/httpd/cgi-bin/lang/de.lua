@@ -84,6 +84,7 @@ label = {
     p_fw_fpga_ver = "Gateware";
     p_fw_sopc_ver = "SOPC";
     p_fw_software_ver = "Software";
+    p_fw_software_tag = "Bezeichnung";
     p_fw_upload = "Neue Firmware raufladen";
     p_fw_act_firmware = "Aktuelle Firmware-Version";
 
