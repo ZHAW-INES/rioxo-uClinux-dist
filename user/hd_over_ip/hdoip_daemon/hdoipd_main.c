@@ -196,18 +196,18 @@ int main(int argc, char **argv)
     rscp_fd = stdout;
 
 #ifndef DBGCONSOLE
-    if ((report_fd = fopen("/tmp/hdoipd.log", "w")) == NULL) {
+    if ((report_fd = fopen("/var/log/hdoipd.log", "w")) == NULL) {
         return 0;
     }
+    report("/var/log/hdoipd.log started");
 #endif
 
 #ifndef DBGCONSOLERSCP
-    if ((rscp_fd = fopen("/tmp/rscp.log", "w")) == NULL) {
+    if ((rscp_fd = fopen("/var/log/rscp.log", "w")) == NULL) {
         return 0;
     }
+    report("/var/log/rscp.log started");
 #endif
-
-    report("/tmp/hdoipd.log started");
 
     if ((drv = open(DEV_NODE, O_RDWR)) != -1) {
 
