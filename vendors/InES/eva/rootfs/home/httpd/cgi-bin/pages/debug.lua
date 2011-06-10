@@ -11,7 +11,7 @@ function show(t)
     local ret
 
     if(t.dl_hdoipd_log ~= nil) then
-        ret = hdoip.download.file("/tmp/hdoipd.log", "hdoipd.log")
+        ret = hdoip.download.file("/var/log/hdoipd.log", "hdoipd.log")
         if(ret == "") then
             return
         end        
@@ -19,7 +19,7 @@ function show(t)
     end
 
     if(t.dl_rscp_log ~= nil) then
-        ret = hdoip.download.file("/tmp/rscp.log", "rscp.log")
+        ret = hdoip.download.file("/var/log/rscp.log", "rscp.log")
         if(ret == "") then
             return
         end       
@@ -27,9 +27,9 @@ function show(t)
     end
     
     if(t.dl_system_log ~= nil) then
-        os.execute("/bin/busybox dmesg >> /tmp/kernel.log")
-        ret = hdoip.download.file("/tmp/kernel.log", "hdoipd.log")
-        os.execute("/bin/busybox rm /tmp/kernel.log")
+        os.execute("/bin/busybox dmesg >> /var/log/kernel.log")
+        ret = hdoip.download.file("/var/log/kernel.log", "kernel.log")
+        os.execute("/bin/busybox rm /var/log/kernel.log")
         if(ret == "") then
             return
         end       
