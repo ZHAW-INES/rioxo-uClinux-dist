@@ -131,17 +131,29 @@ function FormText(name, value, size, disabled)
 
 end
 
+function FormRadioSingle(name, value, label, checked)
+    if((checked ~= nil) and (checked > 0)) then
+        checked = ' checked'
+    else 
+        checked = ''
+    end
+
+    html_str = html_str .. "<input type=\"radio\" name=\"" .. name .. "\" value=\"" .. value .. "\"".. checked .. ">" .. label .. "\n"
+end
+
 function FormRadio(name, values, size, selected)
     local cnt = 0
     local checked
 
     while(cnt < size) do
         if(cnt == tonumber(selected)) then
-            checked = " checked"
+            checked = 1
         else 
-            checked = ""
+            checked = 0
         end
-        html_str = html_str .. "<input type=\"radio\" name=\"" .. name .. "\" value=\"" .. cnt .. "\"".. checked .. ">" .. values[cnt] .. "<br>\n"
+        
+        FormRadioSingle(name, cnt, values[cnt], checked)
+        html_str = html_str .. '<br>\n'
         cnt = cnt + 1
     end
 end 
@@ -166,7 +178,7 @@ end
 
 function FormCheckbox(name, value, label, checked)
     html_str = html_str .. "<input type=\"checkbox\" name=\""..name.."\" value=\""..value.."\""
-    if(checked ~= nil) then
+    if((checked ~= nil) and (checked > 0))then
         html_str = html_str .." checked"
     end
     html_str = html_str ..">"..label

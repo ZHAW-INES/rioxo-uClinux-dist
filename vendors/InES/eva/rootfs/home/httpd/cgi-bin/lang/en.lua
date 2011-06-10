@@ -115,5 +115,9 @@ label = {
     p_st_net_delay = "Max. network delay";
     p_st_auto_stream = "Auto stream";
     p_st_force_hdcp = "Force HDCP"; 
+    p_st_multicast_en = "Multicast enable";
+    p_st_multicast_group = "Multicast group";
+    p_st_unicast = "Unicast";
+    p_st_multicast = "Multicast";
 }
 

@@ -44,6 +44,8 @@ REG_AMX_HELLO_IP = "amx-hello-ip"
 REG_AMX_HELLO_PORT = "amx-hello-port"
 REG_AMX_HELLO_MSG = "amx-hello-msg"
 REG_AMX_HELLO_INTERVAL = "amx-hello-interval"
+REG_MULTICAST_EN = "multicast_en"
+REG_MULTICAST_GROUP = "multicast_group"
 
 local PIPE_CMD = "/tmp/web.cmd"
 local PIPE_RSP = "/tmp/web.rsp"

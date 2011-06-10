@@ -25,9 +25,13 @@ function show(t)
         
         t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
         t.aud_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_PORT)
+        t.edit_vid_port = 0
+        t.edit_aud_port = 0
         
         if(hdoip.pipe.getParam(hdoip.pipe.REG_FORCE_HDCP) == "true") then
-            t.hdcp_force = true
+            t.hdcp_force = 1
+        else 
+            t.hdcp_force = 0
         end 
        
         if(t.mode_vtb) then 
@@ -35,11 +39,23 @@ function show(t)
             if(tonumber(t.st_bw) ~= nil) then
                 t.st_bw = 8 * tonumber(t.st_bw) / 2^20 -- Bytes/s => MBit/s
             end
+            
+            t.multicast_en = hdoip.pipe.getParam(hdoip.pipe.REG_MULTICAST_EN)
+            if(t.multicast_en == "true") then
+                t.multicast_en = 1
+                t.unicast_en = 0
+            else
+                t.multicast_en = 0
+                t.unicast_en = 1
+            end
+            t.multicast_group = hdoip.pipe.getParam(hdoip.pipe.REG_MULTICAST_GROUP)
         end
 
         if(t.mode_vrb) then
             if(hdoip.pipe.getParam(hdoip.pipe.REG_AUTO_STREAM) == "true") then
-                t.auto_stream = true;
+                t.auto_stream = 1;
+            else 
+                t.auto_stream = 0;
             end
         
 	        t.net_delay = hdoip.pipe.getParam(hdoip.pipe.REG_ST_NET_DELAY)
@@ -47,10 +63,14 @@ function show(t)
 	        
 	        if(string.find(t.media_sel, MEDIA_SEL_AUD) ~= nil) then
 	            t.cb_audio = 1
+	        else 
+	           t.cb_audio = 0
 	        end
 	
 	        if(string.find(t.media_sel, MEDIA_SEL_VID) ~= nil) then
 	            t.cb_video = 1
+            else 
+                t.cb_video = 0
 	        end
         end
 
@@ -69,6 +89,7 @@ function show(t)
         if(t.hdcp_force ~= nil) then
             t.hdcp_force_str = "true" 
         else
+            t.hdcp_force = 0
             t.hdcp_force_str = "false"
         end 
         hdoip.pipe.setParam(hdoip.pipe.REG_FORCE_HDCP, t.hdcp_force_str)
@@ -122,20 +143,42 @@ function show(t)
 	        t.media = ""
 	        if (t.cb_video ~= nil) then
 	            t.media = t.media .. "video"
+	            t.cb_video = 1
+	        else 
+                t.cb_video = 0
 	        end 
 	        if (t.cb_audio ~= nil) then
-	            if(t.cb_video ~= nil) then
+	            if(t.cb_video > 0) then
 	                t.media = t.media .. " "
 	            end
 	            t.media = t.media .. "audio" 
+	            t.cb_audio = 1
+	        else 
+                t.cb_audio = 0
 	        end
 	        hdoip.pipe.setParam(hdoip.pipe.REG_ST_MODE_MEDIA, t.media)
 	        
 	        if(t.auto_stream ~= nil) then
 	           hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "true")
+	           t.auto_stream = 1
 	        else
-	           hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "false") 
+	           hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "false")
+	           t.auto_stream = 0 
 	        end
+        end
+        
+        if((t.multicast_en ~= nil) and (t.multicast_en == "true")) then
+            hdoip.pipe.setParam(hdoip.pipe.REG_MULTICAST_EN, "true")
+            t.multicast_en = 1
+            t.unicast_en = 0
+        else
+            hdoip.pipe.setParam(hdoip.pipe.REG_MULTICAST_EN, "false")
+            t.multicast_en = 0
+            t.unicast_en = 1 
+        end
+        
+        if(t.multicast_group ~= nil) then
+            hdoip.pipe.setParam(hdoip.pipe.REG_MULTICAST_GROUP, t.multicast_group)
         end
         
         hdoip.pipe.getParam(hdoip.pipe.REG_SYS_UPDATE)
@@ -148,14 +191,26 @@ function show(t)
     hdoip.html.TableHeader(3)
     
     -- Common fields
-    hdoip.html.Text(label.p_st_connect);                                                    hdoip.html.TableInsElement(1);
---    hdoip.html.FormIP(REG_ST_URI_LABEL, t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3);        hdoip.html.TableInsElement(2);
-    hdoip.html.FormText(REG_ST_URI_LABEL, t.st_uri, 40, 0);                                 hdoip.html.TableInsElement(2);
+    if(t.mode_vtb) then 
+        hdoip.html.FormRadioSingle("multicast_en", "false", label.p_st_unicast, t.unicast_en)       hdoip.html.TableInsElement(3);
+        hdoip.html.Text(label.p_st_connect);                                                        hdoip.html.TableInsElement(1);
+        hdoip.html.FormText(REG_ST_URI_LABEL, t.st_uri, 40, 0);                                     hdoip.html.TableInsElement(2);
+    
+        hdoip.html.FormRadioSingle("multicast_en", "true", label.p_st_multicast, t.multicast_en)    hdoip.html.TableInsElement(3);
+        hdoip.html.Text(label.p_st_multicast_group);                                                hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("multicast_group", t.multicast_group, 40, 0);                           hdoip.html.TableInsElement(2);
+    elseif(t.mode_vrb) then
+        hdoip.html.Text(label.p_st_connect);                                                        hdoip.html.TableInsElement(1);
+        hdoip.html.FormText(REG_ST_URI_LABEL, t.st_uri, 40, 0);                                     hdoip.html.TableInsElement(2);
+        hdoip.html.Text(label.p_st_multicast_en);                                                   hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("multicast_en", "true", "", t.multicast_en)                         hdoip.html.TableInsElement(2);
+    end
+    
     hdoip.html.Text(label.p_st_force_hdcp);                                                 hdoip.html.TableInsElement(1);
     hdoip.html.FormCheckbox("hdcp_force", 1, "", t.hdcp_force)                              hdoip.html.TableInsElement(2);
 
     hdoip.html.Text(label.p_st_vid_port);                                                   hdoip.html.TableInsElement(1);
-    if(t.edit_vid_port ~= nil) then
+    if((t.edit_vid_port ~= nil) and (t.edit_vid_port == "1"))then
         hdoip.html.FormText(REG_ST_VID_PORT_LABEL, t.vid_port, 5, 0);                       hdoip.html.TableInsElement(1);
         hdoip.html.FormHidden("save_vid_port", 1)
         hdoip.html.Text(label.u_decimal);                                                   hdoip.html.TableInsElement(1);
@@ -165,7 +220,7 @@ function show(t)
     end
 
     hdoip.html.Text(label.p_st_aud_port);                                                   hdoip.html.TableInsElement(1);
-    if(t.edit_aud_port ~= nil) then
+    if((t.edit_aud_port ~= nil) and (t.edit_aud_port == "1")) then
         hdoip.html.FormText(REG_ST_AUD_PORT_LABEL, t.aud_port, 5, 0);                       hdoip.html.TableInsElement(1); 
         hdoip.html.FormHidden("save_aud_port", 1)
         hdoip.html.Text(label.u_decimal);                                                   hdoip.html.TableInsElement(1);
