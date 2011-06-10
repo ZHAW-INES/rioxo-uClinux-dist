@@ -210,9 +210,9 @@ static inline void get_call(char* n, char** k)
 { \
     int ret = pthread_create(&th, 0, f, d); \
     if (ret) { \
-        report(ERROR #f ".pthread_create: failed %d", ret); \
+        report2(ERROR #f ".pthread_create: failed %d", ret); \
     } else { \
-        report(INFO #f ".pthread_create successful"); \
+        report2(INFO #f ".pthread_create successful"); \
     } \
 }
 
@@ -220,9 +220,9 @@ static inline void get_call(char* n, char** k)
 { \
     int ret = pthread_create(&th, a, f, d); \
     if (ret) { \
-        report(ERROR #f ".pthread_create: failed %d", ret); \
+        report2(ERROR #f ".pthread_create: failed %d", ret); \
     } else { \
-        report(INFO #f ".pthread_create successful"); \
+        report2(INFO #f ".pthread_create successful"); \
     } \
 }
 
