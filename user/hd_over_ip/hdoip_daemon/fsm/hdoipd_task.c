@@ -11,6 +11,9 @@
 #include "rscp_listener.h"
 #include "hoi_cfg.h"
 
+#include "vrb_video.h"
+#include "vrb_audio.h"
+
 // local buffer
 static char buf[256];
 static uint32_t update_vector = 0;
@@ -397,6 +400,7 @@ void task_get_system_update(char** p)
 				case HOID_VTB : hdoipd_goto_vtb();
 								break;
 				case HOID_VRB : hdoipd_goto_vrb();
+				                hdoipd_set_task_start_vrb();
 								break;
 				default 	  :
 								break;
@@ -486,6 +490,20 @@ void task_get_rscp_state(char** s)
     }
 
     *s = buf;
+}
+
+void task_get_vrb_is_playing(char** p)
+{
+    *p = "false";
+    switch(vrb_video.state) {
+        case RSCP_PLAYING:  *p = "true";
+                            break;
+    }
+
+    switch(vrb_audio.state) {
+        case RSCP_PLAYING:  *p = "true";
+                            break;
+    }
 }
 
 int task_ready()
@@ -625,6 +643,7 @@ void hdoipd_register_task()
     get_listener("sync-delay", task_get_sync_delay);
     get_listener("stream-state", task_get_rscp_state);
     get_listener("multicast", task_get_multicast_client);
+    get_listener("vrb_is_playing", task_get_vrb_is_playing);
 
     // set-listener are called when a new value is written to the register
     // if the same value is written as already stored the listener isn't called
