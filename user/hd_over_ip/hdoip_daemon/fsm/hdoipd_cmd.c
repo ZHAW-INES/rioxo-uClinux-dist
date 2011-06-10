@@ -129,11 +129,10 @@ void hdoipd_cmd_vrb_setup(t_hoic_load* cmd)
 
 void hdoipd_cmd_play(t_hoic_cmd UNUSED *cmd)
 {
-    if (hdoipd_state(HOID_VRB)) {
-        //hdoipd_set_task_start_vrb();
-        alive_check_start_vrb_alive();
-    } else {
-        hdoipd_goto_vrb();
+    hdoipd_goto_vrb();
+
+    if(!hdoipd.auto_stream) {
+         hdoipd_set_task_start_vrb();
     }
 }
 
