@@ -29,12 +29,17 @@
 
 #undef REPORT_PTHREAD
 #undef REPORT_RSCP
+#undef REPORT_RSCP_HELLO
+#undef REPORT_RSCP_CLIENT
+#undef REPORT_RSCP_SERVER
+#undef REPORT_ALIVE_HELLO
 
-#define DBGCONSOLE
-#define DBGCONSOLERSCP
+
+#define DBGCONSOLE          // x
+#undef DBGCONSOLERSCP     // x
 
 #define EDID_WRITE_HEX_FILE
-#define REPORT_EDID
+#undef REPORT_EDID
 
 //------------------------------------------------------------------------------
 //
@@ -52,6 +57,11 @@ extern FILE* rscp_fd;
 #define EVENT       " ← "
 #define CHANGE      " → "
 #define CONT        "     "
+#define DEBUG       "------------------------------------------------------------- \n d "
+// #define VTB_METHOD  " M "
+#define VTB_METHOD  "------------------------------------------------------------- \n M "
+// #define VRB_METHOD  " M "
+#define VRB_METHOD  "------------------------------------------------------------- \n M "
 
 #define UNUSED __attribute__((__unused__))
 
