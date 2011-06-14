@@ -138,7 +138,7 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     eth.packet_size = 512;
     eth.rtp_ssrc = 0;
     for(n=0;n<6;n++) eth.src_mac[n] = hdoipd.local.mac[n];
-    for(n=0;n<6;n++) eth.dst_mac[n] = cookie->remote.mac[n];
+    for(n=0;n<6;n++) eth.dst_mac[n] = dst_mac[n];
     eth.udp_dst_port = cookie->remote.aud_port;
     eth.udp_src_port = hdoipd.local.aud_port;
 

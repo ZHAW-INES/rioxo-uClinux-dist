@@ -13,6 +13,8 @@
 #include "debug.h"
 #include "hdoipd.h"
 #include "rscp_string.h"
+#include "box_sys.h"
+#include "hdoipd_fsm.h"
 
 int alive_check_client_open(t_alive_check *handle, bool enable, int interval, char *dest, uint16_t port, int broadcast, bool load_new_config)
 {
@@ -255,7 +257,10 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
         memset(&hello_msg, 0, msg_length);
         if (!alive_check_server_handler(handle, hello_msg, msg_length)) {
             if (!alive_check_test_msg_vrb_alive(hello_msg, client_ip)) {
-                alive_check_response_vrb_alive(client_ip);
+                // response only when not already unicast is streaming
+                if ((!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) || get_multicast_enable()) {
+                    alive_check_response_vrb_alive(client_ip);
+                }
             }
         }
     }
