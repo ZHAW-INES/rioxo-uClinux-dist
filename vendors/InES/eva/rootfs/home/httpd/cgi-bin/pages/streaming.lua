@@ -49,14 +49,15 @@ function show(t)
                 t.unicast_en = 1
             end
             t.multicast_group = hdoip.pipe.getParam(hdoip.pipe.REG_MULTICAST_GROUP)
-        end
-
-        if(t.mode_vrb) then
+            
             if(hdoip.pipe.getParam(hdoip.pipe.REG_AUTO_STREAM) == "true") then
                 t.auto_stream = 1;
             else 
                 t.auto_stream = 0;
             end
+        end
+
+        if(t.mode_vrb) then
         
 	        t.net_delay = hdoip.pipe.getParam(hdoip.pipe.REG_ST_NET_DELAY)
 	        t.media_sel = hdoip.pipe.getParam(hdoip.pipe.REG_ST_MODE_MEDIA)
@@ -131,6 +132,14 @@ function show(t)
             else
                 hdoip.html.AddError(t, label.err_datarate_not_number)
             end
+            
+            if(t.auto_stream ~= nil) then
+               hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "true")
+               t.auto_stream = 1
+            else
+               hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "false")
+               t.auto_stream = 0 
+            end
         end
 
         if(t.mode_vrb) then
@@ -157,14 +166,6 @@ function show(t)
                 t.cb_audio = 0
 	        end
 	        hdoip.pipe.setParam(hdoip.pipe.REG_ST_MODE_MEDIA, t.media)
-	        
-	        if(t.auto_stream ~= nil) then
-	           hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "true")
-	           t.auto_stream = 1
-	        else
-	           hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "false")
-	           t.auto_stream = 0 
-	        end
         end
         
         if((t.multicast_en ~= nil) and (t.multicast_en == "true")) then
@@ -234,6 +235,8 @@ function show(t)
         hdoip.html.Text(label.p_st_datarate);                                               hdoip.html.TableInsElement(1);
         hdoip.html.FormText(REG_ST_BW_LABEL, t.st_bw, 4, 0); 
         hdoip.html.Text(label.u_mbps);                                                      hdoip.html.TableInsElement(2);
+        hdoip.html.Text(label.p_st_auto_stream);                                                hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                            hdoip.html.TableInsElement(2);
     end
 
     -- VRB specific fields
@@ -245,8 +248,6 @@ function show(t)
 	    hdoip.html.Text(label.p_st_net_delay);                                                  hdoip.html.TableInsElement(1);
 	    hdoip.html.FormText(REG_ST_NET_DELAY_LABEL, t.net_delay, 4, 0); 
 	    hdoip.html.Text(label.u_ms);                                                            hdoip.html.TableInsElement(2);
-	    hdoip.html.Text(label.p_st_auto_stream);                                                hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                            hdoip.html.TableInsElement(2);
     end
 
     hdoip.html.TableBottom()
