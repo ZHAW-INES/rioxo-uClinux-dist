@@ -190,32 +190,28 @@ bool hdoipd_goto_ready()
             rscp_listener_teardown_all(&hdoipd.listener);
             rscp_listener_free_media(&hdoipd.listener);
             hdoipd_off(true);
-            return true;
         break;
         case HOID_VRB:
             // shut down VRB
             rscp_client_deactivate(hdoipd.client);
             rscp_listener_free_media(&hdoipd.listener);
             hdoipd_off(true);
-            return true;
         break;
         case HOID_READY:
-            return true;
         break;
         case HOID_LOOP:
         case HOID_SHOW_CANVAS:
             hoi_image_free(hdoipd.canvas);
             hdoipd.canvas = 0;
             hdoipd_off(true);
-            return true;
         break;
         default:
             report("request not supported in state %s\n", statestr(hdoipd.state));
             return false;
         break;
     }
-
-    return false;
+    osd_printf("Device is idle");
+    return true;
 }
 
 /** Force to ready state
