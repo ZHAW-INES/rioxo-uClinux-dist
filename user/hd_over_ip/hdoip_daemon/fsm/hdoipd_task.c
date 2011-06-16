@@ -191,7 +191,7 @@ void task_get_eth_status(char** p)
 void task_get_multicast_client(char ** p)
 {
     report_available_clients();
-  //  sprintf(buf, "multicast enable: %i", (int) get_multicast_enable());
+    sprintf(buf, "multicast enable: %i", (int) get_multicast_enable());
     *p = buf;
 }
 
@@ -603,7 +603,7 @@ void task_set_auto_stream(char* p)
 
 void task_set_multicast_update(char* p)
 {
-    update_vector |= HOID_TSK_UPD_MULTICAST | HOID_TSK_EXEC_RESTART_VRB;
+    update_vector |= HOID_TSK_UPD_MULTICAST | HOID_TSK_EXEC_RESTART_VTB;
 }
 
 void task_set_alive_update(char* p)

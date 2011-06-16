@@ -31,6 +31,8 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
 
     report(VTB_METHOD "vtb_video_setup");
 
+    set_multicast_enable(reg_test("multicast_en", "true"));
+
     media->result = RSCP_RESULT_READY;
 
     if (!hdoipd_state(HOID_VTB)) {
@@ -117,7 +119,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     cookie->remote.address = rsp->address;
     cookie->remote.vid_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.vid_port, hdoipd.local.vid_port);
-    m->transport.multicast = set_multicast_enable(reg_test("multicast_en", "true"));
+    m->transport.multicast = get_multicast_enable();
 
     rscp_response_setup(rsp, &m->transport, media->sessionid);
 
@@ -205,9 +207,9 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     // send timing
     rscp_response_play(rsp, media->sessionid, &fmt, &timing);
 
-#ifdef VID_IN_PATH
     if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // activate vsi
+#ifdef VID_IN_PATH
         if ((n = hoi_drv_vsi(fmt.compress, 0, reg_get_int("bandwidth"), &eth, &timing, &fmt.value))) {
             return RSCP_REQUEST_ERROR;
         }
@@ -230,8 +232,8 @@ int vtb_video_teardown(t_rscp_media* media, t_rscp_req_teardown *m, t_rscp_conne
     media->result = RSCP_RESULT_TEARDOWN;
 
     if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
-#ifdef VID_IN_PATH
         if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+#ifdef VID_IN_PATH
             hdoipd_hw_reset(DRV_RST_VID_IN);
 #endif
             hdoipd_set_vtb_state(VTB_VID_OFF);
@@ -259,8 +261,8 @@ void vtb_video_pause(t_rscp_media *media)
     media->result = RSCP_RESULT_PAUSE_Q;
 
     if (hdoipd_tstate(VTB_VIDEO)) {
-#ifdef VID_IN_PATH
         if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+#ifdef VID_IN_PATH
             hdoipd_hw_reset(DRV_RST_VID_IN);
 #endif
             hdoipd_set_vtb_state(VTB_VID_IDLE);

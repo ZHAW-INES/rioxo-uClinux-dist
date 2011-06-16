@@ -278,8 +278,8 @@ int eto_drv_handler(t_eto* handle, t_queue* event_queue)
         handle->vtx = vtx;
         if (!handle->vcnt) {
             queue_put(event_queue, E_ETO_VIDEO_ON);
-            handle->vcnt = ETO_LINK_COUNT;
         }
+        handle->vcnt = ETO_LINK_COUNT;
     } else {
         if (handle->vcnt == 1) {
             queue_put(event_queue, E_ETO_VIDEO_OFF);
@@ -293,8 +293,8 @@ int eto_drv_handler(t_eto* handle, t_queue* event_queue)
         handle->atx = atx;
         if (!handle->acnt) {
             queue_put(event_queue, E_ETO_AUDIO_ON);
-            handle->acnt = ETO_LINK_COUNT;
         }
+        handle->acnt = ETO_LINK_COUNT;
     } else {
         if (handle->acnt == 1) {
             queue_put(event_queue, E_ETO_AUDIO_OFF);

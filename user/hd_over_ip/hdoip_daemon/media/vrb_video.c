@@ -49,7 +49,7 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     vrb.remote.vid_port = PORT_RANGE_START(m->transport.server_port);
     hdoipd.local.vid_port = PORT_RANGE_START(m->transport.client_port);
 
-    vrb.multicast_en = m->transport.multicast || reg_test("multicast_en", "true");
+    vrb.multicast_en = m->transport.multicast;
 
     if (vrb.multicast_en) {
         vrb.dst_ip = m->transport.multicast_group;
@@ -257,7 +257,6 @@ int vrb_video_dosetup(t_rscp_media *media)
     rscp_default_transport(&transport); // TODO: daemon transport configuration
     port = reg_get_int("video-port");
     transport.client_port = PORT_RANGE(htons(port), htons(port+1));
-    transport.multicast = reg_test("multicast_en", "true");
 
     edid.segment = 0;
     hoi_drv_rdedid(edid.edid);

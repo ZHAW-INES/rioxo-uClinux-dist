@@ -81,7 +81,6 @@ typedef struct {
 typedef struct {
     int                 timeout;
     int                 alive_ping;
-    t_rscp_edid         edid;
     t_hdoip_ethernet    remote;
 } t_multicast_cookie;
 
