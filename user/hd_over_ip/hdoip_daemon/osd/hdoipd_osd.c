@@ -12,6 +12,7 @@
 #include "hoi_image.h"
 #include "hoi_res.h"
 #include "rscp_string.h"
+#include "hdoip_log.h"
 
 char osdtmp[OSD_BUFFER_LENGTH];
 
@@ -78,6 +79,11 @@ void* hdoipd_osd_timer(void UNUSED *d)
         rscp_client_event(hdoipd.client, EVENT_TICK);
         rscp_listener_event(&hdoipd.listener, EVENT_TICK);
 #endif
+
+        // Log file handler
+        hdoip_log_handler(&hdoipd.main_log);
+        hdoip_log_handler(&hdoipd.rscp_log);
+
         unlock("hdoipd_tick_timer");
 
     } while (1);

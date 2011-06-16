@@ -240,7 +240,7 @@ t_rscp_media* rscp_listener_get_media(t_rscp_listener* handle, char* name)
 
 void rscp_listener_free_media(t_rscp_listener* handle)
 {
-    report("rscp_listener_free_media()");
+    report(INFO "rscp_listener_free_media()");
     listener_lock(handle, "rscp_listener_free_media");
         bstmap_freep(&handle->media);
     listener_unlock(handle, "rscp_listener_free_media");

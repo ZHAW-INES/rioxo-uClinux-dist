@@ -306,7 +306,7 @@ int rscp_client_kill(t_rscp_client* client)
 
 int rscp_client_update(t_rscp_client* client, uint32_t event)
 {
-#ifdef REPORT_RSCP
+#ifdef REPORT_RSCP_UPDATE
     report(" > RSCP Client [%d] UPDATE", client->nr);
 #endif
 
@@ -430,7 +430,7 @@ void* rscp_client_req_thread(void* _client)
 
     //lock("rscp_client_req_thread-start");
 #ifdef REPORT_RSCP_CLIENT
-        report(" + RSCP Client [%d] request ep", client->nr);
+    report(" + RSCP Client [%d] request ep", client->nr);
 #endif
     //unlock("rscp_client_req_thread-start");
 
@@ -443,7 +443,7 @@ void* rscp_client_req_thread(void* _client)
         lock("rscp_client_req_thread");
 
         if(!(client->task & E_RSCP_CLIENT_KILL) && (client->media)) {
-#ifdef REPORT_RSCP
+#ifdef REPORT_RSCP_RX
             report(" < RSCP Client [%d] %s", client->nr, common.rq.method);
 #endif
 
@@ -462,7 +462,7 @@ void* rscp_client_req_thread(void* _client)
 
     //lock("rscp_client_req_thread-close");
 #ifdef REPORT_RSCP_CLIENT
-        report(" - RSCP Client [%d] request ep", client->nr);
+    report(" - RSCP Client [%d] request ep", client->nr);
 #endif
     //unlock("rscp_client_req_thread-close");
 

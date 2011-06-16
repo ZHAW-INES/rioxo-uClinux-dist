@@ -158,7 +158,7 @@ void rscp_server_update(t_rscp_media* media, uint32_t event)
     struct in_addr a1; a1.s_addr = server->con.address;
     sprintf(uri, "rscp://%s/", inet_ntoa(a1));
 
-#ifdef REPORT_RSCP
+#ifdef REPORT_RSCP_UPDATE
     report(" > RSCP Server [%d] UPDATE", server->nr);
 #endif
 

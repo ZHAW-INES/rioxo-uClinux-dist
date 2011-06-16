@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
-#include "debug.h"
+#include "hdoipd.h"
 #include "edid.h"
 #include "edid_report.h"
 #include "cea_861.h"

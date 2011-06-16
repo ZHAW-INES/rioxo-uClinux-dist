@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "hdoipd.h"
 #include "hoi_drv_user.h"
 #include "hoi_image.h"
 #include "hoi_res.h"
@@ -18,7 +19,7 @@
 #include "rscp_include.h"
 #include "vrb_video.h"
 #include "update.h"
-#include "debug.h"
+
 
 
 void hdoipd_cmd_canvas(t_hoic_canvas* cmd)
@@ -140,7 +141,7 @@ void hdoipd_cmd_play(t_hoic_cmd UNUSED *cmd)
 void hdoipd_ready(t_hoic_cmd UNUSED *cmd)
 {
     if (hdoipd_goto_ready()) {
-        report("hdoip_ready() done");
+        report(INFO "hdoip_ready() done");
     }
 }
 

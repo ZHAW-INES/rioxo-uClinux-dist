@@ -11,7 +11,6 @@
 #include "client_list.h"
 #include "rscp_net.h"
 #include "hdoipd.h"
-#include "debug.h"
 
 
 static struct {

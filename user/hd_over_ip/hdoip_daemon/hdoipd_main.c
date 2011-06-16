@@ -28,14 +28,10 @@
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 #include "bstmap.h"
-#include "debug.h"
 
 #define DEV_NODE        "/dev/hdoip_core"
 
 t_hdoipd hdoipd;
-
-FILE* report_fd;
-FILE* rscp_fd;
 
 typedef struct {
     int in, out;
@@ -167,8 +163,6 @@ void* event_read_thread(void UNUSED *d)
 
 void* poll_thread(void UNUSED *d)
 {
-    int ret;
-
     while (1) {
         struct timespec ts = {
             .tv_sec = POLL_THREAD_INTERVAL_SEC,
@@ -189,25 +183,39 @@ void* poll_thread(void UNUSED *d)
 int main(int argc, char **argv)
 {
     int drv;
+    int ret = 0;
     pthread_t the, thp;
     pthread_t* th = malloc(sizeof(pthread_t)* (argc-1));
 
-    report_fd = stdout;
-    rscp_fd = stdout;
+    memset(&hdoipd, 0, sizeof(t_hdoipd));
 
-#ifndef DBGCONSOLE
-    if ((report_fd = fopen("/var/log/hdoipd.log", "w")) == NULL) {
+#ifdef MAIN_LOG
+    #ifndef DBGCONSOLE
+        // Set log file limit to 10k byte each
+        ret = hdoip_log_init(&hdoipd.main_log, "/var/log/hdoipd0.log", "/var/log/hdoipd1.log", 10240);
+    #else
+        ret = hdoip_log_init(&hdoipd.main_log, "", "", 0);
+    #endif
+
+    if(ret < 0) {
+        printf("Init main log failed");
         return 0;
     }
-    report("/var/log/hdoipd.log started");
 #endif
 
-#ifndef DBGCONSOLERSCP
-    if ((rscp_fd = fopen("/var/log/rscp.log", "w")) == NULL) {
+#ifdef RSCP_LOG
+    #ifndef DBGCONSOLERSCP
+        ret = hdoip_log_init(&hdoipd.rscp_log, "/var/log/hdoipd.rscp0.log", "/var/log/hdoipd.rscp1.log", 10240);
+    #else
+        ret = hdoip_log_init(&hdoipd.rscp_log, "", "", 0);
+    #endif
+
+    if(ret < 0) {
+        perrno("Init RSCP log failed");
         return 0;
     }
-    report("/var/log/rscp.log started");
 #endif
+
 
     if ((drv = open(DEV_NODE, O_RDWR)) != -1) {
 
@@ -246,8 +254,8 @@ int main(int argc, char **argv)
         report("could not open <%s>\n", DEV_NODE);
     }
 
-    fclose(report_fd);
-    fclose(rscp_fd);
+    hdoip_log_close(&hdoipd.main_log);
+    hdoip_log_close(&hdoipd.rscp_log);
 
     pthread_mutex_destroy(&hdoipd.mutex);
 

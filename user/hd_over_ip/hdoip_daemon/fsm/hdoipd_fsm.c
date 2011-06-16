@@ -693,8 +693,6 @@ bool hdoipd_init(int drv)
 {
     pthread_mutexattr_t attr;
 
-    memset(&hdoipd, 0, sizeof(t_hdoipd));
-
     hdoipd.drv = drv;
     hdoipd.set_listener = 0;
     hdoipd.get_listener = 0;

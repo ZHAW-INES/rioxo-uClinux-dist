@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "debug.h"
+#include "hdoipd.h"
 #include "cea_861.h"
 #include "edid.h"
 #include "edid_report.h"

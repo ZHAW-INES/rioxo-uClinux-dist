@@ -8,10 +8,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "hdoipd.h"
 #include "altremote.h"
 #include "flash.h"
 #include "update.h"
-#include "debug.h"
+
 
 #define BLOCK_SIZE          (4096)
 #define FLASH_DEV_NAME      "/dev/mtd0"

@@ -147,14 +147,35 @@ typedef struct {
     t_alive_check       amx;            // AMX control releated structure
     t_alive_check		alive_check;    // structure to test if server is running
     bool                dhcp;           // flag if DHCP client is used
+
+    t_hdoip_log         main_log;
+    t_hdoip_log         rscp_log;
 } t_hdoipd;
-
-
-//------------------------------------------------------------------------------
-//
 
 extern t_hdoipd                 hdoipd;
 
+
+//------------------------------------------------------------------------------
+// report functions
+
+#define report(...) { \
+    hdoip_report(&hdoipd.main_log, __VA_ARGS__); \
+}
+
+#define reportn(...) { \
+    hdoip_reportn(&hdoipd.main_log, __VA_ARGS__); \
+}
+
+#define perrno(...) { \
+    hdoip_perrno(&hdoipd.main_log, __VA_ARGS__);\
+}
+
+#define report_rscp(...) {\
+    hdoip_report(&hdoipd.rscp_log, __VA_ARGS__); \
+}
+
+//------------------------------------------------------------------------------
+//
 
 static inline bool tick_delay(uint64_t x)
 {
