@@ -23,6 +23,8 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
 
     report(VTB_METHOD "vtb_audio_setup");
 
+    set_multicast_enable(reg_test("multicast_en", "true"));
+
     if (!hdoipd_state(HOID_VTB)) {
         report(" ? not in state vtb");
         rscp_err_no_vtb(rsp);
@@ -68,7 +70,7 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     cookie->remote.address = rsp->address;
     cookie->remote.aud_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.aud_port, hdoipd.local.aud_port);
-    m->transport.multicast = set_multicast_enable(reg_test("multicast_en", "true"));
+    m->transport.multicast = get_multicast_enable();
 
     rscp_response_setup(rsp, &m->transport, media->sessionid);
 
@@ -160,9 +162,9 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     // send timing
     rscp_response_play(rsp, media->sessionid, &fmt, 0);
 
-#ifdef AUD_IN_PATH
     if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
         // activate asi
+#ifdef AUD_IN_PATH
         uint8_t channel_select[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
         hoi_drv_asi(0, &eth, nfo->audio_fs[0], nfo->audio_width[0], nfo->audio_cnt[0], channel_select);
         report(INFO "audio streaming started(fs = %d Hz, bitwidth = %d Bit)", nfo->audio_fs[0], nfo->audio_width[0]);
@@ -185,8 +187,8 @@ int vtb_audio_teardown(t_rscp_media* media, t_rscp_req_teardown *m, t_rscp_conne
     media->result = RSCP_RESULT_TEARDOWN;
 
     if (hdoipd_tstate(VTB_AUD_MASK)) {
-#ifdef AUD_IN_PATH
         if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+#ifdef AUD_IN_PATH
             hdoipd_hw_reset(DRV_RST_AUD_IN);
 #endif
             hdoipd_set_vtb_state(VTB_AUD_OFF);
@@ -214,8 +216,8 @@ void vtb_audio_pause(t_rscp_media *media)
     media->result = RSCP_RESULT_PAUSE_Q;
 
     if (hdoipd_tstate(VTB_AUDIO)) {
-#ifdef AUD_IN_PATH
         if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+#ifdef AUD_IN_PATH
             hdoipd_hw_reset(DRV_RST_AUD_IN);
 #endif
             hdoipd_set_vtb_state(VTB_AUD_IDLE);

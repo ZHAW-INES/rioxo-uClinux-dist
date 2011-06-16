@@ -155,7 +155,7 @@ void report_available_clients()
 
 bool set_multicast_enable(bool enable)
 {
-    multicast.enable = multicast.enable || enable;
+    multicast.enable = enable;
     
     return multicast.enable;
 }
