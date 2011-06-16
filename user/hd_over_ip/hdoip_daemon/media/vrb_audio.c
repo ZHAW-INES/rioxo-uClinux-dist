@@ -175,10 +175,6 @@ void vrb_audio_pause(t_rscp_media *media)
         hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
         hdoipd_set_vtb_state(VTB_AUD_IDLE);
     }
-
-    if (vrb.multicast_en) {
-        leave_multicast_group(vrb.dst_ip);
-    }
 }
 
 
