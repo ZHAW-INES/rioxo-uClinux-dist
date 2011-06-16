@@ -192,10 +192,6 @@ void vrb_video_pause(t_rscp_media *media)
         hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
         hdoipd_set_vtb_state(VTB_VID_IDLE);
     }
-
-    if (vrb.multicast_en) {
-        leave_multicast_group(vrb.dst_ip);
-    }
 }
 
 int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
