@@ -8,9 +8,11 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
+
+#include "hdoipd.h"
 #include "hoi_image.h"
 #include "hoi_res.h"
-#include "debug.h"
+
 
 uint8_t* hoi_image_canvas_create(t_video_timing* timing)
 {

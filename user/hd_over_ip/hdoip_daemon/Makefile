@@ -55,6 +55,8 @@ OBJS   +=   multicast/multicast.o
 OBJS   +=   multicast/client_list.o
 CFLAGS += -Ialive
 OBJS   +=   alive/alive_check.o
+CFLAGS += -Ilog
+OBJS   +=   log/hdoip_log.o
 
 # we need the ioctl defines from hdoip_types.h
 CFLAGS += -I../../../vendors/InES/eva/modules/hdoip_core/driver

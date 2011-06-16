@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "bstmap.h"
-#include "debug.h"
+#include "hdoipd.h"
 
 typedef struct {
     void (*f)(char*, char*, void*);

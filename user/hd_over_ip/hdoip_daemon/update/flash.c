@@ -34,10 +34,11 @@
 #include <errno.h>
 #include <mtd/mtd-user.h>
 
+#include "hdoipd.h"
 #include "error.h"
 #include "flash.h"
 #include "util.h"
-#include "debug.h"
+
 
 /**
  * Open a flash device (MTD).

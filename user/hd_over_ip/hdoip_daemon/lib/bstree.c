@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "bstree.h"
-#include "debug.h"
+#include "hdoipd.h"
 
 static inline void bst_depth(t_bstn* root)
 {

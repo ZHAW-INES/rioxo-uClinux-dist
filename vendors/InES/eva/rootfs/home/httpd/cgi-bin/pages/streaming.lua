@@ -140,6 +140,20 @@ function show(t)
                hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "false")
                t.auto_stream = 0 
             end
+            
+            if((t.multicast_en ~= nil) and (t.multicast_en == "true")) then
+	            hdoip.pipe.setParam(hdoip.pipe.REG_MULTICAST_EN, "true")
+	            t.multicast_en = 1
+	            t.unicast_en = 0
+	        else
+	            hdoip.pipe.setParam(hdoip.pipe.REG_MULTICAST_EN, "false")
+	            t.multicast_en = 0
+	            t.unicast_en = 1 
+	        end
+	        
+	        if(t.multicast_group ~= nil) then
+	            hdoip.pipe.setParam(hdoip.pipe.REG_MULTICAST_GROUP, t.multicast_group)
+	        end
         end
 
         if(t.mode_vrb) then
@@ -168,20 +182,6 @@ function show(t)
 	        hdoip.pipe.setParam(hdoip.pipe.REG_ST_MODE_MEDIA, t.media)
         end
         
-        if((t.multicast_en ~= nil) and (t.multicast_en == "true")) then
-            hdoip.pipe.setParam(hdoip.pipe.REG_MULTICAST_EN, "true")
-            t.multicast_en = 1
-            t.unicast_en = 0
-        else
-            hdoip.pipe.setParam(hdoip.pipe.REG_MULTICAST_EN, "false")
-            t.multicast_en = 0
-            t.unicast_en = 1 
-        end
-        
-        if(t.multicast_group ~= nil) then
-            hdoip.pipe.setParam(hdoip.pipe.REG_MULTICAST_GROUP, t.multicast_group)
-        end
-        
         hdoip.pipe.getParam(hdoip.pipe.REG_SYS_UPDATE)
     end
 
@@ -203,8 +203,6 @@ function show(t)
     elseif(t.mode_vrb) then
         hdoip.html.Text(label.p_st_connect);                                                        hdoip.html.TableInsElement(1);
         hdoip.html.FormText(REG_ST_URI_LABEL, t.st_uri, 40, 0);                                     hdoip.html.TableInsElement(2);
-        hdoip.html.Text(label.p_st_multicast_en);                                                   hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("multicast_en", "true", "", t.multicast_en)                         hdoip.html.TableInsElement(2);
     end
     
     hdoip.html.Text(label.p_st_force_hdcp);                                                 hdoip.html.TableInsElement(1);

@@ -10,7 +10,6 @@
 
 #include "alive_check.h"
 #include "rscp_net.h"
-#include "debug.h"
 #include "hdoipd.h"
 #include "rscp_string.h"
 #include "box_sys.h"
