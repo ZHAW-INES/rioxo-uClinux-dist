@@ -10,23 +10,39 @@ require("hdoip.download")
 function show(t)
     local ret
 
-    if(t.dl_hdoipd_log ~= nil) then
-        ret = hdoip.download.file("/var/log/hdoipd.log", "hdoipd.log")
+    if(t.dl_hdoipd0_log ~= nil) then
+        ret = hdoip.download.file("/var/log/hdoipd0.log", "hdoipd0.log")
+        if(ret == "") then
+            return
+        end        
+        t.err = t.err .. ret 
+    end
+    
+    if(t.dl_hdoipd1_log ~= nil) then
+        ret = hdoip.download.file("/var/log/hdoipd1.log", "hdoipd1.log")
         if(ret == "") then
             return
         end        
         t.err = t.err .. ret 
     end
 
-    if(t.dl_rscp_log ~= nil) then
-        ret = hdoip.download.file("/var/log/rscp.log", "rscp.log")
+    if(t.dl_rscp0_log ~= nil) then
+        ret = hdoip.download.file("/var/log/hdoipd.rscp0.log", "rscp0.log")
         if(ret == "") then
             return
         end       
         t.err = t.err .. ret 
     end
     
-    if(t.dl_system_log ~= nil) then
+    if(t.dl_rscp1_log ~= nil) then
+        ret = hdoip.download.file("/var/log/hdoipd.rscp1.log", "rscp1.log")
+        if(ret == "") then
+            return
+        end       
+        t.err = t.err .. ret 
+    end
+    
+    if(t.dl_kernel_log ~= nil) then
         os.execute("/bin/busybox dmesg >> /var/log/kernel.log")
         ret = hdoip.download.file("/var/log/kernel.log", "kernel.log")
         os.execute("/bin/busybox rm /var/log/kernel.log")
@@ -94,12 +110,16 @@ function show(t)
     hdoip.html.Title("<br>Log files");                                                   
 
     hdoip.html.TableHeader(4)
-    hdoip.html.Text("hdoipd.log");                                                      hdoip.html.TableInsElement(1);
-    hdoip.html.OneButtonForm(t, script_path, "dl_hdoipd_log",label.button_dump);        hdoip.html.TableInsElement(1);
-    hdoip.html.Text("system.log");                                                      hdoip.html.TableInsElement(1);
-    hdoip.html.OneButtonForm(t, script_path, "dl_system_log",label.button_dump);        hdoip.html.TableInsElement(1);
-    hdoip.html.Text("rscp.log");                                                        hdoip.html.TableInsElement(1);
-    hdoip.html.OneButtonForm(t, script_path, "dl_rscp_log",label.button_dump);          hdoip.html.TableInsElement(1);
+    hdoip.html.Text("hdoipd0.log");                                                     hdoip.html.TableInsElement(1);
+    hdoip.html.OneButtonForm(t, script_path, "dl_hdoipd0_log",label.button_dump);       hdoip.html.TableInsElement(1);
+    hdoip.html.Text("hdoipd1.log");                                                     hdoip.html.TableInsElement(1);
+    hdoip.html.OneButtonForm(t, script_path, "dl_hdoipd1_log",label.button_dump);       hdoip.html.TableInsElement(1);
+    hdoip.html.Text("rscp0.log");                                                       hdoip.html.TableInsElement(1);
+    hdoip.html.OneButtonForm(t, script_path, "dl_rscp0_log",label.button_dump);         hdoip.html.TableInsElement(1);
+    hdoip.html.Text("rscp1.log");                                                       hdoip.html.TableInsElement(1);
+    hdoip.html.OneButtonForm(t, script_path, "dl_rscp1_log",label.button_dump);         hdoip.html.TableInsElement(1);
+    hdoip.html.Text("kernel.log");                                                      hdoip.html.TableInsElement(1);
+    hdoip.html.OneButtonForm(t, script_path, "dl_kernel_log",label.button_dump);        hdoip.html.TableInsElement(1);
     hdoip.html.Text("boa.access.log");                                                  hdoip.html.TableInsElement(1);
     hdoip.html.OneButtonForm(t, script_path, "dl_boa_access_log",label.button_dump);    hdoip.html.TableInsElement(1);
     hdoip.html.Text("boa.cgi.log");                                                     hdoip.html.TableInsElement(1);
