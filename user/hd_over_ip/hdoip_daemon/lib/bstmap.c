@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "bstmap.h"
-#include "debug.h"
+#include "hdoipd.h"
 
 typedef struct {
     void (*f)(char*, char*, void*);
@@ -35,19 +35,19 @@ t_keyvalue* bstmap_add(t_bstmap** root, char* key, char* value)
 
     kv = malloc(sizeof(t_keyvalue));
     if (!kv) {
-        printf("bstmap_add.malloc(sizeof(t_keyvalue)): out of memory");
+        report("bstmap_add.malloc(sizeof(t_keyvalue)): out of memory");
         return 0;
     }
 
     kv->key = malloc(strlen(key) + 1);
     if (!kv->key) {
-        printf("bstmap_add.malloc(strlen(key)): out of memory");
+        report("bstmap_add.malloc(strlen(key)): out of memory");
         free(kv);
         return 0;
     }
     kv->value = malloc(strlen(value) + 1);
     if (!kv->value) {
-        printf("bstmap_add.malloc(strlen(value)): out of memory");
+        report("bstmap_add.malloc(strlen(value)): out of memory");
         free(kv->key);
         free(kv);
         return 0;
@@ -121,7 +121,7 @@ void bstmap_setp(t_bstmap** root, char* key, void* value)
 
     kv = malloc(sizeof(t_keyvalue));
     if (!kv) {
-        printf("bstmap_setp.malloc(sizeof(t_keyvalue)): out of memory");
+        report("bstmap_setp.malloc(sizeof(t_keyvalue)): out of memory");
         return;
     }
 

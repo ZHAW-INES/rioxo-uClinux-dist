@@ -89,6 +89,7 @@
 #define HOI_MSG_WDG_ENABLE          (0x70000107)
 #define HOI_MSG_WDG_DISABLE         (0x70000108)
 #define HOI_MSG_WDG_SERVICE         (0x70000109)
+#define HOI_MSG_SET_TIMING          (0x7000010A)
 
 
 // Driver Bit Mask
@@ -198,7 +199,8 @@ typedef struct {
     uint32_t            udp_port_vid;
     uint32_t            udp_port_aud;
     uint32_t            ip_address_dst;
-    uint32_t            ip_address_src;
+    uint32_t            ip_address_src_aud;
+    uint32_t            ip_address_src_vid;
 } t_hoi_msg_eti;
 
 #define hoi_msg_eti_init(p) hoi_msg_init(p, HOI_MSG_ETI, t_hoi_msg_eti)
@@ -457,6 +459,12 @@ typedef struct {
 
 
 #define hoi_msg_debug_init(p) hoi_msg_init(p, HOI_MSG_DEBUG, t_hoi_msg_debug)
+
+//------------------------------------------------------------------------------
+// set timing for osd
+
+#define hoi_msg_set_timing_init(p) hoi_msg_init(p, HOI_MSG_SET_TIMING, t_hoi_msg_image)
+
 //------------------------------------------------------------------------------
 //
 

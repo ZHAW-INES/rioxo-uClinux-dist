@@ -19,6 +19,10 @@
 #include "hoi_drv_user.h"
 #include "version.h"
 
+#include <netdb.h>
+extern int h_errno;
+
+
 int hoi_msg(void* param)
 {
     int ret;
@@ -88,13 +92,15 @@ int hoi_drv_hdcpstat(uint32_t *eto_hdcp_audio,uint32_t *eto_hdcp_video,uint32_t 
     return ret;
 }
 //-----------------------------------------------------------------------------
-int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src, uint32_t vid, uint32_t aud)
+
+int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud, uint32_t vid, uint32_t aud)
 {
     t_hoi_msg_eti msg;
 
     hoi_msg_eti_init(&msg);
     msg.ip_address_dst = addr_dst;
-    msg.ip_address_src = addr_src;
+    msg.ip_address_src_vid = addr_src_vid;
+    msg.ip_address_src_aud = addr_src_aud;
     msg.udp_port_aud = aud;
     msg.udp_port_vid = vid;
 
@@ -292,10 +298,24 @@ int hoi_drv_show(bool compress, void* buffer, t_video_timing* timing, uint32_t a
 
 int hoi_drv_debug(void)
 {
-    int ret;
+    int ret=0;
     t_hoi_msg_debug msg;
 
     hoi_msg_debug_init(&msg);
+    ret = hoi_msg(&msg);
+
+    return ret;
+}
+
+
+int hoi_drv_set_timing(t_video_timing* timing)
+{
+    int ret=0;
+    t_hoi_msg_image msg;
+    
+    memcpy(&msg.timing, timing, sizeof(t_video_timing));
+
+    hoi_msg_set_timing_init(&msg);
     ret = hoi_msg(&msg);
 
     return ret;
@@ -313,6 +333,7 @@ int hoi_drv_getversion(t_hoic_getversion* cmd)
     cmd->sysid_date = msg.sysid_date;
     cmd->sysid_id = msg.sysid_id;
     cmd->sw_version = VERSION_SOFTWARE;
+    strcpy(cmd->sw_tag, VERSION_TAG);
 
     return ret;
 }
@@ -398,50 +419,6 @@ int hoi_drv_wraudtag(void* buffer)
 }
 
 //------------------------------------------------------------------------------
-// HDCP
-int hoi_drv_hdcp_get_timer(t_hoi_msg_hdcp_timer *msg)
-{
-    hoi_msg_hdcp_get_timer_init(msg);
-    return hoi_msg(msg);
-}
-
-int hoi_drv_hdcp_set_timer(uint32_t start_time)
-{
-    t_hoi_msg_hdcp_timer msg;
-
-    hoi_msg_hdcp_set_timer_init(&msg);
-    msg.start_time = start_time;
-    return hoi_msg(&msg);
-}
-
-int hoi_drv_hdcp_get_key(uint32_t key[4])
-{
-    int ret;
-    t_hoi_msg_hdcp_key msg;
-
-    hoi_msg_hdcp_get_key_init(&msg);
-    ret = hoi_msg(&msg);
-
-    key[0] = msg.key[0];
-    key[1] = msg.key[1];
-    key[2] = msg.key[2];
-    key[3] = msg.key[3];
-
-    return ret;
-}
-
-//------------------------------------------------------------------------------
-// Watch dog
-int hoi_drv_wdg_init(uint32_t service_time)
-{
-    t_hoi_msg_wdg msg;
-
-    hoi_msg_wdg_init_init(&msg);
-    msg.service_time = service_time;
-    return hoi_msg(&msg);
-}
-
-//------------------------------------------------------------------------------
 // command
 
 #define HOI_CMDSW(T)                            \
@@ -458,7 +435,6 @@ HOI_CMDSW(osdon);
 HOI_CMDSW(osdoff);
 HOI_CMDSW(hpdon);
 HOI_CMDSW(hpdoff);
-HOI_CMDSW(hpdreset);
 HOI_CMDSW(repair);
 
 HOI_CMDSW(hdcp_viden_eti);      //enable hdcp eti video encryption

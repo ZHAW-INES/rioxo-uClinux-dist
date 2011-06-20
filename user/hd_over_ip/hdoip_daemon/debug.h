@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "hdoip_log.h"
 
 //------------------------------------------------------------------------------
 // Debug Switches
@@ -27,19 +28,32 @@
 #define USE_LAUNCHER
 #define USE_SYS_TICK
 
-#undef REPORT_PTHREAD
-#undef REPORT_RSCP
 
-#define DBGCONSOLE
-#undef DBGCONSOLERSCP
+
+// main log file
+#define MAIN_LOG
+#undef REPORT_RSCP
+#undef REPORT_RSCP_CLIENT
+#undef REPORT_RSCP_SERVER
+#undef REPORT_RSCP_HELLO
+#undef REPORT_RSCP_RX
+#undef REPORT_PTHREAD
+#undef REPORT_RSCP_UPDATE
+#undef REPORT_ALIVE_HELLO
+
+// RSCP log file
+#undef RSCP_LOG
+#undef REPORT_RSCP_PACKETS
+
+
+#undef DBGCONSOLE          // x
+#undef DBGCONSOLERSCP     // x
 
 #define EDID_WRITE_HEX_FILE
+#undef REPORT_EDID
 
 //------------------------------------------------------------------------------
 //
-
-extern FILE* report_fd;
-extern FILE* rscp_fd;
 
 #define STATE       " § "
 #define ERROR       " ? "
@@ -51,9 +65,19 @@ extern FILE* rscp_fd;
 #define EVENT       " ← "
 #define CHANGE      " → "
 #define CONT        "     "
+#define DEBUG       "------------------------------------------------------------- \n d "
+// #define VTB_METHOD  " M "
+#define VTB_METHOD  "------------------------------------------------------------- \n M "
+// #define VRB_METHOD  " M "
+#define VRB_METHOD  "------------------------------------------------------------- \n M "
 
 #define UNUSED __attribute__((__unused__))
-
+/*
+#define report(...) { \
+    hdoip_report(&hdoipd.main_log, __VA_ARGS__); \
+}
+*/
+/*
 #define report(...) { \
     fprintf(report_fd, __VA_ARGS__); \
     fprintf(report_fd, "\n"); \
@@ -70,6 +94,7 @@ extern FILE* rscp_fd;
     fprintf(report_fd, "\n"); \
     fflush(report_fd); \
 }
+*/
 
 #ifdef REPORT_PTHREAD
     #define report2(...) report(__VA_ARGS__)

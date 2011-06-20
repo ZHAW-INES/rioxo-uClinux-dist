@@ -83,6 +83,7 @@ typedef struct {
     uint32_t            profile;                    //!< "AVP"
     uint32_t            lower;                      //!< "UDP"
     bool                multicast;
+    uint32_t            multicast_group;
     uint32_t            destination;
     bool                append;
     uint32_t            ttl;

@@ -84,6 +84,7 @@ label = {
     p_fw_fpga_ver = "Gateware";
     p_fw_sopc_ver = "SOPC";
     p_fw_software_ver = "Software";
+    p_fw_software_tag = "Bezeichnung";
     p_fw_upload = "Neue Firmware raufladen";
     p_fw_act_firmware = "Aktuelle Firmware-Version";
 
@@ -96,7 +97,11 @@ label = {
     p_eth_gateway = "Netz&uuml;bergang";
     p_eth_subnet = "Subnetzmaske";
     p_eth_mode = "Systemmodus";
-    p_eth_dev_name = "Ger&auml;tename";
+    p_eth_dev_name = "Hostname";
+    p_eth_dev_caption = "Beschreibung";
+    p_eth_ip_dhcp = "IP-Adresse von einem DHCP-Server beziehen";
+    p_eth_ip_static = "Feste IP-Adresse setzen";
+    p_eth_dns_server = "DNS-Server";
 
     -- Page streaming
     p_st_video = "Video";
@@ -109,5 +114,9 @@ label = {
     p_st_net_delay = "Max. Netzwerkverz&ouml;gerung";
     p_st_auto_stream = "Auto Stream";
     p_st_force_hdcp = "HDCP erzwingen"; 
+    p_st_multicast_en = "Multicast einschalten";
+    p_st_multicast_group = "Multicastgruppe";
+    p_st_unicast = "Unicast";
+    p_st_multicast = "Multicast";
 
 }

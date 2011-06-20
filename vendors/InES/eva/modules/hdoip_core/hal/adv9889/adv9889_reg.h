@@ -21,6 +21,7 @@
 #define ADV9889_OFF_AUDIO      			(0x0a)
 #define ADV9889_OFF_I2S					(0x0c)
 #define ADV9889_OFF_I2S_WIDTH			(0x0d)
+#define ADV9889_OFF_POLARITY            (0x17)
 #define ADV9889_OFF_SETTINGS			(0x12)
 #define ADV9889_OFF_SYSTEM   			(0x41)
 #define ADV9889_OFF_STATUS   			(0x42)
@@ -74,6 +75,13 @@
 #define ADV9889_I2S_EN1					0x08
 #define ADV9889_I2S_EN2					0x10
 #define ADV9889_I2S_EN3					0x20
+
+// ADV9889_OFF_POLARITY
+#define ADV9889_POLARITY_DEFAULT        0x00
+#define ADV9889_POLARITY_VSYNC_I        0x40  
+#define ADV9889_POLARITY_VSYNC_N        0x00
+#define ADV9889_POLARITY_HSYNC_I        0x20
+#define ADV9889_POLARITY_HSYNC_N        0x00
 
 // ADV9889_OFF_SETTINGS
 #define ADV9889_COPYRIGHT				0x20

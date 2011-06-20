@@ -35,7 +35,7 @@ int net_get_local_hwaddr(int sock, char* ifn, uint8_t* mac)
     strcpy(req.ifr_name, ifn);
 
     if((n = ioctl(sock, SIOCGIFHWADDR, (void*)&req)) == -1 ) {
-        perror("ioctl(SIOCGIFHWADDR) failed");
+        perrno("ioctl(SIOCGIFHWADDR) failed");
         return RSCP_ERRORNO;
     }
 
@@ -54,7 +54,7 @@ int net_get_local_addr(int sock, char* ifn, uint32_t* addr)
     strcpy(req.ifr_name, ifn);
 
     if((n = ioctl(sock, SIOCGIFADDR, (void*)&req)) == -1 ) {
-        perror("ioctl(SIOCGIFADDR) failed");
+        perrno("ioctl(SIOCGIFADDR) failed");
         return RSCP_ERRORNO;
     }
 
@@ -75,7 +75,7 @@ int net_read_arp_map(int sock, char* ifn, uint32_t address, uint8_t* mac)
     strcpy(req.arp_dev, ifn);
 
     if (ioctl(sock, SIOCGARP, (void*)&req) == -1) {
-        perror("ioctl(SIOCGARP) failed");
+        perrno("ioctl(SIOCGARP) failed");
         return RSCP_ERRORNO;
     }
 
@@ -106,8 +106,8 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
 
     /* Read device ip */
     if((ioctl(sock, SIOCGIFADDR, (void*)&ifreq)) == -1 ) {
-            perror("ioctl(SIOCGIFNETMASK) failed");
-            return RSCP_ERRORNO;
+        perrno("ioctl(SIOCGIFADDR) failed");
+        return RSCP_ERRORNO;
     }
 
     memcpy(&sin, &ifreq.ifr_addr, sizeof(struct sockaddr));
@@ -115,7 +115,7 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
 
     /* Read subnet mask */
     if((ioctl(sock, SIOCGIFNETMASK, (void*)&ifreq)) == -1 ) {
-        perror("ioctl(SIOCGIFNETMASK) failed");
+        perrno("ioctl(SIOCGIFNETMASK) failed");
         return RSCP_ERRORNO;
     }
 
@@ -143,7 +143,7 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
     gw = gethostbyname(str);
 
     if (!gw) {
-        perror("net_get_remote_hwaddr() gethostbyname failed");
+        perrno("net_get_remote_hwaddr() gethostbyname failed");
         return RSCP_ERRORNO;
     }
 

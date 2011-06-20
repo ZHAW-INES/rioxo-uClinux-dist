@@ -131,34 +131,54 @@ function FormText(name, value, size, disabled)
 
 end
 
+function FormRadioSingle(name, value, label, checked)
+    if((checked ~= nil) and (checked > 0)) then
+        checked = ' checked'
+    else 
+        checked = ''
+    end
+
+    html_str = html_str .. "<input type=\"radio\" name=\"" .. name .. "\" value=\"" .. value .. "\"".. checked .. ">" .. label .. "\n"
+end
+
 function FormRadio(name, values, size, selected)
     local cnt = 0
     local checked
 
     while(cnt < size) do
         if(cnt == tonumber(selected)) then
-            checked = " checked"
+            checked = 1
         else 
-            checked = ""
+            checked = 0
         end
-        html_str = html_str .. "<input type=\"radio\" name=\"" .. name .. "\" value=\"" .. cnt .. "\"".. checked .. ">" .. values[cnt] .. "<br>\n"
+        
+        FormRadioSingle(name, cnt, values[cnt], checked)
+        html_str = html_str .. '<br>\n'
         cnt = cnt + 1
     end
 end 
 
-function FormIP(name, value0, value1, value2, value3)
-    FormText(name .. "0", value0, 3, 0)
-    html_str = html_str .. " . "
-    FormText(name .. "1", value1, 3, 0)
-    html_str = html_str .. " . "
-    FormText(name .. "2", value2, 3, 0)
-    html_str = html_str .. " . "
-    FormText(name .. "3", value3, 3, 0)
+function FormIP(name, value0, value1, value2, value3, disable)
+    if((disable ~= nil) and (disable > 0))then
+        if((value0 ~= "") and (value1 ~= "") and (value2 ~= "") and (value3 ~= "")) then
+            Text(value0..'.'..value1..'.'..value2..'.'..value3)
+        else 
+            Text("")
+        end
+    else
+	    FormText(name .. "0", value0, 3, 0)
+	    html_str = html_str .. " . "
+	    FormText(name .. "1", value1, 3, 0)
+	    html_str = html_str .. " . "
+	    FormText(name .. "2", value2, 3, 0)
+	    html_str = html_str .. " . "
+	    FormText(name .. "3", value3, 3, 0)
+    end
 end
 
 function FormCheckbox(name, value, label, checked)
     html_str = html_str .. "<input type=\"checkbox\" name=\""..name.."\" value=\""..value.."\""
-    if(checked ~= nil) then
+    if((checked ~= nil) and (checked > 0))then
         html_str = html_str .." checked"
     end
     html_str = html_str ..">"..label
@@ -209,7 +229,9 @@ end
 function Header(t, title, script_path, addon)
     local menu_item_cnt = 6
     local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_status; [3] = label.tab_firmware; [4] = label.tab_default; [5] = label.tab_settings;}
-    local dev_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_NAME)
+    local dev_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_HOST_NAME)
+    local dev_caption = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DEV_CAPTION)
+    
 
     local menu_class = ""
     local css = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".. html_css_file .."\">\n"
@@ -227,17 +249,17 @@ function Header(t, title, script_path, addon)
     html_str = "<html>\n<head>\n".. t.cookie .."<title>" .. title .. "</title>\n" .. addon .. css .. "</head>\n<body>\n"
    
     html_str = html_str .. '<div id="wrapper">\n<div id="main">\n<div id="box">\n<div id="header">\n'
-    html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b></div><h1 id="logo"><a href="http://www.rioxo.ch"><img src="/img/rioxo_logo.png" alt="rioxo&reg;"></a></h1>\n'
+    html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.rioxo.ch"><img src="/img/rioxo_logo.png" alt="rioxo&reg;"></a></h1>\n'
     
 
     html_str = html_str .. '<div id="mainmenu">\n<ul class=\"menu\">\n'
     
-    if((t.system_mode == "vrb") and (t.login))then
+    if((t.mode_vrb) and (t.login))then
         html_str = html_str .. '<li id="right">'
         ImageLink(script_path.."?page=".. t.page .."&refresh=1", img_path.."refresh.png", label.reconnect)
         html_str = html_str .. '</li>'
 
-        if(((t.daemon_state == "ready") and (t.refresh == nil) and (t.play == nil)) or (t.stop ~= nil))then    
+        if(((t.vrb_playing == false) and (t.refresh == nil) and (t.play == nil)) or (t.stop ~= nil))then    
             html_str = html_str .. '<li id="right">'
             ImageLink(script_path.."?page=".. t.page, img_path.."stop_gray.png", label.stop)
             html_str = html_str .. '</li>'

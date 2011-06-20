@@ -34,9 +34,11 @@
 #include <errno.h>
 #include <mtd/mtd-user.h>
 
+#include "hdoipd.h"
 #include "error.h"
 #include "flash.h"
 #include "util.h"
+
 
 /**
  * Open a flash device (MTD).
@@ -307,7 +309,7 @@ int flash_dev_eraseall(struct flash_dev *dev)
 			int ret = check_bad_block(dev, &offset);
 
 			if (ret > 0) {
-				printf("Skipping bad block at 0x%08x\n", erase.start);
+			    report("Skipping bad block at 0x%08x\n", erase.start);
 				continue;
 			} else if (ret < 0) {
 				if (ret == EOPNOTSUPP) {

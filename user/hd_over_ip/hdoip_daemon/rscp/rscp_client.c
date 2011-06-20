@@ -62,7 +62,9 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
 
     if (ret == RSCP_SUCCESS) {
         client->nr = nr++;
+#ifdef REPORT_RSCP_CLIENT
         report(" + RSCP Client [%d] open %s", client->nr, address);
+#endif
 
         memcpy(client->uri, address, strlen(address)+1);
         memcpy(buf, address, strlen(address)+1);
@@ -77,7 +79,7 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
         host = gethostbyname(uri.server);
 
         if (!host) {
-            report("gethostbyname failed");
+            //herror("gethostbyname");
             ret = RSCP_CLIENT_ERROR;
         }
     }
@@ -91,9 +93,9 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
         } else {
             port = htons(554);
         }
-
+#ifdef REPORT_RSCP_CLIENT
         report(" i server name: %s - %s:%d", host->h_name, inet_ntoa(addr), ntohs(port));
-
+#endif
         if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
             report(ERROR "RSCP Client [%d]: socket error: %s", client->nr, strerror(errno));
             ret = RSCP_CLIENT_ERROR;
@@ -105,10 +107,9 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
         memset(&dest_addr, 0, sizeof(struct sockaddr_in));
         dest_addr.sin_family = AF_INET;
         dest_addr.sin_port = port;
-        dest_addr.sin_addr.s_addr = addr.s_addr;
+        dest_addr.sin_addr.s_addr = addr.s_addr;        // remote address
 
-        //try to connect server
-        if (connect(fd, (struct sockaddr*)&dest_addr, sizeof(struct sockaddr)) == -1) {
+        if (connect(fd, (struct sockaddr_in*)&dest_addr, sizeof(struct sockaddr_in)) == -1) {
             close(fd);
             perrno(ERROR "RSCP Client [%d]: connection refused", client->nr);
             ret = RSCP_CLIENT_ERROR;
@@ -169,15 +170,19 @@ int rscp_client_close(t_rscp_client* client)
 
     client->task = E_RSCP_CLIENT_KILL;
     shutdown(client->con.fdw, SHUT_RDWR);
+    close(client->con.fdw);
 
     // detach client from media
     if (client->media) {
+#ifdef REPORT_RSCP_CLIENT
         report(" i RSCP Client [%d] detach media %s", client->nr, client->media->name);
+#endif
         rmcr_teardown(client->media, 0, 0);
         client->media->creator = 0;
         client->media = 0;
-
+#ifdef REPORT_RSCP_CLIENT
         report(" i RSCP Client [%d] join pthread", client->nr);
+#endif
 
         unlock("rscp_client_close");
             pthread_join(client->th1, 0);
@@ -187,8 +192,9 @@ int rscp_client_close(t_rscp_client* client)
         close(client->con.fdr);
         close(client->con2.fdr);
     }
-
+#ifdef REPORT_RSCP_CLIENT
     report(" - RSCP Client [%d]", client->nr);
+#endif
 
     free(client);
 
@@ -202,8 +208,10 @@ int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp
     u_rscp_header buf;
     t_rscp_header_common common;
 
-
+#ifdef REPORT_RSCP
     report(" > RSCP Client [%d] SETUP", client->nr);
+#endif
+
     // send setup message
     rscp_request_setup(&client->con, client->uri, transport, edid, hdcp);
 
@@ -344,7 +352,9 @@ int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt)
     int n;
     u_rscp_header buf;
 
-    report(" > RSCP Client [%s %d] PLAY", client->media->name, client->nr);
+#ifdef REPORT_RSCP
+    report(" > RSCP Client [%d] PLAY", client->nr);
+#endif
 
     rscp_request_play(&client->con, client->uri, client->media->sessionid, fmt);
 
@@ -376,7 +386,9 @@ int rscp_client_teardown(t_rscp_client* client)
     u_rscp_header buf;
     int nr = client->nr;
 
-    report(" > RSCP Client [%s %d] TEARDOWN", client->media->name, client->nr);
+#ifdef REPORT_RSCP
+    report(" > RSCP Client [%d] TEARDOWN", client->nr);
+#endif
 
     // request teardown
     rscp_request_teardown(&client->con, client->uri, client->media->sessionid);
@@ -401,8 +413,9 @@ int rscp_client_set_kill(t_rscp_client* client)
 
 int rscp_client_kill(t_rscp_client* client)
 {
+#ifdef REPORT_RSCP_CLIENT
     report(" > RSCP Client [%d] kill", client->nr);
-
+#endif
     // response
     rmcr_teardown(client->media, 0, &client->con);
 
@@ -413,7 +426,7 @@ int rscp_client_kill(t_rscp_client* client)
 
 int rscp_client_update(t_rscp_client* client, uint32_t event)
 {
-#ifdef REPORT_RSCP
+#ifdef REPORT_RSCP_UPDATE
     report(" > RSCP Client [%d] UPDATE", client->nr);
 #endif
 
@@ -428,7 +441,9 @@ int rscp_client_update(t_rscp_client* client, uint32_t event)
  * */
 int rscp_client_hello(t_rscp_client* client)
 {
+#ifdef REPORT_RSCP_HELLO
     report(" > RSCP Client [%d] HELLO", client->nr);
+#endif
 
     rscp_request_hello(&client->con, client->uri);
 
@@ -486,23 +501,26 @@ void* rscp_client_thread(void* _client)
     char* line, *tst;
     t_rscp_client* client = _client;
 
+#ifdef REPORT_RSCP_CLIENT
     report(" + RSCP Client [%d] filter", client->nr);
-    // receive as long as no errors occur ??
+#endif
+
     while ((n = rscp_receive(&client->con1, &line, 0)) == RSCP_SUCCESS) {
         tst = line;
-        //check if received message is a request or a response
-        if (!str_starts_with(&tst, RSCP_VERSION)) {  //if request...
+        if (!str_starts_with(&tst, RSCP_VERSION)) { // if response
             do {
                 msgprintf(&client->con2, "%s\r\n", line);
                 if (*line == 0) break;
             } while ((n = rscp_receive(&client->con1, &line, 0)) == RSCP_SUCCESS);
             if (n != RSCP_SUCCESS) {
-                report("rscp client filter receive error on request");
+                report(ERROR "rscp client filter receive error on request");
                 break;
             }
-            rscp_write(&client->con2);  //write to pipe 2 ??
 
-        } else {	//if response
+            rscp_write(&client->con2);
+
+        } else { // if request
+
             do {
                 msgprintf(&client->con1, "%s\r\n", line);
                 if (*line == 0) break;
@@ -515,7 +533,10 @@ void* rscp_client_thread(void* _client)
         }
     }
     client->task = E_RSCP_CLIENT_KILL;
+
+#ifdef REPORT_RSCP_CLIENT
     report(" - RSCP Client [%d] filter: (%d) %s", client->nr, n, strerror(errno));
+#endif
 
     close(client->con1.fdw);
     close(client->con2.fdw);
@@ -535,7 +556,9 @@ void* rscp_client_req_thread(void* _client)
     u_rscp_header buf;
 
     //lock("rscp_client_req_thread-start");
-        report(" + RSCP Client [%d] request ep", client->nr);
+#ifdef REPORT_RSCP_CLIENT
+    report(" + RSCP Client [%d] request ep", client->nr);
+#endif
     //unlock("rscp_client_req_thread-start");
 
     while (!(client->task & E_RSCP_CLIENT_KILL)) {
@@ -547,7 +570,7 @@ void* rscp_client_req_thread(void* _client)
         lock("rscp_client_req_thread");
 
         if(!(client->task & E_RSCP_CLIENT_KILL) && (client->media)) {
-#ifdef REPORT_RSCP
+#ifdef REPORT_RSCP_RX
             report(" < RSCP Client [%d] %s", client->nr, common.rq.method);
 #endif
             // process request (function responses for itself)
@@ -563,7 +586,9 @@ void* rscp_client_req_thread(void* _client)
     }
 
     //lock("rscp_client_req_thread-close");
-        report(" - RSCP Client [%d] request ep", client->nr);
+#ifdef REPORT_RSCP_CLIENT
+    report(" - RSCP Client [%d] request ep", client->nr);
+#endif
     //unlock("rscp_client_req_thread-close");
 
     return 0;

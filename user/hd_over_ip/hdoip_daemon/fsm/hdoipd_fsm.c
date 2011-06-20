@@ -23,6 +23,7 @@
 #include "hdoipd_fsm.h"
 #include "hdoipd_task.h"
 #include "rscp_include.h"
+#include "rscp_string.h"
 #include "edid.h"
 
 #include "vrb_video.h"
@@ -86,7 +87,7 @@ bool hdoipd_clr_rsc(int state)
             hdoipd_set_rsc(RSC_AUDIO_SYNC);
         }
     }
-    if ((state & RSC_AUDIO_SYNC) && hdoipd_rsc(RSC_VIDEO_OUT)) {
+    if ((state & RSC_AUDIO_SYNC) && hdoipd_rsc(RSC_VIDEO_OUT) && !hdoipd_rsc(RSC_OSD)) {
         if (reg_test("mode-sync", "streamsync")) {
             // TODO: switch sync to
             hdoipd_set_rsc(RSC_VIDEO_SYNC);
@@ -190,32 +191,28 @@ bool hdoipd_goto_ready()
             rscp_listener_teardown_all(&hdoipd.listener);
             rscp_listener_free_media(&hdoipd.listener);
             hdoipd_off(true);
-            return true;
         break;
         case HOID_VRB:
             // shut down VRB
             rscp_client_deactivate(hdoipd.client);
             rscp_listener_free_media(&hdoipd.listener);
             hdoipd_off(true);
-            return true;
         break;
         case HOID_READY:
-            return true;
         break;
         case HOID_LOOP:
         case HOID_SHOW_CANVAS:
             hoi_image_free(hdoipd.canvas);
             hdoipd.canvas = 0;
             hdoipd_off(true);
-            return true;
         break;
         default:
             report("request not supported in state %s\n", statestr(hdoipd.state));
             return false;
         break;
     }
-
-    return false;
+    osd_printf("Device is idle");
+    return true;
 }
 
 /** Force to ready state
@@ -288,14 +285,15 @@ void hdoipd_goto_vrb()
                 hdoipd_set_state(HOID_VRB);
 
                 // register remote for "hello"
-                box_sys_set_remote(reg_get("remote-uri"));
-
+                //box_sys_set_remote(reg_get("remote-uri"));
                 // first thing to try is setup a new connection based on registry
 
-                if(hdoipd.auto_stream) {
-                    hdoipd_set_task_start_vrb();
-                }
+                //if(hdoipd.auto_stream) {
+                //    hdoipd_set_task_start_vrb();
+                //}
+                hdoipd.alive_check.init_done = 0;
 
+                alive_check_start_vrb_alive();
             }
         } else {
             report(ERROR "already in state vrb");
@@ -361,7 +359,6 @@ int hdoipd_vrb_play(t_rscp_media *media, void UNUSED *d)
         report(ERROR "hdoipd_vrb_play() only valid in state VRB");
         return -1;
     }
-
     return rscp_media_play(media);
 }
 
@@ -390,27 +387,22 @@ void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps)
 int hdoipd_start_vrb_cb(t_rscp_media* media, void* d)
 {
     int os = media->state;
-    int ret = RSCP_SUCCESS;
+    int ret = 0;
 
     if (rscp_media_sinit(media)) {
-    	report(INFO "hdoipd_start_vrb_cb(%s) => media->state = RSCP_INIT", media->name);
-        hdoipd_vrb_setup(media, d);
+        if(hdoipd_vrb_setup(media, d) == -1) {
+            ret = 1;
+        }
     } else if (rscp_media_sready(media)) {
-    	report(INFO "hdoipd_start_vrb_cb(%s) => media->state = RSCP_READY", media->name);
-        ret = hdoipd_vrb_play(media, d);
+        if(hdoipd_vrb_play(media, d) == -1) {
+            ret = 1;
+        }
     } else {
-    	report(INFO "hdoipd_start_vrb_cb(%s) => media->state = RSCP_PLAYING", media->name);
-    	report(INFO "hdoipd_start_vrb_cb(%s) return : 0");
         return 0;
     }
-	report(INFO "rscp_media_sinit(%s) return : %d", media->name, (os == media->state));
-
-	if(ret != RSCP_SUCCESS) {
-		return 1;
-	} else {
-		return (os == media->state);
-	}
+    return ret;
 }
+
 int hdoipd_start_vrb(void *d)
 {
     int failed = 0;
@@ -474,8 +466,11 @@ void hdoipd_fsm_vrb(uint32_t event)
         case E_ADV9889_CABLE_ON:
             // plug in the cable is a start point for the VRB to
             // work when video or embedded audio is desired ...
+            //if(hdoipd.auto_stream) {
+            //    hdoipd_set_task_start_vrb();
+            //}
             if(hdoipd.auto_stream) {
-                hdoipd_set_task_start_vrb();
+                alive_check_start_vrb_alive();
             }
         break;
         case E_ADV9889_CABLE_OFF:
@@ -690,8 +685,8 @@ void hdoipd_hello()
 
 void hdoipd_start()
 {
-    hdoipd_hello();
-    
+    //hdoipd_hello();
+
     char *s = reg_get("mode-start");
     if (strcmp(s, "vtb") == 0) {
         hdoipd_goto_vtb();
@@ -711,11 +706,7 @@ void hdoipd_start()
 
 bool hdoipd_init(int drv)
 {
-
-    int ret;
     pthread_mutexattr_t attr;
-
-    memset(&hdoipd, 0, sizeof(t_hdoipd));
 
     hdoipd.drv = drv;
     hdoipd.set_listener = 0;
@@ -744,6 +735,8 @@ bool hdoipd_init(int drv)
 
     hdoipd_registry_update();
 
+    hdoipd.dhcp = reg_test("system-dhcp", "true");
+
     hoi_cfg_system();
 
     hdoipd.local.vid_port = htons(reg_get_int("video-port"));
@@ -752,10 +745,7 @@ bool hdoipd_init(int drv)
 
     hdoipd.auto_stream = reg_test("auto-stream", "true");
 
-    if(hdoipd_amx_open(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"),
-                    inet_addr(reg_get("amx-hello-ip")), htons(reg_get_int("amx-hello-port")))) {
-        perror("[AMX] hdoipd_amx_open() failed");
-    }
+    alive_check_client_open(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"), reg_get("amx-hello-ip"), reg_get_int("amx-hello-port"), 1, true);
 
     pthread_mutexattr_init(&attr);
     //pthread_mutexattr_setrobust_np(&attr, PTHREAD_MUTEX_ROBUST_NP);

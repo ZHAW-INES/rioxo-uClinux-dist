@@ -217,7 +217,8 @@ int hdoip_cli_getversion(int fd, int fdr, char** argv, int argc)
     printf(" FPGA SVN         : %d\n", version.fpga_svn);
     printf(" SOPC date        : %s", ctime(&version.sysid_date));
     printf(" SOPC ID          : 0x%08x\n", version.sysid_id);
-    printf(" Software version : %d.%d\n\n", (version.sw_version>>16), (version.sw_version&0xFFFF));
+    printf(" Software version : %d.%d\n", (version.sw_version>>16), (version.sw_version&0xFFFF));
+    printf(" Software tag     : %s\n\n", version.sw_tag);
     return 0;
 }
 

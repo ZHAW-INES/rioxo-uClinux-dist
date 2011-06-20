@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+#include "hdoipd.h"
 #include "rscp_media.h"
 #include "rscp_listener.h"
 #include "rscp_server.h"
@@ -18,7 +19,7 @@
 #include "rscp_command.h"
 #include "rscp_error.h"
 #include "string.h"
-#include "debug.h"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // received a request as a server (can answer -> rsp != 0)

@@ -13,6 +13,7 @@
 #include "rscp.h"
 #include "rscp_net.h"
 #include "rscp_command.h"
+#include "hdoipd.h"
 
 void rscp_response_line(t_rscp_connection* msg, int code, char* reason)
 {
@@ -76,6 +77,7 @@ void rscp_header_transport(t_rscp_connection* msg, t_rscp_transport* t)
     if (t->port) msgprintf(msg, "port=%d-%d;", PORT_RANGE_START(t->port), PORT_RANGE_STOP(t->port));
     if (t->client_port) msgprintf(msg, "client_port=%d-%d;", ntohs(PORT_RANGE_START(t->client_port)), ntohs(PORT_RANGE_STOP(t->client_port)));
     if (t->server_port) msgprintf(msg, "server_port=%d-%d;", ntohs(PORT_RANGE_START(t->server_port)), ntohs(PORT_RANGE_STOP(t->server_port)));
+    msgprintf(msg, "multicast_group=%s;", reg_get("multicast_group"));
     msgprintf(msg, "mode=\"PLAY\"\r\n");
 }
 

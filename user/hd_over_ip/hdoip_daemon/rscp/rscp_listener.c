@@ -52,6 +52,7 @@ void* rscp_listener_run_server(t_rscp_server* server)
 			list_remove(server->idx);
 			if (server->con.fdr != -1) {
 				shutdown(server->con.fdr, SHUT_RDWR);
+                close(server->con.fdr);
 				server->con.fdr = -1;
 			}
 
@@ -101,6 +102,7 @@ void rscp_listener_close_server(t_rscp_server* con, t_rscp_listener *handle)
             if (shutdown(con->con.fdw, SHUT_RDWR) == -1) {
                 report("close connection error: %s", strerror(errno));
             }
+            close(con->con.fdw);
             con->con.fdw = -1;
         }
     listener_unlock(handle, "rscp_listener_close_server");
@@ -116,7 +118,6 @@ void* rscp_listener_thread(t_rscp_listener* handle)
 {
     struct sockaddr_in this_addr;
     struct sockaddr_in remote_addr;
-    socklen_t sin_size;
     int fd;
 
     report(" + RSCP Listener [%d] thread", handle->nr);
@@ -132,7 +133,7 @@ void* rscp_listener_thread(t_rscp_listener* handle)
     this_addr.sin_port = htons(handle->port);
     this_addr.sin_addr.s_addr = INADDR_ANY;
 
-    if (bind(handle->sockfd, (struct sockaddr*)&this_addr, sizeof(struct sockaddr)) == -1) {
+    if (bind(handle->sockfd, (struct sockaddr_in*)&this_addr, sizeof(struct sockaddr_in)) == -1) {
         report(" ? rscp listener bind error: %s", strerror(errno));
         return (void*)RSCP_ERRORNO;
     }
@@ -144,14 +145,15 @@ void* rscp_listener_thread(t_rscp_listener* handle)
 
     // run... and make new thread for every incoming connection
     while (handle->run) {
-        sin_size = sizeof(struct sockaddr_in);
+
         memset(&remote_addr, 0, sizeof(struct sockaddr_in));
-        //accept returns new descriptor for the accepted socket
-        if ((fd = accept(handle->sockfd, (struct sockaddr*)&remote_addr, &sin_size)) != -1) {
-            rscp_listener_start_server(handle, fd, &remote_addr);  //start new server
+
+        if ((fd = accept(handle->sockfd, (struct sockaddr*)&remote_addr, sizeof(struct sockaddr_in))) != -1) {
+            rscp_listener_start_server(handle, fd, &remote_addr);            
         } else if (fd == -1) {
             report(" ? rscp listener accept error: %s", strerror(errno));
         }
+
     }
 
     // cleanup child threads...
@@ -206,6 +208,7 @@ int rscp_listener_close(t_rscp_listener* handle)
     if (shutdown(handle->sockfd, SHUT_RDWR) == -1) {
         report("close socket error: %s", strerror(errno));
     }
+    close(handle->sockfd);
 
     report(" - RSCP Listener [%d]", handle->nr);
 
@@ -243,7 +246,7 @@ t_rscp_media* rscp_listener_get_media(t_rscp_listener* handle, char* name)
 
 void rscp_listener_free_media(t_rscp_listener* handle)
 {
-    report("rscp_listener_free_media()");
+    report(INFO "rscp_listener_free_media()");
     listener_lock(handle, "rscp_listener_free_media");
         bstmap_freep(&handle->media);
     listener_unlock(handle, "rscp_listener_free_media");

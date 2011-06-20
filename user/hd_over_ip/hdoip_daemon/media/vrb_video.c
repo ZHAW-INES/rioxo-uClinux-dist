@@ -17,6 +17,8 @@
 #include "hdoipd_fsm.h"
 #include "edid.h"
 #include "hdcp.h"
+#include "rscp_string.h"
+#include "multicast.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout)
@@ -26,13 +28,15 @@ static struct {
     t_hdoip_eth         remote;
     int                 timeout;
     int                 alive_ping;
+    uint32_t            dst_ip;
+    bool                multicast_en;
 } vrb;
 
 int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection* rsp)
 {
     int n;
     t_rscp_client* client = media->creator;
-    report(INFO "vrb_video_setup");
+    report(VRB_METHOD "vrb_video_setup");
 
     if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
         return n;
@@ -45,6 +49,15 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     vrb.remote.address = client->con.address;
     vrb.remote.vid_port = PORT_RANGE_START(m->transport.server_port);
     hdoipd.local.vid_port = PORT_RANGE_START(m->transport.client_port);
+
+    vrb.multicast_en = m->transport.multicast;
+
+    if (vrb.multicast_en) {
+        vrb.dst_ip = m->transport.multicast_group;
+    }
+    else {
+        vrb.dst_ip = hdoipd.local.address;
+    }
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, vid);
 
@@ -62,8 +75,7 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
 #ifdef ETI_PATH
     // setup ethernet input
-    hoi_drv_eti(hdoipd.local.address, vrb.remote.address,
-            hdoipd.local.vid_port, 0);
+    hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0);
 #endif
 
     hdoipd_set_vtb_state(VTB_VID_IDLE);
@@ -78,7 +90,7 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UNUSED *rsp)
 {
     uint32_t compress = 0;
-    report(INFO "vrb_video_play");
+    report(VRB_METHOD "vrb_video_play");
 
     //Test if HDCP parameters were set correctly
 	if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETI_VIDEO_EN)){
@@ -96,6 +108,11 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     media->result = RSCP_RESULT_PLAYING;
 
     osd_permanent(false);
+
+    // join multicast group
+    if (vrb.multicast_en) {
+        join_multicast_group(vrb.dst_ip);
+    }
 
     // set slave timer when not already synced
     if (!hdoipd_rsc(RSC_SYNC)) {
@@ -128,11 +145,7 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 
 int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rscp_connection *rsp)
 {
-	if(rsp) {
-		report(INFO "vrb_video_teardown (requested)");
-	} else {
-		report(INFO "vrb_video_teardown");
-	}
+    report(VRB_METHOD "vrb_video_teardown");
 
     media->result = RSCP_RESULT_TEARDOWN;
 
@@ -143,10 +156,19 @@ int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rsc
         hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
         hdoipd_set_vtb_state(VTB_VID_OFF);
     }
+    
+    if (vrb.multicast_en) {
+        leave_multicast_group(vrb.dst_ip);
+    }
 
     if (rsp) {
         osd_permanent(true);
         osd_printf("video remote off...\n");
+    }
+
+    // start sending hello frames to vtb
+    if(hdoipd.auto_stream) {
+        alive_check_start_vrb_alive();
     }
 
     return RSCP_SUCCESS;
@@ -190,7 +212,8 @@ void vrb_video_pause(t_rscp_media *media)
 {
 	report(INFO "vrb_video_pause");
     media->result = RSCP_RESULT_PAUSE_Q;
-    report(INFO "hdoipd.vtb_state: %08x",hdoipd.vtb_state);
+
+    report(VRB_METHOD "vrb_video_pause");
 
     if (hdoipd_tstate(VTB_VIDEO)) {
     report(INFO "vrb_video_pause: VTB_VIDEO");
@@ -198,8 +221,7 @@ void vrb_video_pause(t_rscp_media *media)
         hdoipd_hw_reset(DRV_RST_VID_OUT);
 #endif
 #ifdef ETI_PATH
-        hoi_drv_eti(hdoipd.local.address, vrb.remote.address,
-                hdoipd.local.vid_port, 0);
+        hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0);
 #endif
         hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
         hdoipd_set_vtb_state(VTB_VID_IDLE);
@@ -230,8 +252,8 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
         	report(INFO "vrb_video_update; EVENT_VIDEO_IN_OFF");
             vrb_video_pause(media);
             osd_permanent(true);
-            osd_printf("vtb.video stoped streaming...\n");
-            report(ERROR "vtb.video stoped streaming");
+            osd_printf("vtb.video stopped streaming...\n");
+            report(ERROR "vtb.video stopped streaming");
             return RSCP_PAUSE;
         break;
     }
@@ -262,6 +284,8 @@ int vrb_video_dosetup(t_rscp_media *media)
 
     hdcp.hdcp_on = reg_test("hdcp-force", "true");
 
+    report(VRB_METHOD "vrb_video_dosetup");
+
     if (!client) return RSCP_NULL_POINTER;
 
     rscp_default_transport(&transport); // TODO: daemon transport configuration
@@ -280,6 +304,8 @@ int vrb_video_doplay(t_rscp_media *media)
     char *s;
     t_rscp_rtp_format fmt;
     t_rscp_client *client = media->creator;
+
+    report(VRB_METHOD "vrb_video_doplay");
 
     if (!client) return RSCP_NULL_POINTER;
 

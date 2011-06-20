@@ -11,6 +11,8 @@
 #include "hdoipd_fsm.h"
 #include "hoi_image.h"
 #include "hoi_res.h"
+#include "rscp_string.h"
+#include "hdoip_log.h"
 
 char osdtmp[OSD_BUFFER_LENGTH];
 
@@ -33,7 +35,7 @@ void hdoipd_osd_activate()
         if (!(hdoipd_rsc(RSC_VIDEO_IN | RSC_VIDEO_OUT))) {
             report(CHANGE "activate 640x480 debug output screen for osd");
             if ((timing = hoi_res_timing(640, 480, 60))) {
-                //hoi_drv_debug(timing);
+                hoi_drv_set_timing(timing);
                 hdoipd_set_rsc(RSC_VIDEO_OUT);
             }
         }
@@ -65,15 +67,23 @@ void* hdoipd_osd_timer(void UNUSED *d)
         }
 
         lock("hdoipd_tick_timer");
-            if(hdoipd_amx_handler(&hdoipd.amx, reg_get("amx-hello-msg"))) {
-                perror("[AMX] hdoipd_amx_handler() failed");
-            }
 
-            hdoipd.tick++;
+        alive_check_client_handler(&hdoipd.amx, reg_get("amx-hello-msg"));
+
+        // initialize alive check if socket not exists
+        alive_check_init_msg_vrb_alive();
+        alive_check_handle_msg_vrb_alive(&hdoipd.alive_check);
+
+        hdoipd.tick++;
 #ifdef USE_SYS_TICK
-            rscp_client_event(hdoipd.client, EVENT_TICK);
-            rscp_listener_event(&hdoipd.listener, EVENT_TICK);
+        rscp_client_event(hdoipd.client, EVENT_TICK);
+        rscp_listener_event(&hdoipd.listener, EVENT_TICK);
 #endif
+
+        // Log file handler
+        hdoip_log_handler(&hdoipd.main_log);
+        hdoip_log_handler(&hdoipd.rscp_log);
+
         unlock("hdoipd_tick_timer");
 
     } while (1);

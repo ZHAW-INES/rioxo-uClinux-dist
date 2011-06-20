@@ -33,9 +33,6 @@
 
 t_hdoipd hdoipd;
 
-FILE* report_fd;
-FILE* rscp_fd;
-
 typedef struct {
     int in, out;
     char *cfifo;    // command (read)
@@ -159,15 +156,13 @@ void* event_read_thread(void UNUSED *d)
         if (read(hdoipd.drv, &event, 4)==4) {
             hdoipd_event(event);
         } else {
-            printf("event_read_thread failed\n");
+            report("event_read_thread failed\n");
         }
     }
 }
 
 void* poll_thread(void UNUSED *d)
 {
-    int ret;
-
     while (1) {
         struct timespec ts = {
             .tv_sec = POLL_THREAD_INTERVAL_SEC,
@@ -188,27 +183,41 @@ void* poll_thread(void UNUSED *d)
 int main(int argc, char **argv)
 {
     int drv;
+    int ret = 0;
     pthread_t the, thp;
     pthread_t* th = malloc(sizeof(pthread_t)* (argc-1));
 
-    report_fd = stdout;
-    rscp_fd = stdout;
+    memset(&hdoipd, 0, sizeof(t_hdoipd));
 
-#ifndef DBGCONSOLE
-    if (!(report_fd = fopen("/tmp/hdoipd.log", "w"))) {
+#ifdef MAIN_LOG
+    #ifndef DBGCONSOLE
+        // Set log file limit to 10k byte each
+        ret = hdoip_log_init(&hdoipd.main_log, "/var/log/hdoipd0.log", "/var/log/hdoipd1.log", 10240);
+    #else
+        ret = hdoip_log_init(&hdoipd.main_log, "", "", 0);
+    #endif
+
+    if(ret < 0) {
+        printf("Init main log failed");
         return 0;
     }
 #endif
 
-#ifndef DBGCONSOLERSCP
-    if (!(rscp_fd = fopen("/tmp/rscp.log", "w"))) {
+#ifdef RSCP_LOG
+    #ifndef DBGCONSOLERSCP
+        ret = hdoip_log_init(&hdoipd.rscp_log, "/var/log/hdoipd.rscp0.log", "/var/log/hdoipd.rscp1.log", 10240);
+    #else
+        ret = hdoip_log_init(&hdoipd.rscp_log, "", "", 0);
+    #endif
+
+    if(ret < 0) {
+        perrno("Init RSCP log failed");
         return 0;
     }
 #endif
 
-    report("/tmp/hdoipd.log started");
 
-    if ((drv = open(DEV_NODE, O_RDWR))) {
+    if ((drv = open(DEV_NODE, O_RDWR)) != -1) {
 
         if (hdoipd_init(drv)) {
 
@@ -231,7 +240,7 @@ int main(int argc, char **argv)
                 close(hdoipd.drv);
 
                 if(hdoipd.amx.enable) {
-                	shutdown(hdoipd.amx.socket, SHUT_RDWR);
+                    alive_check_client_close(&hdoipd.amx);
                 }
 
                 report("hdoipd closed");
@@ -242,11 +251,11 @@ int main(int argc, char **argv)
         }
 
     } else {
-        printf("could not open <%s>\n", DEV_NODE);
+        report("could not open <%s>\n", DEV_NODE);
     }
 
-    fclose(report_fd);
-    fclose(rscp_fd);
+    hdoip_log_close(&hdoipd.main_log);
+    hdoip_log_close(&hdoipd.rscp_log);
 
     pthread_mutex_destroy(&hdoipd.mutex);
 

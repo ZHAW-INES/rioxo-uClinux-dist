@@ -12,6 +12,7 @@
 
 #include <stdlib.h>
 #include "linked_list.h"
+#include "hdoipd.h"
 
 t_node* node_create(void* elem)
 {
@@ -21,7 +22,7 @@ t_node* node_create(void* elem)
         node->prev = node;
         node->elem = elem;
     } else {
-        printf("node_create.malloc: out of memory");
+        report("node_create.malloc: out of memory");
     }
     return node;
 }

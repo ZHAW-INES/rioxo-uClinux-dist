@@ -438,7 +438,7 @@ static int hdoip_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	/* check oversized frames */
 	if (unlikely(len > MAX_PKT_SIZE)) {
 		dev->stats.tx_dropped++;
-		printk(KERN_ERR "%s: Packet too large\n", dev->name);
+		printk(KERN_ERR "%s: Packet too large: %i\n", dev->name, len);
 		goto out_free;
 	}
 

@@ -312,8 +312,8 @@ int eti_drv_handler(t_eti* handle, t_queue* event_queue)
         handle->vrx = vrx;
         if (!handle->vcnt) {
             queue_put(event_queue, E_ETI_VIDEO_ON);
-            handle->vcnt = ETI_LINK_COUNT;
         }
+        handle->vcnt = ETI_LINK_COUNT;
     } else {
         if (handle->vcnt == 1) {
             queue_put(event_queue, E_ETI_VIDEO_OFF);
@@ -327,8 +327,8 @@ int eti_drv_handler(t_eti* handle, t_queue* event_queue)
         handle->arx = arx;
         if (!handle->acnt) {
             queue_put(event_queue, E_ETI_AUDIO_ON);
-            handle->acnt = ETI_LINK_COUNT;
         }
+        handle->acnt = ETI_LINK_COUNT;
     } else {
         if (handle->acnt == 1) {
             queue_put(event_queue, E_ETI_AUDIO_OFF);

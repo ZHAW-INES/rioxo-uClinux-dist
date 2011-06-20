@@ -21,7 +21,9 @@ t_rscp_server* rscp_server_create(int fd, uint32_t addr)
         rscp_coninit(&server->con, fd, addr);
         server->nr = nr++;
         server->kill = false;
+#ifdef REPORT_RSCP_SERVER
         report(" + RSCP Server [%d] for %s", server->nr, str_ntoa(addr));
+#endif
     } else {
         report(ERROR "rscp_server_create.malloc: out of memory");
     }
@@ -47,7 +49,9 @@ int rscp_server_thread(t_rscp_server* handle)
     t_rscp_media *media, *smedia;
     u_rscp_header buf;
 
+#ifdef REPORT_RSCP_SERVER
     report(INFO "rscp server started");
+#endif
 
     // receive request line
     while (1) {
@@ -97,8 +101,10 @@ int rscp_server_thread(t_rscp_server* handle)
     }
 
     handle->kill = true;
-    report(" - RSCP Server [%d] ended", handle->nr);
 
+#ifdef REPORT_RSCP_SERVER
+    report(" - RSCP Server [%d] ended", handle->nr);
+#endif
     return n;
 }
 
@@ -133,11 +139,14 @@ void rscp_server_close(t_rscp_media* media)
 
     if ((server) && (server->con.fdr != -1)) {
         // a server connection is active for this media -> shut it down
+#ifdef REPORT_RSCP_SERVER
         report(DEL "RSCP Server [%d] close %s:%s", server->nr, media->name, media->sessionid);
+#endif
 
         if (shutdown(server->con.fdr, SHUT_RDWR) == -1) {
             report(ERROR "close socket error: %s", strerror(errno));
         }
+        close(server->con.fdr);
         server->con.fdr = -1;
     }
 }
@@ -149,7 +158,7 @@ void rscp_server_update(t_rscp_media* media, uint32_t event)
     struct in_addr a1; a1.s_addr = server->con.address;
     sprintf(uri, "rscp://%s/", inet_ntoa(a1));
 
-#ifdef REPORT_RSCP
+#ifdef REPORT_RSCP_UPDATE
     report(" > RSCP Server [%d] UPDATE", server->nr);
 #endif
 

@@ -12,6 +12,7 @@
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "hdcp.h"
+#include "multicast.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout)
@@ -21,13 +22,15 @@ static struct {
     t_hdoip_eth         remote;
     int                 timeout;
     int                 alive_ping;
+    uint32_t            dst_ip;
+    bool                multicast_en;
 } vrb;
 
 int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection* rsp)
 {
     int n;
     t_rscp_client* client = media->creator;
-    report(INFO "vrb_audio_setup");
+    report(VRB_METHOD "vrb_audio_setup");
 
     if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
         return n;
@@ -40,6 +43,16 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     vrb.remote.address = client->con.address;
     vrb.remote.aud_port = PORT_RANGE_START(m->transport.server_port);
     hdoipd.local.aud_port = PORT_RANGE_START(m->transport.client_port);
+
+    vrb.multicast_en = m->transport.multicast;
+
+    if (vrb.multicast_en) {
+        vrb.dst_ip = m->transport.multicast_group;
+        join_multicast_group(vrb.dst_ip);
+    }
+    else {
+        vrb.dst_ip = hdoipd.local.address;
+    }
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, aud);
 
@@ -57,8 +70,7 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
 #ifdef ETI_PATH
     // TODO: separete Audio/Video
-    hoi_drv_eti(hdoipd.local.address, vrb.remote.address,
-            0, hdoipd.local.aud_port);
+    hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port);
 #endif
 
     hdoipd_set_vtb_state(VTB_AUD_IDLE);
@@ -74,7 +86,7 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UNUSED *rsp)
 {
     uint32_t compress = 0;
-    report(INFO "vrb_audio_play");
+    report(VRB_METHOD "vrb_audio_play");
 
     //Test if HDCP parameters were set correctly
 	if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETI_AUDIO_EN)){
@@ -122,7 +134,7 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 
 int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown UNUSED *m, t_rscp_connection *rsp)
 {
-    report(INFO "vrb_audio_teardown");
+    report(VRB_METHOD "vrb_audio_teardown");
 
     media->result = RSCP_RESULT_TEARDOWN;
 
@@ -132,6 +144,10 @@ int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown UNUSED *m, t_rsc
 #endif
         hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
         hdoipd_set_vtb_state(VTB_AUD_OFF);
+    }
+
+    if (vrb.multicast_en) {
+        leave_multicast_group(vrb.dst_ip);
     }
 
     if (rsp) {
@@ -180,6 +196,7 @@ void vrb_audio_pause(t_rscp_media *media)
 {
 	report(INFO "vrb_audio_pause");
     media->result = RSCP_RESULT_PAUSE_Q;
+    report(VRB_METHOD "vrb_audio_pause");
 
     if (hdoipd_tstate(VTB_AUDIO)) {
 
@@ -187,8 +204,7 @@ void vrb_audio_pause(t_rscp_media *media)
         hdoipd_hw_reset(DRV_RST_AUD_OUT);
 #endif
 #ifdef ETI_PATH
-        hoi_drv_eti(hdoipd.local.address, vrb.remote.address,
-                0, hdoipd.local.aud_port);
+        hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port);
 #endif
         hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
         hdoipd_set_vtb_state(VTB_AUD_IDLE);
@@ -219,8 +235,8 @@ int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
         break;
         case EVENT_AUDIO_IN0_OFF:
             vrb_audio_pause(media);
-            osd_printf("vtb.audio stoped streaming...\n");
-            report(ERROR "vtb.audio stoped streaming");
+            osd_printf("vtb.audio stopped streaming...\n");
+            report(ERROR "vtb.audio stopped streaming");
             return RSCP_PAUSE;
         break;
     }
@@ -250,6 +266,8 @@ int vrb_audio_dosetup(t_rscp_media *media)
 
     hdcp.hdcp_on = reg_test("hdcp-force", "true");
 
+    report(VRB_METHOD "vrb_audio_dosetup");
+
     if (!client) return RSCP_NULL_POINTER;
 
     rscp_default_transport(&transport); // TODO: daemon transport configuration
@@ -262,6 +280,8 @@ int vrb_audio_dosetup(t_rscp_media *media)
 int vrb_audio_doplay(t_rscp_media *media)
 {
     t_rscp_client *client = media->creator;
+
+    report(VRB_METHOD "vrb_audio_doplay");
 
     if (!client) return RSCP_NULL_POINTER;
 

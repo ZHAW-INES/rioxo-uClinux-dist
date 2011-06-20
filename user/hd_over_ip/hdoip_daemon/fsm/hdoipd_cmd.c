@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "hdoipd.h"
 #include "hoi_drv_user.h"
 #include "hoi_image.h"
 #include "hoi_res.h"
@@ -18,6 +19,7 @@
 #include "rscp_include.h"
 #include "vrb_video.h"
 #include "update.h"
+
 
 
 void hdoipd_cmd_canvas(t_hoic_canvas* cmd)
@@ -32,11 +34,11 @@ void hdoipd_load(t_hoic_load* cmd)
 
     if (hdoipd_goto_ready()) {
 
-        if ((f = fopen(cmd->filename, "r"))) {
+        if ((f = fopen(cmd->filename, "r")) != NULL) {
             hdoipd.canvas = hoi_image_load(f);
             fclose(f);
         } else {
-            printf("open file <%s> failed\n", cmd->filename);
+            report("open file <%s> failed\n", cmd->filename);
         }
         if (hdoipd.canvas) {
             hdoipd.rsc_state |= RSC_VIDEO_OUT;
@@ -54,7 +56,7 @@ void hdoipd_capture(t_hoic_capture* cmd)
 
     if (hdoipd_goto_ready()) {
 
-        if ((f = fopen(cmd->filename, "w"))) {
+        if ((f = fopen(cmd->filename, "w")) != NULL) {
             if (cmd->compress) {
                 hoi_image_capture_jpeg2000(f, cmd->size);
             } else {
@@ -62,7 +64,7 @@ void hdoipd_capture(t_hoic_capture* cmd)
             }
             fclose(f);
         } else {
-            printf("open file <%s> failed\n", cmd->filename);
+            report("open file <%s> failed\n", cmd->filename);
         }
 
         hdoipd_set_state(HOID_READY);
@@ -128,10 +130,10 @@ void hdoipd_cmd_vrb_setup(t_hoic_load* cmd)
 
 void hdoipd_cmd_play(t_hoic_cmd UNUSED *cmd)
 {
-    if (hdoipd_state(HOID_VRB)) {
-        hdoipd_set_task_start_vrb();
-    } else {
-        hdoipd_goto_vrb();
+    hdoipd_goto_vrb();
+
+    if(!hdoipd.auto_stream) {
+         hdoipd_set_task_start_vrb();
     }
 }
 
@@ -139,7 +141,7 @@ void hdoipd_cmd_play(t_hoic_cmd UNUSED *cmd)
 void hdoipd_ready(t_hoic_cmd UNUSED *cmd)
 {
     if (hdoipd_goto_ready()) {
-        report("hdoip_ready() done");
+        report(INFO "hdoip_ready() done");
     }
 }
 
@@ -189,7 +191,7 @@ void hdoipd_read(t_hoic_param* cmd, int rsp)
 void hdoipd_remote_update(t_hoic_kvparam *cmd)
 {
     if(update_flash(cmd->str) != 0) {
-        printf("update_flash() failed\n");
+        report("update_flash() failed\n");
     }
 }
 

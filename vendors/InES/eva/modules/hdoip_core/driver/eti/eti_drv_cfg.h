@@ -4,7 +4,7 @@
 #include "hoi_burst.h"
 
 /* ETI configuration */
-#define ETI_CPU_FILTER_MASK		(0x00000008)
+#define ETI_CPU_FILTER_MASK		(0x00000808)
 #define ETI_VID_FILTER_MASK		(0x000006D6)
 #define ETI_AUD_FILTER_MASK 	(0x000005E6)
 #define ETI_DIS_FILTER_MASK     (0xFFFFFFFF)

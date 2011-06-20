@@ -17,7 +17,7 @@
 #include "debug.h"
 #include "rscp_include.h"
 #include "bstmap.h"
-#include "hdoipd_amx.h"
+#include "alive_check.h"
 
 
 #define CFG_FILE                    "/mnt/config/hdoipd.cfg"
@@ -73,12 +73,12 @@ enum {
 //HDCP states
 enum {
     HDCP_SKE_EXECUTED		= 0x01,		//start hdcp session key exchange
-    HDCP_ENABLED			= 0x02		//hdcp is enabled/disabled
+    HDCP_ENABLED		= 0x02		//hdcp is enabled/disabled
 };
 
 //received HDCP messages
 enum {
-    HDCP_START				=0,		//start hdcp session key exchange
+    HDCP_START			=0,		//start hdcp session key exchange
     HDCP_AKE_SEND_CERT		=3,		//certificate received
     HDCP_AKE_SEND_RRX		=6,		//send rrx
     HDCP_AKE_SEND_HPRIME	=7,		//received H to check HMAC
@@ -185,16 +185,39 @@ typedef struct {
     int                 eth_timeout;    // amount of ticks till connection timeout is detected
 
     bool                auto_stream;    // flag if device should do auto stream after boot
-    t_hdoip_amx         amx;            // AMX control releated structure
-    t_hdcp 				hdcp;
+    t_hdcp 		hdcp;
+    t_alive_check       amx;            // AMX control releated structure
+    t_alive_check	alive_check;    // structure to test if server is running
+    bool                dhcp;           // flag if DHCP client is used
+
+    t_hdoip_log         main_log;
+    t_hdoip_log         rscp_log;
 } t_hdoipd;
-
-
-//------------------------------------------------------------------------------
-//
 
 extern t_hdoipd                 hdoipd;
 
+
+//------------------------------------------------------------------------------
+// report functions
+
+#define report(...) { \
+    hdoip_report(&hdoipd.main_log, __VA_ARGS__); \
+}
+
+#define reportn(...) { \
+    hdoip_reportn(&hdoipd.main_log, __VA_ARGS__); \
+}
+
+#define perrno(...) { \
+    hdoip_perrno(&hdoipd.main_log, __VA_ARGS__);\
+}
+
+#define report_rscp(...) {\
+    hdoip_report(&hdoipd.rscp_log, __VA_ARGS__); \
+}
+
+//------------------------------------------------------------------------------
+//
 
 static inline bool tick_delay(uint64_t x)
 {
@@ -250,9 +273,9 @@ static inline void get_call(char* n, char** k)
 { \
     int ret = pthread_create(&th, 0, f, d); \
     if (ret) { \
-        report(ERROR #f ".pthread_create: failed %d", ret); \
+        report2(ERROR #f ".pthread_create: failed %d", ret); \
     } else { \
-        report(INFO #f ".pthread_create successful"); \
+        report2(INFO #f ".pthread_create successful"); \
     } \
 }
 
@@ -260,9 +283,9 @@ static inline void get_call(char* n, char** k)
 { \
     int ret = pthread_create(&th, a, f, d); \
     if (ret) { \
-        report(ERROR #f ".pthread_create: failed %d", ret); \
+        report2(ERROR #f ".pthread_create: failed %d", ret); \
     } else { \
-        report(INFO #f ".pthread_create successful"); \
+        report2(INFO #f ".pthread_create successful"); \
     } \
 }
 

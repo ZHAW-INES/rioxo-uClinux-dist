@@ -298,6 +298,7 @@ typedef struct {
     uint32_t            fpga_date, fpga_svn;
     uint32_t            sysid_date, sysid_id;
     uint32_t            sw_version;
+    char                sw_tag[50];
 } PACK t_hoic_version ALIGN4;
 
 typedef struct {
@@ -305,6 +306,7 @@ typedef struct {
     uint32_t            fpga_date, fpga_svn;
     uint32_t            sysid_date, sysid_id;
     uint32_t            sw_version;
+    char                sw_tag[50];
 } PACK t_hoic_getversion ALIGN4;
 
 static inline void hoic_getversion(int fd, int fdr, t_hoic_version *ver)
@@ -319,6 +321,8 @@ static inline void hoic_getversion(int fd, int fdr, t_hoic_version *ver)
     ver->sysid_date = rsp.sysid_date; 
     ver->sysid_id = rsp.sysid_id;
     ver->sw_version = rsp.sw_version; 
+
+    strcpy(ver->sw_tag, rsp.sw_tag);
 }
 
 

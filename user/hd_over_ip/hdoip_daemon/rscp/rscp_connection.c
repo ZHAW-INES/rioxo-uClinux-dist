@@ -123,11 +123,10 @@ int rscp_receive(t_rscp_connection* con, char** line, int timeout)
 
     *line = sol;
 
-#ifdef REPORT_RSCP
+#ifdef REPORT_RSCP_PACKETS
     if (con->doc & RSCP_CON_DOC_RX) {
         struct in_addr addr = { .s_addr = con->address };
-        fprintf(rscp_fd, "[%15s] < %s\n", inet_ntoa(addr), *line);
-        fflush(rscp_fd);
+        report_rscp("[%15s] < %s", inet_ntoa(addr), *line);
     }
 #endif
 
@@ -144,14 +143,13 @@ void rscp_send(t_rscp_connection* con)
         perrno("rscp_send() send failed");
     }
 
-#ifdef REPORT_RSCP
+#ifdef REPORT_RSCP_PACKETS
     if (con->doc & RSCP_CON_DOC_TX) {
         struct in_addr addr = { .s_addr = con->address };
         char* sol = con->out.buf;
         while (*sol) {
-            fprintf(rscp_fd, "[%15s] > %s\n", inet_ntoa(addr), str_next_token(&sol, "%:\r\n;%0"));
+            report_rscp("[%15s] > %s", inet_ntoa(addr), str_next_token(&sol, "%:\r\n;%0"));
         }
-        fflush(rscp_fd);
     }
 #endif
 
@@ -170,14 +168,13 @@ void rscp_write(t_rscp_connection* con)
         perrno("rscp_send() write failed");
     }
 
-#ifdef REPORT_RSCP
+#ifdef REPORT_RSCP_PACKETS
     if (con->doc & RSCP_CON_DOC_TX) {
         struct in_addr addr = { .s_addr = con->address };
         char* sol = con->out.buf;
         while (*sol) {
-            fprintf(rscp_fd, "[%15s] > %s\n", inet_ntoa(addr), str_next_token(&sol, "%:\r\n;%0"));
+            report_rscp("[%15s] > %s", inet_ntoa(addr), str_next_token(&sol, "%:\r\n;%0"));
         }
-        fflush(rscp_fd);
     }
 #endif
     con->sequence++;  //increment sequence nr.

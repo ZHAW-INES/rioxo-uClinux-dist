@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
-#include "debug.h"
+#include "hdoipd.h"
 #include "edid.h"
 #include "edid_report.h"
 #include "cea_861.h"
@@ -43,7 +43,7 @@ int edid_read_file(t_edid* edid)
 
     fd = open(file, O_RDONLY, 0600);
 
-    if(fd > -1) {
+    if(fd != -1) {
         ret = read(fd, (void *) edid, sizeof(uint8_t) * 256);
         if(ret == -1) {
             return ret;
@@ -63,7 +63,7 @@ int edid_write_file(t_edid* edid)
 
     fd = open(file, O_CREAT | O_RDWR, 0600);
 
-    if(fd > -1) {
+    if(fd != -1) {
         ret = write(fd, &(buf[0]), sizeof(uint8_t) * 256);
 
         if(ret == -1) {
@@ -115,6 +115,7 @@ int edid_verify(t_edid* edid)
 
 void edid_report(t_edid* edid)
 {
+#ifdef REPORT_EDID
     report(CONT "edid verify: %s", ((edid_verify(edid) == 0) ? "valid" : "error"));
     report(CONT "edid version is %d.%d", edid->edid_version, edid->edid_revision);
 
@@ -189,23 +190,24 @@ void edid_report(t_edid* edid)
     if(edid->extension_count == 1) {
         report(CONT "extension block : ");
         switch(edid->extension_block[0]) {
-            case EDID_EXT_TAG_CEA:  printf("CEA 861 Series Extension\n");
+            case EDID_EXT_TAG_CEA:  report(CONT "CEA 861 Series Extension\n");
                                     cea_861_report((t_ext_cea_861*) edid->extension_block);
                                     break;
-            case EDID_EXT_TAG_VTB:  printf("Video Timing Block Extension\n");
+            case EDID_EXT_TAG_VTB:  report(CONT "Video Timing Block Extension\n");
                                     break;
-            case EDID_EXT_TAG_DI:   printf("Display Information Extension\n");
+            case EDID_EXT_TAG_DI:   report(CONT "Display Information Extension\n");
                                     break;
-            case EDID_EXT_TAG_LS:   printf("Localized String Extension\n");
+            case EDID_EXT_TAG_LS:   report(CONT "Localized String Extension\n");
                                     break;
-            case EDID_EXT_TAG_DPVL: printf("Digital Packet Video Link Extension\n");
+            case EDID_EXT_TAG_DPVL: report(CONT "Digital Packet Video Link Extension\n");
                                     break;
-            case EDID_EXT_TAG_BLOCK_MAP: printf("Extension Block Map\n");
+            case EDID_EXT_TAG_BLOCK_MAP: report(CONT "Extension Block Map\n");
                                     break;
-            case EDID_EXT_TAG_MANUFACT: printf("Extension defined by the display manufacturer\n");
+            case EDID_EXT_TAG_MANUFACT: report(CONT "Extension defined by the display manufacturer\n");
                                     break;
         }
     }
+#endif // REPORT_EDID
 }
 
 void edid_hoi_limit(t_edid* edid)

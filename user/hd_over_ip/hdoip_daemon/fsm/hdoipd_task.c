@@ -7,7 +7,12 @@
 #include "hoi_drv_user.h"
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
+#include "multicast.h"
 #include "rscp_listener.h"
+#include "hoi_cfg.h"
+
+#include "vrb_video.h"
+#include "vrb_audio.h"
 
 // local buffer
 static char buf[256];
@@ -18,11 +23,15 @@ enum {
 	HOID_TSK_UPD_SYS_SUBNET 	= 0x00000001,
 	HOID_TSK_UPD_SYS_GATEWAY 	= 0x00000002,
 	HOID_TSK_UPD_SYS_MAC 		= 0x00000004,
+	HOID_TSK_UPD_SYS_DNS        = 0x00000008,
 	HOID_TSK_UPD_REMOTE_URI 	= 0x00000010,
 	HOID_TSK_UPD_HELLO_URI 		= 0x00000020,
 	HOID_TSK_UPD_MODE_START 	= 0x00000040,
 	HOID_TSK_UPD_AUTO_STREAM    = 0x00000080,
 	HOID_TSK_UPD_AMX            = 0x00000100,
+    HOID_TSK_UPD_ALIVE          = 0x00000200,
+    HOID_TSK_UPD_MULTICAST      = 0x00000400,
+	HOID_TSK_UPD_DHCP           = 0x00000800,
 	HOID_TSK_EXEC_GOTO_READY	= 0x01000000,
 	HOID_TSK_EXEC_START			= 0x02000000,
 	HOID_TSK_EXEC_RESTART		= 0x03000000,
@@ -33,7 +42,7 @@ enum {
 
 void task_get_drivers(char** p)
 {
-    char * tmp = buf;
+    char *tmp = buf;
 
     if (hdoipd.drivers & DRV_ADV9889) tmp += sprintf(tmp, "ADV9889 ");
     if (hdoipd.drivers & DRV_ADV7441) tmp += sprintf(tmp, "ADV7441 ");
@@ -41,6 +50,56 @@ void task_get_drivers(char** p)
     if (tmp!=buf) tmp--;
     *tmp = 0;
     *p = buf;
+}
+
+void task_get_system_ip(char** p)
+{
+    if(hdoipd.dhcp) {
+        hoi_cfg_get_ip(buf);
+        *p = buf;
+    } else {
+        *p = reg_get("system-ip");
+    }
+}
+
+void task_get_system_gateway(char** p)
+{
+    if(hdoipd.dhcp) {
+        hoi_cfg_get_default_gw(buf);
+        *p = buf;
+    } else {
+        *p = reg_get("system-gateway");
+    }
+}
+
+void task_get_system_subnet(char** p)
+{
+    if(hdoipd.dhcp) {
+        hoi_cfg_get_subnet(buf);
+        *p = buf;
+    } else {
+        *p = reg_get("system-subnet");
+    }
+}
+
+void task_get_system_dns1(char** p)
+{
+    if(hdoipd.dhcp) {
+        hoi_cfg_get_dns_server(buf, NULL);
+        *p = buf;
+    } else {
+        *p = reg_get("system-dns1");
+    }
+}
+
+void task_get_system_dns2(char** p)
+{
+    if(hdoipd.dhcp) {
+        hoi_cfg_get_dns_server(NULL, buf);
+        *p = buf;
+    } else {
+        *p = reg_get("system-dns2");
+    }
 }
 
 void task_get_state(char** p)
@@ -126,6 +185,13 @@ void task_get_eth_status(char** p)
             stat->tx_vid_cnt, stat->rx_vid_cnt,
             stat->tx_aud_cnt, stat->rx_aud_cnt,
             stat->tx_inv_cnt, stat->rx_inv_cnt);
+    *p = buf;
+}
+
+void task_get_multicast_client(char ** p)
+{
+    report_available_clients();
+    sprintf(buf, "multicast enable: %i", (int) get_multicast_enable());
     *p = buf;
 }
 
@@ -248,27 +314,36 @@ void task_get_system_update(char** p)
 		/* MAC address */
 		if(update_vector & HOID_TSK_UPD_SYS_MAC) {
 			report("Updating MAC address...");
-			sprintf(buf, "/sbin/ifconfig %s hw ether %s", reg_get("system-ifname"), reg_get("system-mac"));
-			system(buf);
+			hoi_cfg_mac_addr(reg_get("system-ifname"), reg_get("system-mac"));
 		}
 
-		/* IP & subnet mask */
-		if((update_vector & HOID_TSK_UPD_SYS_IP) ||
-		   (update_vector & HOID_TSK_UPD_SYS_SUBNET)) {
+		// DHCP flag
+        if((update_vector & HOID_TSK_UPD_DHCP) == 0) {
+            /* IP & subnet mask */
+            if((update_vector & HOID_TSK_UPD_SYS_IP) ||
+               (update_vector & HOID_TSK_UPD_SYS_SUBNET)) {
+                report("Updating IP & subnet mask...");
+                hoi_cfg_ip_addr(reg_get("system-ifname"), reg_get("system-ip"), reg_get("system-subnet"));
+            }
 
-			report("Updating IP & subnet mask...");
-			sprintf(buf, "/sbin/ifconfig %s %s netmask %s up", reg_get("system-ifname"), reg_get("system-ip"), reg_get("system-subnet"));
-			system(buf);
-		}
+            /* default gateway */
+            if(update_vector & HOID_TSK_UPD_SYS_GATEWAY) {
+                report("Updating Gateway...");
+                hoi_cfg_default_gw(reg_get("system-gateway"));
+            }
 
-		/* default gateway */
-		if(update_vector & HOID_TSK_UPD_SYS_GATEWAY) {
-			report("Updating Gateway...");
-			sprintf(buf, "/sbin/route del default", reg_get("system-gateway"));
-			system(buf);
-			sprintf(buf, "/sbin/route add default gw %s", reg_get("system-gateway"));
-			system(buf);
-		}
+            /* DNS server */
+            if(update_vector & HOID_TSK_UPD_SYS_DNS) {
+                hoi_cfg_set_dns_server(reg_get("system-dns1"), reg_get("system-dns2"));
+            }
+        } else { // Update DHCP mode
+            hdoipd.dhcp = reg_test("system-dhcp", "true");
+            if(hdoipd.dhcp) {
+                hoi_cfg_dynamic_ip();
+            } else {
+                hoi_cfg_static_ip();
+            }
+        }
 
 		/* remote URI  */
 		if(update_vector & HOID_TSK_UPD_REMOTE_URI) {
@@ -282,11 +357,10 @@ void task_get_system_update(char** p)
 
 		/* AMX update */
 		if(update_vector & HOID_TSK_UPD_AMX) {
-		    report("Updating AMX updated...");
-		    if(hdoipd_amx_update(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"),
-		                        inet_addr(reg_get("amx-hello-ip")), htons(reg_get_int("amx-hello-port")))) {
-		        perror("hdoipd_amx_update() failed");
-		    }
+		    report("Updating AMX...");
+            if(alive_check_client_update(&(hdoipd.amx), reg_test("amx-en", "true"), reg_get_int("amx-hello-interval"), reg_get("amx-hello-ip"), reg_get_int("amx-hello-port"), 1, true) == -1) {
+                report("[AMX] alive_check_client_update() failed");
+            }
 		}
 
 		/* Auto-stream feature */
@@ -299,6 +373,18 @@ void task_get_system_update(char** p)
 		if(update_vector & HOID_TSK_UPD_MODE_START) {
 			report("Updating device modus...");
 		}
+
+        /* multicast */
+        if(update_vector & HOID_TSK_UPD_MULTICAST) {
+		    report("Updating multicast...");
+        }
+
+        /* vrb alive check */
+        if(update_vector & HOID_TSK_UPD_ALIVE) {
+		    report("Updating alive check...");
+            alive_check_server_close(&hdoipd.alive_check);
+            alive_check_init_msg_vrb_alive();
+        }
 
 		// -------------------------------------------------------------
 		// System commands (after update)
@@ -314,6 +400,7 @@ void task_get_system_update(char** p)
 				case HOID_VTB : hdoipd_goto_vtb();
 								break;
 				case HOID_VRB : hdoipd_goto_vrb();
+				                hdoipd_set_task_start_vrb();
 								break;
 				default 	  :
 								break;
@@ -405,6 +492,20 @@ void task_get_rscp_state(char** s)
     *s = buf;
 }
 
+void task_get_vrb_is_playing(char** p)
+{
+    *p = "false";
+    switch(vrb_video.state) {
+        case RSCP_PLAYING:  *p = "true";
+                            break;
+    }
+
+    switch(vrb_audio.state) {
+        case RSCP_PLAYING:  *p = "true";
+                            break;
+    }
+}
+
 int task_ready()
 {
     int state = hdoipd.state;
@@ -430,19 +531,39 @@ void task_set_bw(char* p)
     if (bw) hoi_drv_bw(bw);
 }
 
+void task_set_system_dns1(char* p)
+{
+    if(!hdoipd.dhcp) {
+        update_vector |= HOID_TSK_UPD_SYS_DNS | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
+    }
+}
+
+void task_set_system_dns2(char* p)
+{
+    if(!hdoipd.dhcp) {
+        update_vector |= HOID_TSK_UPD_SYS_DNS | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
+    }
+}
+
 void task_set_ip(char* p)
 {
-	update_vector |= HOID_TSK_UPD_SYS_IP | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
+    if(!hdoipd.dhcp) {
+        update_vector |= HOID_TSK_UPD_SYS_IP | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
+    }
 }
 
 void task_set_subnet(char* p)
 {
-	update_vector |= HOID_TSK_UPD_SYS_SUBNET | HOID_TSK_UPD_AMX;
+    if(!hdoipd.dhcp) {
+        update_vector |= HOID_TSK_UPD_SYS_SUBNET | HOID_TSK_UPD_AMX;
+    }
 }
 
 void task_set_gateway(char* p)
 {
-	update_vector |= HOID_TSK_UPD_SYS_GATEWAY | HOID_TSK_UPD_AMX;
+    if(!hdoipd.dhcp) {
+        update_vector |= HOID_TSK_UPD_SYS_GATEWAY | HOID_TSK_UPD_AMX;
+    }
 }
 
 void task_set_mac(char* p)
@@ -480,15 +601,35 @@ void task_set_auto_stream(char* p)
     update_vector |= HOID_TSK_UPD_AUTO_STREAM | HOID_TSK_EXEC_RESTART_VRB;
 }
 
+void task_set_multicast_update(char* p)
+{
+    update_vector |= HOID_TSK_UPD_MULTICAST | HOID_TSK_EXEC_RESTART_VTB;
+}
+
+void task_set_alive_update(char* p)
+{
+    update_vector |= HOID_TSK_UPD_ALIVE;
+}
+
 void task_set_network_delay(char* p)
 {
     update_vector |= HOID_TSK_EXEC_RESTART_VRB;
+}
+
+void task_set_dhcp(char *p)
+{
+    update_vector |= HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX | HOID_TSK_UPD_DHCP;
 }
 
 void hdoipd_register_task()
 {
     get_listener("system-state", task_get_system_state);
     get_listener("system-update", task_get_system_update);
+    get_listener("system-ip", task_get_system_ip);
+    get_listener("system-subnet", task_get_system_subnet);
+    get_listener("system-gateway", task_get_system_gateway);
+    get_listener("system-dns1", task_get_system_dns1);
+    get_listener("system-dns2", task_get_system_dns2);
     get_listener("daemon-driver", task_get_drivers);
     get_listener("daemon-state", task_get_state);
     get_listener("daemon-vtb-state", task_get_vtb_state);
@@ -501,6 +642,8 @@ void hdoipd_register_task()
     get_listener("hdcp-status", task_get_hdcp_status);
     get_listener("sync-delay", task_get_sync_delay);
     get_listener("stream-state", task_get_rscp_state);
+    get_listener("multicast", task_get_multicast_client);
+    get_listener("vrb_is_playing", task_get_vrb_is_playing);
 
     // set-listener are called when a new value is written to the register
     // if the same value is written as already stored the listener isn't called
@@ -509,6 +652,9 @@ void hdoipd_register_task()
     set_listener("system-subnet", task_set_subnet);
     set_listener("system-gateway", task_set_gateway);
     set_listener("system-mac", task_set_mac);
+    set_listener("system-dhcp", task_set_dhcp);
+    set_listener("system-dns1", task_set_system_dns1);
+    set_listener("system-dns2", task_set_system_dns2);
     set_listener("network-delay", task_set_network_delay);
     set_listener("mode-start", task_set_mode_start);
     set_listener("mode-media", task_set_mode_media);
@@ -519,7 +665,11 @@ void hdoipd_register_task()
     set_listener("amx-hello-ip", task_set_amx_update);
     set_listener("amx-hello-port", task_set_amx_update);
     set_listener("amx-hello-interval", task_set_amx_update);
-
+    set_listener("multicast_en", task_set_multicast_update);
+    set_listener("multicast_group", task_set_multicast_update);
+    set_listener("alive-check", task_set_alive_update);
+    set_listener("alive-check-interval", task_set_alive_update);
+    set_listener("alive-check-port", task_set_alive_update);
 }
 
 

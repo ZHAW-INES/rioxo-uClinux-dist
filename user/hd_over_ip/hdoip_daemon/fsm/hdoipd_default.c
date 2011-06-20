@@ -12,11 +12,15 @@
 void hdoipd_set_default()
 {
     reg_set("system-ifname", "eth0");
-    reg_set("system-name", "rioxo_0");
+    reg_set("system-hostname", "rioxo_0");
+    reg_set("system-dev-caption", "e.q. blu-ray player");
     reg_set("system-ip", "192.168.1.200");
     reg_set("system-subnet", "255.255.255.0");
     reg_set("system-gateway", "192.168.1.1");
     reg_set("system-mac", "00:15:12:00:00:42");
+    reg_set("system-dns1", "");
+    reg_set("system-dns2", "");
+    reg_set("system-dhcp", "false");
     reg_set("system-cmd", "");
 
     reg_set("auto-stream", "true");
@@ -47,6 +51,12 @@ void hdoipd_set_default()
     reg_set("amx-hello-port", "1000");
     reg_set("amx-hello-msg", "HELLO");
     reg_set("amx-hello-interval", "5");
+
+    reg_set("multicast_en", "false");
+    reg_set("multicast_group", "224.0.1.0");
+    reg_set("alive-check", "true");
+    reg_set("alive-check-interval", "5");
+    reg_set("alive-check-port", "2002");
 }
 
 static void update_0_0_to_0_1()
@@ -97,6 +107,29 @@ static void update_0_1_to_0_2()
     report(INFO "updated registry from version 0.1 to 0.2");
 }
 
+static void update_0_2_to_0_3()
+{
+    char *p;
+
+    p = reg_get("system-name");
+    reg_del("system-name");
+
+    reg_set("system-hostname", p);
+    reg_set("system-dev-caption", "e.q. blu-ray player");
+
+    p = reg_get("multicast_group_video");
+    if (p) {
+        reg_del("multicast_group_video");
+    }
+
+    p = reg_get("multicast_group_audio");
+    if (p) {
+        reg_del("multicast_group_audio");
+    }
+
+    reg_set(CFGTAG, "v0.3");
+}
+
 /** upgrade config
  *
  * upgrades from one version to the next until the newest version is
@@ -118,6 +151,11 @@ void hdoipd_registry_update()
         update = true;
     }
 
+    if (reg_test(CFGTAG, "v0.2")) {
+        update_0_2_to_0_3();
+        update = true;
+    }
+
     // ... further version upgrades
     // if (reg_test(CFGTAG, "v0.1")) -> upgrade to 0.2 etc..
 
@@ -127,7 +165,7 @@ void hdoipd_registry_update()
         hoi_cfg_write(CFG_FILE);
     }
 
-    if (!reg_test(CFGTAG, "v0.1")) {
+    if (!reg_test(CFGTAG, "v0.3")) {
         report(INFO "unknown config version");
     }
 }

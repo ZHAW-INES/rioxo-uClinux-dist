@@ -30,8 +30,13 @@ int main(int argc, char **argv)
     fd = open(FIFO_NODEC, O_RDWR, 0600);                                                     /* open character device */
     fdr = open(FIFO_NODER, O_RDWR, 0600);                                                     /* open character device */
 
-    if(fd < 0) {
-        err(1, "Failed to open %s: %s \n", FIFO_NODEC, strerror(errno));
+    if(fd == -1) {
+        err(1, "Failed to open (fd) %s: %s \n", FIFO_NODEC, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    if(fdr == -1) {
+        err(1, "Failed to open (fdr) %s: %s \n", FIFO_NODEC, strerror(errno));
         exit(EXIT_FAILURE);
     }
 

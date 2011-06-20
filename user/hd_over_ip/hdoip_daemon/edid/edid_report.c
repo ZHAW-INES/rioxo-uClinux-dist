@@ -5,7 +5,7 @@
  *      Author: stth
  */
 
-#include "debug.h"
+#include "hdoipd.h"
 #include "edid.h"
 #include "edid_report.h"
 

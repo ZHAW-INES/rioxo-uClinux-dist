@@ -4,11 +4,15 @@ require ("hdoip.convert")
 
 REG_SYS_UPDATE = "system-update"
 REG_SYS_IF = "system-ifname"
-REG_SYS_NAME = "system-name"
+REG_SYS_HOST_NAME = "system-hostname"
+REG_SYS_DEV_CAPTION = "system-dev-caption"
 REG_SYS_IP = "system-ip"
+REG_SYS_DNS1 = "system-dns1"
+REG_SYS_DNS2 = "system-dns2"
 REG_SYS_MAC = "system-mac"
 REG_SYS_SUB = "system-subnet"
 REG_SYS_GW = "system-gateway"
+REG_SYS_DHCP = "system-dhcp"
 REG_AUTO_STREAM = "auto-stream"
 REG_MODE_START = "mode-start"
 REG_ST_MODE_MEDIA = "mode-media"
@@ -26,6 +30,7 @@ REG_STATUS_VRB = "daemon-vrb-state"
 REG_STATUS_RSC = "daemon-rsc"
 REG_STATUS_ETH = "eth-status"
 REG_STATUS_VSO = "vso-status"
+REG_VRB_IS_PLAYING = "vrb_is_playing"
 REG_FORCE_HDCP = "hdcp-force"
 REG_STATUS_HDCP = "hdcp-status"
 REG_STATUS_SYSTEM = "system-state"
@@ -34,7 +39,13 @@ REG_WEB_LANG = "web-lang"
 REG_WEB_AUTH_EN = "web-auth-en"
 REG_WEB_USER = "web-user"
 REG_WEB_PASS = "web-pass"
-
+REG_AMX_EN = "amx-en"
+REG_AMX_HELLO_IP = "amx-hello-ip"
+REG_AMX_HELLO_PORT = "amx-hello-port"
+REG_AMX_HELLO_MSG = "amx-hello-msg"
+REG_AMX_HELLO_INTERVAL = "amx-hello-interval"
+REG_MULTICAST_EN = "multicast_en"
+REG_MULTICAST_GROUP = "multicast_group"
 
 local PIPE_CMD = "/tmp/web.cmd"
 local PIPE_RSP = "/tmp/web.rsp"
@@ -152,9 +163,10 @@ end
 
 function getVersion(t)
     if((fd_cmd ~= nil) and (fd_rsp ~= nil)) then
-        str = createCmdHeader(PIPE_CMD_GETVERSION, 20)
+        str = createCmdHeader(PIPE_CMD_GETVERSION, 70)
         str = str .. string.format("%08x%08x%08x%08x%08x",0,0,0,0,0)
-        str = hdoip.convert.Str2HexFile(str)
+        
+        str = hdoip.convert.Str2HexFile(str) .. '                                                  '
 
         fd_cmd:write(str)
         fd_cmd:flush()
@@ -184,6 +196,7 @@ function getVersion(t)
         local tmp  = hdoip.convert.bin2dec(string.sub(ret,17,18),2)
         local tmp2 = hdoip.convert.bin2dec(string.sub(ret,19,20),2) 
         t.sw_version_str = string.format("%d.%d",tmp2, tmp) 
+        t.sw_tag = string.format("%s",string.sub(ret,21))
     end
 end
 
