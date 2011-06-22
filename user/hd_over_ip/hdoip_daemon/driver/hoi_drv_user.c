@@ -419,6 +419,50 @@ int hoi_drv_wraudtag(void* buffer)
 }
 
 //------------------------------------------------------------------------------
+// HDCP
+int hoi_drv_hdcp_get_timer(t_hoi_msg_hdcp_timer *msg)
+{
+    hoi_msg_hdcp_get_timer_init(msg);
+    return hoi_msg(msg);
+}
+
+int hoi_drv_hdcp_set_timer(uint32_t start_time)
+{
+    t_hoi_msg_hdcp_timer msg;
+
+    hoi_msg_hdcp_set_timer_init(&msg);
+    msg.start_time = start_time;
+    return hoi_msg(&msg);
+}
+
+int hoi_drv_hdcp_get_key(uint32_t key[4])
+{
+    int ret;
+    t_hoi_msg_hdcp_key msg;
+
+    hoi_msg_hdcp_get_key_init(&msg);
+    ret = hoi_msg(&msg);
+
+    key[0] = msg.key[0];
+    key[1] = msg.key[1];
+    key[2] = msg.key[2];
+    key[3] = msg.key[3];
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Watch dog
+int hoi_drv_wdg_init(uint32_t service_time)
+{
+    t_hoi_msg_wdg msg;
+
+    hoi_msg_wdg_init_init(&msg);
+    msg.service_time = service_time;
+    return hoi_msg(&msg);
+}
+
+//------------------------------------------------------------------------------
 // command
 
 #define HOI_CMDSW(T)                            \

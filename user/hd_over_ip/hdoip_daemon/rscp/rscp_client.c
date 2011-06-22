@@ -283,7 +283,7 @@ int rscp_client_hdcp(t_rscp_client* client)
 
     /* decrypt km */
     rsaes_decrypt(p->content, client->media->hdcp_var.km, hdoipd.hdcp.p, hdoipd.hdcp.q,hdoipd.hdcp.dp,hdoipd.hdcp.dq,hdoipd.hdcp.qInv);
-    report(INFO "km: %s",client->media->hdcp_var.km); //SECRET VALUE, SHOW ONLY TO DEBUG
+    //report(INFO "km: %s",client->media->hdcp_var.km); //SECRET VALUE, SHOW ONLY TO DEBUG
     report(INFO "rtx: %s",client->media->hdcp_var.rtx);
 
     /* send rrx  */

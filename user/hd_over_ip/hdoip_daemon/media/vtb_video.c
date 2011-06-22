@@ -24,7 +24,15 @@
 
 int vtb_video_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
 {
-  return hdcp_ske_s(media, m, rsp, &vtb.timeout);
+	int ret;
+
+	t_multicast_cookie* cookie = media->cookie;
+    ret = hdcp_ske_s(media, m, rsp);
+
+    cookie->timeout = 0;
+    cookie->alive_ping = 1;
+
+    return ret;
 }
 
 int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
@@ -161,14 +169,14 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
         return RSCP_REQUEST_ERROR;
     }
 
-    if((!get_multicast_enable()) || (check_client_availability == CLIENT_NOT_AVAILABLE)) {
+   /* if((!get_multicast_enable()) || (check_client_availability == CLIENT_NOT_AVAILABLE)) {
         if (!hdoipd_tstate(VTB_VID_IDLE)) {
             // we don't have the resource reserved
             report(" ? require state VTB_IDLE");
             rscp_err_server(rsp);
             return RSCP_REQUEST_ERROR;
         }
-    }
+    }*/
 
     if (!hdoipd_rsc(RSC_VIDEO_IN)) {
         // currently no video input active
@@ -300,7 +308,7 @@ void vtb_video_pause(t_rscp_media *media)
     remove_client_from_vtb(MEDIA_IS_VIDEO, cookie->remote.address);
 }
 
-int vtb_video_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_connection *rsp)
+int vtb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection *rsp)
 {
     t_multicast_cookie* cookie = media->cookie;
 

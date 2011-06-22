@@ -73,7 +73,7 @@ enum {
 //HDCP states
 enum {
     HDCP_SKE_EXECUTED		= 0x01,		//start hdcp session key exchange
-    HDCP_ENABLED		= 0x02		//hdcp is enabled/disabled
+    HDCP_ENABLED		    = 0x02		//hdcp is enabled/disabled
 };
 
 //received HDCP messages
@@ -153,6 +153,9 @@ typedef struct {
 	char				dq[129];		//private key
 	char				qInv[129];		//private key
 	char				lc128[33];		//secret global constant
+	char 			    ks[33];			//session key
+	char 			    ks_x_lc128[33];	//session key
+	char 				riv[17];		//random number to session key
 } t_hdcp;
 
 typedef struct {
@@ -185,9 +188,9 @@ typedef struct {
     int                 eth_timeout;    // amount of ticks till connection timeout is detected
 
     bool                auto_stream;    // flag if device should do auto stream after boot
-    t_hdcp 		hdcp;
+    t_hdcp 				hdcp;
     t_alive_check       amx;            // AMX control releated structure
-    t_alive_check	alive_check;    // structure to test if server is running
+    t_alive_check		alive_check;    // structure to test if server is running
     bool                dhcp;           // flag if DHCP client is used
 
     t_hdoip_log         main_log;

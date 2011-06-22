@@ -18,7 +18,15 @@
 
 int vtb_audio_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
 {
-    return hdcp_ske_s(media, m, rsp, &vtb.timeout);
+	int ret;
+
+	t_multicast_cookie* cookie = media->cookie;
+    ret = hdcp_ske_s(media, m, rsp);
+
+    cookie->timeout = 0;
+    cookie->alive_ping = 1;
+
+    return ret;
 }
 
 int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)

@@ -15,7 +15,7 @@
 #include "hdoipd.h"
 
 int check_certificate(char* certificate, int* repeater, char* km, char* enc_km);
-int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp, int* timeout);
+int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp);
 int generate_rtx(char* rtx);
 int get_hdcp_status();
 int hdcp_decrypt_flash_keys();

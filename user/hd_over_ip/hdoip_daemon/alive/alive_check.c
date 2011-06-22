@@ -242,7 +242,7 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
 
     if reg_test("mode-start", "vrb") {
         if (hdoipd.alive_check.init_done) {
-            memset(&hello_msg, 0, msg_length);
+            memset(hello_msg, 0, msg_length);
             if (reg_test("system-dhcp", "true")) {
                 sprintf(hello_msg, "%s/%s/%s","HELLO", "VRB", reg_get("system-hostname"));
             } else {
@@ -253,7 +253,7 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
     }
 
     if reg_test("mode-start", "vtb") {
-        memset(&hello_msg, 0, msg_length);
+    	memset(hello_msg, 0, msg_length);
         if (!alive_check_server_handler(handle, hello_msg, msg_length)) {
             if (!alive_check_test_msg_vrb_alive(hello_msg, client_ip)) {
                 // response only when not already unicast is streaming

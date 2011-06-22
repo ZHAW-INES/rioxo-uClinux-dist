@@ -809,7 +809,7 @@ bool hdoipd_init(int drv)
     hdoipd_osd_timer_start();
 #endif
 
-    hoi_drv_wdg_init(1000000000); //set and start watchdog (to 7?? sec.)
+    hoi_drv_wdg_init(2000000000); //set and start watchdog (to 20 sec.)
     hoi_drv_wdg_enable();
     report(INFO "START WATCHDOG");
     return true;
