@@ -56,6 +56,9 @@
 #define HOIC_FMT_PROC           (0x34000009)
 #define HOIC_READ               (0x3400000a)
 
+// E-EDID
+#define HOIC_GET_EDID           (0x35000001)
+
 // Config
 #define HOIC_PARAM_GET          (0x3800000a)
 #define HOIC_PARAM_SET          (0x3800000b)
@@ -266,6 +269,15 @@ static inline void hoic_remote_update(int fd, char* file)
 {
     size_t len = strlen(file) + 1;
     hoic_setupx(t_hoic_kvparam, HOIC_REMOTE_UPDATE, len);
+    tmp.offset = 0;
+    hoic_write(t_hoic_kvparam);
+    write(fd, file, len);
+}
+
+static inline void hoic_get_edid(int fd, char* file)
+{
+    size_t len = strlen(file) + 1;
+    hoic_setupx(t_hoic_kvparam, HOIC_GET_EDID, len);
     tmp.offset = 0;
     hoic_write(t_hoic_kvparam);
     write(fd, file, len);

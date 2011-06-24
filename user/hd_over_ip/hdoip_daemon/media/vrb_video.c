@@ -256,7 +256,9 @@ int vrb_video_dosetup(t_rscp_media *media)
 
     edid.segment = 0;
     hoi_drv_rdedid(edid.edid);
+#ifdef REPORT_EDID
     edid_report((void*)edid.edid);
+#endif
 
     return rscp_client_setup(client, &transport, &edid);
 }

@@ -4,6 +4,7 @@ OBJS = hdoipd_main.o
 CFLAGS += -I.
 OBJS   +=   edid/edid.o
 OBJS   +=   edid/edid_report.o
+OBJS   +=   edid/edid_merge.o
 OBJS   +=   edid/cea_861.o
 CFLAGS += -Iedid
 CFLAGS += -Iupdate

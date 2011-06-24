@@ -19,25 +19,7 @@
 
 static uint8_t edid_header[8] = {0,0xff,0xff,0xff,0xff,0xff,0xff,0};
 
-char *file = "/tmp/edid";
-char *file_hex = "/tmp/edid_hex";
-
-
-int edid_compare(t_edid* edid1, t_edid* edid2)
-{
-    int i;
-    uint8_t *buf1 = (uint8_t *) edid1;
-    uint8_t *buf2 = (uint8_t *) edid2;
-
-    for(i=0 ; i < 256 ; i++) {
-        if(buf1[i] != buf2[i]) {
-            return 0;
-        }
-    }
-    return 1;
-}
-
-int edid_read_file(t_edid* edid)
+int edid_read_file(t_edid* edid, char *file)
 {
     int fd, ret;
 
@@ -56,7 +38,7 @@ int edid_read_file(t_edid* edid)
     return 0;
 }
 
-int edid_write_file(t_edid* edid)
+int edid_write_file(t_edid *edid, char *file)
 {
     int ret, fd;
     uint8_t *buf = (uint8_t*) edid;
@@ -75,7 +57,9 @@ int edid_write_file(t_edid* edid)
     close(fd);
 
 #ifdef EDID_WRITE_HEX_FILE
-    int fd_hex = fopen(file_hex, "w");
+    strcat(file,"_hex");
+
+    int fd_hex = fopen(file, "w");
 
     if(fd_hex != NULL) {
         for(int i=0 ; i<256 ; i+=8) {
@@ -90,16 +74,24 @@ int edid_write_file(t_edid* edid)
     return 0;
 }
 
+
+
 int edid_verify(t_edid* edid)
 {
     uint8_t* p8 = (uint8_t*)edid;
     uint8_t checksum = 0;
+    int size = 128;
+
+    if(edid->extension_count > 0) {
+        size = 256;
+    }
+
 
     if (memcmp(p8, edid_header, 8) != 0) {
         return -1;
     }
 
-    for (int i=0;i<128;i++) {
+    for (int i=0;i<size;i++) {
         checksum += p8[i];
     }
 
@@ -111,11 +103,30 @@ int edid_verify(t_edid* edid)
     return 0;
 }
 
+int edid_checksum_gen(t_edid* edid)
+{
+    int i;
+    uint8_t sum;
+    uint8_t *ptr = (uint8_t *) edid;
+
+    sum = 0;
+    for(i=0 ; i<128-1 ; i++) {
+        sum += ptr[i];
+    }
+
+    edid->checksum = (uint8_t) (0x100 - sum);
+
+    sum = 0;
+    for(i=128 ; i<256-1 ; i++) {
+        sum += ptr[i];
+    }
+
+    edid->extension_block.checksum = (uint8_t) (0x100 - sum);
+}
 
 
 void edid_report(t_edid* edid)
 {
-#ifdef REPORT_EDID
     report(CONT "edid verify: %s", ((edid_verify(edid) == 0) ? "valid" : "error"));
     report(CONT "edid version is %d.%d", edid->edid_version, edid->edid_revision);
 
@@ -158,40 +169,24 @@ void edid_report(t_edid* edid)
     report(CONT "edid gamma = %.2f", gamma);
 
     report(CONT "edid established timings:");
-    if (edid->timings & EDID_ET_800x600_60) report(CONT "  800 x 600 @ 60Hz");
-    if (edid->timings & EDID_ET_800x600_56) report(CONT "  800 x 600 @ 56Hz");
-    if (edid->timings & EDID_ET_640x480_75) report(CONT "  640 x 480 @ 75Hz");
-    if (edid->timings & EDID_ET_640x480_72) report(CONT "  640 x 480 @ 72Hz");
-    if (edid->timings & EDID_ET_640x480_67) report(CONT "  640 x 480 @ 67Hz");
-    if (edid->timings & EDID_ET_640x480_60) report(CONT "  640 x 480 @ 60Hz");
-    if (edid->timings & EDID_ET_720x400_88) report(CONT "  720 x 400 @ 88Hz");
-    if (edid->timings & EDID_ET_720x400_70) report(CONT "  720 x 400 @ 70Hz");
-    if (edid->timings & EDID_ET_1280x1024_75) report(CONT "  1280 x 1024 @ 75Hz");
-    if (edid->timings & EDID_ET_1024x768_75) report(CONT "  1024 x 768 @ 75Hz");
-    if (edid->timings & EDID_ET_1024x768_70) report(CONT "  1024 x 768 @ 70Hz");
-    if (edid->timings & EDID_ET_1024x768_60) report(CONT "  1024 x 768 @ 60Hz");
-    if (edid->timings & EDID_ET_1024x768_87i) report(CONT "  1024 x 768 @ 87Hz(i)");
-    if (edid->timings & EDID_ET_832x624_75) report(CONT "  832 x 624 @ 60Hz");
-    if (edid->timings & EDID_ET_800x600_75) report(CONT "  800 x 600 @ 75Hz");
-    if (edid->timings & EDID_ET_800x600_72) report(CONT "  800 x 600 @ 72Hz");
+    edid_report_est(edid);
 
     report(CONT "edid standard timings:");
     for (int i=0;i<8;i++) {
         edid_report_std_timing(edid->std_timings[i]);
     }
 
-    edid_report_dsc(edid->detailed_timing[0].tmp);
-    edid_report_dsc(edid->detailed_timing[1].tmp);
-    edid_report_dsc(edid->detailed_timing[2].tmp);
-    edid_report_dsc(edid->detailed_timing[3].tmp);
+    for (int i=0;i<4;i++) {
+        edid_report_dsc(edid->detailed_timing[i].tmp);
+    }
 
     report(CONT "edid extension count = %d", edid->extension_count);
 
     if(edid->extension_count == 1) {
         report(CONT "extension block : ");
-        switch(edid->extension_block[0]) {
+        switch(edid->extension_block.tag) {
             case EDID_EXT_TAG_CEA:  report(CONT "CEA 861 Series Extension\n");
-                                    cea_861_report((t_ext_cea_861*) edid->extension_block);
+                                    cea_861_report((t_ext_cea_861*) &edid->extension_block.tag);
                                     break;
             case EDID_EXT_TAG_VTB:  report(CONT "Video Timing Block Extension\n");
                                     break;
@@ -207,11 +202,88 @@ void edid_report(t_edid* edid)
                                     break;
         }
     }
-#endif // REPORT_EDID
 }
 
 void edid_hoi_limit(t_edid* edid)
 {
 
+}
+
+void edid_report_vid_timing(t_edid *edid)
+{
+    int i=0, flag=0;
+
+    edid_report(edid);
+    report("\n\n");
+
+    // detailed timing modes
+    report("1. priority");
+    for(i=0 ; i<4 ; i++) {
+        edid_report_detailed_timing(edid->detailed_timing[i].tmp);
+    }
+
+    // detailed timing modes in extensions
+    report("2. priority");
+    if(edid->extension_block.offset != 0) {
+        for(i=0 ; i<4 ; i++) {
+            edid_report_detailed_timing((&edid->extension_block.tag) + edid->extension_block.offset + (i * 18));
+        }
+    }
+
+    // CVT timing
+    // TODO CVT timing in extensions!
+    report("3. priority");
+    flag = 0;
+    for(i=0 ; i<4 ; i++) {
+        if(EDID_DSC_TAG(edid->detailed_timing[i].tmp) == EDID_TAG_CVT) {
+            edid_report_cvt_dsc(edid->detailed_timing[i].tmp);
+            flag = 1;
+        }
+    }
+    if(flag == 0) {
+        report(CONT "no CVT timing available");
+    }
+
+    // standard timings
+    // TODO standard timing in extensions!
+    report("4. priority");
+    for (int i=0;i<8;i++) {
+        edid_report_std_timing(edid->std_timings[i]);
+    }
+
+    // additional timing Mode (Established timings I, II & III, default GTF, GTF secondary Curve, CVT
+    report("5. priority");
+
+    // Established timings 23h & 24h -> tag F7h
+    report("  established timing I & II");
+    edid_report_est(edid);
+
+    report("  established timing III");
+    flag = 0;
+    for (i=0;i<4; i++) {
+        if(EDID_DSC_TAG(&edid->detailed_timing[i].tmp) == EDID_TAG_EST3) {
+            flag = 1;
+            break;
+        }
+    }
+
+    if(flag == 1) {
+        edid_report_est3((uint8_t *)&edid->detailed_timing[i].tmp);
+    } else {
+        report(CONT "    not available");
+    }
+
+    // display range limits & CVT
+    flag = 0;
+    for (int i=0;i<4;i++) {
+        if(EDID_DSC_TAG(edid->detailed_timing[i].tmp) == EDID_TAG_DRL) {
+
+            flag = 1;
+        }
+    }
+    if(flag == 1) {
+        report("  display range limits");
+        edid_report_drl(edid->detailed_timing[i].tmp);
+    }
 }
 

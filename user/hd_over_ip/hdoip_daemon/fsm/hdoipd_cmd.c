@@ -19,8 +19,7 @@
 #include "rscp_include.h"
 #include "vrb_video.h"
 #include "update.h"
-
-
+#include "edid.h"
 
 void hdoipd_cmd_canvas(t_hoic_canvas* cmd)
 {
@@ -195,6 +194,19 @@ void hdoipd_remote_update(t_hoic_kvparam *cmd)
     }
 }
 
+void hdoipd_get_edid(t_hoic_kvparam *cmd)
+{
+    t_edid edid;
+
+    if(hdoipd.rsc_state & RSC_VIDEO_SINK) {
+        hoi_drv_rdedid(&edid);
+        edid_write_file(&edid, cmd->str);
+        edid_report(&edid);
+    } else {
+        report("no sink connected");
+    }
+}
+
 void hdoipd_get_version(t_hoic_getversion* cmd, int rsp)
 {
     hoi_drv_getversion(cmd);
@@ -239,6 +251,7 @@ void hdoipd_request(uint32_t* cmd, int rsp)
         hdoipdreq(HOIC_STORE_CFG, hdoipd_store_cfg);
         hdoipdreq(HOIC_PARAM_SET, hdoipd_set_param);
         hdoipdreq(HOIC_REMOTE_UPDATE, hdoipd_remote_update);
+        hdoipdreq(HOIC_GET_EDID, hdoipd_get_edid);
         hdoipdreq(HOIC_FACTORY_DEFAULT, hdoipd_factory_default);
         hdoipdreq(HOIC_DEBUG, hdoipd_debug);
         hdoipdreq_rsp(HOIC_GETVERSION, hdoipd_get_version);

@@ -15,29 +15,36 @@ typedef struct {
     uint8_t         tmp[18];
 } __attribute__((packed)) t_edid_timing;
 
+typedef struct {
+    uint8_t     tag;                // 0x00
+    uint8_t     revision;           // 0x01
+    uint8_t     offset;             // 0x02
+    uint8_t     data[124];          // 0x03 - 0x7E
+    uint8_t     checksum;           // 0x7F
+} __attribute__((packed)) t_edid_ext_block;
 
 typedef struct {
-    uint8_t         header[8];              // 0x00 - 0x07 !< should be "00 ff ff ff ff ff ff 00"
-    uint16_t        id_manufacturer;        // 0x08 - 0x09
-    uint16_t        id_product_code;        // 0x0A - 0x0B
-    uint32_t        id_serial_number;       // 0x0C - 0x0F
-    uint8_t         week;                   // 0x10
-    uint8_t         year;                   // 0x11
-    uint8_t         edid_version;           // 0x12
-    uint8_t         edid_revision;          // 0x13
-    uint8_t         video_input_definition; // 0x14
-    uint8_t         hsize;                  // 0x15
-    uint8_t         vsize;                  // 0x16
-    uint8_t         gamma;                  // 0x17
-    uint8_t         feature;                // 0x18
-    uint8_t         color[10];              // 0x19 - 0x22
-    uint16_t        timings;                // 0x23 - 0x24
-    uint8_t         timings_reserved;       // 0x25
-    uint16_t        std_timings[8];         // 0x26 - 0x35
-    t_edid_timing   detailed_timing[4];     // 0x36 - 0x7D
-    uint8_t         extension_count;        // 0x7E
-    uint8_t         checksum;               // 0x7F
-    uint8_t         extension_block[128];   // 0x80 - 0xFF
+    uint8_t             header[8];              // 0x00 - 0x07 !< should be "00 ff ff ff ff ff ff 00"
+    uint16_t            id_manufacturer;        // 0x08 - 0x09
+    uint16_t            id_product_code;        // 0x0A - 0x0B
+    uint32_t            id_serial_number;       // 0x0C - 0x0F
+    uint8_t             week;                   // 0x10
+    uint8_t             year;                   // 0x11
+    uint8_t             edid_version;           // 0x12
+    uint8_t             edid_revision;          // 0x13
+    uint8_t             video_input_definition; // 0x14
+    uint8_t             hsize;                  // 0x15
+    uint8_t             vsize;                  // 0x16
+    uint8_t             gamma;                  // 0x17
+    uint8_t             feature;                // 0x18
+    uint8_t             color[10];              // 0x19 - 0x22
+    uint16_t            timings;                // 0x23 - 0x24
+    uint8_t             timings_reserved;       // 0x25
+    uint16_t            std_timings[8];         // 0x26 - 0x35
+    t_edid_timing       detailed_timing[4];     // 0x36 - 0x7D
+    uint8_t             extension_count;        // 0x7E
+    uint8_t             checksum;               // 0x7F
+    t_edid_ext_block    extension_block;        // 0x80 - 0xFF
 } __attribute__((packed)) t_edid;
 
 // established timings - bitmap
@@ -118,6 +125,12 @@ typedef struct {
 #define EDID_DRL_MAX_PIXCLK(p)      (((p[9]) * 10))
 #define EDID_DRL_SUPPORT_FLAGS(p)   ((p[10]))
 
+// DRL_SUPPORT_FLAGS
+#define EDID_DRL_SUPPORT_FLAGS_DGTF         (0x00)
+#define EDID_DRL_SUPPORT_FLAGS_RNG_LIMITS   (0x01)
+#define EDID_DRL_SUPPORT_FLAGS_SGTF         (0x02)
+#define EDID_DRL_SUPPORT_FLAGS_CVT          (0x04)
+
 // Color management data definition
 #define EDID_DCM_VERSION(p)         (p[5])
 #define EDID_DCM_RED_A2(p)          (((uint16_t)p[8]) | ((uint16_t)p[9]<<8))
@@ -133,6 +146,29 @@ typedef struct {
 #define EDID_CVT_ASPECT_RATIO(p)    ((p[1]&0x0C)>>2)
 #define EDID_CVT_VRATE(p)           ((p[2]&0x60)>>5)
 #define EDID_CVT_SUPPORTED_RATE(p)  (p[2]&0x1F)
+
+// Range limits & CVT Support
+#define EDID_DRL_CVT_S_ARATIO_MASK  (0xF8)
+#define EDID_DRL_CVT_S_ARATIO_4_3   (0x80)
+#define EDID_DRL_CVT_S_ARATIO_16_9  (0x40)
+#define EDID_DRL_CVT_S_ARATIO_16_10 (0x20)
+#define EDID_DRL_CVT_S_ARATIO_5_4   (0x10)
+#define EDID_DRL_CVT_S_ARATIO_15_9  (0x08)
+
+#define EDID_DRL_CVT_P_ARATIO_MASK  (0xE0)
+#define EDID_DRL_CVT_P_ARATIO_4_3   (0x00)
+#define EDID_DRL_CVT_P_ARATIO_16_9  (0x20)
+#define EDID_DRL_CVT_P_ARATIO_16_10 (0x40)
+#define EDID_DRL_CVT_P_ARATIO_5_4   (0x60)
+#define EDID_DRL_CVT_P_ARATIO_15_9  (0x80)
+
+#define EDID_DRL_CVT_STD_BLANKING   (0x08)
+#define EDID_DRL_CVT_RDC_BLANKING   (0x10)
+
+#define EDID_DRL_CVT_HORZ_SHRINK    (0x80)
+#define EDID_DRL_CVT_HORZ_STRETCH   (0x40)
+#define EDID_DRL_CVT_VERT_SHRINK    (0x20)
+#define EDID_DRL_CVT_VERT_STRETCH   (0x10)
 
 // Established timings III descriptor defintion
 #define EDID_EST3_640x350_85        (0x80)
@@ -213,10 +249,12 @@ typedef struct {
 
 
 int edid_verify(t_edid* edid);
+int edid_checksum_gen(t_edid* edid);
 void edid_report(t_edid* edid);
 void edid_hoi_limit(t_edid* edid);
-int edid_write_file(t_edid* edid);
-int edid_read_file(t_edid* edid);
+int edid_write_file(t_edid *edid, char *file);
+int edid_read_file(t_edid* edid, char *file);
 int edid_compare(t_edid* edid1, t_edid* edid2);
+void edid_report_vid_timing(t_edid *edid);
 
 #endif /* EDID_H_ */

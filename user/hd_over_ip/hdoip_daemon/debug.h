@@ -46,7 +46,7 @@
 #undef REPORT_RSCP_PACKETS
 
 
-#undef DBGCONSOLE          // x
+#define DBGCONSOLE          // x
 #undef DBGCONSOLERSCP     // x
 
 #define EDID_WRITE_HEX_FILE

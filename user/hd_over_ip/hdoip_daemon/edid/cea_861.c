@@ -85,9 +85,71 @@ void cea_861_report(t_ext_cea_861* ext)
 
     if(ext->offset != 0) {
         report(CONT "detailed timing descriptors");
-        for(int i=ext->offset; i<128 ; i+=18) {
-            edid_report_detailed_timing(p+i);
+        for(int i=0; i<4 ; i++) {
+            edid_report_detailed_timing(p+ext->offset+i*18);
         }
     }
 }
 
+void cea_861_merge(t_ext_cea_861 *cea, t_ext_cea_861 *cea1, t_ext_cea_861 *cea2)
+{
+    int i, j, size1, size2, cnt,k,l;
+    uint8_t *ptr1, *ptr2, *ptr3;
+
+    ptr1 = (uint8_t *) cea1;
+    ptr2 = (uint8_t *) cea2;
+    ptr3 = (uint8_t *) cea;
+
+    memset(cea, 0x00, 128);
+
+    cea->tag = cea1->tag;
+    cea->revision = cea1->revision;
+    cea->options = cea1->options & cea2->options;   // TODO total number of native DTDs?
+    cea->offset = 4;
+
+    for(i=4; i<cea1->offset; i+=size1) {
+        size1 = (ptr1[i] & 0x1F) + 1;
+        for(j=4; j<cea2->offset; j+=size2) {
+            size2 = (ptr2[j] & 0x1F) + 1;
+            if((ptr1[i] & CEA861_TAG_MASK) == (ptr2[j] & CEA861_TAG_MASK)) {
+                ptr3 = ((uint8_t *) cea) + cea->offset;
+                switch(ptr1[i] & CEA861_TAG_MASK) {
+                    case CEA861_TAG_AUDIO:  ptr3[0] = ptr1[i];
+                                            ptr3[2] = ptr1[i+2] & ptr2[j+2]; // sampling rates
+                                            if((ptr1[i+1]&0x78) == (ptr2[j+1]&0x78)) {// if same audio format code
+                                                ptr3[1] = ptr1[i+1] & ptr2[j+1];
+                                                ptr3[3] = ptr1[i+3] & ptr2[j+3];
+                                            } else {
+                                                ptr3[1] = ptr1[i+1];
+                                                ptr3[3] = ptr1[i+3];
+                                            }
+
+                                            cea->offset += 4;
+                                            break;
+                    case CEA861_TAG_SPEAKER:ptr3[0] = ptr1[i];
+                                            ptr3[1] = ptr1[i+1] & ptr2[j+1];
+                                            ptr3[2] = ptr1[i+2] & ptr2[j+2];
+                                            ptr3[3] = ptr1[i+3];
+                                            cea->offset += 4;
+                                            break;
+                    case CEA861_TAG_VIDEO:  cnt = 1;
+                                            for(k=1 ; k<size1 ; k++) {
+                                                for(l=1 ; l<size2 ; l++) {
+                                                    if(CEA861_VIDEO_SVD(ptr1[i+k]) == CEA861_VIDEO_SVD(ptr2[j+l])) {
+                                                        ptr3[cnt] = CEA861_VIDEO_SVD(ptr1[i+k]) | ((ptr1[i+k] & ptr2[j+l]) & 0x80);
+                                                        cnt++;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            if(cnt != 1) {
+                                                ptr3[0] = (ptr1[i] & 0xE0) | ((cnt-1) & 0x1F);
+                                                cea->offset += cnt;
+                                            }
+                                            break;
+                    default:                break;
+                }
+            }
+        }
+    }
+}

@@ -63,5 +63,6 @@ typedef struct {
 } __attribute__((packed)) t_ext_cea_861;
 
 void cea_861_report(t_ext_cea_861* ext);
+void cea_861_merge(t_ext_cea_861 *cea, t_ext_cea_861 *cea1, t_ext_cea_861 *cea2);
 
 #endif /* CEA_861_H_ */

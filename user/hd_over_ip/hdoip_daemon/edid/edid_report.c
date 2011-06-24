@@ -41,6 +41,26 @@ void edid_report_std_timing(uint16_t p)
     }
 }
 
+void edid_report_est(t_edid *edid)
+{
+    if (edid->timings & EDID_ET_800x600_60) report(CONT "  800 x 600 @ 60Hz");
+    if (edid->timings & EDID_ET_800x600_56) report(CONT "  800 x 600 @ 56Hz");
+    if (edid->timings & EDID_ET_640x480_75) report(CONT "  640 x 480 @ 75Hz");
+    if (edid->timings & EDID_ET_640x480_72) report(CONT "  640 x 480 @ 72Hz");
+    if (edid->timings & EDID_ET_640x480_67) report(CONT "  640 x 480 @ 67Hz");
+    if (edid->timings & EDID_ET_640x480_60) report(CONT "  640 x 480 @ 60Hz");
+    if (edid->timings & EDID_ET_720x400_88) report(CONT "  720 x 400 @ 88Hz");
+    if (edid->timings & EDID_ET_720x400_70) report(CONT "  720 x 400 @ 70Hz");
+    if (edid->timings & EDID_ET_1280x1024_75) report(CONT "  1280 x 1024 @ 75Hz");
+    if (edid->timings & EDID_ET_1024x768_75) report(CONT "  1024 x 768 @ 75Hz");
+    if (edid->timings & EDID_ET_1024x768_70) report(CONT "  1024 x 768 @ 70Hz");
+    if (edid->timings & EDID_ET_1024x768_60) report(CONT "  1024 x 768 @ 60Hz");
+    if (edid->timings & EDID_ET_1024x768_87i) report(CONT "  1024 x 768 @ 87Hz(i)");
+    if (edid->timings & EDID_ET_832x624_75) report(CONT "  832 x 624 @ 60Hz");
+    if (edid->timings & EDID_ET_800x600_75) report(CONT "  800 x 600 @ 75Hz");
+    if (edid->timings & EDID_ET_800x600_72) report(CONT "  800 x 600 @ 72Hz");
+}
+
 void edid_report_est3(uint8_t *p)
 {
     report(CONT "  version : %d", p[5]);
@@ -107,6 +127,83 @@ void edid_report_color_point(uint8_t* p)
     report(CONT "  [2] gamma: 0x%02x",EDID_CP_GAMMA2(p));
 }
 
+void edid_report_sgtf(uint8_t* p)
+{
+    uint16_t tmp;
+    // Byte 0 - 9 defines display range limits
+    // Byte 10 tag
+    // Byte 11 reserved
+
+    // Byte 12 start break frequency
+    report(CONT "  start break frequency : %d kHz", p[12]);
+    report(CONT "  C x 2                 : %d", p[13]);
+    tmp = ((uint16_t)p[14]) | ((uint16_t) p[15]) << 8;
+    report(CONT "  M                     : %d", tmp);
+    report(CONT "  K                     : %d", p[16]);
+    report(CONT "  J x 2                 : %d", p[17]);
+}
+
+void edid_report_cvt_support(uint8_t* p)
+{
+    uint16_t tmp;
+    // Byte 0 - 9 defines display range limits
+    // Byte 10 tag
+    // Byte 11 version
+
+    // Byte 12 Additional pixel clock precision
+    report(CONT "  Max. Pix Clk : %d MHz", EDID_DRL_MAX_PIXCLK(p) - ((p[12]>>2) / 4));
+
+    // Byte 13 Maximum active pixels per line
+    tmp = (((uint16_t) p[12] & 0x03)<<8 | ((uint16_t)p[13])) * 8;
+    report(CONT "  Max. active pixel per line : %d", tmp);
+
+    // Byte 14 supported aspect ratios
+    report(CONT "  supported aspect ration");
+    if(p[14] & EDID_DRL_CVT_S_ARATIO_4_3) report(CONT "    4 : 3 AR");
+    if(p[14] & EDID_DRL_CVT_S_ARATIO_16_9) report(CONT "    16 : 9 AR");
+    if(p[14] & EDID_DRL_CVT_S_ARATIO_16_10) report(CONT "    16 : 10 AR");
+    if(p[14] & EDID_DRL_CVT_S_ARATIO_5_4) report(CONT "    5 : 4 AR");
+    if(p[14] & EDID_DRL_CVT_S_ARATIO_15_9) report(CONT "    15 : 9 AR");
+
+    // Byte 15 preferred aspect ratio
+    switch(p[15] & EDID_DRL_CVT_P_ARATIO_MASK) {
+        case EDID_DRL_CVT_P_ARATIO_4_3     : report(CONT "  preferred aspect ration : 4 : 3 AR");
+                                             break;
+        case EDID_DRL_CVT_P_ARATIO_16_9     : report(CONT "  preferred aspect ration : 16 : 9 AR");
+                                             break;
+        case EDID_DRL_CVT_P_ARATIO_16_10     : report(CONT "  preferred aspect ration : 16 : 10 AR");
+                                             break;
+        case EDID_DRL_CVT_P_ARATIO_5_4     : report(CONT "  preferred aspect ration : 5 : 4 AR");
+                                             break;
+        case EDID_DRL_CVT_P_ARATIO_15_9     : report(CONT "  preferred aspect ration : 15 : 9 AR");
+                                             break;
+    }
+
+    report(CONT "  standard CVT blanking : %s supported", ((p[15] & EDID_DRL_CVT_STD_BLANKING) ? "" : "not"));
+    report(CONT "  reduced CVT blanking : %s supported", ((p[15] & EDID_DRL_CVT_RDC_BLANKING) ? "" : "not"));
+
+    report(CONT "  type of display scaling supported");
+    if(p[16] & EDID_DRL_CVT_HORZ_SHRINK) {
+        report(CONT "    horizontal Shrink");
+    }
+
+    if(p[16] & EDID_DRL_CVT_HORZ_STRETCH) {
+            report(CONT "    horizontal Stretch");
+    }
+
+    if(p[16] & EDID_DRL_CVT_VERT_SHRINK) {
+        report(CONT "    vertical Shrink");
+    }
+
+    if(p[16] & EDID_DRL_CVT_VERT_STRETCH) {
+            report(CONT "    vertical Stretch");
+    }
+
+    report(CONT "  preferred vertical refresh rate : %d", p[17]);
+
+
+}
+
 void edid_report_drl(uint8_t* p)
 {
     report(CONT "  vertical offset: %d",EDID_DRL_VOFFSET(p));
@@ -116,7 +213,26 @@ void edid_report_drl(uint8_t* p)
     report(CONT "  minimum horizontal rate: %d Hz",EDID_DRL_MIN_HRATE(p));
     report(CONT "  maximum horizontal rate: %d Hz",EDID_DRL_MAX_HRATE(p));
     report(CONT "  maximum pixel clock: %d MHz",EDID_DRL_MAX_PIXCLK(p));
-    report(CONT "  video timing support flags : 0x%02x",EDID_DRL_SUPPORT_FLAGS(p));
+
+    switch(EDID_DRL_SUPPORT_FLAGS(p)) {
+        case EDID_DRL_SUPPORT_FLAGS_DGTF :
+                    report(CONT "  video timing support flags : default GTF");
+                    break;
+        case EDID_DRL_SUPPORT_FLAGS_RNG_LIMITS :
+                    report(CONT "  video timing support flags : range limits only");
+                    break;
+        case EDID_DRL_SUPPORT_FLAGS_SGTF :
+                    report(CONT "  video timing support flags : second GTF");
+                    edid_report_sgtf(p);
+                    break;
+        case EDID_DRL_SUPPORT_FLAGS_CVT :
+                    report(CONT "  video timing support flags : CVT support");
+                    edid_report_cvt_support(p);
+                    break;
+        default:
+                    report(CONT "  video timing support flags : reserved");
+                    break;
+    }
     // TODO: implement secondary timing support & GTF
 }
 
