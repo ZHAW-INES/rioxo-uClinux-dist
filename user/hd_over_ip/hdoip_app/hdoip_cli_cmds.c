@@ -207,6 +207,12 @@ int hdoip_cli_remote_update(int fd, int fdr, char** argv, int argc)
     return 0;
 }
 
+int hdoip_cli_get_edid(int fd, int fdr, char** argv, int argc)
+{
+    hoic_get_edid(fd, argv[0]);
+    return 0;
+}
+
 int hdoip_cli_getversion(int fd, int fdr, char** argv, int argc)
 {
     t_hoic_version version;
@@ -257,5 +263,6 @@ const t_hdoip_cli_cmd_arr cmd_arr[] = {
         { "version",        0, hdoip_cli_getversion,    ""},
         { "factory-default",0, hdoip_cli_default,       ""},
         { "debug"          ,0, hdoip_cli_debug,         ""},
+        { "get-edid"       ,1, hdoip_cli_get_edid,      "file"},
     };
 const int cmd_cnt = sizeof(cmd_arr)/sizeof(t_hdoip_cli_cmd_arr);
