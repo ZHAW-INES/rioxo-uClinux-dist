@@ -20,6 +20,8 @@ const char* event_str(uint32_t e);
 
 int hoi_drv_ldrv(uint32_t drivers);
 int hoi_drv_buf(void* ar, size_t arl, void* vr, size_t vrl, void* at, size_t atl, void* vt, size_t vtl);
+int hoi_drv_hdcp(uint32_t* hdcp_keys);
+int hoi_drv_hdcpstat(uint32_t *eto_hdcp_audio,uint32_t *eto_hdcp_video,uint32_t *eti_hdcp_audio, uint32_t *eti_hdcp_video);
 
 int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud, uint32_t vid, uint32_t aud);
 int hoi_drv_vsi(uint32_t compress, uint32_t encrypt, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt);
@@ -62,6 +64,14 @@ int hoi_drv_hpdon();
 int hoi_drv_hpdoff();
 int hoi_drv_loop();
 int hoi_drv_repair();
+int hoi_drv_hdcp_viden_eti();
+int hoi_drv_hdcp_viden_eto();
+int hoi_drv_hdcp_auden_eti();
+int hoi_drv_hdcp_auden_eto();
+int hoi_drv_hdcp_viddis_eti();
+int hoi_drv_hdcp_viddis_eto();
+int hoi_drv_hdcp_auddis_eti();
+int hoi_drv_hdcp_auddis_eto();
 
 int hoi_drv_poll();
 int hoi_drv_getversion(t_hoic_getversion* cmd);

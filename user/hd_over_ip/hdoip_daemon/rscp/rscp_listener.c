@@ -3,6 +3,8 @@
  *
  *  Created on: 19.11.2010
  *      Author: alda
+ *
+ * Functions to start server
  */
 
 #include <stdio.h>
@@ -38,6 +40,7 @@ static void listener_unlock(t_rscp_listener* handle, const char* s)
     pthread_mutex_unlock(&handle->mutex);
 }
 
+
 void* rscp_listener_run_server(t_rscp_server* server)
 {
 	t_rscp_listener* listener = server->owner;
@@ -61,10 +64,12 @@ void* rscp_listener_run_server(t_rscp_server* server)
 			free(server);
 		listener_unlock(listener, "rscp_listener_run_server");
     unlock("rscp_listener_run_server");
-
     return 0;
 }
 
+/** start server
+ *
+ * */
 int rscp_listener_start_server(t_rscp_listener* handle, int fd, struct sockaddr_in* addr)
 {
     pthread_t th;
@@ -104,6 +109,7 @@ void rscp_listener_close_server(t_rscp_server* con, t_rscp_listener *handle)
 }
 
 /* listener thread
+ * create socket and wait for connections
  *
  * @param handle listener struct
  * @return rscp error code
@@ -137,7 +143,7 @@ void* rscp_listener_thread(t_rscp_listener* handle)
         return (void*)RSCP_ERRORNO;
     }
 
-    // run...
+    // run... and make new thread for every incoming connection
     while (handle->run) {
 
         memset(&remote_addr, 0, sizeof(struct sockaddr_in));

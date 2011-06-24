@@ -42,6 +42,7 @@ typedef struct {
 
 extern const t_map_set client_method[];
 
+extern const t_map_fnc tab_response_hdcp[];
 extern const t_map_fnc tab_response_setup[];
 extern const t_map_fnc tab_response_play[];
 extern const t_map_fnc tab_response_teardown[];
@@ -56,16 +57,16 @@ void rscp_client_event(t_node* list, uint32_t event);
 
 // client operation
 int rscp_client_close(t_rscp_client* client);
-int rscp_client_set_kill(t_rscp_client* client);
 int rscp_client_kill(t_rscp_client* client);
-
-int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp_edid *edid);
+int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp_edid *edid, t_rscp_hdcp *hdcp);
+int rscp_client_set_kill(t_rscp_client* client);
 int rscp_client_set_play(t_rscp_client* client);
 int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt);
 int rscp_client_set_teardown(t_rscp_client* client);
 int rscp_client_teardown(t_rscp_client* client);
 int rscp_client_update(t_rscp_client* client, uint32_t event);
 int rscp_client_hello(t_rscp_client* client);
+int rscp_client_hdcp(t_rscp_client* client);
 
 
 

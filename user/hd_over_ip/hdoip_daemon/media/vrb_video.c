@@ -16,6 +16,7 @@
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "edid.h"
+#include "hdcp.h"
 #include "rscp_string.h"
 #include "multicast.h"
 
@@ -60,6 +61,18 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, vid);
 
+    /*start hdcp session key exchange if necessary */
+    report("Check if HDCP is necessary and start ske");
+    hdoipd.hdcp.enc_state = m->hdcp.hdcp_on;
+
+    if ((m->hdcp.hdcp_on == 1) && !(hdoipd.hdcp.ske_executed)){
+		if (rscp_client_hdcp(client) != RSCP_SUCCESS){
+			report(" ? Session key exchange failed");
+			rscp_err_hdcp(rsp);
+			return RSCP_REQUEST_ERROR;
+		}
+    }
+
 #ifdef ETI_PATH
     // setup ethernet input
     hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0);
@@ -78,6 +91,19 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 {
     uint32_t compress = 0;
     report(VRB_METHOD "vrb_video_play");
+
+    //Test if HDCP parameters were set correctly
+	if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETI_VIDEO_EN)){
+		if (hdoipd.hdcp.ske_executed){
+			hoi_drv_hdcp(hdoipd.hdcp.keys); 	/* write keys to kernel */
+			report(INFO "Video encryption enabled (eti)!");
+			hoi_drv_hdcp_viden_eti();
+		}
+		else {
+			report(INFO "No valid HDCP ske executed!");
+			return RSCP_ERRORNO;
+		}
+	}
 
     media->result = RSCP_RESULT_PLAYING;
 
@@ -151,6 +177,8 @@ int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rsc
 
 int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
 {
+	t_rscp_client *client = media->creator;
+
     if(rsp) {
         report(" ? client failed (%d): %d - %s", m, rsp->ecode, rsp->ereason);
         osd_permanent(true);
@@ -163,6 +191,10 @@ int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
             case 405:   media->result = RSCP_RESULT_SERVER_NO_VTB;
                         break;
             case 406:   media->result = RSCP_RESULT_SERVER_NO_VIDEO_IN;
+                        break;
+            case 408:   media->result = RSCP_RESULT_SERVER_HDCP_ERROR;
+                        rscp_client_set_teardown(client);
+                        hdoipd_set_task_start_vrb();
                         break;
             case 400:
             default:    media->result = RSCP_RESULT_SERVER_ERROR;
@@ -178,11 +210,13 @@ int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
 
 void vrb_video_pause(t_rscp_media *media)
 {
+	report(INFO "vrb_video_pause");
     media->result = RSCP_RESULT_PAUSE_Q;
+
     report(VRB_METHOD "vrb_video_pause");
 
     if (hdoipd_tstate(VTB_VIDEO)) {
-
+    report(INFO "vrb_video_pause: VTB_VIDEO");
 #ifdef VID_OUT_PATH
         hdoipd_hw_reset(DRV_RST_VID_OUT);
 #endif
@@ -196,25 +230,26 @@ void vrb_video_pause(t_rscp_media *media)
 
 int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
+	t_rscp_client *client = media->creator;
+	//report(INFO "EVENT NR: %08x", m->event);
     switch (m->event) {
 
         case EVENT_TICK:
             // reset timeout
             vrb.timeout = 0;
         break;
-
         case EVENT_VIDEO_IN_ON:
             // No multicast for now...simply stop before starting new
+        	report(INFO "vrb_video_update; EVENT_VIDEO_IN_ON");
             if (rscp_media_splaying(media)) {
                 vrb_video_pause(media);
             }
             // restart
             rscp_client_set_play(media->creator);
-
             return RSCP_PAUSE;
         break;
-
         case EVENT_VIDEO_IN_OFF:
+        	report(INFO "vrb_video_update; EVENT_VIDEO_IN_OFF");
             vrb_video_pause(media);
             osd_permanent(true);
             osd_printf("vtb.video stopped streaming...\n");
@@ -245,6 +280,9 @@ int vrb_video_dosetup(t_rscp_media *media)
     t_rscp_transport transport;
     t_rscp_edid edid;
     t_rscp_client *client = media->creator;
+    t_rscp_hdcp hdcp;
+
+    hdcp.hdcp_on = reg_test("hdcp-force", "true");
 
     report(VRB_METHOD "vrb_video_dosetup");
 
@@ -260,7 +298,7 @@ int vrb_video_dosetup(t_rscp_media *media)
     edid_report((void*)edid.edid);
 #endif
 
-    return rscp_client_setup(client, &transport, &edid);
+    return rscp_client_setup(client, &transport, &edid, &hdcp);
 }
 
 int vrb_video_doplay(t_rscp_media *media)

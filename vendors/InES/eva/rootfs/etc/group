@@ -1,3 +1,4 @@
 root:x:0:
 ftp:x:50:
 nogroup:x:65534:
+client:x:1000:

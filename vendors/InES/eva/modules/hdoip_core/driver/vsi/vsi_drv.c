@@ -28,7 +28,7 @@ int vsi_drv_start(t_vsi* handle)
     if((handle->status & VSI_DRV_STATUS_ETH_PARAMS_SET) == 0) {
         return ERR_VSI_ETH_PARAMS_NOT_SET;
     }
-
+    REPORT(INFO, "VSI_DRV_START");
 	vsi_enable(handle->p_vsi);
     handle->status = handle->status | VSI_DRV_STATUS_ACTIV;
 

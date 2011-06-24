@@ -67,13 +67,10 @@ void* hdoipd_osd_timer(void UNUSED *d)
         }
 
         lock("hdoipd_tick_timer");
-
         alive_check_client_handler(&hdoipd.amx, reg_get("amx-hello-msg"));
-
         // initialize alive check if socket not exists
         alive_check_init_msg_vrb_alive();
         alive_check_handle_msg_vrb_alive(&hdoipd.alive_check);
-
         hdoipd.tick++;
 #ifdef USE_SYS_TICK
         rscp_client_event(hdoipd.client, EVENT_TICK);

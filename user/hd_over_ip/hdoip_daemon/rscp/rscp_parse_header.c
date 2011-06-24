@@ -3,6 +3,9 @@
  *
  *  Created on: 22.11.2010
  *      Author: alda
+ *
+ *  Functions to parse the received message string back to the struct values
+ *  Every line of the RSCP message has its own parsing function.
  */
 
 #include <stdio.h>
@@ -221,6 +224,18 @@ int rscp_parse_edid(char* line, t_rscp_edid *edid)
     for (int i=0;i<256;i++) {
         edid->edid[i] = nextbyte(&line[2*i+2]);
     }
+    return RSCP_SUCCESS;
+}
+
+int rscp_parse_hdcp(char* line, t_rscp_hdcp *hdcp)
+{
+	int a;
+	char* token;
+
+	next(token, line);
+	a = str_hdcp(token);
+	hdcp->hdcp_on = a;
+
     return RSCP_SUCCESS;
 }
 

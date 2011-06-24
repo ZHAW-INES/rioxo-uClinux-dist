@@ -19,9 +19,9 @@
 #include "bstmap.h"
 #include "alive_check.h"
 
+
 #define CFG_FILE                    "/mnt/config/hdoipd.cfg"
 #define CFG_RSP_TIMEOUT             20
-
 #define OSD_TIMER_INTERVAL_SEC      (1)
 #define OSD_TIMER_INTERVAL_NSEC     (0)
 #define POLL_THREAD_INTERVAL_SEC    (0)
@@ -62,12 +62,37 @@ enum {
     VRB_AUD_MASK    = 0x06
 };
 
+// hdcp enabled / disabled in HW
+enum {
+    HDCP_ETI_VIDEO_EN       = 0x01,  //eti video enabled in HW
+    HDCP_ETI_AUDIO_EN       = 0x02,  //eti audio enabled in HW
+    HDCP_ETO_VIDEO_EN       = 0x04,  //eto video enabled in HW
+    HDCP_ETO_AUDIO_EN       = 0x08   //eto audio enabled in HW
+};
+
+//HDCP states
+enum {
+    HDCP_SKE_EXECUTED		= 0x01,		//start hdcp session key exchange
+    HDCP_ENABLED		    = 0x02		//hdcp is enabled/disabled
+};
+
+//received HDCP messages
+enum {
+    HDCP_START			=0,		//start hdcp session key exchange
+    HDCP_AKE_SEND_CERT		=3,		//certificate received
+    HDCP_AKE_SEND_RRX		=6,		//send rrx
+    HDCP_AKE_SEND_HPRIME	=7,		//received H to check HMAC
+    HDCP_LC_SEND_LPRIME		=10		//received HMAC from locality check
+};
+
+
 // what is
 enum {
     RSC_AUDIO0_IN   = 0x000001,     // active audio input (from video board)
     RSC_AUDIO1_IN   = 0x000002,     // active audio input (from audio board)
     RSC_AUDIO_IN    = 0x000003,     // active audio input
     RSC_VIDEO_IN    = 0x000010,     // active video input
+    RSC_VIDEO_IN_HDCP=0x000020,	    // HDCP required
     RSC_VIDEO_SINK  = 0x000100,     // a video sink is connected
     RSC_ETH_LINK    = 0x000200,     // a ethernet link is on
     RSC_AUDIO_OUT   = 0x001000,     // active audio output
@@ -114,6 +139,25 @@ typedef struct {
     void*               value;
 } t_task;
 
+// hdcp variables
+typedef struct {
+	uint32_t			enc_state;		//encryption enabled disabled
+    uint32_t            state;			//hdcp statemachine
+    uint32_t			ske_executed;	//session key exchange executed previously?
+    uint32_t 			keys[6];		//ks and riv ready to write to kernel
+    //the secret values from flash
+	char				certrx[1046];	//public certificate
+	char				p[129];			//private key
+	char				q[129];			//private key
+	char				dp[129];		//private key
+	char				dq[129];		//private key
+	char				qInv[129];		//private key
+	char				lc128[33];		//secret global constant
+	char 			    ks[33];			//session key
+	char 			    ks_x_lc128[33];	//session key
+	char 				riv[17];		//random number to session key
+} t_hdcp;
+
 typedef struct {
     int                 drv;            // file descriptor to the hdoip_core driver
     t_bstmap*           registry;       // registry
@@ -144,6 +188,7 @@ typedef struct {
     int                 eth_timeout;    // amount of ticks till connection timeout is detected
 
     bool                auto_stream;    // flag if device should do auto stream after boot
+    t_hdcp 				hdcp;
     t_alive_check       amx;            // AMX control releated structure
     t_alive_check		alive_check;    // structure to test if server is running
     bool                dhcp;           // flag if DHCP client is used

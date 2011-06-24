@@ -31,6 +31,7 @@
 #include "vrb_audio.h"
 #include "vtb_audio.h"
 #include "box_sys.h"
+		
 
 const char* statestr(int state)
 {
@@ -231,7 +232,7 @@ void hdoipd_force_ready()
 
     hdoipd_goto_ready();
 
-    report(INFO, "hdoipd_force_ready() done");
+    report(INFO "hdoipd_force_ready() done");
 }
 
 
@@ -253,7 +254,6 @@ void hdoipd_goto_vtb()
                 rscp_listener_add_media(&hdoipd.listener, &vtb_audio);
                 rscp_listener_add_media(&hdoipd.listener, &vtb_video);
                 rscp_listener_add_media(&hdoipd.listener, &box_sys);
-
                 hdoipd_set_state(HOID_VTB);
             }
         } else {
@@ -287,6 +287,7 @@ void hdoipd_goto_vrb()
                 // register remote for "hello"
                 //box_sys_set_remote(reg_get("remote-uri"));
                 // first thing to try is setup a new connection based on registry
+
                 //if(hdoipd.auto_stream) {
                 //    hdoipd_set_task_start_vrb();
                 //}
@@ -401,6 +402,7 @@ int hdoipd_start_vrb_cb(t_rscp_media* media, void* d)
     }
     return ret;
 }
+
 int hdoipd_start_vrb(void *d)
 {
     int failed = 0;
@@ -429,6 +431,7 @@ void hdoipd_task(void)
             hdoipd.task_timeout--;
         } else {
             if(hdoipd_start_vrb(0)) {
+            	report(ERROR "task hdoipd_start_vrb() repeat (%d)",hdoipd.task_repeat);
                 if(hdoipd.task_repeat > 0) {
                     hdoipd.task_timeout = 50;
                     hdoipd.task_repeat--;
@@ -436,6 +439,7 @@ void hdoipd_task(void)
                     hdoipd.task_commands &= ~TASK_START_VRB;
                 }
             } else {
+            	report(ERROR "task hdoipd_start_vrb() executed");
                 hdoipd.task_repeat = 0;
                 hdoipd.task_commands &= ~TASK_START_VRB;
             }
@@ -499,6 +503,7 @@ void hdoipd_fsm_vtb(uint32_t event)
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
         break;
         case E_ADV7441A_NEW_RES:
+        	report(INFO "E_ADV7441A_NEW_RES, EVENT_VIDEO_IN_ON")
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
         break;
         case E_ADV7441A_NEW_AUDIO:
@@ -578,12 +583,22 @@ void hdoipd_event(uint32_t event)
         case E_ETO_AUDIO_OFF:
             hdoipd_clr_rsc(RSC_EAO);
         break;
-
         case E_ADV7441A_HDCP:
+        	report(INFO "\n ******* Incomming stream is encrypted!! ****** ");
+            hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
         break;
         case E_ADV7441A_NO_HDCP:
+        	report(INFO "\n ******* Incomming stream is !!! NOT !!! encrypted!! ****** ");
+        	hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
         break;
-
+        case E_HDCP_STREAMING_ERROR:   // restart VTB if Kernel detects HDCP streaming error
+        	report(INFO "*********** HDCP streaming error ***********");
+            if (hdoipd_state(HOID_VTB|HOID_VRB)) {
+                hdoipd_force_ready();
+                report(INFO "HDCP ERROR, restarting system");
+                hdoipd_start();
+            }
+        break;
         // ...
         case E_VSI_FIFO2_FULL:
         break;
@@ -704,6 +719,8 @@ bool hdoipd_init(int drv)
     hdoipd.vrb_state = VRB_OFF;
     hdoipd.client = list_create();
     hdoipd.auto_stream = false;
+    hdoipd.hdcp.ske_executed = 0;
+    hdoipd.hdcp.enc_state = 0;
 
     // allocate resource
     void* vid = malloc(VID_SIZE);
@@ -792,6 +809,9 @@ bool hdoipd_init(int drv)
     hdoipd_osd_timer_start();
 #endif
 
+    hoi_drv_wdg_init(2000000000); //set and start watchdog (to 20 sec.)
+    hoi_drv_wdg_enable();
+    report(INFO "START WATCHDOG");
     return true;
 }
 

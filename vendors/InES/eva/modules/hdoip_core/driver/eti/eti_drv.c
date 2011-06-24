@@ -102,6 +102,18 @@ int eti_drv_aes_aud_dis(t_eti* handle)
     return ERR_ETI_SUCCESS;
 }
 
+/** Get status of audio and video aes encryption (on/off?) 
+ *
+ * @param handle pointer to the eti handle
+ * @return error code
+ */
+int eti_drv_aes_stat(t_eti* handle, uint32_t *audio_enc_en, uint32_t *video_enc_en)
+{
+    *audio_enc_en = eti_get_config_audio_enc_en(handle->ptr);
+    *video_enc_en = eti_get_config_video_enc_en(handle->ptr);
+    //REPORT(INFO, "audio(): (audio stat : %08x)", *audio_enc_en);
+    return ERR_ETI_SUCCESS;
+}
 /** Enables video aes encryption 
  *
  * @param handle pointer to the eti handle

@@ -107,3 +107,20 @@ bool str_split_response_line(t_str_response_line* rsp, char* s)
     return (rsp->version&&rsp->code&&rsp->reason);
 }
 
+//function to parse hdcp messages
+//returns the string after the "=" as an integer
+//TODO: error handling
+int str_hdcp(char* str){
+  int i, j;
+  char status[9]="";
+  char tempchar[2];
+  char *hdcp_stat;
+  hdcp_stat = strchr(str,'=');
+  i=hdcp_stat-str;
+  for (j=(i+1);j<(int)strlen(str);j++){
+    sprintf(tempchar,"%c",str[j]);
+    strcat(status,tempchar);
+  }
+  i = atoi(status);
+  return i;
+}

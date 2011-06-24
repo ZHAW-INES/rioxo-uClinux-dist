@@ -3,11 +3,11 @@
 #
 
 all:
-	$(MAKE) -C $(ROOTDIR)/lib/libssl all_user
+	$(MAKE) -C $(ROOTDIR)/lib/libssl all
 
 clean:
 	:
 
 romfs:
-	$(MAKE) -C $(ROOTDIR)/lib/libssl romfs_user
+	$(MAKE) -C $(ROOTDIR)/lib/libssl romfs
 

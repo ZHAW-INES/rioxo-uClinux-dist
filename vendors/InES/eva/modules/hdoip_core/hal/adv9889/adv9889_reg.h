@@ -173,6 +173,7 @@
 #define ADV9889_CLOCK_9839              0x10
 
 // ADV9889_OFF_PWR_DOWN
+
 #define ADV9889_PWR_DOWN_ON             0x3C
 #define ADV9889_PWR_DOWN_OFF            0x00
 

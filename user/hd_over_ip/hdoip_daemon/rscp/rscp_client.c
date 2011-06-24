@@ -3,6 +3,13 @@
  *
  *  Created on: 22.11.2010
  *      Author: alda
+ *
+ *  Functions to establish connection(s) to the server
+ *  Functions to send and receive messages (every sent message
+ *  expects an answer)
+ *  Difference request/response:
+ *  Response: server response to a request from client (normal case)
+ *  Request: request from server (to client) initiated by server
  */
 
 #include <stdio.h>
@@ -15,7 +22,7 @@
 #include "rscp_command.h"
 #include "rscp_parse_header.h"
 #include "hdoipd.h"
-
+#include "hdcp.h"
 
 void* rscp_client_thread(void* _client);
 void* rscp_client_req_thread(void* _client);
@@ -151,6 +158,7 @@ int rscp_client_close(t_rscp_client* client)
 {
     if (!client) return RSCP_NULL_POINTER;
 
+
     // remove client
     if (client->idx) {
         list_remove(client->idx);
@@ -194,16 +202,18 @@ int rscp_client_close(t_rscp_client* client)
 }
 
 // returns response code
-int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp_edid *edid)
+int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp_edid *edid, t_rscp_hdcp *hdcp)
 {
     int n;
     u_rscp_header buf;
     t_rscp_header_common common;
+
 #ifdef REPORT_RSCP
     report(" > RSCP Client [%d] SETUP", client->nr);
 #endif
 
-    rscp_request_setup(&client->con, client->uri, transport, edid);
+    // send setup message
+    rscp_request_setup(&client->con, client->uri, transport, edid, hdcp);
 
     rscp_default_response_setup((void*)&buf);
 
@@ -222,6 +232,113 @@ int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp
 
     return n;
 }
+/** HDCP session key exchange
+ *  Exchange session key with server
+ *
+ * */
+int rscp_client_hdcp(t_rscp_client* client)
+{
+    int n, i;
+    u_rscp_header buf;
+    t_rscp_header_common common;
+    char content[]="";
+    char H[65];
+    char ks[33];
+    char riv[17];
+    char L[65];
+    char *id[16] = {"00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15"};
+    client->media->hdcp_var.repeater = 0;  //repeater value
+    t_rscp_rsp_hdcp* p;
+    p = (t_rscp_rsp_hdcp*)&buf;
+
+    /* Get the encrypted HDCP keys from flash and decrypt them*/
+    hdcp_decrypt_flash_keys();
+    report(INFO "Ask server to start session key exchange");
+
+    /* send start hdcp */
+    rscp_request_hdcp(&client->con, client->media->sessionid, client->uri, id[0], content);
+    rscp_default_response_hdcp((void*)&buf);
+    // response
+    n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
+
+    report(INFO "ID: %s",p->id);
+    report(INFO "Content: %s",p->content);
+    if (strcmp(p->id, "02")) return RSCP_HDCP_ERROR;  //check if correct message was received
+    strcpy(client->media->hdcp_var.rtx, p->content);  //save rtx
+
+    /* Add repeater value to certificate */
+    memmove(hdoipd.hdcp.certrx + 1,hdoipd.hdcp.certrx,1045);
+    if (client->media->hdcp_var.repeater == 1) hdoipd.hdcp.certrx[0]='1';
+    else hdoipd.hdcp.certrx[0]='0';
+
+    /* send certificate */
+    rscp_request_hdcp(&client->con, client->media->sessionid, client->uri, id[3], hdoipd.hdcp.certrx);
+    rscp_default_response_hdcp((void*)&buf);
+    // response
+    n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
+
+    report(INFO "ID: %s",p->id);
+    report(INFO "Content: %s",p->content);
+    if (strcmp(p->id, "04")) return RSCP_HDCP_ERROR;  //check if correct message was received
+
+    /* decrypt km */
+    rsaes_decrypt(p->content, client->media->hdcp_var.km, hdoipd.hdcp.p, hdoipd.hdcp.q,hdoipd.hdcp.dp,hdoipd.hdcp.dq,hdoipd.hdcp.qInv);
+    //report(INFO "km: %s",client->media->hdcp_var.km); //SECRET VALUE, SHOW ONLY TO DEBUG
+    report(INFO "rtx: %s",client->media->hdcp_var.rtx);
+
+    /* send rrx  */
+    hdcp_generate_random_nr(client->media->hdcp_var.rrx);
+    rscp_request_hdcp(&client->con, client->media->sessionid, client->uri, id[6], client->media->hdcp_var.rrx);
+    rscp_default_response_hdcp((void*)&buf);
+    /* response (only acknowledge, therefore ignore content) */
+    n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
+
+    if (strcmp(p->id, "00")) return RSCP_HDCP_ERROR;  //check if correct message was received
+
+    /* send AKE send H_prime */
+	report(INFO "rtx: %s", client->media->hdcp_var.rtx);
+    hdcp_calculate_h(client->media->hdcp_var.rtx, &client->media->hdcp_var.repeater, H, client->media->hdcp_var.km, client->media->hdcp_var.kd);
+    report(INFO "H: %s", H);
+    rscp_request_hdcp(&client->con, client->media->sessionid, client->uri, id[7], H);
+    rscp_default_response_hdcp((void*)&buf);
+    // response LC_init
+    n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
+
+    report(INFO "ID: %s",p->id);
+    report(INFO "Content: %s",p->content);
+    if (strcmp(p->id, "09")) return RSCP_HDCP_ERROR;  //check if correct message was received
+    strcpy(client->media->hdcp_var.rn, p->content);
+
+    /* generate HMAC of rn and send it back*/
+    report(INFO "rn: %s", client->media->hdcp_var.rn);
+    report(INFO "rrx: %s", client->media->hdcp_var.rrx);
+    hdcp_calculate_l(client->media->hdcp_var.rn, client->media->hdcp_var.rrx, client->media->hdcp_var.kd, L);
+    report(INFO "L: %s", L);
+    rscp_request_hdcp(&client->con, client->media->sessionid, client->uri, id[10], L);
+    // response contains encrypted session key
+    n = rscp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
+
+    report(INFO "ID: %s",p->id);
+    report(INFO "Content: %s",p->content);
+    if (strcmp(p->id, "11")) return RSCP_HDCP_ERROR;  //check if correct message was received
+    /*devide received content into ks and riv*/
+    for (i=0;i<17;i++){
+    	riv[i]=p->content[32+i];
+    }
+    p->content[32]='\0';
+    // decrypt session key
+    hdcp_ske_dec_ks(client->media->hdcp_var.rn, ks, p->content, client->media->hdcp_var.rtx, client->media->hdcp_var.rrx, client->media->hdcp_var.km);
+    //report(INFO "THE SESSION KEY: %s", ks); //SECRET VALUE; SHOW ONLY TO DEBUG
+    report(INFO "RIV: %s", riv);
+	/* xor session key with lc128 */
+	xor_strings(ks, hdoipd.hdcp.lc128, ks,32);
+    /* write keys to HW and enable encryption*/
+    hdcp_convert_sk_char_int(ks, riv, hdoipd.hdcp.keys);
+    hdoipd.hdcp.ske_executed = HDCP_SKE_EXECUTED;
+    report(INFO "SESSION KEY EXCHANGE SUCCESSFUL!")
+    return RSCP_SUCCESS;
+}
+
 
 int rscp_client_set_play(t_rscp_client* client)
 {
@@ -234,6 +351,7 @@ int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt)
 {
     int n;
     u_rscp_header buf;
+
 #ifdef REPORT_RSCP
     report(" > RSCP Client [%d] PLAY", client->nr);
 #endif
@@ -244,6 +362,7 @@ int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt)
 
     // response
     n = rscp_parse_response(&client->con, tab_response_play, (void*)&buf, 0, CFG_RSP_TIMEOUT);
+
     if (n == RSCP_SUCCESS) {
         rmcr_play(client->media, (void*)&buf, &client->con);
     } else if (n == RSCP_RESPONSE_ERROR) {
@@ -266,6 +385,7 @@ int rscp_client_teardown(t_rscp_client* client)
 {
     u_rscp_header buf;
     int nr = client->nr;
+
 #ifdef REPORT_RSCP
     report(" > RSCP Client [%d] TEARDOWN", client->nr);
 #endif
@@ -315,7 +435,10 @@ int rscp_client_update(t_rscp_client* client, uint32_t event)
     return RSCP_SUCCESS;
 }
 
-
+/** just say "hello" to the server
+ *  the first message of an message-exchange
+ *
+ * */
 int rscp_client_hello(t_rscp_client* client)
 {
 #ifdef REPORT_RSCP_HELLO
@@ -326,7 +449,6 @@ int rscp_client_hello(t_rscp_client* client)
 
     return RSCP_SUCCESS;
 }
-
 
 void rscp_client_deactivate(t_node* list)
 {
@@ -369,7 +491,10 @@ void rscp_client_force_close(t_node* list)
     }
 }
 
-
+/** checks if the received message is a request or a response
+ *  if its a request, write to pipe 2, else to pipe 1
+ *
+ * */
 void* rscp_client_thread(void* _client)
 {
     int n;
@@ -383,7 +508,6 @@ void* rscp_client_thread(void* _client)
     while ((n = rscp_receive(&client->con1, &line, 0)) == RSCP_SUCCESS) {
         tst = line;
         if (!str_starts_with(&tst, RSCP_VERSION)) { // if response
-
             do {
                 msgprintf(&client->con2, "%s\r\n", line);
                 if (*line == 0) break;
@@ -392,6 +516,7 @@ void* rscp_client_thread(void* _client)
                 report(ERROR "rscp client filter receive error on request");
                 break;
             }
+
             rscp_write(&client->con2);
 
         } else { // if request
@@ -404,12 +529,11 @@ void* rscp_client_thread(void* _client)
                 report("rscp client filter receive error on response");
                 break;
             }
-            rscp_write(&client->con1);
-
+            rscp_write(&client->con1);  //write to pipe 1 ??
         }
     }
-
     client->task = E_RSCP_CLIENT_KILL;
+
 #ifdef REPORT_RSCP_CLIENT
     report(" - RSCP Client [%d] filter: (%d) %s", client->nr, n, strerror(errno));
 #endif
@@ -420,6 +544,9 @@ void* rscp_client_thread(void* _client)
     return 0;
 }
 
+/** function processes requests only
+ *
+ * */
 void* rscp_client_req_thread(void* _client)
 {
     int n = 0;
@@ -446,7 +573,6 @@ void* rscp_client_req_thread(void* _client)
 #ifdef REPORT_RSCP_RX
             report(" < RSCP Client [%d] %s", client->nr, common.rq.method);
 #endif
-
             // process request (function responses for itself)
             n = ((frscpm*)method->fnc)(client->media, (void*)&buf, &client->con);
             if (n != RSCP_SUCCESS) {
@@ -455,7 +581,6 @@ void* rscp_client_req_thread(void* _client)
                 break;
             }
         }
-
         unlock("rscp_client_req_thread");
 
     }

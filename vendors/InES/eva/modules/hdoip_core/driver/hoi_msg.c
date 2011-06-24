@@ -70,8 +70,83 @@ int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
 
     return SUCCESS;
 }
+//--------------------------------- HDCP --------------------------------------
+// enable hdcp eti video encryption
+int hoi_drv_msg_hdcp_video_en_eti(t_hoi* handle){
+    eti_drv_aes_vid_en(&handle->eti);
+    return SUCCESS;
+}
+// enable hdcp eto video encryption
+int hoi_drv_msg_hdcp_video_en_eto(t_hoi* handle){
+    eto_drv_aes_vid_en(&handle->eto);
+    return SUCCESS;
+}
+// enable hdcp eti audio encryption
+int hoi_drv_msg_hdcp_audio_en_eti(t_hoi* handle){
+    eti_drv_aes_aud_en(&handle->eti);
+    return SUCCESS;
+}
+// enable hdcp eto audio encryption
+int hoi_drv_msg_hdcp_audio_en_eto(t_hoi* handle){
+    eto_drv_aes_aud_en(&handle->eto);
+    return SUCCESS;
+}
+// disable hdcp eti video encryption
+int hoi_drv_msg_hdcp_video_dis_eti(t_hoi* handle){
+    eti_set_config_video_enc_dis(&handle->eti);
+    return SUCCESS;
+}
+// disable hdcp eto video encryption
+int hoi_drv_msg_hdcp_video_dis_eto(t_hoi* handle){
+    eto_set_config_video_enc_dis(&handle->eto);
+    return SUCCESS;
+}
+// disable hdcp eti audio encryption
+int hoi_drv_msg_hdcp_audio_dis_eti(t_hoi* handle){
+    eti_set_config_audio_enc_dis(&handle->eti);
+    return SUCCESS;
+}
+// disable hdcp eto audio encryption
+int hoi_drv_msg_hdcp_audio_dis_eto(t_hoi* handle){
+    eto_set_config_audio_enc_dis(&handle->eto);
+    return SUCCESS;
+}
+// enable hdcp encryption in AD9889 (hdmi transmitter IC)
+int hoi_drv_msg_hdcp_ADV9889_en(t_hoi* handle){
+	adv9889_drv_hdcp_on(&handle->adv9889);
+    return SUCCESS;
+}
+
+// disable hdcp encryption in AD9889 (hdmi transmitter IC)
+int hoi_drv_msg_hdcp_ADV9889_dis(t_hoi* handle){
+	adv9889_drv_hdcp_off(&handle->adv9889);
+    return SUCCESS;
+}
 
 
+// hdcp init (write keys to hardware)
+int hoi_drv_msg_hdcp_init(t_hoi* handle, t_hoi_msg_hdcp_init* msg)
+{
+   /* REPORT(INFO, "hoi_drv_msg_aes_init() -> init aes (key0 : %08x)", msg->key0);
+    REPORT(INFO, "hoi_drv_msg_aes_init() -> init aes (key1 : %08x)", msg->key1);
+    REPORT(INFO, "hoi_drv_msg_aes_init() -> init aes (key2 : %08x)", msg->key2);
+    REPORT(INFO, "hoi_drv_msg_aes_init() -> init aes (key3 : %08x)", msg->key3);
+    REPORT(INFO, "hoi_drv_msg_aes_init() -> init aes (riv0 : %08x)", msg->riv0);
+    REPORT(INFO, "hoi_drv_msg_aes_init() -> init aes (riv1 : %08x)", msg->riv1);*/
+    //set aes keys 
+    eti_drv_set_aes(&handle->eti, &(msg->key0), &(msg->riv0)); 
+    eto_drv_set_aes(&handle->eto, &(msg->key0), &(msg->riv0));
+    return SUCCESS;
+}
+
+// return hdcp status (on/off)
+int hoi_drv_msg_hdcpstat(t_hoi* handle, t_hoi_msg_hdcpstat* msg)
+{
+    eti_drv_aes_stat(&handle->eti, &msg->status_eti_audio, &msg->status_eti_video);
+    eto_drv_aes_stat(&handle->eto, &msg->status_eto_audio, &msg->status_eto_video);
+    return SUCCESS;
+}
+//-----------------------------------------------------------------------------
 int hoi_drv_msg_eti(t_hoi* handle, t_hoi_msg_eti* msg)
 {
     // when port = 0 not active!
@@ -158,7 +233,6 @@ int hoi_drv_msg_asoreg(t_hoi* handle, t_hoi_msg_asoreg* msg)
 
     return SUCCESS;
 }
-
 
 int hoi_drv_msg_viostat(t_hoi* handle, t_hoi_msg_viostat* msg)
 {
@@ -284,6 +358,7 @@ int hoi_drv_msg_vso_repaire(t_hoi* handle)
 {
     int n;
     uint32_t ien;
+// TODO: check if needed
 
     // stop/flush vso
     vso_drv_stop(&handle->vso);
@@ -746,7 +821,8 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_VSOSTAT,               hoi_drv_msg_vsostat);
         call(HOI_MSG_VIOSTAT,               hoi_drv_msg_viostat);
         call(HOI_MSG_ASOREG,                hoi_drv_msg_asoreg);
-
+	call(HOI_MSG_HDCP_INIT,      	    hoi_drv_msg_hdcp_init);
+	call(HOI_MSG_HDCPSTAT,       	    hoi_drv_msg_hdcpstat);
 
         call(HOI_MSG_GETVERSION,            hoi_drv_msg_getversion);
 
@@ -769,6 +845,19 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         callsw(HOI_MSG_WDG_ENABLE,          hoi_drv_msg_wdg_enable);
         callsw(HOI_MSG_WDG_DISABLE,         hoi_drv_msg_wdg_disable);
         callsw(HOI_MSG_WDG_SERVICE,         hoi_drv_msg_wdg_service);
+
+	callsw(HOI_MSG_HDCP_ENVIDEO_ETI, hoi_drv_msg_hdcp_video_en_eti);
+	callsw(HOI_MSG_HDCP_ENVIDEO_ETO, hoi_drv_msg_hdcp_video_en_eto);
+	callsw(HOI_MSG_HDCP_ENAUDIO_ETI, hoi_drv_msg_hdcp_audio_en_eti);
+	callsw(HOI_MSG_HDCP_ENAUDIO_ETO, hoi_drv_msg_hdcp_audio_en_eto);
+
+	callsw(HOI_MSG_HDCP_DISVIDEO_ETI, hoi_drv_msg_hdcp_video_dis_eti);
+	callsw(HOI_MSG_HDCP_DISVIDEO_ETO, hoi_drv_msg_hdcp_video_dis_eto);
+	callsw(HOI_MSG_HDCP_DISAUDIO_ETI, hoi_drv_msg_hdcp_audio_dis_eti);
+	callsw(HOI_MSG_HDCP_DISAUDIO_ETO, hoi_drv_msg_hdcp_audio_dis_eto);
+
+	callsw(HOI_MSG_HDCP_ENAD9889, hoi_drv_msg_hdcp_ADV9889_en);
+	callsw(HOI_MSG_HDCP_DISAD9889, hoi_drv_msg_hdcp_ADV9889_dis);
 
         callsw(HOI_MSG_POLL,    hoi_drv_msg_poll);
 

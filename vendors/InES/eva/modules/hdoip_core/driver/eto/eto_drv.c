@@ -95,6 +95,20 @@ int eto_drv_aes_aud_dis(t_eto* handle)
     return ERR_ETO_SUCCESS;
 }
 
+/** Get status of audio and video aes encryption (on/off?) 
+ *
+ * @param handle pointer to the eto handle
+ * @return error code
+ */
+int eto_drv_aes_stat(t_eto* handle, uint32_t *audio_enc_en, uint32_t *video_enc_en)
+{
+    *audio_enc_en = eto_get_config_audio_enc_en(handle->ptr);
+    *video_enc_en = eto_get_config_video_enc_en(handle->ptr);
+    //*audio_enc_en = 12; //only to test if path up to userspace works
+    //*video_enc_en = 34;
+    return ERR_ETI_SUCCESS;
+}
+
 /** Enables video aes encryption 
  *
  * @param handle pointer to the eto handle

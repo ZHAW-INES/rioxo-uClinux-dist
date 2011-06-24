@@ -24,6 +24,14 @@ typedef enum {
 } e_rscp_media_state;
 
 typedef enum {
+    HDCP_SEND_RTX,
+    HDCP_VERIFY_CERT,
+    HDCP_RECEIVE_RRX,
+    HDCP_RECEIVE_H,
+    HDCP_SEND_KS
+} e_rscp_hdcp_state;
+
+typedef enum {
     RSCP_RESULT_IDLE = 0,
     RSCP_RESULT_READY,
     RSCP_RESULT_PLAYING,
@@ -37,13 +45,24 @@ typedef enum {
     RSCP_RESULT_SERVER_BUSY,
     RSCP_RESULT_SERVER_NO_VTB,
     RSCP_RESULT_SERVER_TRY_LATER,
-    RSCP_RESULT_SERVER_NO_VIDEO_IN
+    RSCP_RESULT_SERVER_NO_VIDEO_IN,
+    RSCP_RESULT_SERVER_HDCP_ERROR
 } e_rscp_media_result;
 
-//
 typedef int (frscpm)(void* media, void* msg, void* rsp);
 typedef int (frscpl)(void* media);
 typedef int (frscpe)(void* media, uint32_t event);
+
+// Media HDCP variables
+typedef struct t_rscp_media_hdcp {
+	int			hdcp_state;		// HDCP state
+    char		km[33];			// masterkey
+    char 		rrx[19];		// random number from receiver
+    char		rn[17];			// random number from locality check
+    char 		kd[65];			//
+    char    	rtx[17];		// rtx (random number)
+    uint32_t	repeater;		// repeater (true or false)
+}t_rscp_media_hdcp;
 
 // Media session
 typedef struct t_rscp_media {
@@ -54,9 +73,12 @@ typedef struct t_rscp_media {
     char*   name;               // "audio", "video" or "" (box_sys)
     char    sessionid[20];      // Session string (ID)
     int     state;              // Media state (INIT, READY, PLAYING)
+    int		hdcp_state;			// HDCP state
+    t_rscp_media_hdcp hdcp_var; // HDCP variables (state, keys, etc.)
     int     result;             // Media status
     size_t  cookie_size;        // Size of cookie
     void*   cookie;             // Media related data
+    frscpm* hdcp;
     frscpm* error;              // (media*, rscp-code, connection)
     frscpm* setup;              // (c->s) request or response
     frscpm* play;               // (c->s) request or response
@@ -92,9 +114,11 @@ int rmsq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_hello(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
+int rmsq_hdcp(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 
 int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsr_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
+
 
 
 // rscp media client

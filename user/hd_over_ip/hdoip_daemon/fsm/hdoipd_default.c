@@ -46,7 +46,6 @@ void hdoipd_set_default()
     reg_set("web-auth-en", "false");
     reg_set("web-user", "admin");
     reg_set("web-pass", "admin");
-
     reg_set("amx-en", "true");
     reg_set("amx-hello-ip", "192.168.1.255");
     reg_set("amx-hello-port", "1000");
@@ -55,7 +54,6 @@ void hdoipd_set_default()
 
     reg_set("multicast_en", "false");
     reg_set("multicast_group", "224.0.1.0");
-
     reg_set("alive-check", "true");
     reg_set("alive-check-interval", "5");
     reg_set("alive-check-port", "2002");

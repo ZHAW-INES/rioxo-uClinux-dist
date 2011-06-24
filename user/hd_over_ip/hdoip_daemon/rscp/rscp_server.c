@@ -59,6 +59,7 @@ int rscp_server_thread(t_rscp_server* handle)
         n = rscp_parse_request(&handle->con, srv_method, &method, &buf, &common);
 
         // connection closed...
+
         if (n) {
         	break;
         }
@@ -106,7 +107,6 @@ int rscp_server_thread(t_rscp_server* handle)
 #endif
     return n;
 }
-
 
 /** Teardown connection
  *

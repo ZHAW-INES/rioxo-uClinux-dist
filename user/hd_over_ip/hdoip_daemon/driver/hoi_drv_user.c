@@ -59,6 +59,40 @@ int hoi_drv_buf(void* ar, size_t arl, void* vr, size_t vrl, void* at, size_t atl
 
     return hoi_msg(&msg);
 }
+//-----------------------------------------------------------------------------
+// HDCP
+//send hdcp keys to kernel
+int hoi_drv_hdcp(uint32_t* hdcp_keys)
+{
+    t_hoi_msg_hdcp_init msg;
+
+    hoi_msg_hdcp_init(&msg);
+    msg.key0 = hdcp_keys[0];
+    msg.key1 = hdcp_keys[1];
+    msg.key2 = hdcp_keys[2];
+    msg.key3 = hdcp_keys[3];
+    msg.riv0 = hdcp_keys[4];
+    msg.riv1 = hdcp_keys[5];
+
+    return hoi_msg(&msg);
+}
+
+//get hdcp status
+int hoi_drv_hdcpstat(uint32_t *eto_hdcp_audio,uint32_t *eto_hdcp_video,uint32_t *eti_hdcp_audio, uint32_t *eti_hdcp_video)
+{
+    int ret;
+    t_hoi_msg_hdcpstat msg;
+
+    hoi_msg_hdcpstat_init(&msg);
+    ret = hoi_msg(&msg);
+    *eto_hdcp_audio = msg.status_eto_audio;
+    *eto_hdcp_video = msg.status_eto_video;
+    *eti_hdcp_audio = msg.status_eti_audio;
+    *eti_hdcp_video = msg.status_eti_video;
+
+    return ret;
+}
+//-----------------------------------------------------------------------------
 
 int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud, uint32_t vid, uint32_t aud)
 {
@@ -550,10 +584,53 @@ int hoi_drv_wraudtag(void* buffer)
     t_hoi_msg_tag msg;
 
     hoi_msg_wraudtag_init(&msg);
-    memcpy(msg.tag, buffer, 256);
     ret = hoi_msg(&msg);
 
     return ret;
+}
+
+//------------------------------------------------------------------------------
+// HDCP
+int hoi_drv_hdcp_get_timer(t_hoi_msg_hdcp_timer *msg)
+{
+    hoi_msg_hdcp_get_timer_init(msg);
+    return hoi_msg(msg);
+}
+
+int hoi_drv_hdcp_set_timer(uint32_t start_time)
+{
+    t_hoi_msg_hdcp_timer msg;
+
+    hoi_msg_hdcp_set_timer_init(&msg);
+    msg.start_time = start_time;
+    return hoi_msg(&msg);
+}
+
+int hoi_drv_hdcp_get_key(uint32_t key[4])
+{
+    int ret;
+    t_hoi_msg_hdcp_key msg;
+
+    hoi_msg_hdcp_get_key_init(&msg);
+    ret = hoi_msg(&msg);
+
+    key[0] = msg.key[0];
+    key[1] = msg.key[1];
+    key[2] = msg.key[2];
+    key[3] = msg.key[3];
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Watch dog
+int hoi_drv_wdg_init(uint32_t service_time)
+{
+    t_hoi_msg_wdg msg;
+
+    hoi_msg_wdg_init_init(&msg);
+    msg.service_time = service_time;
+    return hoi_msg(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -574,3 +651,21 @@ HOI_CMDSW(osdoff);
 HOI_CMDSW(hpdon);
 HOI_CMDSW(hpdoff);
 HOI_CMDSW(repair);
+
+HOI_CMDSW(hdcp_viden_eti);      //enable hdcp eti video encryption
+HOI_CMDSW(hdcp_viden_eto);      //enable hdcp eto video encryption
+HOI_CMDSW(hdcp_auden_eti);      //enable hdcp eti audio encryption
+HOI_CMDSW(hdcp_auden_eto);      //enable hdcp eto audio encryption
+HOI_CMDSW(hdcp_viddis_eti);     //disable hdcp eti video encryption
+HOI_CMDSW(hdcp_viddis_eto);     //disable hdcp eto video encryption
+HOI_CMDSW(hdcp_auddis_eti);     //disable hdcp eti audio encryption
+HOI_CMDSW(hdcp_auddis_eto);     //disable hdcp eto audio encryption
+HOI_CMDSW(hdcp_adv9889dis);  	//disable AD9889 hdcp encryption
+HOI_CMDSW(hdcp_adv9889en);   	//enable AD9889 hdcp encryption
+
+HOI_CMDSW(wdg_enable);
+HOI_CMDSW(wdg_disable);
+HOI_CMDSW(wdg_service);
+HOI_CMDSW(hdcp_timer_enable);
+HOI_CMDSW(hdcp_timer_disable);
+HOI_CMDSW(hdcp_timer_load);

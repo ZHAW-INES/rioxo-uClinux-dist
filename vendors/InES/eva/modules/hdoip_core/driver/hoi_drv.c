@@ -7,6 +7,9 @@
 #include "hoi_drv.h"
 #include "vid_const.h"
 #include "ext_irq_pio.h"
+#include "hoi_msg.h"
+#include "wdg_hal.h"
+
 
 
 /* base driver initialization
@@ -191,7 +194,9 @@ void hoi_drv_handler(t_hoi* handle)
     aso_drv_handler(&handle->aso, handle->event);
     eto_drv_handler(&handle->eto, handle->event);
     eti_drv_handler(&handle->eti, handle->event);
+    hdcp_drv_handler(&handle->eti, &handle->eto, &handle->adv7441a, &handle->adv9889, &handle->vsi, &handle->vso, &handle->asi, &handle->aso, &handle->drivers, handle->event); //hdcp handler
     stream_sync(&handle->sync);
+    wdg_reset(handle->p_wdg); //reset watchdog
 }
 
 void hoi_drv_timer(t_hoi* handle)

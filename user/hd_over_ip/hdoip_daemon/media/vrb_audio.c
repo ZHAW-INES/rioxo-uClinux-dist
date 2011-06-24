@@ -11,6 +11,7 @@
 #include "vrb_audio.h"
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
+#include "hdcp.h"
 #include "multicast.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
@@ -55,6 +56,18 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, aud);
 
+    /*start hdcp session key exchange if necessary */
+    report("Check if HDCP is necessary and start ske");
+    hdoipd.hdcp.enc_state = m->hdcp.hdcp_on;
+
+    if ((m->hdcp.hdcp_on == 1) && !(hdoipd.hdcp.ske_executed)){
+		if (rscp_client_hdcp(client) != RSCP_SUCCESS){
+			report(" ? Session key exchange failed");
+			rscp_err_hdcp(rsp);
+			return RSCP_REQUEST_ERROR;
+		}
+    }
+
 #ifdef ETI_PATH
     // TODO: separete Audio/Video
     hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port);
@@ -74,6 +87,19 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 {
     uint32_t compress = 0;
     report(VRB_METHOD "vrb_audio_play");
+
+    //Test if HDCP parameters were set correctly
+	if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETI_AUDIO_EN)){
+		if (hdoipd.hdcp.ske_executed){
+			hoi_drv_hdcp(hdoipd.hdcp.keys); 	/* write keys to kernel */
+			report(INFO "Audio encryption enabled (eti)!");
+			hoi_drv_hdcp_auden_eti();
+		}
+		else {
+			report(INFO "No valid HDCP ske executed!");
+			return RSCP_ERRORNO;
+		}
+	}
 
     media->result = RSCP_RESULT_PLAYING;
 
@@ -105,7 +131,8 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     return RSCP_SUCCESS;
 }
 
-int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown *m, t_rscp_connection *rsp)
+
+int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown UNUSED *m, t_rscp_connection *rsp)
 {
     report(VRB_METHOD "vrb_audio_teardown");
 
@@ -135,6 +162,8 @@ int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown *m, t_rscp_conne
 
 int vrb_audio_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
 {
+	t_rscp_client *client = media->creator;
+
     if(rsp) {
         report(" ? client failed (%d): %d - %s", m, rsp->ecode, rsp->ereason);
         osd_printf("vrb.audio streaming could not be established: %d - %s\n", rsp->ecode, rsp->ereason);
@@ -146,6 +175,10 @@ int vrb_audio_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
             case 405:   media->result = RSCP_RESULT_SERVER_NO_VTB;
                         break;
             case 406:   media->result = RSCP_RESULT_SERVER_NO_VIDEO_IN;
+                        break;
+            case 408:   media->result = RSCP_RESULT_SERVER_HDCP_ERROR;
+            			rscp_client_set_teardown(client);
+            			hdoipd_set_task_start_vrb();
                         break;
             case 400:
             default:    media->result = RSCP_RESULT_SERVER_ERROR;
@@ -161,6 +194,7 @@ int vrb_audio_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
 
 void vrb_audio_pause(t_rscp_media *media)
 {
+	report(INFO "vrb_audio_pause");
     media->result = RSCP_RESULT_PAUSE_Q;
     report(VRB_METHOD "vrb_audio_pause");
 
@@ -180,6 +214,7 @@ void vrb_audio_pause(t_rscp_media *media)
 
 int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
+	t_rscp_client *client = media->creator;
     switch (m->event) {
 
         case EVENT_TICK:
@@ -198,7 +233,6 @@ int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
 
             return RSCP_PAUSE;
         break;
-
         case EVENT_AUDIO_IN0_OFF:
             vrb_audio_pause(media);
             osd_printf("vtb.audio stopped streaming...\n");
@@ -228,6 +262,9 @@ int vrb_audio_dosetup(t_rscp_media *media)
     int port;
     t_rscp_transport transport;
     t_rscp_client *client = media->creator;
+    t_rscp_hdcp hdcp;
+
+    hdcp.hdcp_on = reg_test("hdcp-force", "true");
 
     report(VRB_METHOD "vrb_audio_dosetup");
 
@@ -237,7 +274,7 @@ int vrb_audio_dosetup(t_rscp_media *media)
     port = reg_get_int("audio-port");
     transport.client_port = PORT_RANGE(htons(port), htons(port+1));
 
-    return rscp_client_setup(client, &transport, 0);
+    return rscp_client_setup(client, &transport, 0, &hdcp);
 }
 
 int vrb_audio_doplay(t_rscp_media *media)

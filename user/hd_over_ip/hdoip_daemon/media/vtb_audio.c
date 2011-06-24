@@ -10,11 +10,24 @@
 #include "hdoipd_fsm.h"
 #include "box_sys.h"
 #include "rscp_server.h"
+#include "hdcp.h"
 #include "multicast.h"
 
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
+int vtb_audio_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
+{
+	int ret;
+
+	t_multicast_cookie* cookie = media->cookie;
+    ret = hdcp_ske_s(media, m, rsp);
+
+    cookie->timeout = 0;
+    cookie->alive_ping = 1;
+
+    return ret;
+}
 
 int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
@@ -67,12 +80,18 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         hdoipd_set_vtb_state(VTB_AUD_IDLE);
     }
 
+    //check if hdcp is forced by HDMI, user or client (over RSCP)
+    if (reg_test("hdcp-force", "true") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
+    	m->hdcp.hdcp_on = 1;
+    	hdoipd.hdcp.enc_state = HDCP_ENABLED;
+    }
+
     cookie->remote.address = rsp->address;
     cookie->remote.aud_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.aud_port, hdoipd.local.aud_port);
     m->transport.multicast = get_multicast_enable();
 
-    rscp_response_setup(rsp, &m->transport, media->sessionid);
+    rscp_response_setup(rsp, &m->transport, media->sessionid, &m->hdcp);
 
     REPORT_RTX("TX", hdoipd.local, "->", cookie->remote, aud);
 
@@ -122,6 +141,21 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
         return RSCP_REQUEST_ERROR;
     }
 
+    //check if audio HDCP status is unchanged, else return ERROR
+    report("TEST HDCP status before start audio play!");
+    if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETO_AUDIO_EN)){
+    	if (hdoipd.hdcp.ske_executed){
+    		hoi_drv_hdcp(hdoipd.hdcp.keys); //write keys to kernel
+    		hoi_drv_hdcp_auden_eto();
+    		report(INFO "Audio encryption enabled (eto)!");
+    	}
+    	else {
+    		report(" ? Audio HDCP status has changed after SKE");
+    		rscp_err_hdcp(rsp);
+    		return RSCP_REQUEST_ERROR;
+    	}
+    }
+
     // start ethernet output
     if(get_multicast_enable()) {
         eth.ipv4_dst_ip = inet_addr(reg_get("multicast_group"));
@@ -155,8 +189,8 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     if ( ((nfo->audio_width[0]<8) || (nfo->audio_width[0]>32)) ||
          ((nfo->audio_fs[0]<32000) || (nfo->audio_fs[0]>96000)) ||
          ((nfo->audio_cnt[0]<1) || (nfo->audio_cnt[0]>8)) ) {
-        rscp_err_def_source(rsp);
-        return RSCP_REQUEST_ERROR;
+          rscp_err_def_source(rsp);
+          return RSCP_REQUEST_ERROR;
     }
 
     // send timing
@@ -178,7 +212,7 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     return RSCP_SUCCESS;
 }
 
-int vtb_audio_teardown(t_rscp_media* media, t_rscp_req_teardown *m, t_rscp_connection* rsp)
+int vtb_audio_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t_rscp_connection* rsp)
 {
     t_multicast_cookie* cookie = media->cookie;
 
@@ -228,7 +262,7 @@ void vtb_audio_pause(t_rscp_media *media)
 }
 
 
-int vtb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
+int vtb_audio_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
     t_multicast_cookie* cookie = media->cookie;
 
@@ -241,7 +275,6 @@ int vtb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
 
     return RSCP_SUCCESS;
 }
-
 
 int vtb_audio_event(t_rscp_media *media, uint32_t event)
 {
@@ -293,6 +326,7 @@ t_rscp_media vtb_audio = {
     .name = "audio",
     .owner = 0,
     .cookie = 0,
+    .hdcp = (frscpm*)vtb_audio_hdcp,
     .cookie_size = sizeof(t_multicast_cookie),
     .setup = (frscpm*)vtb_audio_setup,
     .play = (frscpm*)vtb_audio_play,

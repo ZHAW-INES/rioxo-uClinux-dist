@@ -30,6 +30,7 @@ int rscp_parse_rtp_info(char* line, t_rscp_rtp_info* p);
 int rscp_parse_ui32(char* line, uint32_t* p);
 int rscp_parse_str(char* line, char* p);
 int rscp_parse_edid(char* line, t_rscp_edid *edid);
+int rscp_parse_hdcp(char* line, t_rscp_hdcp *hdcp);
 
 int rscp_ommit_header(t_rscp_connection* con, int timeout);
 int rscp_parse_header(t_rscp_connection* con, const t_map_fnc attr[], void* base, t_rscp_header_common* common, int timeout);
