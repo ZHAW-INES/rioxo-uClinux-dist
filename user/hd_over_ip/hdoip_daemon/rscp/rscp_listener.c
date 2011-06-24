@@ -95,7 +95,7 @@ void rscp_listener_close_server(t_rscp_server* con, t_rscp_listener *handle)
         if (list_contains(handle->cons, con)) {
             valid = true;
             if (shutdown(con->con.fdw, SHUT_RDWR) == -1) {
-                report("close connection error: %s", strerror(errno));
+                report(ERROR "close connection error: %s", strerror(errno));
             }
             close(con->con.fdw);
             con->con.fdw = -1;
@@ -117,7 +117,7 @@ void* rscp_listener_thread(t_rscp_listener* handle)
     report(" + RSCP Listener [%d] thread", handle->nr);
 
     if ((handle->sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        report(" ? rscp listener socket error: %s", strerror(errno));
+        report(ERROR "rscp listener socket error: %s", strerror(errno));
         return (void*)RSCP_ERRORNO;
     }
 
@@ -128,12 +128,12 @@ void* rscp_listener_thread(t_rscp_listener* handle)
     this_addr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(handle->sockfd, (struct sockaddr_in*)&this_addr, sizeof(struct sockaddr_in)) == -1) {
-        report(" ? rscp listener bind error: %s", strerror(errno));
+        report(ERROR "rscp listener bind error: %s", strerror(errno));
         return (void*)RSCP_ERRORNO;
     }
 
     if (listen(handle->sockfd, RSCP_BACKLOG) == -1) {
-        report(" ? rscp listener listen error: %s", strerror(errno));
+        report(ERROR "rscp listener listen error: %s", strerror(errno));
         return (void*)RSCP_ERRORNO;
     }
 
@@ -145,7 +145,7 @@ void* rscp_listener_thread(t_rscp_listener* handle)
         if ((fd = accept(handle->sockfd, (struct sockaddr*)&remote_addr, sizeof(struct sockaddr_in))) != -1) {
             rscp_listener_start_server(handle, fd, &remote_addr);            
         } else if (fd == -1) {
-            report(" ? rscp listener accept error: %s", strerror(errno));
+            report(ERROR "rscp listener accept error: %s", strerror(errno));
         }
 
     }
@@ -158,7 +158,7 @@ void* rscp_listener_thread(t_rscp_listener* handle)
     // the thread removes itself from handle->cons
     list_traverse_free(cons, (f_node_callback*)rscp_listener_close_server, handle);
 
-    report(" - RSCP Listener [%d] thread", handle->nr);
+    report(DEL "RSCP Listener [%d] thread", handle->nr);
 
     return (void*)RSCP_SUCCESS;
 }
@@ -182,7 +182,7 @@ int rscp_listener_start(t_rscp_listener* handle, int port)
     handle->kills = queue_create();
     handle->nr = nr++;
 
-    report(" + RSCP Listener [%d]", handle->nr);
+    report(NEW "RSCP Listener [%d]", handle->nr);
 
     pthread_mutex_init(&handle->mutex, NULL);
     pthread(handle->th, (pf*)rscp_listener_thread, handle);
@@ -200,11 +200,11 @@ int rscp_listener_close(t_rscp_listener* handle)
     handle->run = false;
 
     if (shutdown(handle->sockfd, SHUT_RDWR) == -1) {
-        report("close socket error: %s", strerror(errno));
+        report(ERROR "close socket error: %s", strerror(errno));
     }
     close(handle->sockfd);
 
-    report(" - RSCP Listener [%d]", handle->nr);
+    report(DEL "RSCP Listener [%d]", handle->nr);
 
     pthread_join(handle->th, 0);
 
@@ -330,7 +330,7 @@ void rscp_listener_event(t_rscp_listener* handle, uint32_t event)
 
 void rscp_listener_close_all(t_rscp_listener* handle)
 {
-    report("rscp_listener_close_all()");
+    report(INFO "rscp_listener_close_all()");
     listener_lock(handle, "rscp_listener_teardown_all");
         bstmap_traverse_freep(&handle->sessions, rscp_listener_traverse, rscp_server_close);
     listener_unlock(handle, "rscp_listener_teardown_all");
@@ -344,7 +344,7 @@ void rscp_listener_close_all(t_rscp_listener* handle)
  */
 void rscp_listener_teardown_all(t_rscp_listener* handle)
 {
-    report("rscp_listener_teardown_all()");
+    report(INFO "rscp_listener_teardown_all()");
     listener_lock(handle, "rscp_listener_teardown_all");
         bstmap_traverse_freep(&handle->sessions, rscp_listener_traverse, rscp_server_teardown);
     listener_unlock(handle, "rscp_listener_teardown_all");
@@ -352,7 +352,7 @@ void rscp_listener_teardown_all(t_rscp_listener* handle)
 
 void rscp_listener_pause_all(t_rscp_listener* handle)
 {
-    report("rscp_listener_pause_all()");
+    report(INFO "rscp_listener_pause_all()");
     listener_lock(handle, "rscp_listener_pause_all");
         bstmap_traverse(handle->sessions, rscp_listener_traverse, rscp_server_pause);
     listener_unlock(handle, "rscp_listener_pause_all");
