@@ -2,3 +2,4 @@ dir_$(CONFIG_USER_HDOIP_APP)		    += hd_over_ip/hdoip_app
 dir_$(CONFIG_USER_HDOIP_DAEMON)		    += hd_over_ip/hdoip_daemon
 dir_$(CONFIG_USER_BCRYPT)		    += bcrypt
 dir_$(CONFIG_USER_HDCP)		    	    += hdcp
+dir_$(CONFIG_USER_USBIP)                    += usbip

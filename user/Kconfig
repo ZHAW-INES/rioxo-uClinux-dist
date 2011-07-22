@@ -4561,6 +4561,9 @@ config USER_BCRYPT
 config USER_HDCP
 	bool "HDCP encryption engine"
 
+config USER_USBIP
+	bool "USB over IP"
+
 endmenu
 
 #############################################################################
