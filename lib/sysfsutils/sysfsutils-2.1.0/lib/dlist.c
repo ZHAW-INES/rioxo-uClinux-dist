@@ -35,7 +35,7 @@
  * else null if no nodes.
  */
 
-inline void *dlist_mark(Dlist *list)
+void *dlist_mark(Dlist *list)
 {
   if(list->marker!=NULL)
     return(list->marker->data);
@@ -47,7 +47,7 @@ inline void *dlist_mark(Dlist *list)
  * Set marker to start.
  */
 
-inline void dlist_start(Dlist *list)
+void dlist_start(Dlist *list)
 {
   list->marker=list->head;
 }
@@ -56,7 +56,7 @@ inline void dlist_start(Dlist *list)
  * Set marker to end.
  */
 
-inline void dlist_end(Dlist *list)
+void dlist_end(Dlist *list)
 {
   list->marker=list->head;
 }
@@ -70,7 +70,7 @@ inline void dlist_end(Dlist *list)
  * return pointer to data at new marker
  * if nowhere to move the marker in desired direction return null 
  */
-inline void *_dlist_mark_move(Dlist *list,int direction)
+void *_dlist_mark_move(Dlist *list,int direction)
 {
   if(direction)
     {
