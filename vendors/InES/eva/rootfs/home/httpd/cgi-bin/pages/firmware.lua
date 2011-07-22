@@ -3,7 +3,7 @@ module (..., package.seeall)
 require("hdoip.html")
 require("hdoip.pipe")
 
-local IMAGE_HDR_SIZE = 20
+local IMAGE_HDR_SIZE = 28
 local IMAGE_HDR_ID = "INES"
 
 function rebooting(t)
@@ -11,9 +11,16 @@ function rebooting(t)
     hdoip.html.Title("Firmware update")
     hdoip.html.Text("The firmware will update now and reboot after. This takes  3 .. 4 minutes")
     hdoip.html.Text("<br><b> do NOT turn off the device during this process</b>")
- 
     hdoip.html.Bottom(t)
+end
 
+function rebooting_load_bar(t, t_load, t_restart)
+    hdoip.html.Header(t, label.page_name .. "Rebooting", script_path)
+    hdoip.html.Title("Firmware update")
+    hdoip.html.Text("The firmware will update now and reboot after.")
+    hdoip.html.Text("<br><b> do NOT turn off the device during this process</b>")
+    hdoip.html.Loadbar(t_load, t_restart)
+    hdoip.html.Bottom(t)
 end
 
 -- ------------------------------------------------------------------
@@ -37,12 +44,24 @@ function show(t)
             fd:close()
             if(hdr ~= nil) then
                 if(string.sub(hdr, 1, 4) ~= IMAGE_HDR_ID) then
-                    t.err = t.err .. "This file is not an firmware image<br>\n"
+                    t.err = t.err .. "This file is not a firmware image<br>\n"
                     os.execute("/bin/busybox rm "..firmware_image)
                 else
-                    rebooting(t)
-                    hdoip.pipe.remote_update(firmware_image)
-                    return
+                    if(string.byte(hdr, 5) == 20) then
+                        loadtime = string.byte(hdr, 21)
+                        loadtime = loadtime + string.byte(hdr, 22) * 256
+                        restarttime = string.byte(hdr, 25)
+                        rebooting_load_bar(t, loadtime, restarttime)
+                        hdoip.pipe.remote_update(firmware_image)
+                        return
+                    end
+
+                    if(string.byte(hdr, 5) == 12) then
+                        rebooting(t)
+                        hdoip.pipe.remote_update(firmware_image)
+                        return
+                    end
+                    t.err = t.err .. "This file is not a valid firmware image<br>\n"
                 end
             end
         else

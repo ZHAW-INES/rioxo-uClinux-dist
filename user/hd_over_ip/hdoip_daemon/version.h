@@ -5,6 +5,6 @@
 #define VERSION_SOFTWARE        0xFFFFFFFF
 
 // version tag (max. 50 letters)
-#define VERSION_TAG             "beta (stth)"
+#define VERSION_TAG             "loadbar (buan)"
 
 #endif /* VERSION_H_ */
