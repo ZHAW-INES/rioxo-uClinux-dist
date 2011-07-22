@@ -1,0 +1,5 @@
+#!/bin/sh
+
+/sbin/modprobe vhci-hcd
+/sbin/ifconfig eth0 hw ether 00:15:12:00:33:44
+/sbin/ifconfig eth0 10.0.1.30
