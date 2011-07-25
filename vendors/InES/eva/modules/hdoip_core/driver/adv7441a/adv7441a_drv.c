@@ -412,7 +412,7 @@ int adv7441a_get_audio_timing(t_adv7441a* handle)
     } else if((tmp_bit_width == handle->aud_st.bit_width) &&    // parameter not changed
               (tmp_mute == handle->aud_st.mute) &&
               (tmp_channel_cnt == handle->aud_st.channel_cnt) &&
-              (tmp_fs = handle->aud_st.fs)) {
+              (tmp_fs == handle->aud_st.fs)) {
         return ERR_ADV7441A_AUD_PARAM_NOT_CHANGED;
     } else { // capture parameter
         handle->aud_st.bit_width = tmp_bit_width;
@@ -562,6 +562,7 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
      *  TMDS clock active
      *  Video PLL locked
      */
+
     if(((hdmi_raw3 & ADV7441A_BIT_TMDS_CLK_A_RAW) != 0) && ((hdmi_raw3 & ADV7441A_BIT_VIDEO_PLL_LCK_RAW) != 0)) {
         /* Encryption detection */
         if(hdmi_status2 & ADV7441A_BIT_HDMI_ENCRPT_ST) {

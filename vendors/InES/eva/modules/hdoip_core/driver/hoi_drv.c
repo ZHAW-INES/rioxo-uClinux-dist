@@ -196,6 +196,7 @@ void hoi_drv_handler(t_hoi* handle)
     eti_drv_handler(&handle->eti, handle->event);
     hdcp_drv_handler(&handle->eti, &handle->eto, &handle->adv7441a, &handle->adv9889, &handle->vsi, &handle->vso, &handle->asi, &handle->aso, &handle->drivers, handle->event); //hdcp handler
     adv9889_drv_handler(&handle->adv9889, handle->event);
+    adv7441a_handler(&handle->adv7441a, handle->event);
     stream_sync(&handle->sync);
     wdg_reset(handle->p_wdg); //reset watchdog
 }
