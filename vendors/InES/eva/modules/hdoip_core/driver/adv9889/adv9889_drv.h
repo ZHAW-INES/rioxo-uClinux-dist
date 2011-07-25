@@ -22,6 +22,7 @@
 #define AV_MUTED            (0x01)
 #define AV_UNMUTED          (0x00)
 #define HDCP_CHECK_LINK_INT (0x32)      /* 50 intervall */
+#define EDID_TIMEOUT        (0x28)      /* Timeout if EDID cannot be read */
 
 enum {
     HDCP_OFF = 0x00,
@@ -48,6 +49,7 @@ typedef struct {
     uint8_t         bksv_cnt;
     uint8_t         bksv[14*5];
     uint8_t         bstatus[2];
+    uint32_t        edid_timeout;
 } t_adv9889;
 
 
@@ -60,6 +62,7 @@ int adv9889_drv_hdcp_on(t_adv9889* handle);
 int adv9889_drv_hdcp_off(t_adv9889* handle);
 int adv9889_drv_av_mute(t_adv9889* handle);
 int adv9889_drv_av_unmute(t_adv9889* handle);
+int adv9889_drv_handler(t_adv9889* handle, t_queue* event_queue);
 
 
 #endif /* ADV9889_DRV_H_ */

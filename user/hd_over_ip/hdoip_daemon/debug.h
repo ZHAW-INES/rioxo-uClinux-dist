@@ -45,11 +45,8 @@
 #undef RSCP_LOG
 #undef REPORT_RSCP_PACKETS
 
-#define DBGCONSOLE          // x
-#define DBGCONSOLERSCP     // x
-
-//#undef DBGCONSOLE          // x
-//#undef DBGCONSOLERSCP     // x
+#define DBGCONSOLE
+#define DBGCONSOLERSCP
 
 #define EDID_WRITE_HEX_FILE
 #undef REPORT_EDID

@@ -72,6 +72,7 @@ int adv9889_drv_init(t_adv9889* handle, t_i2c* p_i2c, t_vio* p_vio)
     handle->hdcp_cnt        = 0;
     handle->repeater        = 0;
     handle->bksv_cnt        = 0;
+    handle->edid_timeout    = 0;
 
 	// shut down...
     adv9889_write(handle, ADV9889_OFF_PWR_DOWN, ADV9889_PWR_DOWN_ON);
@@ -310,6 +311,16 @@ int adv9889_drv_handler(t_adv9889* handle, t_queue* event_queue)
         }
     }
 
+    // restart chip if EDID cannot be read
+    if(handle->edid_timeout != 0) {
+        handle->edid_timeout--;
+    }
+    if(handle->edid_timeout == 1) {
+        adv9889_drv_powerdown(handle);
+        adv9889_drv_powerup(handle);
+        handle->edid_timeout = EDID_TIMEOUT;
+    }
+
     return SUCCESS;
 }
 
@@ -324,6 +335,7 @@ int adv9889_irq_handler(t_adv9889* handle, t_queue* event_queue)
         if ((status & ADV9889_STATUS_ON) == ADV9889_STATUS_ON) {
             REPORT(INFO, "adv9889 activated");
             adv9889_drv_powerup(handle);
+            handle->edid_timeout = EDID_TIMEOUT;
         } else {
             REPORT(INFO, "adv9889 deactivated");
             adv9889_drv_powerdown(handle);
@@ -338,6 +350,7 @@ int adv9889_irq_handler(t_adv9889* handle, t_queue* event_queue)
             // we support a maximum of 3 extension blocks for now!
             if (handle->edid[126] > 3) handle->edid[126] = 3;
         }
+
         if (handle->edid_segment < ((handle->edid[126]+1)/2)) {
             // start read next edid  segment
             adv9889_write(handle, ADV9889_OFF_EDID_SEG, handle->edid_segment);
@@ -347,17 +360,18 @@ int adv9889_irq_handler(t_adv9889* handle, t_queue* event_queue)
                 handle->edid_first = 0;
                 REPORT(INFO, "adv9889 config");
                 adv9889_drv_boot(handle);
+                handle->edid_timeout = 0;
                 queue_put(event_queue, E_ADV9889_CABLE_ON);
             }
         }
     }
 
-    if (irq2 & ADV9889_INT2_HDCP_ERR) {
-        tmp = adv9889_read(handle, ADV9889_OFF_HDCP_STATE); 
+    if(handle->hdcp_state != HDCP_OFF) {
+        if (irq2 & ADV9889_INT2_HDCP_ERR) {
+            tmp = adv9889_read(handle, ADV9889_OFF_HDCP_STATE); 
 
-        REPORT(INFO, "[HDMI OUT] HDCP error : %d (state : %d)", (tmp&0xF0)>>4, (tmp&0xF));
-
-        if(handle->hdcp_state != HDCP_OFF) {
+            REPORT(INFO, "[HDMI OUT] HDCP error : %d (state : %d)", (tmp&0xF0)>>4, (tmp&0xF));
+       
             adv9889_drv_av_mute(handle);
             adv9889_drv_hdcp_off(handle);
         }
