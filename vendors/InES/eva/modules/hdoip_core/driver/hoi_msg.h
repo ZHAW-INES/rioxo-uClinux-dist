@@ -90,7 +90,7 @@
 #define HOI_MSG_WDG_DISABLE         (0x70000108)
 #define HOI_MSG_WDG_SERVICE         (0x70000109)
 #define HOI_MSG_SET_TIMING          (0x7000010A)
-
+#define HOI_MSG_LED                 (0x7000010B)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)

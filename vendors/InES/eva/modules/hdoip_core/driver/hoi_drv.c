@@ -38,6 +38,7 @@ void hoi_drv_init(t_hoi* handle)
     handle->p_eso           = ioremap(BASE_ETO,         0xffffffff);
     handle->p_ver           = ioremap(BASE_VER,         0xffffffff);
     handle->p_sysid         = ioremap(BASE_SYSID,       0xffffffff);
+    handle->p_led           = ioremap(BASE_LED,         0xffffffff);
 
     // init
     handle->event = queue_init(100);
@@ -54,7 +55,7 @@ void hoi_drv_init(t_hoi* handle)
     i2c_drv_init(&handle->i2c_tag_vid, handle->p_i2c_tag_vid, 400000);
  
     // init
-    led_drv_init(&handle->led, &handle->i2c_tag_vid, &handle->i2c_tag_aud);
+    led_drv_init(&handle->led, &handle->i2c_tag_vid, &handle->i2c_tag_aud, handle->p_led);
     eti_drv_set_ptr(&handle->eti, handle->p_esi);
     eto_drv_set_ptr(&handle->eto, handle->p_eso);
     vio_drv_init(&handle->vio, handle->p_vio, handle->p_adv212);
@@ -197,6 +198,7 @@ void hoi_drv_handler(t_hoi* handle)
     hdcp_drv_handler(&handle->eti, &handle->eto, &handle->adv7441a, &handle->adv9889, &handle->vsi, &handle->vso, &handle->asi, &handle->aso, &handle->drivers, handle->event); //hdcp handler
     adv9889_drv_handler(&handle->adv9889, handle->event);
     adv7441a_handler(&handle->adv7441a, handle->event);
+    led_drv_handler(&handle->led);
     stream_sync(&handle->sync);
     wdg_reset(handle->p_wdg); //reset watchdog
 }

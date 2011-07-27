@@ -43,6 +43,7 @@
 #define BASE_TSE            (na_tse_mac_control_port)
 #define BASE_VER            (na_acb_firmware_revision)
 #define BASE_SYSID          (na_sysid)
+#define BASE_LED            (na_acb_led)
 
 // Register area sizes
 #define TSE_MAC_SIZE        0x400

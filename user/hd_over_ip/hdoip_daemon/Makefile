@@ -78,6 +78,8 @@ OBJS   +=   log/hdoip_log.o
 
 # we need the ioctl defines from hdoip_types.h
 CFLAGS += -I../../../vendors/InES/eva/modules/hdoip_core/driver
+# we need the instruction-codes defines from led_drv_instructions.h
+CFLAGS += -I../../../vendors/InES/eva/modules/hdoip_core/driver/led
 CFLAGS += -std=gnu99
 
 LDLIBS += -lpthread -lrt

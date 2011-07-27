@@ -56,6 +56,7 @@ typedef struct {
     void                *p_hdcp;
     void                *p_ver;
     void                *p_sysid;
+    void                *p_led;
 
     t_i2c               i2c_tx;
     t_i2c               i2c_rx;

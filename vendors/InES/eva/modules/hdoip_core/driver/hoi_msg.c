@@ -503,6 +503,12 @@ int hoi_drv_msg_bw(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
+int hoi_drv_msg_led(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    led_drv_set_status(&handle->led, msg->value);
+    return SUCCESS;
+}
+
 //------------------------------------------------------------------------------
 // Command
 
@@ -797,6 +803,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_ASI,                   hoi_drv_msg_asi);
         call(HOI_MSG_ASO,                   hoi_drv_msg_aso);
         call(HOI_MSG_BW,                    hoi_drv_msg_bw);
+        call(HOI_MSG_LED,                   hoi_drv_msg_led);
 
         call(HOI_MSG_OFF,                   hoi_drv_msg_off);
         call(HOI_MSG_IFMT,                  hoi_drv_msg_ifmt);

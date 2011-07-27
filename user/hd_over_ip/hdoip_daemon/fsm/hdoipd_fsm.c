@@ -523,12 +523,14 @@ void hdoipd_event(uint32_t event)
     switch (event) {
         // Ethernet connection on/off
         case E_ETO_LINK_UP:
+            hoi_drv_set_led_status(ETHERNET_ACTIVE);
             hdoipd_set_rsc(RSC_ETH_LINK);
             if (hdoipd_state(HOID_READY)) {
                 hdoipd_start();
             }
         break;
         case E_ETO_LINK_DOWN:
+            hoi_drv_set_led_status(ETHERNET_INACTIVE);
             hdoipd_clr_rsc(RSC_ETH_LINK);
             if (hdoipd_state(HOID_VTB|HOID_VRB)) {
                 hdoipd_force_ready();
