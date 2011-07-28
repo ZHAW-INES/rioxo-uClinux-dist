@@ -115,7 +115,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         if(merge) { // new or changed E-EDID from remote received
             ret = edid_read_file(&edid1, EDID_PATH_VIDEO_IN);
             if(ret != -1) {
-                if(ret == -2) { // No E-EDID for video exists
+                if((ret == -2) || !get_multicast_enable()) { // No E-EDID for video exists or unicast -> write edid without merge
                     report(INFO "E-EDID loaded");
                     edid_write_file((t_edid *)m->edid.edid, EDID_PATH_VIDEO_IN);
                     hoi_drv_wredid((t_edid *)m->edid.edid);

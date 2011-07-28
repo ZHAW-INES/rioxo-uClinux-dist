@@ -83,7 +83,7 @@ int adv7441a_on(t_adv7441a* handle)
 int adv7441a_off(t_adv7441a* handle) 
 {
 	int tmp;
-	
+
 	if((handle->status & ADV7441A_STATUS_ACTIVE) != 0) {
 		tmp = adv7441a_usr_map_read(handle, ADV7441A_REG_OUTPUT_CONTROL);
 		adv7441a_usr_map_write(handle, ADV7441A_REG_OUTPUT_CONTROL, tmp | ADV7441A_BIT_TOD); /* output drivers tri-stated */
@@ -530,14 +530,14 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
 	}
 
     /* Video PLL changed */
-	if((hdmi_status3 & ADV7441A_BIT_VIDEO_PLL_LCK_ST) != 0) {
+    if((hdmi_status3 & ADV7441A_BIT_VIDEO_PLL_LCK_ST) != 0) {
         int3_clr |= ADV7441A_BIT_VIDEO_PLL_LCK_CLR;
-		if((hdmi_raw3 & ADV7441A_BIT_VIDEO_PLL_LCK_RAW) != 0){
-			//REPORT(INFO, "[HDMI IN] Video PLL locked\n");
-		} else {
-    		//REPORT(INFO, "[HDMI IN] Video PLL unlocked\n");
-		}	
-	}
+        if((hdmi_raw3 & ADV7441A_BIT_VIDEO_PLL_LCK_RAW) != 0){
+            REPORT(INFO, "[HDMI IN] Video PLL locked\n");
+        } else {
+            REPORT(INFO, "[HDMI IN] Video PLL unlocked\n");
+        }	
+    }
 
 	/* Audio PLL changed */
     if((hdmi_status2 & ADV7441A_BIT_AUDIO_PLL_LCK_ST) != 0) {
