@@ -41,6 +41,7 @@ typedef struct {
 	uint32_t        edid_first;     //!< first edid segment read
 	uint32_t        audio_cnt;
 	uint32_t        audio_fs;
+    uint32_t        audio_width;
 	uint8_t         edid[512];      //!< edid + up to three segments
     int             av_mute;
     int             hdcp_state;
@@ -54,7 +55,7 @@ typedef struct {
 
 
 int adv9889_drv_init(t_adv9889* handle, t_i2c* p_i2c, t_vio* vio);
-int adv9889_drv_setup_audio(t_adv9889* handle, int ch, int fs);
+int adv9889_drv_setup_audio(t_adv9889* handle, int ch, int fs, int width);
 int adv9889_irq_handler(t_adv9889* handle, t_queue* event_queue);
 int adv9889_drv_powerup(t_adv9889* handle);
 int adv9889_drv_get_edid(t_adv9889* handle, uint8_t* mem);

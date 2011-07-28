@@ -184,7 +184,7 @@ int adv9889_drv_boot(t_adv9889* handle)
     }
     
     // configure audio
-    adv9889_drv_setup_audio(handle, handle->audio_cnt, handle->audio_fs);
+    adv9889_drv_setup_audio(handle, handle->audio_cnt, handle->audio_fs, handle->audio_width);
 
     // AV mute off
     adv9889_write(handle, ADV9889_OFF_PWR_DOWN, ADV9889_PWR_DOWN_OFF);
@@ -193,12 +193,15 @@ int adv9889_drv_boot(t_adv9889* handle)
     return SUCCESS;
 }
 
-int adv9889_drv_setup_audio(t_adv9889* handle, int ch, int fs)
+int adv9889_drv_setup_audio(t_adv9889* handle, int ch, int fs, int width)
 {
     uint32_t m = ADV9889_I2S_STD;
+    uint8_t fs_code = 0;
+    uint8_t wd_code = 0;
 
     handle->audio_cnt = ch;
     handle->audio_fs = fs;
+    handle->audio_width = width;
 
     adv9889_write(handle, ADV9889_OFF_AUD_CHCNT, ADV9889_AUD_CHANNEL(ch));
 
@@ -212,6 +215,30 @@ int adv9889_drv_setup_audio(t_adv9889* handle, int ch, int fs)
     adv9889_write(handle, ADV9889_OFF_N_2, (m>>16)&0x0f);
     adv9889_write(handle, ADV9889_OFF_N_1, (m>> 8)&0xff);
     adv9889_write(handle, ADV9889_OFF_N_0, (m>> 0)&0xff);
+
+    switch (fs) {
+        case 32000 :  fs_code |= 0x30; break;
+        case 44100 :  fs_code |= 0x00; break;
+        case 48000 :  fs_code |= 0x20; break;
+        case 88200 :  fs_code |= 0x80; break;
+        case 96000 :  fs_code |= 0xA0; break;
+        case 176400 : fs_code |= 0xC0; break;
+        case 192000 : fs_code |= 0xE0; break;
+    }
+    adv9889_write(handle, ADV9889_OFF_I2S_FS, fs_code);
+
+    switch (width) {
+        case 16 : wd_code |= 0x02; break;
+        case 17 : wd_code |= 0x0C; break;
+        case 18 : wd_code |= 0x04; break;
+        case 19 : wd_code |= 0x08; break;
+        case 20 : wd_code |= 0x0A; break;
+        case 21 : wd_code |= 0x0D; break;
+        case 22 : wd_code |= 0x07; break;
+        case 23 : wd_code |= 0x09; break;
+        case 24 : wd_code |= 0x0B; break;
+    }
+    adv9889_write(handle, ADV9889_OFF_I2S_WORD_LENGTH, wd_code);
 
     return SUCCESS;
 }

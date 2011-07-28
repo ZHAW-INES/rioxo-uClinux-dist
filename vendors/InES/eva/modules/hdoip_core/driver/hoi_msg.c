@@ -434,7 +434,7 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
     aso_drv_start(&handle->aso);
 
     if (handle->drivers & DRV_ADV9889) {
-        adv9889_drv_setup_audio(&handle->adv9889, msg->channel_cnt, msg->fs);
+        adv9889_drv_setup_audio(&handle->adv9889, msg->channel_cnt, msg->fs, msg->width);
     }
 
     if (msg->cfg & DRV_STREAM_SYNC) {
