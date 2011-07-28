@@ -167,60 +167,72 @@ void led_drv_control_set(t_led* handle, uint32_t led, uint32_t status)
 int led_drv_set_status(t_led* handle, uint32_t instruction)
 {
     switch (instruction){
-        case ETHERNET_ACTIVE        :   led_drv_control_set(handle, LED_ETH_STATUS,     LED_ON);
-                                        led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_1S);
-                                        break;
+        case ETHERNET_ACTIVE                :   led_drv_control_set(handle, LED_ETH_STATUS,     LED_ON);
+                                                led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_1S);
+                                                break;
 
-        case ETHERNET_INACTIVE      :   led_drv_control_set(handle, LED_ETH_STATUS,     LED_OFF);
-                                        led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_3S);
-                                        break;
+        case ETHERNET_INACTIVE              :   led_drv_control_set(handle, LED_ETH_STATUS,     LED_OFF);
+                                                led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_3S);
+                                                break;
 
-        case DVI_IN_CONNECTED       :   led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_ON);
-                                        led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
-                                        break;
+        case DVI_IN_CONNECTED_NO_AUDIO      :   led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_FLASHING_3S);
+                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
+                                                break;
 
-        case DVI_IN_DISCONNECTED    :   led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_OFF);
-                                        led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
-                                        break;
+        case DVI_IN_CONNECTED_WITH_AUDIO    :   led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_ON);
+                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
+                                                break;
 
-        case DVI_OUT_CONNECTED      :   led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_ON);
-                                        led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
-                                        break;
+        case DVI_IN_DISCONNECTED            :   led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_OFF);
+                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
+                                                break;
 
-        case DVI_OUT_DISCONNECTED   :   led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_OFF);
-                                        led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
-                                        break;
+        case DVI_OUT_CONNECTED_NO_AUDIO     :   led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_FLASHING_3S);
+                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
+                                                break;
 
-        case FIRMWARE_START         :   led_drv_control_set(handle, LED_BOOT,           LED_ON);
-                                        led_drv_control_set(handle, LED_ETH_STATUS,     LED_OFF);
-                                        led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_3S);
-                                        led_drv_control_set(handle, LED_POWER_RED,      LED_OFF);
-                                        led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
-                                        led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_OFF);
-                                        led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
-                                        led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_OFF);
-                                        break;
+        case DVI_OUT_CONNECTED_WITH_AUDIO   :   led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_ON);
+                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
+                                                break;
 
-        case NO_STREAM_ACTIVE       :   led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_1S);
-                                        break;
+        case DVI_OUT_DISCONNECTED           :   led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
+                                                break;
 
-        case STREAM_ACTIVE          :   led_drv_control_set(handle, LED_POWER_GREEN,    LED_ON);
-                                        break;
+        case FIRMWARE_START                 :   led_drv_control_set(handle, LED_BOOT,           LED_ON);
+                                                led_drv_control_set(handle, LED_ETH_STATUS,     LED_OFF);
+                                                led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_3S);
+                                                led_drv_control_set(handle, LED_POWER_RED,      LED_OFF);
+                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
+                                                led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_OFF);
+                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_OFF);
+                                                break;
 
-        case STREAM_ERROR_HDMI_IN   :   led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_OFF);
-                                        led_drv_control_set(handle, LED_VID_IN_RED,     LED_ON);
-                                        break;
+        case NO_STREAM_ACTIVE               :   led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_1S);
+                                                break;
 
-        case STREAM_ERROR_HDMI_OUT  :   led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_OFF);
-                                        led_drv_control_set(handle, LED_VID_OUT_RED,    LED_ON);
-                                        break;
+        case STREAM_ACTIVE                  :   led_drv_control_set(handle, LED_POWER_GREEN,    LED_ON);
+                                                break;
 
-        case IDENTIFICATION_ON      :   led_drv_control_set(handle, LED_POWER_RED,      LED_ON);
-                                        break;
+        case STREAM_ERROR_HDMI_IN           :   led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_OFF);
+                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_ON);
+                                                break;
 
-        case IDENTIFICATION_OFF     :   led_drv_control_set(handle, LED_POWER_RED,      LED_OFF);
-                                        break;
+        case STREAM_ERROR_HDMI_OUT          :   led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_ON);
+                                                break;
 
-        default                     :   break;
+        case IDENTIFICATION_ON              :   led_drv_control_set(handle, LED_POWER_RED,      LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_FLASHING_1S);
+                                                break;
+
+        case IDENTIFICATION_OFF             :   led_drv_control_set(handle, LED_POWER_RED,      LED_OFF);
+                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
+                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
+                                                break;
+
+        default                             :   break;
     }
 }

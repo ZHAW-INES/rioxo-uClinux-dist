@@ -542,42 +542,66 @@ void hdoipd_event(uint32_t event)
         // resource state
         case E_ADV9889_CABLE_ON:
             hdoipd_set_rsc(RSC_VIDEO_SINK);
+            hoi_drv_set_led_status(DVI_OUT_CONNECTED_NO_AUDIO);
         break;
         case E_ADV9889_CABLE_OFF:
             hdoipd_clr_rsc(RSC_VIDEO_SINK);
+            hoi_drv_set_led_status(DVI_OUT_DISCONNECTED);
         break;
         case E_ADV7441A_NC:
             hdoipd_clr_rsc(RSC_VIDEO_IN);
+            hoi_drv_set_led_status(DVI_IN_DISCONNECTED);
         break;
         case E_ADV7441A_CONNECT:
             // TODO handle event
         break;
         case E_ADV7441A_NEW_RES:
             hdoipd_set_rsc(RSC_VIDEO_IN);
+            if(hdoipd_rsc(RSC_AUDIO0_IN)) {
+                hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
+            } else {
+                hoi_drv_set_led_status(DVI_IN_CONNECTED_NO_AUDIO);
+            }
         break;
         case E_ADV7441A_NEW_AUDIO:
             hdoipd_set_rsc(RSC_AUDIO0_IN);
+            hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
         break;
         case E_ADV7441A_NO_AUDIO:
             hdoipd_clr_rsc(RSC_AUDIO0_IN);
+            if(hdoipd_rsc(RSC_VIDEO_IN)) {
+                hoi_drv_set_led_status(DVI_IN_CONNECTED_NO_AUDIO);
+            }
         break;
         case E_ETI_VIDEO_ON:
             hdoipd_set_rsc(RSC_EVI);
+            hoi_drv_set_led_status(STREAM_ACTIVE);
         break;
         case E_ETI_VIDEO_OFF:
             hdoipd_clr_rsc(RSC_EVI);
+            if(hdoipd_rsc(RSC_ETH_LINK)) {
+                hoi_drv_set_led_status(ETHERNET_ACTIVE);
+            }
         break;
         case E_ETI_AUDIO_ON:
             hdoipd_set_rsc(RSC_EAI);
+            hoi_drv_set_led_status(DVI_OUT_CONNECTED_WITH_AUDIO);
         break;
         case E_ETI_AUDIO_OFF:
             hdoipd_clr_rsc(RSC_EAI);
+            if(hdoipd_rsc(RSC_VIDEO_SINK)) {
+                hoi_drv_set_led_status(DVI_OUT_CONNECTED_NO_AUDIO);
+            }
         break;
         case E_ETO_VIDEO_ON:
             hdoipd_set_rsc(RSC_EVO);
+            hoi_drv_set_led_status(STREAM_ACTIVE);
         break;
         case E_ETO_VIDEO_OFF:
             hdoipd_clr_rsc(RSC_EVO);
+            if(hdoipd_rsc(RSC_ETH_LINK)) {
+                hoi_drv_set_led_status(NO_STREAM_ACTIVE);
+            }
         break;
         case E_ETO_AUDIO_ON:
             hdoipd_set_rsc(RSC_EAO);

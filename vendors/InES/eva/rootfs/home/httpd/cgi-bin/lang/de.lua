@@ -102,6 +102,7 @@ label = {
     p_eth_ip_dhcp = "IP-Adresse von einem DHCP-Server beziehen";
     p_eth_ip_static = "Feste IP-Adresse setzen";
     p_eth_dns_server = "DNS-Server";
+    p_eth_led = "Ger&auml;t identifizieren";
 
     -- Page streaming
     p_st_video = "Video";

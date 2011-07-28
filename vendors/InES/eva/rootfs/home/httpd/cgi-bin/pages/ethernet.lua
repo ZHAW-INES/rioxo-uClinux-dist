@@ -78,6 +78,11 @@ function show(t)
             t.sys_dhcp = 0
         end 
         
+        if(hdoip.pipe.getParam(hdoip.pipe.REG_IDENTIFICATION) == "14") then
+            t.identification = 1;
+        else 
+            t.identification = 0;
+        end
 
     else
         t.sys_hostname = hdoip.html.unescape(t.sys_hostname)
@@ -85,7 +90,6 @@ function show(t)
         
         t.sys_caption = hdoip.html.unescape(t.sys_caption)
         hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DEV_CAPTION, t.sys_caption)
-        
         
         if(t.sys_dhcp == "1") then
             t.sys_dhcp_str = "true"
@@ -95,6 +99,14 @@ function show(t)
             t.sys_dhcp = 0
         end
         
+        if(t.identification ~= nil) then
+           hdoip.pipe.setParam(hdoip.pipe.REG_IDENTIFICATION, "14")
+           t.identification = 1
+        else
+           hdoip.pipe.setParam(hdoip.pipe.REG_IDENTIFICATION, "15")
+           t.identification = 0 
+        end
+
         hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DHCP, t.sys_dhcp_str)
 
         -- Set network parameter if not in DHCP mode
@@ -147,6 +159,7 @@ function show(t)
         if(hdoip.pipe.getParam(hdoip.pipe.REG_MODE_START) ~= t_sys_mode_conv[tonumber(t.sys_mode)]) then
             hdoip.pipe.setParam(hdoip.pipe.REG_MODE_START, t_sys_mode_conv[tonumber(t.sys_mode)])
         end
+
         hdoip.pipe.getParam(hdoip.pipe.REG_SYS_UPDATE)
     end
 
@@ -174,6 +187,9 @@ function show(t)
         hdoip.html.FormText(REG_SYS_DEV_CAPTION_LABEL, t.sys_caption, 30, 0);                                   hdoip.html.TableInsElement(1);
         hdoip.html.Text(label.p_eth_mode);                                                                      hdoip.html.TableInsElement(1);
         hdoip.html.FormRadio(REG_MODE_START_LABEL, t_sys_mode, 3, t.sys_mode)                                   hdoip.html.TableInsElement(1);
+
+        hdoip.html.Text(label.p_eth_led);                                                                       hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("identification", 1, "", t.identification)                                      hdoip.html.TableInsElement(2);
 
         hdoip.html.TableBottom()
     
