@@ -409,11 +409,11 @@ int adv7441a_get_audio_timing(t_adv7441a* handle)
 
     if((tmp_fs == 0) || (tmp_bit_width < 8) || (tmp_bit_width > 32)) { // paramter not in range
         return ERR_ADV7441A_AUD_PARAM_NOT_VALID;
-    } else if((tmp_bit_width == handle->aud_st.bit_width) &&    // parameter not changed
-              (tmp_mute == handle->aud_st.mute) &&
-              (tmp_channel_cnt == handle->aud_st.channel_cnt) &&
-              (tmp_fs == handle->aud_st.fs)) {
-        return ERR_ADV7441A_AUD_PARAM_NOT_CHANGED;
+  //  } else if((tmp_bit_width == handle->aud_st.bit_width) &&    // parameter not changed
+  //            (tmp_mute == handle->aud_st.mute) &&
+  //            (tmp_channel_cnt == handle->aud_st.channel_cnt) &&
+  //            (tmp_fs == handle->aud_st.fs)) {
+  //      return ERR_ADV7441A_AUD_PARAM_NOT_CHANGED;
     } else { // capture parameter
         handle->aud_st.bit_width = tmp_bit_width;
         handle->aud_st.mute = tmp_mute;
@@ -607,9 +607,9 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
 
         /* Audio Clock Regeneration (ACR) packet received */
         if(hdmi_status2 & ADV7441A_BIT_AUDIO_C_PCKT_ST) {
+         	int2_clr |= ADV7441A_BIT_AUDIO_C_PCKT_CLR;
             REPORT(INFO, "[HDMI IN] Audio clock regeneration (ACR) packet received\n");
         	adv7441a_drv_aud_pll_reset(handle);
-         	int2_clr |= ADV7441A_BIT_AUDIO_C_PCKT_CLR;
         }
 
         /* CTS changes by more than threshold */
@@ -646,7 +646,7 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
                     handle->status = handle->status & ~ADV7441A_STATUS_CONNECTION;
                     REPORT(INFO, "[HDMI IN] link on port A lost!\n");
                     queue_put(event_queue, E_ADV7441A_NC);
-                    //queue_put(event_queue, E_ADV7441A_NO_AUDIO);
+                    queue_put(event_queue, E_ADV7441A_NO_AUDIO);
         }
 
         // Clear invalide interrupts if no TMDS clock is detected

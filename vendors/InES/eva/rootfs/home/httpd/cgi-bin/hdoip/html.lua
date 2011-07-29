@@ -300,7 +300,7 @@ end
 
 function Bottom(t)
     Error(t.err)
-    html_str = html_str .. '</div>\n</div>\n</div>\n'
+    html_str = html_str .. '</div>\n'
     html_str = html_str .. '<div id="bottom">\n<div id="footer">\n<div id="footerleft">\n'
     -- TODO: insert footer left
     --html_str = html_str .. '</div><div id="footermain"><div class="moduletable_address"><p>rioxo GmbH | <a href="mailto:mail@rioxo.net">mail@rioxo.net</a></p>\n'
