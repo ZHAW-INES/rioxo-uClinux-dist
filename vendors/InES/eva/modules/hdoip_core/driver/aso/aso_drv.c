@@ -198,6 +198,10 @@ int aso_drv_set_aud_params(t_aso* handle, struct hdoip_aud_params* aud_params)
         return ERR_ASO_RUNNING;
     }
 
+    if ((aud_params->sample_width) > 16) {
+        aud_params->sample_width = 24;
+    }
+
     /* calculate i2s clock (in q5.27 format) */
 
     /* 64*fs = output frequency. division by 2 because clock signal toggles after division factor */

@@ -141,6 +141,12 @@ int rscp_parse_rtp_format(char* line, t_rscp_rtp_format* p)
         p->value = atoi(token);
         nextsp(token, line);
         p->value2 = atoi(token);
+    } else if (strcmp(token, "aud20Bit") == 0) {
+        p->compress = 20;
+        nextsp(token, line);
+        p->value = atoi(token);
+        nextsp(token, line);
+        p->value2 = atoi(token);
     } else if (strcmp(token, "aud24Bit") == 0) {
         p->compress = 24;
         nextsp(token, line);

@@ -299,10 +299,8 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     /* Set CTS change Threshold (0x10) */
     adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_10H, 0x1F);
 
-    /* Disable audio pll, MCLK fs, MCLK N (0x1C) */
-    //adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1CH, 0x20); /* PLL enable write 0x60, disable write 0x20 */
-    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1CH, 0x20); /* PLL enable write 0x60, disable write 0x20 */
-
+    /* Enable audio pll, MCLK fs, MCLK N (0x1C) */
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1CH, 0x58); /* PLL enable write 0x60, disable write 0x20 */
 
     /* Audio Mute options and conversion mode (0x1D) */
     adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, ADV7441A_BIT_UP_CONVERSION_MODE);
@@ -419,6 +417,7 @@ int adv7441a_get_audio_timing(t_adv7441a* handle)
         handle->aud_st.mute = tmp_mute;
         handle->aud_st.channel_cnt = tmp_channel_cnt;
         handle->aud_st.fs = tmp_fs;
+
 	    return ERR_ADV7441A_SUCCESS;
     }
 

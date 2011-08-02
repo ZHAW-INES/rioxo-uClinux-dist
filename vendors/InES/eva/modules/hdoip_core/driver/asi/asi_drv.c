@@ -182,6 +182,11 @@ int asi_drv_set_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params)
     uint16_t payload_words, ip_length, udp_length, frame_size, time_per_word;
     uint8_t sample_len, ch;
 
+
+    if ((aud_params->sample_width) > 16) {
+        aud_params->sample_width = 24;
+    }
+
     if((handle->status & ASI_DRV_STATUS_ACTIV) != 0) {
         return ERR_ASI_RUNNING;
     }
