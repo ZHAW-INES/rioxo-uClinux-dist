@@ -512,11 +512,16 @@ void hdoipd_fsm_vtb(uint32_t event)
         case E_ADV7441A_NO_AUDIO:
             rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_OFF);
         break;
+        case E_ASI_NEW_FS:
+            rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_ON);
+        break;
     }
 }
 
 void hdoipd_event(uint32_t event)
 {
+    uint32_t fs;
+
     lock("hdoipd_event");
         report(EVENT "(%x) %s ", event, event_str(event));
 
@@ -550,6 +555,7 @@ void hdoipd_event(uint32_t event)
         break;
         case E_ADV7441A_NC:
             hdoipd_clr_rsc(RSC_VIDEO_IN);
+            hdoipd_clr_rsc(RSC_AUDIO0_IN);
             hoi_drv_set_led_status(DVI_IN_DISCONNECTED);
         break;
         case E_ADV7441A_CONNECT:
@@ -557,21 +563,14 @@ void hdoipd_event(uint32_t event)
         break;
         case E_ADV7441A_NEW_RES:
             hdoipd_set_rsc(RSC_VIDEO_IN);
-            if(hdoipd_rsc(RSC_AUDIO0_IN)) {
-                hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
-            } else {
-                hoi_drv_set_led_status(DVI_IN_CONNECTED_NO_AUDIO);
-            }
-        break;
-        case E_ADV7441A_NEW_AUDIO:
             hdoipd_set_rsc(RSC_AUDIO0_IN);
             hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
         break;
+        case E_ADV7441A_NEW_AUDIO:
+            hoi_drv_get_fs(&fs);
+            hoi_drv_new_audio(fs);
+        break;
         case E_ADV7441A_NO_AUDIO:
-            hdoipd_clr_rsc(RSC_AUDIO0_IN);
-            if(hdoipd_rsc(RSC_VIDEO_IN)) {
-                hoi_drv_set_led_status(DVI_IN_CONNECTED_NO_AUDIO);
-            }
         break;
         case E_ETI_VIDEO_ON:
             hdoipd_set_rsc(RSC_EVI);
@@ -643,7 +642,10 @@ void hdoipd_event(uint32_t event)
 
         case E_ASI_RBF_ERROR:
         break;
-
+        case E_ASI_NEW_FS:
+            hoi_drv_get_fs(&fs);
+            hoi_drv_new_audio(fs);
+        break;
         case E_ASO_SIZE_ERROR:
         break;
         case E_ASO_FIFO_EMPTY:

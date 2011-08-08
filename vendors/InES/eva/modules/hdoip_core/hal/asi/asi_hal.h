@@ -53,7 +53,8 @@
 #define asi_get_udp_word_length(p)      HOI_RD32((p), ASI_OFF_UDP_WORD_LENGTH)
 #define asi_set_payload_words(p, v)     HOI_WR32((p), ASI_OFF_PAYLOAD_WORDS, (v))
 #define asi_get_payload_words(p)        HOI_RD32((p), ASI_OFF_PAYLOAD_WORDS)
-#define asi_get_i2s_size                HOI_RD32((p), AIS_OFF_SIZE_RO)
+#define asi_get_i2s_size(p)             HOI_RD32((p), AIS_OFF_SIZE_RO)
+#define asi_get_fs(p)                   HOI_RD32((p), ASI_OFF_FS)
 
 /* function prototypes */
 void asi_set_dst_mac(void* p, uint8_t* mac);

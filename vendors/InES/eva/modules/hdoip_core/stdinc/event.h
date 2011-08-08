@@ -44,6 +44,7 @@
 #define E_ASI_ID                (0x50000000)
 #define E_ASI_CNT               1
 #define E_ASI_RBF_ERROR         (E_ASI_ID + 0x00000001)
+#define E_ASI_NEW_FS            (E_ASI_ID + 0x00000002)
 
 /* ASO events */
 #define E_ASO_ID                (0x60000000)

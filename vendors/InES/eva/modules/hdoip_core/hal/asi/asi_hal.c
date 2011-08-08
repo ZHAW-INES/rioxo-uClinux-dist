@@ -166,6 +166,8 @@ void asi_get_eth_params(void* p, struct hdoip_eth_params* eth_params)
 uint8_t asi_set_aud_cfg(void* p, uint8_t ch_cnt_l, uint8_t ch_cnt_r, uint8_t bits)
 {
     uint32_t reg_value = 0;
+
+    REPORT(INFO, "asi_set_aud_cfg() ch l : %d | ch r : %d | bits : %d\n", ch_cnt_l, ch_cnt_r, bits);
     
     reg_value = aud_bits_to_container(bits);
 
@@ -186,9 +188,11 @@ void asi_get_aud_cfg(void* p, uint8_t* ch_cnt_l, uint8_t* ch_cnt_r, uint8_t* bit
 {
     uint32_t reg_value = HOI_RD32(p, ASI_OFF_AUD_INFO);
 
+    REPORT(INFO, "asi_get_aud_cfg() reg_value : %08x\n", reg_value);
+
     *ch_cnt_l = (uint8_t) (reg_value & ASI_CNT_LEFT_MSK);
-    *ch_cnt_r = (uint8_t) ((reg_value >> 4) & ASI_CNT_RIGHT_MSK);
-    *bits = aud_container_to_bits(reg_value & ASI_CONTAINER_MSK);
+    *ch_cnt_r = (uint8_t) ((reg_value & ASI_CNT_RIGHT_MSK) >> 4);
+    *bits = aud_container_to_bits((reg_value & ASI_CONTAINER_MSK)>>8);
 }
 
 

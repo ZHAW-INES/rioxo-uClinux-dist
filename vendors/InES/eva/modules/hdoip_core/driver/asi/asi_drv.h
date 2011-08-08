@@ -25,5 +25,6 @@ int asi_drv_set_eth_params(t_asi* handle, struct hdoip_eth_params* eth_params);
 int asi_drv_get_eth_params(t_asi* handle, struct hdoip_eth_params* eth_params);
 int asi_drv_set_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params);
 int asi_drv_get_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params);
+int asi_drv_get_fs(t_asi* handle);
 
 #endif /* ASI_DRV_H_ */

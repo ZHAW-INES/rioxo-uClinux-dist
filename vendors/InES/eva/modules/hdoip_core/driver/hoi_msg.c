@@ -413,7 +413,6 @@ int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
     return SUCCESS;
 }
 
-
 int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
 {
     int vid = 0;
@@ -444,7 +443,6 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
 
     return SUCCESS;
 }
-
 
 //------------------------------------------------------------------------------
 // Image capture / show
@@ -506,6 +504,12 @@ int hoi_drv_msg_bw(t_hoi* handle, t_hoi_msg_param* msg)
 int hoi_drv_msg_led(t_hoi* handle, t_hoi_msg_param* msg)
 {
     led_drv_set_status(&handle->led, msg->value);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_new_audio(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    adv7441a_audio_fs_change(&handle->adv7441a, msg->value);
     return SUCCESS;
 }
 
@@ -688,6 +692,12 @@ int hoi_drv_msg_get_stime(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
+int hoi_drv_msg_get_fs(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    msg->value = asi_drv_get_fs(&handle->asi);
+    return SUCCESS;
+}
+
 int hoi_drv_msg_set_stime(t_hoi* handle, t_hoi_msg_param* msg)
 {
     tmr_set_slave(handle->p_tmr, msg->value);
@@ -804,6 +814,8 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_ASO,                   hoi_drv_msg_aso);
         call(HOI_MSG_BW,                    hoi_drv_msg_bw);
         call(HOI_MSG_LED,                   hoi_drv_msg_led);
+        call(HOI_MSG_NEW_AUDIO,             hoi_drv_msg_new_audio);
+        call(HOI_MSG_GET_FS,                hoi_drv_msg_get_fs);
 
         call(HOI_MSG_OFF,                   hoi_drv_msg_off);
         call(HOI_MSG_IFMT,                  hoi_drv_msg_ifmt);

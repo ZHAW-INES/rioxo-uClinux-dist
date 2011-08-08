@@ -30,7 +30,8 @@ const char* event_str(uint32_t e)
         case E_VSO_ST_ACTIVE: return "vso stream active";
 
         case E_ASI_RBF_ERROR: return "asi ringbuffer error";
-
+        case E_ASI_NEW_FS: return "asi detected new audio sampling rate";
+    
         case E_ASO_SIZE_ERROR: return "aso size error";
         case E_ASO_FIFO_EMPTY: return "aso fifo underflow";
         case E_ASO_FIFO_FULL: return "aso fifo overflow";

@@ -300,10 +300,13 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_10H, 0x1F);
 
     /* Enable audio pll, MCLK fs, MCLK N (0x1C) */
-    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1CH, 0x58); /* PLL enable write 0x60, disable write 0x20 */
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1CH, 0x20); /* PLL enable write 0x60, disable write 0x20 */
 
     /* Audio Mute options and conversion mode (0x1D) */
     adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, ADV7441A_BIT_UP_CONVERSION_MODE);
+
+    /* Audio PLL VCO Range < 176khz*/
+    adv7441a_hdmi_map_write(handle, 0x3D, 0x60);
 
     /* Reset audio PLL */
     adv7441a_drv_aud_pll_reset(handle);
@@ -333,7 +336,7 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_3, ADV7441A_BIT_VIDEO_PLL_LCK_MB1 | ADV7441A_BIT_V_LOCKED_MB1 | ADV7441A_BIT_TMDS_CLK_A_MB1);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_4, 0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_5, ADV7441A_BIT_CTS_PASS_THRS_M1);
-    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_6, ADV7441A_BIT_NEW_SAMP_RT_MB1);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_6, 0x00);
 
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_2_MASKB_1,0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_2_MASKB_2,0x00);
@@ -504,16 +507,15 @@ int adv7441a_get_video_timing(t_adv7441a* handle)
  */
 int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue) 
 { 
-	uint8_t hdmi_status2, hdmi_status3, hdmi_status5, hdmi_status6;
+	uint8_t hdmi_status2, hdmi_status3, hdmi_status5;
 	uint8_t hdmi_raw2, hdmi_raw3;
-    uint8_t int2_clr = 0, int3_clr = 0, int5_clr = 0, int6_clr = 0, reg_04 = 0;
+    uint8_t int2_clr = 0, int3_clr = 0, int5_clr = 0, reg_04 = 0;
 
 	hdmi_status2 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_2);	
 	hdmi_raw2 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_RAW_STATUS_2);
 	hdmi_status3 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_3);	
 	hdmi_raw3 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_RAW_STATUS_3);
 	hdmi_status5 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_5);
-	hdmi_status6 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_6);
 
 	/* TMDS clock changed */
     if(hdmi_status3 & ADV7441A_BIT_TMDS_CLK_A_ST) {
@@ -618,27 +620,6 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
             adv7441a_drv_aud_pll_reset(handle);
         }
 
-        if(hdmi_status6 & ADV7441A_BIT_NEW_SAMP_RT_ST) {
-            int6_clr |= ADV7441A_BIT_NEW_SAMP_RT_CL;
-
-            /* if new audio parameters or audio not started */
-            if((adv7441a_get_audio_timing(handle) == ERR_ADV7441A_SUCCESS) ||
-               ((handle->status & ADV7441A_STATUS_AUDIO) == 0)){
-                REPORT(INFO, "[HDMI IN] audio sampling rate has changed (audio unmuted)\n");
-                REPORT(INFO, "[HDMI IN] Audio fs = %d Hz", handle->aud_st.fs);
-                REPORT(INFO, "[HDMI IN] Audio width = %d Bit", handle->aud_st.bit_width);
-                REPORT(INFO, "[HDMI IN] Audio count = %d", handle->aud_st.channel_cnt);
-                REPORT(INFO, "[HDMI IN] Audio mute = %d\n", handle->aud_st.mute);
-
-                if((handle->status & ADV7441A_STATUS_AUDIO) != 0) {
-                    queue_put(event_queue, E_ADV7441A_NO_AUDIO);
-                }
-
-                handle->status = handle->status | ADV7441A_STATUS_AUDIO;
-                adv7441a_audio_unmute(handle);
-                queue_put(event_queue, E_ADV7441A_NEW_AUDIO);
-            }
-        }
 
     } else {
         if((handle->status & ADV7441A_STATUS_CONNECTION) != 0) {
@@ -652,7 +633,6 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
         int2_clr |= ADV7441A_BIT_AUDIO_C_PCKT_CLR | ADV7441A_BIT_HDMI_ENCRPT_CLR;
         int3_clr |= ADV7441A_BIT_V_LOCKED_CLR;
         int5_clr |= ADV7441A_BIT_CTS_PASS_THRSH_CL;
-        int6_clr |= ADV7441A_BIT_NEW_SAMP_RT_CL;
     }
 
 
@@ -660,7 +640,6 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
     if(int2_clr)    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_2, int2_clr);
     if(int3_clr)    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_3, int3_clr);
     if(int5_clr)    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_5, int5_clr);
-    if(int6_clr)    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_6, int6_clr);
 
 	return ERR_ADV7441A_SUCCESS;
 }
@@ -718,6 +697,28 @@ int adv7441a_irq2_handler(t_adv7441a* handle, t_queue* event_queue)
     	}
     }	 
 	return ERR_ADV7441A_SUCCESS;
+}
+
+/** adv7441a read audio timing (sampling rate read out of adv7441 is not correct)
+ *
+ * @param handle pointer to the adv7441a handle
+ * @param fs     correct sampling rate
+ * @return error code
+ */
+int adv7441a_audio_fs_change(t_adv7441a* handle, uint32_t fs) {
+
+    if((adv7441a_get_audio_timing(handle) == ERR_ADV7441A_SUCCESS) || ((handle->status & ADV7441A_STATUS_AUDIO) == 0)) {
+        handle->aud_st.fs = fs;
+        REPORT(INFO, "[HDMI IN] audio sampling rate has changed (audio unmuted)\n");
+        REPORT(INFO, "[HDMI IN] Audio fs = %d Hz", handle->aud_st.fs);
+        REPORT(INFO, "[HDMI IN] Audio width = %d Bit", handle->aud_st.bit_width);
+        REPORT(INFO, "[HDMI IN] Audio count = %d", handle->aud_st.channel_cnt);
+        REPORT(INFO, "[HDMI IN] Audio mute = %d\n", handle->aud_st.mute);
+
+        adv7441a_audio_unmute(handle);
+    }
+
+    return ERR_ADV7441A_SUCCESS;
 }
 
 /** adv7441a core driver handler (does nothing atm) 

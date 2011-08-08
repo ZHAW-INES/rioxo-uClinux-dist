@@ -33,5 +33,6 @@ int adv7441a_get_audio_timing(t_adv7441a* handle);
 int adv7441a_drv_dumb_reg(t_adv7441a* handle);
 int adv7441a_enable_portA(t_adv7441a* handle);
 int adv7441a_disable_portA(t_adv7441a* handle);
+int adv7441a_audio_fs_change(t_adv7441a* handle, uint32_t fs);
 
 #endif /* ADV7441A_DRV_H_ */
