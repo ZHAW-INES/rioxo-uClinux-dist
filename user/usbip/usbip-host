@@ -1,0 +1,4 @@
+#!/bin/sh
+
+/sbin/modprobe usbip-host
+/bin/usbipd -D &

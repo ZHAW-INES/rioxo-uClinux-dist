@@ -1,17 +1,29 @@
 VER = usbip-current
 
+FLTFLAGS += -s 8192
+
 CONF_OPTS = \
 	--sbindir=/sbin \
 	--libexecdir=/lib \
 	--libdir=/lib \
 	$(CONFIGURE_SHARED_ENABLE)
 
-include $(ROOTDIR)/tools/autotools.mk
+all: build-$(VER)/Makefile
+	$(MAKE) -C build-$(VER)
+
+build-$(VER)/Makefile:
+	find $(VER) -type f -print0 | xargs -0 touch -r $(VER)/configure
+	set -e ; \
+	rm -rf build-$(VER) ; \
+	mkdir build-$(VER) ; \
+	cd build-$(VER) ; \
+	../$(VER)/configure $(CONFIGURE_OPTS) $(CONF_OPTS)
+
+clean:
+	rm -rf build*
 
 romfs:
-	$(ROMFSINST) $(STAGEDIR)/sbin/usbip /bin/usbip
-	$(ROMFSINST) $(STAGEDIR)/sbin/usbipd /bin/usbipd
-	$(ROMFSINST) -e CONFIG_FMT_USE_FDPIC_ELF $(STAGEDIR)/lib/libusbip.so.0.0.1 /lib/libusbip.so.0
-	$(ROMFSINST) -d $(STAGEDIR)/usr/share/usbip /usr/share/usbip
-	$(ROMFSINST) usbip-client /bin/usbip-client
-	$(ROMFSINST) usbip-server /bin/usbip-server
+	$(ROMFSINST) build-$(VER)/src/usbip /bin/usbip
+	$(ROMFSINST) build-$(VER)/src/usbipd /bin/usbipd
+	$(ROMFSINST) usbip-device /bin/usbip-device
+	$(ROMFSINST) usbip-host /bin/usbip-host
