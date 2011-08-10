@@ -18,7 +18,7 @@
 #include "rscp_include.h"
 #include "bstmap.h"
 #include "alive_check.h"
-
+#include "led_drv_instructions.h"
 
 #define CFG_FILE                    "/mnt/config/hdoipd.cfg"
 #define CFG_RSP_TIMEOUT             20

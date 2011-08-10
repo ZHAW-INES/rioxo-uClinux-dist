@@ -187,7 +187,7 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     hoi_drv_get_mtime(&fmt.rtptime);
 
     if ( ((nfo->audio_width[0]<8) || (nfo->audio_width[0]>32)) ||
-         ((nfo->audio_fs[0]<32000) || (nfo->audio_fs[0]>96000)) ||
+         ((nfo->audio_fs[0]<32000) || (nfo->audio_fs[0]>192000)) ||
          ((nfo->audio_cnt[0]<1) || (nfo->audio_cnt[0]>8)) ) {
           rscp_err_def_source(rsp);
           return RSCP_REQUEST_ERROR;
@@ -201,7 +201,7 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
 #ifdef AUD_IN_PATH
         uint8_t channel_select[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
         hoi_drv_asi(0, &eth, nfo->audio_fs[0], nfo->audio_width[0], nfo->audio_cnt[0], channel_select);
-        report(INFO "audio streaming started(fs = %d Hz, bitwidth = %d Bit)", nfo->audio_fs[0], nfo->audio_width[0]);
+        report(INFO "\naudio streaming started(fs = %d Hz, bitwidth = %d Bit)", nfo->audio_fs[0], nfo->audio_width[0]);
 #endif
         // We are streaming Audio now...
         hdoipd_set_vtb_state(VTB_AUDIO);

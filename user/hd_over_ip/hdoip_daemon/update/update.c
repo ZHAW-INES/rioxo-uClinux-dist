@@ -81,16 +81,21 @@ static int update(uint64_t addr, FILE *f)
         return -1;
     }
 
-    if ((ret = flash_dev_open(&dev, FLASH_DEV_NAME, O_RDWR))) {
+    ret = flash_dev_open(&dev, FLASH_DEV_NAME, O_RDWR);
+    if (ret == -1) {
         report("Could not open %s\n", FLASH_DEV_NAME);
         return ret;
     } 
 
+    // disable watchdog
+    hoi_drv_wdg_disable();
+
     // erase flash 
     report("erasing flash...\n");
     ret = flash_dev_eraseall(&dev);
-    if(ret) {   
+    if(ret == -1) {   
         report("flash erase failed\n");
+        return -1;
     }
 
     // write data until block alignment

@@ -33,6 +33,9 @@ int hoi_drv_show(bool compress, void* buffer, t_video_timing* timing, uint32_t a
 int hoi_drv_debug(void);
 int hoi_drv_set_timing(t_video_timing* timing);
 int hoi_drv_bw(uint32_t bandwidth);
+int hoi_drv_set_led_status(uint32_t instruction);
+int hoi_drv_new_audio(uint32_t fs);
+int hoi_drv_get_fs(uint32_t* p);
 
 int hoi_drv_info(t_video_timing* timing, uint32_t *advcnt);
 int hoi_drv_info_all(t_hoi_msg_info** nfo);

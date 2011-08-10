@@ -10,29 +10,54 @@
 
 #include "std.h"
 #include "i2c_drv.h"
+#include "led_drv_instructions.h"
 
-/* Videoboard */
+/* LED flashing constants */
+#define LED_T_HANDLE            (30)
+#define LED_T_1_SEC             (500)
+#define LED_T_3_SEC             (1500)
+
+/* LED Status*/
+#define LED_ON                  (0x00000000)
+#define LED_OFF                 (0x00000001)
+#define LED_FLASHING_1S         (0x00000002)
+#define LED_FLASHING_3S         (0x00000003)
+
+/* Mainboard (code 0x00 - 0xFF)*/
+#define LED_READ_REG            (HOI_RD32((handle->p_led), 0x00))
+#define LED_SET_REG(m)		    (HOI_WR32((handle->p_led), 0x00, (m)))
+
+#define LED_ETH_STATUS          (0x00000004)
+#define LED_POWER_GREEN         (0x00000008)
+#define LED_POWER_RED           (0x00000010)
+#define LED_BOOT                (0x00000020)
+
+/* Videoboard  (code 0x100 - ...) */
+#define LED_I2C_VID_ADDR        (0x00000044)
 #define LED_VID_RNG             (0x000000FF)
-#define LED_VID_OUT_1_ORANGE    (0x00000003)
-#define LED_VID_OUT_1_GREEN     (0x00000001)
-#define LED_VID_OUT_1_RED       (0x00000002)
-#define LED_VID_OUT_2           (0x00000010)
-#define LED_VID_IN_1_ORANGE     (0x0000000C)
-#define LED_VID_IN_1_GREEN      (0x00000004)
-#define LED_VID_IN_1_RED        (0x00000008)
-#define LED_VID_IN_2            (0x00000020)
-#define LED_VID_BOARD_1         (0x00000040)
-#define LED_VID_BOARD_2         (0x00000080)
+
+#define LED_VID_OUT_ORANGE      (0x00000300)
+#define LED_VID_OUT_GREEN       (0x00000100)
+#define LED_VID_OUT_RED         (0x00000200)
+#define LED_VID_IN_ORANGE       (0x00000C00)
+#define LED_VID_IN_GREEN        (0x00000400)
+#define LED_VID_IN_RED          (0x00000800)
 
 typedef struct {
+    void        *p_led;
     t_i2c       *p_vid_i2c;
     t_i2c       *p_aud_i2c;
     uint32_t    led_set;
+    uint32_t    counter_1s;
+    uint32_t    counter_3s;
+    uint32_t    toggle_mask_1s;
+    uint32_t    toggle_mask_3s;
+    uint32_t    set_mask;
+    uint32_t    clr_mask;
 } t_led;
 
-int led_drv_init(t_led* handle, t_i2c* p_vid_i2c, t_i2c* p_aud_i2c);
-int led_drv_tgl(t_led* handle, uint32_t mask);
-int led_drv_clr(t_led* handle, uint32_t mask);
-int led_drv_set(t_led* handle, uint32_t mask);
+int led_drv_init(t_led* handle, t_i2c* p_vid_i2c, t_i2c* p_aud_i2c, void* p_led);
+void led_drv_handler(t_led* handle);
+int led_drv_set_status(t_led* handle, uint32_t instruction);
 
 #endif /* LED_DRV_H_ */

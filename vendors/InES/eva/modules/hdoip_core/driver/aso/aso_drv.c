@@ -109,12 +109,9 @@ int aso_drv_stop(t_aso* handle)
  */
 int aso_drv_update(t_aso* handle, struct hdoip_aud_params* aud_params, uint32_t aud_delay_us)
 {
-    uint32_t activ = handle->status & ASO_DRV_STATUS_ACTIV;
     uint32_t err;
 
-    if(activ != 0) {
-        aso_drv_stop(handle);
-    }
+    aso_drv_stop(handle);
 
     err = aso_drv_set_aud_params(handle, aud_params);
     if(err != ERR_ASO_SUCCESS) {
@@ -126,9 +123,7 @@ int aso_drv_update(t_aso* handle, struct hdoip_aud_params* aud_params, uint32_t 
         return err;
     }
 
-    if(activ != 0) {
-        aso_drv_start(handle);
-    }
+    aso_drv_start(handle);
 
     return ERR_ASO_SUCCESS;
 }
@@ -196,6 +191,10 @@ int aso_drv_set_aud_params(t_aso* handle, struct hdoip_aud_params* aud_params)
 
     if((handle->status & ASO_DRV_STATUS_ACTIV) != 0) {
         return ERR_ASO_RUNNING;
+    }
+
+    if ((aud_params->sample_width) > 16) {
+        aud_params->sample_width = 24;
     }
 
     /* calculate i2s clock (in q5.27 format) */

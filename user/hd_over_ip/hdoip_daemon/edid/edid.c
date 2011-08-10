@@ -57,9 +57,11 @@ int edid_write_file(t_edid *edid, char *file)
     close(fd);
 
 #ifdef EDID_WRITE_HEX_FILE
-    strcat(file,"_hex");
+    char *file_str;
+    strcpy(file_str, file);
+    strcat(file_str,"_hex");
 
-    int fd_hex = fopen(file, "w");
+    int fd_hex = fopen(file_str, "w");
 
     if(fd_hex != NULL) {
         for(int i=0 ; i<256 ; i+=8) {

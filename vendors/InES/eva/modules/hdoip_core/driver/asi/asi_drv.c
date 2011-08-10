@@ -71,14 +71,11 @@ int asi_drv_init(t_asi* handle, void* p_asi)
  */
 int asi_drv_update(t_asi* handle, struct hdoip_eth_params* eth_params, struct hdoip_aud_params* aud_params)
 {
-    uint32_t activ = handle->status & ASI_DRV_STATUS_ACTIV;
     uint32_t err;
 
     REPORT(INFO, "status : %x", handle->status);
 
-    if(activ != 0) {
-        asi_drv_stop(handle);
-    }
+    asi_drv_stop(handle);
 
     err = asi_drv_set_eth_params(handle, eth_params);
     if(err != ERR_ASI_SUCCESS) {
@@ -90,9 +87,7 @@ int asi_drv_update(t_asi* handle, struct hdoip_eth_params* eth_params, struct hd
         return err;
     }
 
-    if(activ != 0) {
-        asi_drv_start(handle);
-    }
+    asi_drv_start(handle);
 
     return ERR_ASI_SUCCESS;
 }
@@ -182,6 +177,11 @@ int asi_drv_set_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params)
     uint16_t payload_words, ip_length, udp_length, frame_size, time_per_word;
     uint8_t sample_len, ch;
 
+
+    if ((aud_params->sample_width) > 16) {
+        aud_params->sample_width = 24;
+    }
+
     if((handle->status & ASI_DRV_STATUS_ACTIV) != 0) {
         return ERR_ASI_RUNNING;
     }
@@ -256,6 +256,7 @@ int asi_drv_get_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params)
 int asi_drv_handler(t_asi* handle, t_queue* event_queue)
 {
     uint32_t status =  asi_get_status(handle->p_asi,0xFFFFFFFF);
+    uint32_t fs = asi_get_fs(handle->p_asi);
 
     if((status & ASI_STAT_RBFULL) != 0) {
         if((handle->status & ASI_DRV_STATUS_RBF_ERROR) == 0) {
@@ -266,6 +267,36 @@ int asi_drv_handler(t_asi* handle, t_queue* event_queue)
         handle->status = handle->status & ~ASI_DRV_STATUS_RBF_ERROR;
     }
 
+    if ((handle->fs) != fs) {
+        switch (fs/200) {                           // mysterious bug in gateware: why is double of fs measured
+            case (31):  case (32):  handle->sampling_rate = 32000;
+                                    break;
+            case (43):  case (44):  handle->sampling_rate = 44100;
+                                    break;
+            case (47):  case (48):  handle->sampling_rate = 48000;
+                                    break;
+            case (87):  case (88):  handle->sampling_rate = 88200;
+                                    break;
+            case (95):  case (96):  handle->sampling_rate = 96000;
+                                    break;
+            case (175): case (176): handle->sampling_rate = 176400;
+                                    break;
+            case (191): case (192): handle->sampling_rate = 192000;
+                                    break;
+            default:                handle->sampling_rate = 0;
+        }
+        if (handle->sampling_rate_old != handle->sampling_rate) {
+            queue_put(event_queue, E_ASI_NEW_FS);
+            queue_put(event_queue, E_ADV7441A_NO_AUDIO);        // audio is restarting after this stop
+        }
+        handle->sampling_rate_old = handle->sampling_rate;
+    }
+
+    handle->fs = fs;
+
     return ERR_ASI_SUCCESS;
 }
 
+int asi_drv_get_fs(t_asi* handle) {
+    return handle->sampling_rate;
+}

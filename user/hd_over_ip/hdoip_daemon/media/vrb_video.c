@@ -166,9 +166,12 @@ int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rsc
         osd_printf("video remote off...\n");
     }
 
+    // TODO: start sending alive packets should not be in media
     // start sending hello frames to vtb
-    if(hdoipd.auto_stream) {
-        alive_check_start_vrb_alive();
+    if(hdoipd_rsc(RSC_VIDEO_SINK)) {
+        if(hdoipd.auto_stream) {
+            alive_check_start_vrb_alive();
+        }
     }
 
     return RSCP_SUCCESS;

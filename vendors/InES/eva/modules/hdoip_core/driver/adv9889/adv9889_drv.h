@@ -22,6 +22,7 @@
 #define AV_MUTED            (0x01)
 #define AV_UNMUTED          (0x00)
 #define HDCP_CHECK_LINK_INT (0x32)      /* 50 intervall */
+#define EDID_TIMEOUT        (0x28)      /* Timeout if EDID cannot be read */
 
 enum {
     HDCP_OFF = 0x00,
@@ -40,6 +41,7 @@ typedef struct {
 	uint32_t        edid_first;     //!< first edid segment read
 	uint32_t        audio_cnt;
 	uint32_t        audio_fs;
+    uint32_t        audio_width;
 	uint8_t         edid[512];      //!< edid + up to three segments
     int             av_mute;
     int             hdcp_state;
@@ -48,11 +50,12 @@ typedef struct {
     uint8_t         bksv_cnt;
     uint8_t         bksv[14*5];
     uint8_t         bstatus[2];
+    uint32_t        edid_timeout;
 } t_adv9889;
 
 
 int adv9889_drv_init(t_adv9889* handle, t_i2c* p_i2c, t_vio* vio);
-int adv9889_drv_setup_audio(t_adv9889* handle, int ch, int fs);
+int adv9889_drv_setup_audio(t_adv9889* handle, int ch, int fs, int width);
 int adv9889_irq_handler(t_adv9889* handle, t_queue* event_queue);
 int adv9889_drv_powerup(t_adv9889* handle);
 int adv9889_drv_get_edid(t_adv9889* handle, uint8_t* mem);
@@ -60,6 +63,7 @@ int adv9889_drv_hdcp_on(t_adv9889* handle);
 int adv9889_drv_hdcp_off(t_adv9889* handle);
 int adv9889_drv_av_mute(t_adv9889* handle);
 int adv9889_drv_av_unmute(t_adv9889* handle);
+int adv9889_drv_handler(t_adv9889* handle, t_queue* event_queue);
 
 
 #endif /* ADV9889_DRV_H_ */

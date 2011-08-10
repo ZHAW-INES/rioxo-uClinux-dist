@@ -103,6 +103,7 @@ label = {
     p_eth_ip_dhcp = "Obtain an IP address from a DHCP server";
     p_eth_ip_static = "Specify an IP address";
     p_eth_dns_server = "DNS server";
+    p_eth_led = "Identify device";
 
     -- Page streaming
     p_st_video = "Video";

@@ -50,6 +50,7 @@
 #define ASI_OFF_UDP_WORD_LENGTH     (ASI_BASE_PACKETIZE + 0x0038)
 #define ASI_OFF_PAYLOAD_WORDS       (ASI_BASE_PACKETIZE + 0x003C)
 #define ASI_OFF_SIZE_RO             (ASI_BASE_PACKETIZE + 0x0040)
+#define ASI_OFF_FS                  (ASI_BASE_PACKETIZE + 0x0044)
 
 /** bit indexes
  *

@@ -116,6 +116,8 @@ void rscp_header_rtp_format(t_rscp_connection* msg, t_rscp_rtp_format* p)
     // RTP-Format: compress[ value] rtptime
     if (p->compress == 16) {
         msgprintf(msg, "RTP-Format: aud16Bit %d %d %u\r\n", p->value, p->value2, p->rtptime);
+    } else if (p->compress == 20) {
+        msgprintf(msg, "RTP-Format: aud20Bit %d %d %u\r\n", p->value, p->value2, p->rtptime);
     } else if (p->compress == 24) {
         msgprintf(msg, "RTP-Format: aud24Bit %d %d %u\r\n", p->value, p->value2, p->rtptime);
     } else if (p->compress == 32) {

@@ -300,7 +300,7 @@ end
 
 function Bottom(t)
     Error(t.err)
-    html_str = html_str .. '</div>\n</div>\n</div>\n'
+    html_str = html_str .. '</div>\n'
     html_str = html_str .. '<div id="bottom">\n<div id="footer">\n<div id="footerleft">\n'
     -- TODO: insert footer left
     --html_str = html_str .. '</div><div id="footermain"><div class="moduletable_address"><p>rioxo GmbH | <a href="mailto:mail@rioxo.net">mail@rioxo.net</a></p>\n'
@@ -347,4 +347,53 @@ function UploadForm(t, script_path, label, accept)
 --    html_str = html_str .. "<p>"..str.."<input name=\""..label.."\" type=\"file\" size=\"50\" accept=\""..accept.."\">\n"
     html_str = html_str .. "<p><input name=\""..label.."\" type=\"file\" size=\"50\">\n"
     html_str = html_str .. "<input type=\"submit\" value=\"Upload\"></p>\n</form>\n"
+end
+
+function Loadbar(time, time_restart)
+    html_str = html_str .. '<script type="text/javascript">'
+    html_str = html_str .. "var count = 0;"
+    html_str = html_str .. "var count_restart = 0;"
+    html_str = html_str .. "var end = 400;"
+    html_str = html_str .. "var end_restart = 400;"
+    html_str = html_str .. "var time = "..time..";"
+    html_str = html_str .. "var time_restart = "..time_restart..";"
+    html_str = html_str .. "var prozent = 0;"
+
+    html_str = html_str .. "function loadbar()"
+    html_str = html_str .. "{"
+    html_str = html_str .. "    if ( count < end)"
+    html_str = html_str .. "    {"
+    html_str = html_str .. "        count = count + 1;"
+    html_str = html_str .. '        document.getElementById("status").style.width = count + "px";'
+    html_str = html_str .. "        prozent = Math.round( count/end * 100);"
+    html_str = html_str .. '        document.getElementById("counter").innerHTML = prozent+" %";'
+    html_str = html_str .. '        window.setTimeout("loadbar()", (time*1000)/(end));'
+    html_str = html_str .. "    }"
+    html_str = html_str .. "    else"
+    html_str = html_str .. "    {"
+    html_str = html_str .. "        if ( count_restart < end_restart)"
+    html_str = html_str .. "        {"
+    html_str = html_str .. "            count_restart = count_restart + 1;"
+    html_str = html_str .. '            document.getElementById("status").style.width = count_restart + "px";'
+    html_str = html_str .. '            document.getElementById("counter").innerHTML = "restarting RIOXO";'
+    html_str = html_str .. '            window.setTimeout("loadbar()", (time_restart*1000)/(end_restart));'
+    html_str = html_str .. "        }"
+    html_str = html_str .. "        else"
+    html_str = html_str .. "        {"
+    html_str = html_str .. '            location.href="index.lua";'
+    html_str = html_str .. "        }"
+    html_str = html_str .. "    }"
+    html_str = html_str .. "}"
+    html_str = html_str .. "</script>"
+
+    html_str = html_str .. "<br>"
+    html_str = html_str .. "<br>"
+    html_str = html_str .. '<div style="position: relative; width:400px; background-color: #FFFFFF; border: solid 1px #000000;">'
+    html_str = html_str .. '<span id="counter" style="position: absolute; width: 100%; z-index: 3; text-align: center; font-weight: normal;">0%</span>'
+    html_str = html_str .. '<div id="status" style="position: relative; background-color: #0066FF; width:0px; height: 18px; border-right: solid 1px #000000; z-index: 2;"> </div>'
+    html_str = html_str .. "</div>"
+
+    html_str = html_str .. '<script type="text/javascript">'
+    html_str = html_str .. "loadbar();"
+    html_str = html_str .. "</script>"
 end

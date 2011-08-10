@@ -184,12 +184,14 @@ HOI_WRITE(set_mtime, HOI_MSG_SETMTIME);
 HOI_WRITE(set_stime, HOI_MSG_SETSTIME);
 HOI_WRITE(timer, HOI_MSG_TIMER);
 HOI_WRITE(bw, HOI_MSG_BW);
+HOI_WRITE(set_led_status, HOI_MSG_LED);
 HOI_WRITE(reset, HOI_MSG_OFF);
+HOI_WRITE(new_audio, HOI_MSG_NEW_AUDIO);
 
 HOI_READ(get_mtime, HOI_MSG_GETMTIME);
 HOI_READ(get_stime, HOI_MSG_GETSTIME);
 HOI_READ(get_syncdelay, HOI_MSG_SYNCDELAY);
-
+HOI_READ(get_fs, HOI_MSG_GET_FS);
 
 //------------------------------------------------------------------------------
 // capture/show image command

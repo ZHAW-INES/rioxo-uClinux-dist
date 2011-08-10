@@ -57,6 +57,8 @@ void hdoipd_set_default()
     reg_set("alive-check", "true");
     reg_set("alive-check-interval", "5");
     reg_set("alive-check-port", "2002");
+
+    reg_set("led_instruction", "0");
 }
 
 static void update_0_0_to_0_1()

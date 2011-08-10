@@ -611,6 +611,11 @@ void task_set_alive_update(char* p)
     update_vector |= HOID_TSK_UPD_ALIVE;
 }
 
+void task_set_led_instruction(char* p)
+{
+    hoi_drv_set_led_status(atoi(p));
+}
+
 void task_set_network_delay(char* p)
 {
     update_vector |= HOID_TSK_EXEC_RESTART_VRB;
@@ -670,6 +675,7 @@ void hdoipd_register_task()
     set_listener("alive-check", task_set_alive_update);
     set_listener("alive-check-interval", task_set_alive_update);
     set_listener("alive-check-port", task_set_alive_update);
+    set_listener("led_instruction", task_set_led_instruction);
 }
 
 
