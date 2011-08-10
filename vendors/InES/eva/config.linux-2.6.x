@@ -1,6 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.32
+# Wed Aug 10 14:49:26 2011
 #
 # CONFIG_FPU is not set
 CONFIG_ZONE_DMA=y
@@ -67,7 +68,7 @@ CONFIG_EMBEDDED=y
 CONFIG_KALLSYMS=y
 CONFIG_KALLSYMS_ALL=y
 # CONFIG_KALLSYMS_EXTRA_PASS is not set
-# CONFIG_HOTPLUG is not set
+CONFIG_HOTPLUG=y
 CONFIG_PRINTK=y
 CONFIG_BUG=y
 # CONFIG_ELF_CORE is not set
@@ -200,6 +201,7 @@ CONFIG_BOOT_LINK_OFFSET=0x00500000
 #
 # CONFIG_PCI is not set
 # CONFIG_ARCH_SUPPORTS_MSI is not set
+# CONFIG_PCCARD is not set
 
 #
 # Executable file formats
@@ -227,10 +229,7 @@ CONFIG_INET=y
 CONFIG_IP_MULTICAST=y
 # CONFIG_IP_ADVANCED_ROUTER is not set
 CONFIG_IP_FIB_HASH=y
-CONFIG_IP_PNP=y
-CONFIG_IP_PNP_DHCP=y
-# CONFIG_IP_PNP_BOOTP is not set
-# CONFIG_IP_PNP_RARP is not set
+# CONFIG_IP_PNP is not set
 # CONFIG_NET_IPIP is not set
 # CONFIG_NET_IPGRE is not set
 # CONFIG_IP_MROUTE is not set
@@ -295,8 +294,12 @@ CONFIG_DEFAULT_TCP_CONG="cubic"
 #
 # Generic Driver Options
 #
+CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
 CONFIG_STANDALONE=y
 CONFIG_PREVENT_FIRMWARE_BUILD=y
+CONFIG_FW_LOADER=y
+CONFIG_FIRMWARE_IN_KERNEL=y
+CONFIG_EXTRA_FIRMWARE=""
 # CONFIG_DEBUG_DRIVER is not set
 # CONFIG_DEBUG_DEVRES is not set
 # CONFIG_SYS_HYPERVISOR is not set
@@ -484,7 +487,7 @@ CONFIG_INPUT=y
 #
 # CONFIG_INPUT_MOUSEDEV is not set
 # CONFIG_INPUT_JOYDEV is not set
-# CONFIG_INPUT_EVDEV is not set
+CONFIG_INPUT_EVDEV=y
 # CONFIG_INPUT_EVBUG is not set
 
 #
@@ -643,14 +646,14 @@ CONFIG_USB_ARCH_HAS_HCD=y
 # CONFIG_USB_ARCH_HAS_OHCI is not set
 # CONFIG_USB_ARCH_HAS_EHCI is not set
 CONFIG_USB=y
-# CONFIG_USB_DEBUG is not set
-# CONFIG_USB_ANNOUNCE_NEW_DEVICES is not set
+CONFIG_USB_DEBUG=y
+CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
 
 #
 # Miscellaneous USB options
 #
 # CONFIG_USB_DEVICEFS is not set
-# CONFIG_USB_DEVICE_CLASS is not set
+CONFIG_USB_DEVICE_CLASS=y
 # CONFIG_USB_DYNAMIC_MINORS is not set
 # CONFIG_USB_OTG is not set
 # CONFIG_USB_OTG_WHITELIST is not set
@@ -665,7 +668,7 @@ CONFIG_USB=y
 # CONFIG_USB_C67X00_HCD is not set
 # CONFIG_USB_OXU210HP_HCD is not set
 # CONFIG_USB_ISP116X_HCD is not set
-CONFIG_USB_ISP1362_HCD=m
+# CONFIG_USB_ISP1362_HCD is not set
 # CONFIG_USB_ISP1760_HCD is not set
 # CONFIG_USB_SL811_HCD is not set
 # CONFIG_USB_R8A66597_HCD is not set
@@ -727,6 +730,11 @@ CONFIG_USB_ISP1362_HCD=m
 # OTG and related infrastructure
 #
 # CONFIG_NOP_USB_XCEIV is not set
+CONFIG_USB_ISP1763=y
+CONFIG_USB_ISP1763_HCD=y
+# CONFIG_USB_ISP1763_OTG is not set
+# CONFIG_USB_ISP1763_UDC_SELECT is not set
+CONFIG_USB_ISP1763_HCD_SELECT=y
 # CONFIG_MMC is not set
 # CONFIG_MEMSTICK is not set
 # CONFIG_NEW_LEDS is not set
@@ -739,7 +747,37 @@ CONFIG_USB_ISP1362_HCD=m
 #
 # TI VLYNQ
 #
-# CONFIG_STAGING is not set
+CONFIG_STAGING=y
+# CONFIG_STAGING_EXCLUDE_BUILD is not set
+CONFIG_USBIP_CORE=m
+CONFIG_USBIP_VHCI_HCD=m
+CONFIG_USBIP_HOST=m
+# CONFIG_USBIP_DEBUG is not set
+# CONFIG_ECHO is not set
+# CONFIG_COMEDI is not set
+# CONFIG_ASUS_OLED is not set
+# CONFIG_INPUT_MIMIO is not set
+# CONFIG_TRANZPORT is not set
+
+#
+# Android
+#
+
+#
+# Qualcomm MSM Camera And Video
+#
+
+#
+# Camera Sensor Selection
+#
+# CONFIG_INPUT_GPIO is not set
+# CONFIG_POHMELFS is not set
+
+#
+# RAR Register Driver
+#
+# CONFIG_RAR_REGISTER is not set
+# CONFIG_IIO is not set
 
 #
 # File systems
