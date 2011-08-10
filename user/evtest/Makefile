@@ -1,4 +1,4 @@
-EXEC = event_test
+EXEC = evtest
 OBJS = evtest.o
 
 all: $(EXEC)
