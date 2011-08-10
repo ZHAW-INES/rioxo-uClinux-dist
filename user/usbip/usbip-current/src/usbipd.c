@@ -408,10 +408,12 @@ static void do_standalone_mode(bool daemonize)
 
 	dbg("daemonizing...\n");
 	if (daemonize) {
+#if 0
 		if (daemon(0,0) < 0)
 			errx("daemonizing failed: %s", strerror(errno));
 
 		usbip_use_syslog = 1;
+#endif
 	}
 
 	set_signal();
