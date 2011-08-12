@@ -212,6 +212,13 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
         ADV7441A_BIT_TIM_OE |
         ADV7441A_BIT_INT2_EN);
 
+    /* PRIM_MODE Register (0x05)
+        0x02 : RGB (VGA)
+        0x04 : HDMI SD
+        0x05 : HDMI ED / HD
+        0x06 : HDMI VGA to SXGA */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_PRIMARY_MODE, 0x06);
+
     /* VID_STD Register (0x06) */
     adv7441a_usr_map_write(handle, ADV7441A_REG_VIDEO_STANDARD, 0x02);
 
@@ -223,12 +230,7 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_usr_map_write(handle, ADV7441A_REG_ADC_SWITCH_2, 0x00); /* (0xC4) ADC2 */
     adv7441a_usr_map_write(handle, ADV7441A_REG_AFE_CONTROL_1, 0x00); /* (0xF3) ADC3 */
 
-    /* Power down ADC[0-3] (0x3A) */
-    adv7441a_usr_map_write(handle, ADV7441A_REG_ADC_CONTROL,
-        ADV7441A_BIT_PDN_ADC0 |
-        ADV7441A_BIT_PDN_ADC1 |
-        ADV7441A_BIT_PDN_ADC2 |
-        ADV7441A_BIT_PDN_ADC3);
+    adv7441a_usr_map_write(handle, ADV7441A_REG_TLLC_CONTROL_ANALOGUE, 0xA8);
 
     /* -------------------------------- ADI recommend write (user map) -------------------------------- */
     /* Set output format and enable output pins (0x03)
@@ -239,12 +241,6 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
         0x10 : 30 bit 4:4:4
         0x14 : 24 bit 4:4:4 */
     adv7441a_usr_map_write(handle, ADV7441A_REG_OUTPUT_CONTROL, 0x10);
-
-    /* PRIM_MODE Register (0x05)
-        0x04 : HDMI SD
-        0x05 : HDMI ED / HD
-        0x06 : HDMI VGA to SXGA */
-    adv7441a_usr_map_write(handle, ADV7441A_REG_PRIMARY_MODE, 0x06);
 
     /* Set crystal mode and LLC output active (0x1D) */
     adv7441a_usr_map_write(handle, ADV7441A_REG_VERTICAL_SCALE_VALUE_1, ADV7441A_BIT_EN28XTAL);
@@ -327,7 +323,7 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_CONFIGURATION_0, 0xD1); /* active until cleared, active low */
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_CONFIGURATION_1, 0xC1);
 
-    adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_1,0x00);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_1,ADV7441A_BIT_STDI_DVALID_Q | ADV7441A_BIT_SSPD_RESULT_MSKB);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_2,0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_3,0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_4,0x00);
@@ -354,6 +350,9 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
 
     return ERR_ADV7441A_SUCCESS;
 }
+
+
+
 
 /** Sets TMDS equalizer dependent on TMDS frequency 
  *
@@ -499,6 +498,130 @@ int adv7441a_get_video_timing(t_adv7441a* handle)
 	return ERR_ADV7441A_SUCCESS;
 }
 
+
+/** Video Standard Detection and Indentification
+ *
+ *    supported resolutions
+ *    640x480 @60Hz, 72Hz, 75Hz, 85Hz
+ *    800x600 @56Hz, 60Hz, 72Hz, 75Hz, 85Hz
+ *    1024x768 @60Hz, 70Hz, 75Hz, 85Hz
+ *    1280x1024 @60Hz, 75Hz
+ *   
+ *    if more resolutions should be supported, ADV7441A must be used in "auto graphic mode" (user map register 0x06 = 0x07)
+ *
+ * @param handle pointer to the adv7441a handle
+ * @return error code
+ */
+int adv7441a_get_analog_video_timing(t_adv7441a* handle)
+{
+    uint32_t stdi_line_count_field, stdi_field_length_clocks, stdi_interlaced;
+    uint32_t fps;
+    uint8_t res = 0x07;
+
+    stdi_line_count_field = (((adv7441a_usr_map_read(handle, ADV7441A_REG_RB_STANDARD_IDENT_3) & 0x07) << 8) | adv7441a_usr_map_read(handle, ADV7441A_REG_RB_STANDARD_IDENT_4));
+    stdi_field_length_clocks = (((adv7441a_usr_map_read(handle, ADV7441A_REG_FIELD_LENGTH_COUNT_1) & 0x1F) << 8) | adv7441a_usr_map_read(handle, ADV7441A_REG_FIELD_LENGTH_COUNT_2));
+    stdi_interlaced = ((adv7441a_usr_map_read(handle, ADV7441A_REG_RB_STANDARD_IDENT_1) & 0x40) >> 6);
+    
+    fps = ADV7441A_XTAL_FREQ / (stdi_field_length_clocks * 256);
+
+    if (stdi_interlaced) {
+        REPORT(INFO, "VGA Resolution: not supported\n");
+    }
+
+    switch (stdi_line_count_field) {
+	    case (498): case (499): case (500): case (501): case (502): switch(fps) {
+                                                                        case (74):  case (75):  case (76):  REPORT(INFO, "VGA Resolution: 640x480@75.00\n");
+                                                                                                            res = 0x0A;
+                                                                            break;
+                                                                        default:                            REPORT(INFO, "VGA Resolution: not supported\n");
+                                                                    }
+            break;
+	    case (507): case (508): case (509):	case (510): case (511):	switch(fps) {
+                                                                        case (84):  case (85):  case (86):  REPORT(INFO, "VGA Resolution: 640x480@85.00\n");
+                                                                                                            res = 0x0B;
+                                                                            break;
+                                                                        default:                            REPORT(INFO, "VGA Resolution: not supported\n");
+                                                                    }
+            break;
+	    case (518): case (519): case (520): case (521): case (522):	switch(fps) {
+                                                                        case (71):  case (72):  case (73):  REPORT(INFO, "VGA Resolution: 640x480@72.80\n");
+                                                                                                            res = 0x09;
+                                                                            break;
+                                                                        default:                            REPORT(INFO, "VGA Resolution: not supported\n");
+                                                                    }
+            break;
+	    case (523): case (524): case (525): case (526): case (527):	switch(fps) {
+                                                                        case (59):  case (60):  case (61):  REPORT(INFO, "VGA Resolution: 640x480@59.94\n");
+                                                                                                            res = 0x08;
+                                                                            break;
+                                                                        default:                            REPORT(INFO, "VGA Resolution: not supported\n");
+                                                                    }
+            break;
+	    case (623): case (624): case (625): case (626): case (627):
+	    case (628): case (629): case (630): case (631): case (632):     
+        case (633):                                                 switch(fps) {
+                                                                        case (55):  case (56):  case (57):  REPORT(INFO, "VGA Resolution: 800x600@56.25\n");
+                                                                                                            res = 0x00;
+                                                                            break;
+                                                                        case (59):  case (60):  case (61):  REPORT(INFO, "VGA Resolution: 800x600@60.31\n");
+                                                                                                            res = 0x01;
+                                                                            break;
+                                                                        case (74):  case (75):  case (76):  REPORT(INFO, "VGA Resolution: 800x600@75\n");
+                                                                                                            res = 0x03;
+                                                                            break;
+                                                                        case (84):  case (85):  case (86):  REPORT(INFO, "VGA Resolution: 800x600@85.06\n");
+                                                                                                            res = 0x04;
+                                                                            break;
+                                                                        default:                            REPORT(INFO, "VGA Resolution: not supported\n");
+                                                                    }                                                                
+            break;
+	    case (664): case (665): case (666): case (667): case (668):	switch(fps) {
+                                                                        case (71):  case (72):  case (73):  REPORT(INFO, "VGA Resolution: 800x600@72.19\n");
+                                                                                                            res = 0x02;
+                                                                            break;
+                                                                        default:                            REPORT(INFO, "VGA Resolution: not supported\n");
+                                                                    }
+            break;
+	    case (798): case (799): case (800): case (801): case (802):	switch(fps) {
+                                                                        case (74):  case (75):  case (76):  REPORT(INFO, "VGA Resolution: 1024x768@75.03\n");
+                                                                                                            res = 0x0E;
+                                                                            break;
+                                                                        default:                            REPORT(INFO, "VGA Resolution: not supported\n");
+                                                                    }
+            break;
+	    case (804): case (805): case (806): case (807): case (808):	
+        case (809): case (810):                                     switch(fps) {
+                                                                        case (59):  case (60):  case (61):  REPORT(INFO, "VGA Resolution: 1024x768@60\n");
+                                                                                                            res = 0x0C;
+                                                                            break;
+                                                                        case (69):  case (70):  case (71):  REPORT(INFO, "VGA Resolution: 1024x768@70.07\n");
+                                                                                                            res = 0x0D;
+                                                                            break;
+                                                                        case (84):  case (85):  case (86):  REPORT(INFO, "VGA Resolution: 1024x768@85\n");
+                                                                                                            res = 0x0F;
+                                                                            break;
+                                                                        default:                            REPORT(INFO, "VGA Resolution: not supported\n");
+                                                                    }
+            break;
+	    case (1064):case (1065):case (1066):case (1067):case (1068): switch(fps) {
+                                                                        case (59):  case (60):  case (61):  REPORT(INFO, "VGA Resolution: 1280x1024@60.02\n");
+                                                                                                            res = 0x05;
+                                                                            break;
+                                                                        case (74):  case (75):  case (76):  REPORT(INFO, "VGA Resolution: 1280x1024@75.02\n");
+                                                                                                            res = 0x06;
+                                                                            break;
+                                                                        default:                            REPORT(INFO, "VGA Resolution: Resolution not supported\n");
+                                                                     }
+            break;
+        default:                                                                                            REPORT(INFO, "VGA Resolution: not supported\n");
+    }
+
+    adv7441a_usr_map_write(handle, ADV7441A_REG_VIDEO_STANDARD, res);
+
+    return (int) res;
+}
+
+
 /** IRQ1 interrupt handler 
  *
  * @param handle pointer to the adv7441a handle
@@ -507,9 +630,13 @@ int adv7441a_get_video_timing(t_adv7441a* handle)
  */
 int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue) 
 { 
+    uint8_t vga_status1;
+    uint8_t vga_int_1_clr;
 	uint8_t hdmi_status2, hdmi_status3, hdmi_status5;
 	uint8_t hdmi_raw2, hdmi_raw3;
     uint8_t int2_clr = 0, int3_clr = 0, int5_clr = 0, reg_04 = 0;
+
+    vga_status1 = adv7441a_usr_map1_read(handle, ADV7441A_REG_INTERRUPT_STATUS_1);	
 
 	hdmi_status2 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_2);	
 	hdmi_raw2 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_RAW_STATUS_2);
@@ -517,17 +644,37 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
 	hdmi_raw3 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_RAW_STATUS_3);
 	hdmi_status5 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_5);
 
+    /* STDI data is valid (used for VGA) */
+    if(vga_status1 & ADV7441A_BIT_STDI_DVALID_Q) {
+        vga_int_1_clr |= ADV7441A_BIT_STDI_DVALID_Q;
+        if ((hdmi_raw3 & ADV7441A_BIT_TMDS_CLK_A_RAW) == 0) {        // if tmds clock is not active: VGA, otherwise HDMI is connected
+            REPORT(INFO, "[HDMI IN] new VGA video timing\n");
+            queue_put(event_queue, E_ADV7441A_NEW_VGA_RES);
+        }
+    }
+
+    /* Activity on HS, VS Pin (used for VGA) */
+    if(vga_status1 & ADV7441A_BIT_SSPD_RESULT_Q) {
+        vga_int_1_clr |= ADV7441A_BIT_SSPD_RESULT_Q;
+        if ((hdmi_raw3 & ADV7441A_BIT_TMDS_CLK_A_RAW) == 0) {                   // if tmds clock is not active: VGA, otherwise HDMI is connected
+            REPORT(INFO, "[HDMI IN] configure ADV7441 to RGB\n");
+            adv7441a_usr_map_write(handle, ADV7441A_REG_PRIMARY_MODE, 0x02);
+            queue_put(event_queue, E_ADV7441A_ACTIVITY_ON_SYNC);
+        }
+    }
+
 	/* TMDS clock changed */
     if(hdmi_status3 & ADV7441A_BIT_TMDS_CLK_A_ST) {
         int3_clr |= ADV7441A_BIT_TMDS_CLK_A_CLR;
 		if(hdmi_raw3 & ADV7441A_BIT_TMDS_CLK_A_RAW) {
-			/* Set TMDS equalizer settings */
             REPORT(INFO, "[HDMI IN] TMDS clock active on Port A\n");
+            REPORT(INFO, "[HDMI IN] configure ADV7441 to HDMI\n");
+            adv7441a_usr_map_write(handle, ADV7441A_REG_PRIMARY_MODE, 0x06);
+            adv7441a_usr_map_write(handle, ADV7441A_REG_VIDEO_STANDARD, 0x02);
             queue_put(event_queue, E_ADV7441A_CONNECT);
 		} else {
             REPORT(INFO, "[HDMI IN] no TMDS clock active\n");
         }
-
 	}
 
     /* Video PLL changed */
@@ -600,7 +747,7 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
                 REPORT(INFO, "[HDMI IN] vertical synch filter has locked\n");
 			    REPORT(INFO, "[HDMI IN] link on port A established\n");
 
-			    queue_put(event_queue, E_ADV7441A_NEW_RES);
+			    queue_put(event_queue, E_ADV7441A_NEW_HDMI_RES);
             } else {
                 REPORT(INFO, "[HDMI IN] vertical synch filter not locked\n");
             }
@@ -640,6 +787,8 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
     if(int2_clr)    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_2, int2_clr);
     if(int3_clr)    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_3, int3_clr);
     if(int5_clr)    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_5, int5_clr);
+
+    if(vga_int_1_clr)   adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_CLEAR_1, vga_int_1_clr);
 
 	return ERR_ADV7441A_SUCCESS;
 }

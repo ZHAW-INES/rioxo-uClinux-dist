@@ -8,6 +8,7 @@
 /* timing parameters */
 //#define ADV7441A_TIMER_INTERVAL		(20 * HZ / 1000) /* 20ms */
 #define ADV7441A_RESET_WAIT		(5  * HZ / 1000) /* 5ms */
+#define ADV7441A_XTAL_FREQ      (28636300)
 
 /* status bit declaration */
 #define ADV7441A_STATUS			(0x0000000F)

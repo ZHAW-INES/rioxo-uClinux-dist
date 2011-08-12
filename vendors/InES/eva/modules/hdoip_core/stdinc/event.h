@@ -9,12 +9,15 @@
 #define E_ADV7441A_CNT          7
 #define E_ADV7441A_NC		    (E_ADV7441A_ID + 0x00000001)  /* no HDMI connected */
 #define E_ADV7441A_CONNECT      (E_ADV7441A_ID + 0x00000008)  /* HDMI connected */
-#define E_ADV7441A_NEW_RES      (E_ADV7441A_ID + 0x00000002)	/* Resolution change */
+#define E_ADV7441A_NEW_HDMI_RES (E_ADV7441A_ID + 0x00000002)	/* Resolution change */
 #define E_ADV7441A_NEW_AUDIO    (E_ADV7441A_ID + 0x00000003)  /* new audio content received */ 
 #define E_ADV7441A_NO_AUDIO     (E_ADV7441A_ID + 0x00000004)  /* no audio avaible */
 #define E_ADV7441A_HDCP         (E_ADV7441A_ID + 0x00000005)  /* HDCP encrypted content */
 #define E_ADV7441A_NO_HDCP      (E_ADV7441A_ID + 0x00000006)  /* no HDCP encrypted content */
 #define E_ADV7441A_HDCP_KEY_ERR (E_ADV7441A_ID + 0x00000007)  /* HDCP key error (not read or error) */
+#define E_ADV7441A_NEW_VGA_RES  (E_ADV7441A_ID + 0x0000000A)  /* VGA resolution changed*/
+#define E_ADV7441A_ACTIVITY_ON_SYNC (E_ADV7441A_ID + 0x0000000B)  /* activity on sync (VS, HS) detected*/
+
 /* HDCP events */
 #define E_HDCP_STREAMING_ERROR (E_ADV7441A_ID + 0x00000009)  /* HDCP Error, streaming without permission */
 

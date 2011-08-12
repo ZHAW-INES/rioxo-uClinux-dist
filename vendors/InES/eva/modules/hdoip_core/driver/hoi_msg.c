@@ -698,6 +698,12 @@ int hoi_drv_msg_get_fs(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
+int hoi_drv_msg_get_analog_timing(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    msg->value = adv7441a_get_analog_video_timing(&handle->adv7441a);
+    return SUCCESS;
+}
+
 int hoi_drv_msg_set_stime(t_hoi* handle, t_hoi_msg_param* msg)
 {
     tmr_set_slave(handle->p_tmr, msg->value);
@@ -816,7 +822,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_LED,                   hoi_drv_msg_led);
         call(HOI_MSG_NEW_AUDIO,             hoi_drv_msg_new_audio);
         call(HOI_MSG_GET_FS,                hoi_drv_msg_get_fs);
-
+        call(HOI_MSG_GET_ANALOG_TIMING,     hoi_drv_msg_get_analog_timing);
         call(HOI_MSG_OFF,                   hoi_drv_msg_off);
         call(HOI_MSG_IFMT,                  hoi_drv_msg_ifmt);
         call(HOI_MSG_OFMT,                  hoi_drv_msg_ofmt);

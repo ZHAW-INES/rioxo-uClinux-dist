@@ -93,6 +93,7 @@
 #define HOI_MSG_LED                 (0x7000010B)
 #define HOI_MSG_NEW_AUDIO           (0x7000010C)
 #define HOI_MSG_GET_FS              (0x7000010D)
+#define HOI_MSG_GET_ANALOG_TIMING   (0x7000010E)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)

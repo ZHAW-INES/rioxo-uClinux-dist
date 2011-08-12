@@ -11,11 +11,13 @@ const char* event_str(uint32_t e)
     switch (e) {
         case E_ADV7441A_NC: return "no HDMI connected";
         case E_ADV7441A_CONNECT: return "HDMI connected";
-        case E_ADV7441A_NEW_RES: return "resolution change";
+        case E_ADV7441A_NEW_HDMI_RES: return "HDMI resolution changed";
         case E_ADV7441A_NEW_AUDIO: return "new audio content received";
-        case E_ADV7441A_NO_AUDIO: return "no audio avaible";
+        case E_ADV7441A_NO_AUDIO: return "no audio available";
         case E_ADV7441A_HDCP: return "HDCP encrypted content";
         case E_ADV7441A_NO_HDCP: return "no HDCP encrypted content";
+        case E_ADV7441A_NEW_VGA_RES: return "VGA resolution changed";
+        case E_ADV7441A_ACTIVITY_ON_SYNC: return "activity on video in sync detected";
 
         case E_ADV9889_CABLE_ON: return "HDMI sink connected";
         case E_ADV9889_CABLE_OFF: return "HDMI sink disconnected";

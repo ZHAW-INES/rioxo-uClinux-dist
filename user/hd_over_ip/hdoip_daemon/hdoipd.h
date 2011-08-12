@@ -93,6 +93,7 @@ enum {
     RSC_AUDIO_IN    = 0x000003,     // active audio input
     RSC_VIDEO_IN    = 0x000010,     // active video input
     RSC_VIDEO_IN_HDCP=0x000020,	    // HDCP required
+    RSC_VIDEO_IN_VGA =0x000040,     // active VGA input
     RSC_VIDEO_SINK  = 0x000100,     // a video sink is connected
     RSC_ETH_LINK    = 0x000200,     // a ethernet link is on
     RSC_AUDIO_OUT   = 0x001000,     // active audio output

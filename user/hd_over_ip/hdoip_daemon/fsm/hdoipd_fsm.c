@@ -502,8 +502,10 @@ void hdoipd_fsm_vtb(uint32_t event)
         case E_ADV7441A_NC:
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
         break;
-        case E_ADV7441A_NEW_RES:
-        	report(INFO "E_ADV7441A_NEW_RES, EVENT_VIDEO_IN_ON")
+        case E_ADV7441A_NEW_HDMI_RES:
+            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
+        break;
+        case E_ADV7441A_NEW_VGA_RES:
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
         break;
         case E_ADV7441A_NEW_AUDIO:
@@ -520,7 +522,7 @@ void hdoipd_fsm_vtb(uint32_t event)
 
 void hdoipd_event(uint32_t event)
 {
-    uint32_t fs;
+    uint32_t buff;
 
     lock("hdoipd_event");
         report(EVENT "(%x) %s ", event, event_str(event));
@@ -559,16 +561,33 @@ void hdoipd_event(uint32_t event)
             hoi_drv_set_led_status(DVI_IN_DISCONNECTED);
         break;
         case E_ADV7441A_CONNECT:
-            // TODO handle event
         break;
-        case E_ADV7441A_NEW_RES:
+        case E_ADV7441A_NEW_HDMI_RES:
             hdoipd_set_rsc(RSC_VIDEO_IN);
+            hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
             hdoipd_set_rsc(RSC_AUDIO0_IN);
             hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
         break;
+        case E_ADV7441A_NEW_VGA_RES:
+            hdoipd_set_rsc(RSC_VIDEO_IN);
+            hdoipd_set_rsc(RSC_VIDEO_IN_VGA);
+            hdoipd_clr_rsc(RSC_AUDIO0_IN);
+            hoi_drv_get_analog_timing(&buff);
+            if (buff != 7) {
+                hoi_drv_set_led_status(DVI_IN_CONNECTED_NO_AUDIO);
+            } else {
+                hdoipd_clr_rsc(RSC_VIDEO_IN);
+                hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
+                event = event & ~E_ADV7441A_NEW_VGA_RES;                // clear event to prevent that video will be started in hdoipd_fsm_vtb
+                event = event | E_ADV7441A_NC;                          // set event to stop video
+                hoi_drv_set_led_status(DVI_IN_DISCONNECTED);
+            }
+        break;
+        case E_ADV7441A_ACTIVITY_ON_SYNC:
+        break;
         case E_ADV7441A_NEW_AUDIO:
-            hoi_drv_get_fs(&fs);
-            hoi_drv_new_audio(fs);
+            hoi_drv_get_fs(&buff);
+            hoi_drv_new_audio(buff);
         break;
         case E_ADV7441A_NO_AUDIO:
         break;
@@ -643,8 +662,8 @@ void hdoipd_event(uint32_t event)
         case E_ASI_RBF_ERROR:
         break;
         case E_ASI_NEW_FS:
-            hoi_drv_get_fs(&fs);
-            hoi_drv_new_audio(fs);
+            hoi_drv_get_fs(&buff);
+            hoi_drv_new_audio(buff);
         break;
         case E_ASO_SIZE_ERROR:
         break;
