@@ -196,16 +196,16 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_handle = handle;
     handle->status = 0; // clear status
 
-    //adv7441a_disable_portA(handle);
-
     adv7441a_sw_reset(handle);
+
+    adv7441a_disable_portA(handle);
 
     /* ************************************** *
         User map (0x42)
      * ************************************** */
 
     /* Extended output control (0x04) */
-    adv7441a_usr_map_write(handle, ADV7441A_REG_EXTENDED_OUTPUT_CONTROL,
+    adv7441a_usr_map_write(handle, ADV7441A_REG_EXTENDED_OUTPUT_CONTROL, 0x40 |
         ADV7441A_BIT_RANGE | /* reset value */
         ADV7441A_BIT_EN_SFL_PIN | /* reset value */
         ADV7441A_BIT_BL_C_VBI | /* reset value */
@@ -230,9 +230,8 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_usr_map_write(handle, ADV7441A_REG_ADC_SWITCH_2, 0x00); /* (0xC4) ADC2 */
     adv7441a_usr_map_write(handle, ADV7441A_REG_AFE_CONTROL_1, 0x00); /* (0xF3) ADC3 */
 
-    adv7441a_usr_map_write(handle, ADV7441A_REG_TLLC_CONTROL_ANALOGUE, 0xA8);
+    adv7441a_usr_map_write(handle, ADV7441A_REG_TLLC_CONTROL_ANALOGUE, 0x58);
 
-    /* -------------------------------- ADI recommend write (user map) -------------------------------- */
     /* Set output format and enable output pins (0x03)
         0x00 : 10 bit 4:2:2
         0x04 : 20 bit 4:2:2
@@ -254,7 +253,7 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
         ADV7441A_BIT_HS_OUT_SEL);
 
     /* Set CSC Coeff to automatic mode (CSC_23) (0x68) */
-    adv7441a_usr_map_write(handle, ADV7441A_REG_CSC_23, 0xF0 | ADV7441A_BIT_RGB_OUT);
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CSC_23, (adv7441a_usr_map_read(handle, ADV7441A_REG_CSC_23) & 0x08) | 0xF0 | ADV7441A_BIT_RGB_OUT);
 
     /* NEW! Enable HDMI and Analog in (0xBA) */
     adv7441a_usr_map_write(handle, ADV7441A_REG_DPP_CP_105, 0xA0);
@@ -265,8 +264,6 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     /* Set CP AV controll register (0x7B) */
     adv7441a_usr_map_write(handle, ADV7441A_REG_CP_AV_CONTROL, 0x04 | ADV7441A_BIT_AV_BLANK_EN | ADV7441A_BIT_DE_WITH_AVCODE);
 
-    /* 0x7C - 0x7E => reset value */
-
     /* Drive strength for HS, VS, f and clock set to maximum (0xF4) */
     adv7441a_usr_map_write(handle, ADV7441A_REG_DRIVE_STRENGTH, 0x3F);
 
@@ -275,31 +272,42 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
      * ************************************** */
 
     /* Set equalizer settings */
-    adv7441a_usr_map2_write(handle, 0xF0, 0x10);
+    adv7441a_usr_map2_write(handle, 0xF0, 0x34);
     adv7441a_usr_map2_write(handle, 0xF1, 0x0F);
-    adv7441a_usr_map2_write(handle, 0xF4, 0x20);
+    adv7441a_usr_map2_write(handle, 0xF4, 0x18);
 
 
     /* ************************************** *
         HDMI map
      * ************************************** */
 
-    /* Set Mute mask (disable all) */
-    adv7441a_hdmi_map_write(handle,ADV7441A_REG_MUTE_MASK_19_16, 0x00); /* (0x14) */
-    adv7441a_hdmi_map_write(handle,ADV7441A_REG_MUTE_MASK_15_8, 0x00); /* (0x15) */
-    adv7441a_hdmi_map_write(handle,ADV7441A_REG_MUTE_MASK_7_0, 0x00); /* (0x16) */
-
     /* HDMI Port select => Port A (0x00) */
     adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_00H, 0x00);
+
+    /* Force I2S, disable SPDIF (0x02)*/
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_02H, 0x22);
+
+    /* I2S config (24bit, normal mode) (0x03)*/
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_03H, 0x18);
+
+    /* Set Mute mask (disable all) */
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_MUTE_MASK_19_16, 0x0C); /* (0x14) */
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_MUTE_MASK_15_8, 0x00); /* (0x15) */
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_MUTE_MASK_7_0, 0x00); /* (0x16) */
 
     /* Set CTS change Threshold (0x10) */
     adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_10H, 0x1F);
 
     /* Enable audio pll, MCLK fs, MCLK N (0x1C) */
-    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1CH, 0x20); /* PLL enable write 0x60, disable write 0x20 */
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1CH, 0x18);
 
     /* Audio Mute options and conversion mode (0x1D) */
-    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, ADV7441A_BIT_UP_CONVERSION_MODE);
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, ADV7441A_BIT_UP_CONVERSION_MODE | ADV7441A_BIT_DELAY_UNMUTE_1_SEC);
+
+    /* Set Audio PLL Divider to 4 (0x3C)*/
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_PLL_DIVIDER, 0x42);
+
+
 
     /* Audio PLL VCO Range < 176khz*/
     adv7441a_hdmi_map_write(handle, 0x3D, 0x60);
@@ -344,9 +352,6 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_4, 0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_5, 0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_6, 0x00);
-
-    /* Initialize EDID for port A */
-    adv7441a_set_edid(handle, edid);
 
     return ERR_ADV7441A_SUCCESS;
 }

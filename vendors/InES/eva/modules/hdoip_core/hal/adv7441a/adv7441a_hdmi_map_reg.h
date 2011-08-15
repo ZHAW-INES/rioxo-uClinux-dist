@@ -143,6 +143,7 @@
 #define	ADV7441A_BIT_UP_CONVERSION_MODE                          0x20
 #define	ADV7441A_BIT_MUTE_AUDIO                                  0x08
 #define	ADV7441A_BIT_NOT_AUTO_UNMUTE                             0x01
+#define ADV7441A_BIT_DELAY_UNMUTE_1_SEC                          0x04
 
 #define	ADV7441A_REG_TOTAL_LINE_WIDTH_MSB                        0x1E
 
