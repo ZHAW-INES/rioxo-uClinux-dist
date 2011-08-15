@@ -501,6 +501,7 @@ void hdoipd_fsm_vtb(uint32_t event)
     switch (event) {
         case E_ADV7441A_NC:
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
+            rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_OFF);
         break;
         case E_ADV7441A_NEW_HDMI_RES:
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
