@@ -458,6 +458,7 @@ void task_get_rscp_state(char** s)
 {
     t_video_timing vid_timing;
     uint32_t advcnt;
+    uint32_t image_freq, image_pixel;
     int cnt = 0;
     
     buf_ptr = buf;
@@ -476,9 +477,11 @@ void task_get_rscp_state(char** s)
         buf_ptr += sprintf(buf_ptr, "not connected\n");
     }
 
-    hoi_drv_info(&vid_timing, &advcnt);
-    buf_ptr += sprintf(buf_ptr, "resolution     : %d x %d @ %dHz\n", vid_timing.width, vid_timing.height, vid_timing.pfreq);
+    image_pixel = (vid_timing.height + vid_timing.vfront + vid_timing.vback + vid_timing.vpulse) * (vid_timing.width + vid_timing.hfront + vid_timing.hback + vid_timing.hpulse);
+    image_freq = (vid_timing.pfreq / (image_pixel / 100));
 
+    hoi_drv_info(&vid_timing, &advcnt);
+    buf_ptr += sprintf(buf_ptr, "resolution     : %d x %d @ %d.%02d Hz\n", vid_timing.width, vid_timing.height, (image_freq/100), (image_freq%100));
 
     t_rscp_client* client;
     LIST_FOR(client, hdoipd.client) {
