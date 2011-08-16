@@ -31,6 +31,7 @@
 #include "tmr_hal.h"
 #include "ver_hal.h"
 #include "stream_sync.h"
+#include "bdt_drv.h"
 
 
 #define HANDLER_TIMER_INTERVAL      (HZ/20)
@@ -79,6 +80,7 @@ typedef struct {
     t_adv9889           adv9889;
     t_adv7441a          adv7441a;
     t_sync_means        sync;
+    t_bdt               bdt;
 
     t_queue             *event;
     wait_queue_head_t   eq;

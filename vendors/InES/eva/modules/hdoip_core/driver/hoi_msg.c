@@ -40,6 +40,12 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
     if (rmdrv & DRV_ADV7441) {
         // TODO
     }
+    if (rmdrv & DRV_GS2971) {
+        // TODO
+    }
+    if (rmdrv & DRV_GS2972) {
+        // TODO
+    }
 
     // install driver...
     if (lddrv & DRV_ADV9889) {
@@ -47,6 +53,12 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
     }
     if (lddrv & DRV_ADV7441) {
         adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, &handle->vio, (char*)adv7441a_edid_table);
+    }
+    if (lddrv & DRV_GS2971) {
+        //TODO
+    }
+    if (lddrv & DRV_GS2972) {
+        //TODO
     }
 
     handle->drivers = msg->drivers & DRV_ALL;
@@ -113,13 +125,17 @@ int hoi_drv_msg_hdcp_audio_dis_eto(t_hoi* handle){
 }
 // enable hdcp encryption in AD9889 (hdmi transmitter IC)
 int hoi_drv_msg_hdcp_ADV9889_en(t_hoi* handle){
-	adv9889_drv_hdcp_on(&handle->adv9889);
+    if (handle->drivers & DRV_ADV9889) {
+        adv9889_drv_hdcp_on(&handle->adv9889);
+    }
     return SUCCESS;
 }
 
 // disable hdcp encryption in AD9889 (hdmi transmitter IC)
 int hoi_drv_msg_hdcp_ADV9889_dis(t_hoi* handle){
-	adv9889_drv_hdcp_off(&handle->adv9889);
+    if (handle->drivers & DRV_ADV9889) {
+        adv9889_drv_hdcp_off(&handle->adv9889);
+    }
     return SUCCESS;
 }
 
@@ -271,11 +287,12 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
     // setup vsi
     vsi_drv_go(&handle->vsi, &msg->eth);
 
-    if (adv7441a_get_video_timing(&handle->adv7441a)) {
-        REPORT(ERROR, "adv7441a_get_video_timing results not valid");
+    if (handle->drivers & DRV_ADV7441) {
+        if (adv7441a_get_video_timing(&handle->adv7441a)) {
+            REPORT(ERROR, "adv7441a_get_video_timing results not valid");
+        }
+        vio_copy_adv7441_timing(&handle->vio.timing, &handle->adv7441a);
     }
-
-    vio_copy_adv7441_timing(&handle->vio.timing, &handle->adv7441a);
 
     // setup vio
     if (msg->compress) {
@@ -509,7 +526,9 @@ int hoi_drv_msg_led(t_hoi* handle, t_hoi_msg_param* msg)
 
 int hoi_drv_msg_new_audio(t_hoi* handle, t_hoi_msg_param* msg)
 {
-    adv7441a_audio_fs_change(&handle->adv7441a, msg->value);
+    if (handle->drivers & DRV_ADV7441) {
+        adv7441a_audio_fs_change(&handle->adv7441a, msg->value);
+    }
     return SUCCESS;
 }
 
@@ -616,11 +635,14 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
 {
     int min = 0;
     // read video input timing
-    if (adv7441a_get_video_timing(&handle->adv7441a)) {
-        REPORT(ERROR, "adv7441a_get_video_timing results not valid");
+
+    if (handle->drivers & DRV_ADV7441) {
+        if (adv7441a_get_video_timing(&handle->adv7441a)) {
+            REPORT(ERROR, "adv7441a_get_video_timing results not valid");
+        }
+        vio_copy_adv7441_timing(&msg->timing, &handle->adv7441a);
     }
 
-    vio_copy_adv7441_timing(&msg->timing, &handle->adv7441a);
     vio_get_input_frequency(handle->p_vio, &msg->timing);
     if (!msg->timing.interlaced) {
         vio_get_timing(handle->p_vio, &msg->timing);
@@ -700,7 +722,15 @@ int hoi_drv_msg_get_fs(t_hoi* handle, t_hoi_msg_param* msg)
 
 int hoi_drv_msg_get_analog_timing(t_hoi* handle, t_hoi_msg_param* msg)
 {
-    msg->value = adv7441a_get_analog_video_timing(&handle->adv7441a);
+    if (handle->drivers & DRV_ADV7441) {
+        msg->value = adv7441a_get_analog_video_timing(&handle->adv7441a);
+    }
+    return SUCCESS;
+}
+
+int hoi_drv_msg_get_device_id(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    msg->value = bdt_return_device(&handle->bdt);
     return SUCCESS;
 }
 
@@ -823,6 +853,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_NEW_AUDIO,             hoi_drv_msg_new_audio);
         call(HOI_MSG_GET_FS,                hoi_drv_msg_get_fs);
         call(HOI_MSG_GET_ANALOG_TIMING,     hoi_drv_msg_get_analog_timing);
+        call(HOI_MSG_GET_DEV_ID,            hoi_drv_msg_get_device_id);
         call(HOI_MSG_OFF,                   hoi_drv_msg_off);
         call(HOI_MSG_IFMT,                  hoi_drv_msg_ifmt);
         call(HOI_MSG_OFMT,                  hoi_drv_msg_ofmt);
@@ -846,8 +877,8 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_VSOSTAT,               hoi_drv_msg_vsostat);
         call(HOI_MSG_VIOSTAT,               hoi_drv_msg_viostat);
         call(HOI_MSG_ASOREG,                hoi_drv_msg_asoreg);
-	call(HOI_MSG_HDCP_INIT,      	    hoi_drv_msg_hdcp_init);
-	call(HOI_MSG_HDCPSTAT,       	    hoi_drv_msg_hdcpstat);
+        call(HOI_MSG_HDCP_INIT,             hoi_drv_msg_hdcp_init);
+        call(HOI_MSG_HDCPSTAT,              hoi_drv_msg_hdcpstat);
 
         call(HOI_MSG_GETVERSION,            hoi_drv_msg_getversion);
 
@@ -871,18 +902,18 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         callsw(HOI_MSG_WDG_DISABLE,         hoi_drv_msg_wdg_disable);
         callsw(HOI_MSG_WDG_SERVICE,         hoi_drv_msg_wdg_service);
 
-	callsw(HOI_MSG_HDCP_ENVIDEO_ETI, hoi_drv_msg_hdcp_video_en_eti);
-	callsw(HOI_MSG_HDCP_ENVIDEO_ETO, hoi_drv_msg_hdcp_video_en_eto);
-	callsw(HOI_MSG_HDCP_ENAUDIO_ETI, hoi_drv_msg_hdcp_audio_en_eti);
-	callsw(HOI_MSG_HDCP_ENAUDIO_ETO, hoi_drv_msg_hdcp_audio_en_eto);
+        callsw(HOI_MSG_HDCP_ENVIDEO_ETI, hoi_drv_msg_hdcp_video_en_eti);
+        callsw(HOI_MSG_HDCP_ENVIDEO_ETO, hoi_drv_msg_hdcp_video_en_eto);
+        callsw(HOI_MSG_HDCP_ENAUDIO_ETI, hoi_drv_msg_hdcp_audio_en_eti);
+        callsw(HOI_MSG_HDCP_ENAUDIO_ETO, hoi_drv_msg_hdcp_audio_en_eto);
 
-	callsw(HOI_MSG_HDCP_DISVIDEO_ETI, hoi_drv_msg_hdcp_video_dis_eti);
-	callsw(HOI_MSG_HDCP_DISVIDEO_ETO, hoi_drv_msg_hdcp_video_dis_eto);
-	callsw(HOI_MSG_HDCP_DISAUDIO_ETI, hoi_drv_msg_hdcp_audio_dis_eti);
-	callsw(HOI_MSG_HDCP_DISAUDIO_ETO, hoi_drv_msg_hdcp_audio_dis_eto);
+        callsw(HOI_MSG_HDCP_DISVIDEO_ETI, hoi_drv_msg_hdcp_video_dis_eti);
+        callsw(HOI_MSG_HDCP_DISVIDEO_ETO, hoi_drv_msg_hdcp_video_dis_eto);
+        callsw(HOI_MSG_HDCP_DISAUDIO_ETI, hoi_drv_msg_hdcp_audio_dis_eti);
+        callsw(HOI_MSG_HDCP_DISAUDIO_ETO, hoi_drv_msg_hdcp_audio_dis_eto);
 
-	callsw(HOI_MSG_HDCP_ENAD9889, hoi_drv_msg_hdcp_ADV9889_en);
-	callsw(HOI_MSG_HDCP_DISAD9889, hoi_drv_msg_hdcp_ADV9889_dis);
+        callsw(HOI_MSG_HDCP_ENAD9889, hoi_drv_msg_hdcp_ADV9889_en);
+        callsw(HOI_MSG_HDCP_DISAD9889, hoi_drv_msg_hdcp_ADV9889_dis);
 
         callsw(HOI_MSG_POLL,    hoi_drv_msg_poll);
 

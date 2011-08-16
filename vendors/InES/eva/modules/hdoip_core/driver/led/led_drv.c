@@ -10,11 +10,28 @@
  */
 int led_drv_tgl(t_led* handle, uint32_t mask)
 {
+//TODO: how can leds be set in PCA 9575 ?
+    uint8_t old_val;
     handle->led_set = ((handle->led_set & mask) ^ mask) | (handle->led_set & ~mask);
 
-    if(mask & LED_VID_RNG) {
-        i2c_drv_write(handle->p_vid_i2c, LED_I2C_VID_ADDR, ~(handle->led_set & LED_VID_RNG));
+    if (handle->device_id == BDT_ID_HDMI_BOARD) {
+        if (mask & LED_HDMI_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_HDMI_ADDR);
+            i2c_drv_write(handle->p_vid_i2c, LED_I2C_HDMI_ADDR, (old_val & ~LED_HDMI_MASK) | ~(handle->led_set & LED_HDMI_MASK));
+        }
     }
+
+    if (handle->device_id == BDT_ID_SDI8_BOARD) {
+        if (mask & LED_SDI_IN_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_IN_ADDR);
+            //i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_IN_ADDR, (old_val & ~LED_SDI_MASK) | ~((handle->led_set >> LED_SDI_IN_BIT_SHIFT) & LED_SDI_MASK));
+        }
+        if (mask & LED_SDI_OUT_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR);
+            //i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_MASK) | ~((handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_MASK));
+        }
+    }
+
     return SUCCESS;
 }
 
@@ -26,12 +43,27 @@ int led_drv_tgl(t_led* handle, uint32_t mask)
  */
 int led_drv_clr(t_led* handle, uint32_t mask)
 {
+//TODO: how can leds be set in PCA 9575 ?
+    uint8_t old_val;
     uint32_t update = (handle->led_set & mask);
     handle->led_set &= ~mask;
 
-    /* Clear Videoboard LEDs */
-    if(update & LED_VID_RNG) {
-        i2c_drv_write(handle->p_vid_i2c, LED_I2C_VID_ADDR, ~(handle->led_set & LED_VID_RNG));
+    if (handle->device_id == BDT_ID_HDMI_BOARD) {
+        if (update & LED_HDMI_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_HDMI_ADDR);
+            i2c_drv_write(handle->p_vid_i2c, LED_I2C_HDMI_ADDR, (old_val & ~LED_HDMI_MASK) | ~(handle->led_set & LED_HDMI_MASK));
+        }
+    }
+
+    if (handle->device_id == BDT_ID_SDI8_BOARD) {
+        if (mask & LED_SDI_IN_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_IN_ADDR);
+            //i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_IN_ADDR, (old_val & ~LED_SDI_MASK) | ~((handle->led_set >> LED_SDI_IN_BIT_SHIFT) & LED_SDI_MASK));
+        }
+        if (mask & LED_SDI_OUT_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR);
+            //i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_MASK) | ~((handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_MASK));
+        }
     }
 
     return SUCCESS;
@@ -45,12 +77,27 @@ int led_drv_clr(t_led* handle, uint32_t mask)
  */
 int led_drv_set(t_led* handle, uint32_t mask)
 {
+//TODO: how can leds be set in PCA 9575 ?
+    uint8_t old_val;
     uint32_t update = (handle->led_set | mask) - handle->led_set;
     handle->led_set |= mask;
 
-    /* Set Videoboard LEDs */
-    if(update & LED_VID_RNG) {
-        i2c_drv_write(handle->p_vid_i2c, LED_I2C_VID_ADDR, ~(handle->led_set & LED_VID_RNG));
+    if (handle->device_id == BDT_ID_HDMI_BOARD) {
+        if(update & LED_HDMI_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_HDMI_ADDR);
+            i2c_drv_write(handle->p_vid_i2c, LED_I2C_HDMI_ADDR, (old_val & ~LED_HDMI_MASK) | ~(handle->led_set & LED_HDMI_MASK));
+        }
+    }
+
+    if (handle->device_id == BDT_ID_SDI8_BOARD) {
+        if (mask & LED_SDI_IN_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_IN_ADDR);
+            //i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_IN_ADDR, (old_val & ~LED_SDI_MASK) | ~((handle->led_set >> LED_SDI_IN_BIT_SHIFT) & LED_SDI_MASK));
+        }
+        if (mask & LED_SDI_OUT_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR);
+            //i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_MASK) | ~((handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_MASK));
+        }
     }
 
     return SUCCESS;
@@ -63,7 +110,7 @@ int led_drv_set(t_led* handle, uint32_t mask)
  * @param p_aud_i2c pointer to handle of audio i2c driver
  * @return error code
  */
-int led_drv_init(t_led* handle, t_i2c* p_vid_i2c, t_i2c* p_aud_i2c, void* p_led)
+int led_drv_init(t_led* handle, t_i2c* p_vid_i2c, t_i2c* p_aud_i2c, void* p_led, t_bdt* handle_bdt)
 {
     handle->p_vid_i2c       = p_vid_i2c;
     handle->p_aud_i2c       = p_aud_i2c;
@@ -73,6 +120,9 @@ int led_drv_init(t_led* handle, t_i2c* p_vid_i2c, t_i2c* p_aud_i2c, void* p_led)
     handle->toggle_mask_1s  = 0;
     handle->toggle_mask_3s  = 0;
     handle->led_set         = 0;
+    handle->set_mask        = 0;
+    handle->clr_mask        = 0;
+    handle->device_id       = bdt_return_device(handle_bdt);
 
     led_drv_set_status(handle, FIRMWARE_START);
 
@@ -93,10 +143,10 @@ void led_drv_handler(t_led* handle)
         handle->counter_1s = 0;
             // toggle leds on mainboard
             led_status = LED_READ_REG;
-            led_status = led_status^(handle->toggle_mask_1s & 0xFF);
+            led_status = led_status^(handle->toggle_mask_1s & LED_MOTHER_RNG);
             LED_SET_REG(led_status);
             // toggle leds on hdmi-board
-            led_drv_tgl(handle, ((handle->toggle_mask_1s >> 8) & 0xFF));
+            led_drv_tgl(handle, ((handle->toggle_mask_1s >> LED_VIDEO_BIT_SHIFT) & LED_VIDEO_RNG));
     } else {
         handle->counter_1s++; 
     }
@@ -106,25 +156,25 @@ void led_drv_handler(t_led* handle)
         handle->counter_3s = 0;
             // toggle leds on mainboard
             led_status = LED_READ_REG;
-            led_status = led_status^(handle->toggle_mask_3s & 0xFF);
+            led_status = led_status^(handle->toggle_mask_3s & LED_MOTHER_RNG);
             LED_SET_REG(led_status);
             // toggle leds on hdmi-board
-            led_drv_tgl(handle, ((handle->toggle_mask_3s >> 8) & 0xFF));
+            led_drv_tgl(handle, ((handle->toggle_mask_3s >> LED_VIDEO_BIT_SHIFT) & LED_VIDEO_RNG));
     } else {
         handle->counter_3s++; 
     }
 
     // clear
     if (handle->clr_mask) {
-        LED_SET_REG(LED_READ_REG | (handle->clr_mask & 0xFF));
-        led_drv_clr(handle, handle->clr_mask >> 8);
+        LED_SET_REG(LED_READ_REG | (handle->clr_mask & LED_MOTHER_RNG));
+        led_drv_clr(handle, (handle->clr_mask >> LED_VIDEO_BIT_SHIFT) & LED_VIDEO_RNG);
         handle->clr_mask = 0;
     }
 
     // set
     if (handle->set_mask) { 
-        LED_SET_REG(LED_READ_REG & (~(handle->set_mask & 0xFF)));
-        led_drv_set(handle, handle->set_mask >> 8);
+        LED_SET_REG(LED_READ_REG & (~(handle->set_mask & LED_MOTHER_RNG)));
+        led_drv_set(handle, (handle->set_mask >> LED_VIDEO_BIT_SHIFT) & LED_VIDEO_RNG);
         handle->set_mask = 0;
     }
 }
@@ -167,70 +217,74 @@ void led_drv_control_set(t_led* handle, uint32_t led, uint32_t status)
 int led_drv_set_status(t_led* handle, uint32_t instruction)
 {
     switch (instruction){
-        case ETHERNET_ACTIVE                :   led_drv_control_set(handle, LED_ETH_STATUS,     LED_ON);
-                                                led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_1S);
+
+        /* Main-Board */
+        case ETHERNET_ACTIVE                :   led_drv_control_set(handle, LED_ETH_STATUS,      LED_ON);
+                                                led_drv_control_set(handle, LED_POWER_GREEN,     LED_FLASHING_1S);
                                                 break;
 
-        case ETHERNET_INACTIVE              :   led_drv_control_set(handle, LED_ETH_STATUS,     LED_OFF);
-                                                led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_3S);
+        case ETHERNET_INACTIVE              :   led_drv_control_set(handle, LED_ETH_STATUS,      LED_OFF);
+                                                led_drv_control_set(handle, LED_POWER_GREEN,     LED_FLASHING_3S);
                                                 break;
 
-        case DVI_IN_CONNECTED_NO_AUDIO      :   led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_FLASHING_3S);
-                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
+        case NO_STREAM_ACTIVE               :   led_drv_control_set(handle, LED_POWER_GREEN,     LED_FLASHING_1S);
                                                 break;
 
-        case DVI_IN_CONNECTED_WITH_AUDIO    :   led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_ON);
-                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
+        case STREAM_ACTIVE                  :   led_drv_control_set(handle, LED_POWER_GREEN,     LED_ON);
                                                 break;
 
-        case DVI_IN_DISCONNECTED            :   led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_OFF);
-                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
+        /* HDMI-Board */
+        case DVI_IN_CONNECTED_NO_AUDIO      :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_FLASHING_3S);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
                                                 break;
 
-        case DVI_OUT_CONNECTED_NO_AUDIO     :   led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_FLASHING_3S);
-                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
+        case DVI_IN_CONNECTED_WITH_AUDIO    :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_ON);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
                                                 break;
 
-        case DVI_OUT_CONNECTED_WITH_AUDIO   :   led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_ON);
-                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
+        case DVI_IN_DISCONNECTED            :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
                                                 break;
 
-        case DVI_OUT_DISCONNECTED           :   led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
+        case DVI_OUT_CONNECTED_NO_AUDIO     :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_FLASHING_3S);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
                                                 break;
 
-        case FIRMWARE_START                 :   led_drv_control_set(handle, LED_BOOT,           LED_ON);
-                                                led_drv_control_set(handle, LED_ETH_STATUS,     LED_OFF);
-                                                led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_3S);
-                                                led_drv_control_set(handle, LED_POWER_RED,      LED_OFF);
-                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
-                                                led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_OFF);
-                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_OFF);
+        case DVI_OUT_CONNECTED_WITH_AUDIO   :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_ON);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
                                                 break;
 
-        case NO_STREAM_ACTIVE               :   led_drv_control_set(handle, LED_POWER_GREEN,    LED_FLASHING_1S);
+        case DVI_OUT_DISCONNECTED           :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
                                                 break;
 
-        case STREAM_ACTIVE                  :   led_drv_control_set(handle, LED_POWER_GREEN,    LED_ON);
+        case STREAM_ERROR_HDMI_IN           :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_ON);
                                                 break;
 
-        case STREAM_ERROR_HDMI_IN           :   led_drv_control_set(handle, LED_VID_IN_GREEN,   LED_OFF);
-                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_ON);
+        case STREAM_ERROR_HDMI_OUT          :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_ON);
                                                 break;
 
-        case STREAM_ERROR_HDMI_OUT          :   led_drv_control_set(handle, LED_VID_OUT_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_ON);
+        /* Mixed */
+        case FIRMWARE_START                 :   led_drv_control_set(handle, LED_BOOT,            LED_ON);
+                                                led_drv_control_set(handle, LED_ETH_STATUS,      LED_OFF);
+                                                led_drv_control_set(handle, LED_POWER_GREEN,     LED_FLASHING_3S);
+                                                led_drv_control_set(handle, LED_POWER_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
                                                 break;
 
-        case IDENTIFICATION_ON              :   led_drv_control_set(handle, LED_POWER_RED,      LED_FLASHING_1S);
-                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_FLASHING_1S);
-                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_FLASHING_1S);
+        case IDENTIFICATION_ON              :   led_drv_control_set(handle, LED_POWER_RED,       LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_FLASHING_1S);
                                                 break;
 
-        case IDENTIFICATION_OFF             :   led_drv_control_set(handle, LED_POWER_RED,      LED_OFF);
-                                                led_drv_control_set(handle, LED_VID_IN_RED,     LED_OFF);
-                                                led_drv_control_set(handle, LED_VID_OUT_RED,    LED_OFF);
+        case IDENTIFICATION_OFF             :   led_drv_control_set(handle, LED_POWER_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
                                                 break;
 
         default                             :   break;

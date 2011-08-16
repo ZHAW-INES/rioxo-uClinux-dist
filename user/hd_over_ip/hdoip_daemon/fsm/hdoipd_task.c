@@ -46,6 +46,8 @@ void task_get_drivers(char** p)
 
     if (hdoipd.drivers & DRV_ADV9889) tmp += sprintf(tmp, "ADV9889 ");
     if (hdoipd.drivers & DRV_ADV7441) tmp += sprintf(tmp, "ADV7441 ");
+    if (hdoipd.drivers & DRV_GS2971)  tmp += sprintf(tmp, "GS2971 ");
+    if (hdoipd.drivers & DRV_GS2972)  tmp += sprintf(tmp, "GS2972 ");
 
     if (tmp!=buf) tmp--;
     *tmp = 0;

@@ -11,6 +11,8 @@
 #include "std.h"
 #include "i2c_drv.h"
 #include "led_drv_instructions.h"
+#include "bdt_drv.h"
+#include "hoi_msg.h"
 
 /* LED flashing constants */
 #define LED_T_HANDLE            (30)
@@ -26,27 +28,56 @@
 /* Mainboard (code 0x00 - 0xFF)*/
 #define LED_READ_REG            (HOI_RD32((handle->p_led), 0x00))
 #define LED_SET_REG(m)		    (HOI_WR32((handle->p_led), 0x00, (m)))
+#define LED_MOTHER_RNG          (0x000000FF)
 
 #define LED_ETH_STATUS          (0x00000004)
 #define LED_POWER_GREEN         (0x00000008)
 #define LED_POWER_RED           (0x00000010)
 #define LED_BOOT                (0x00000020)
 
-/* Videoboard  (code 0x100 - ...) */
-#define LED_I2C_VID_ADDR        (0x00000044)
-#define LED_VID_RNG             (0x000000FF)
+/* Video-Board Miscellaneous */
+#define LED_VIDEO_BIT_SHIFT      (0x00000008)
+#define LED_VIDEO_RNG            (0x0000FFFF)
 
-#define LED_VID_OUT_ORANGE      (0x00000300)
-#define LED_VID_OUT_GREEN       (0x00000100)
-#define LED_VID_OUT_RED         (0x00000200)
-#define LED_VID_IN_ORANGE       (0x00000C00)
-#define LED_VID_IN_GREEN        (0x00000400)
-#define LED_VID_IN_RED          (0x00000800)
+/* HDMI-Board  (code 0x100 - 0xFFFF) */
+#define LED_I2C_HDMI_ADDR        (0x00000044)
+#define LED_HDMI_MASK            (0x0000000F)
+#define LED_HDMI_RNG             (0x0000000F)
+
+#define LED_HDMI_OUT_ORANGE      (0x00000300)
+#define LED_HDMI_OUT_GREEN       (0x00000100)
+#define LED_HDMI_OUT_RED         (0x00000200)
+#define LED_HDMI_IN_ORANGE       (0x00000C00)
+#define LED_HDMI_IN_GREEN        (0x00000400)
+#define LED_HDMI_IN_RED          (0x00000800)
+
+/* SDI-Board (code 0x10000) - ... */
+#define LED_I2C_SDI_IN_ADDR      (0x00000046)
+#define LED_I2C_SDI_OUT_ADDR     (0x00000044)
+#define LED_SDI_MASK             (0x0000000F)
+#define LED_SDI_IN_RNG           (0x00000F00)
+#define LED_SDI_OUT_RNG          (0x0000F000)
+#define LED_SDI_IN_BIT_SHIFT     (0x00000008)
+#define LED_SDI_OUT_BIT_SHIFT    (0x0000000C)
+
+#define LED_SDI_IN_ORANGE        (0x00030000)
+#define LED_SDI_IN_GREEN         (0x00020000)
+#define LED_SDI_IN_RED           (0x00010000)
+#define LED_SDI_LOOP_ORANGE      (0x000C0000)
+#define LED_SDI_LOOP_GREEN       (0x00040000)
+#define LED_SDI_LOOP_RED         (0x00080000)
+#define LED_SDI_OUT1_ORANGE      (0x00300000)
+#define LED_SDI_OUT1_GREEN       (0x00100000)
+#define LED_SDI_OUT1_RED         (0x00200000)
+#define LED_SDI_OUT2_ORANGE      (0x00C00000)
+#define LED_SDI_OUT2_GREEN       (0x00400000)
+#define LED_SDI_OUT2_RED         (0x00800000)
 
 typedef struct {
     void        *p_led;
     t_i2c       *p_vid_i2c;
     t_i2c       *p_aud_i2c;
+    uint32_t    device_id;
     uint32_t    led_set;
     uint32_t    counter_1s;
     uint32_t    counter_3s;
@@ -56,7 +87,7 @@ typedef struct {
     uint32_t    clr_mask;
 } t_led;
 
-int led_drv_init(t_led* handle, t_i2c* p_vid_i2c, t_i2c* p_aud_i2c, void* p_led);
+int led_drv_init(t_led* handle, t_i2c* p_vid_i2c, t_i2c* p_aud_i2c, void* p_led, t_bdt* handle_bdt);
 void led_drv_handler(t_led* handle);
 int led_drv_set_status(t_led* handle, uint32_t instruction);
 

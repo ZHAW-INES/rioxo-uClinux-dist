@@ -193,6 +193,7 @@ HOI_READ(get_stime, HOI_MSG_GETSTIME);
 HOI_READ(get_syncdelay, HOI_MSG_SYNCDELAY);
 HOI_READ(get_fs, HOI_MSG_GET_FS);
 HOI_READ(get_analog_timing, HOI_MSG_GET_ANALOG_TIMING);
+HOI_READ(get_device_id, HOI_MSG_GET_DEV_ID);
 
 //------------------------------------------------------------------------------
 // capture/show image command

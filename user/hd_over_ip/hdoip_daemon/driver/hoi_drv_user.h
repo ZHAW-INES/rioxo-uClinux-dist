@@ -37,6 +37,7 @@ int hoi_drv_set_led_status(uint32_t instruction);
 int hoi_drv_new_audio(uint32_t fs);
 int hoi_drv_get_fs(uint32_t* p);
 int hoi_drv_get_analog_timing(uint32_t* p);
+int hoi_drv_get_device_id(uint32_t* p);
 int hoi_drv_info(t_video_timing* timing, uint32_t *advcnt);
 int hoi_drv_info_all(t_hoi_msg_info** nfo);
 int hoi_drv_ethstat(t_hoi_msg_ethstat** stat);

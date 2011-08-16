@@ -31,7 +31,6 @@
 #include "vrb_audio.h"
 #include "vtb_audio.h"
 #include "box_sys.h"
-		
 
 const char* statestr(int state)
 {
@@ -754,6 +753,8 @@ void hdoipd_start()
 
 bool hdoipd_init(int drv)
 {
+    uint32_t dev_id;
+
     pthread_mutexattr_t attr;
 
     hdoipd.drv = drv;
@@ -789,7 +790,19 @@ bool hdoipd_init(int drv)
 
     hdoipd.local.vid_port = htons(reg_get_int("video-port"));
     hdoipd.local.aud_port = htons(reg_get_int("audio-port"));
-    hdoipd.drivers = DRV_ADV9889 | DRV_ADV7441;
+
+    // detect connected video card
+    hoi_drv_get_device_id(&dev_id);
+
+    switch (dev_id) {
+        case BDT_ID_HDMI_BOARD: hdoipd.drivers = DRV_ADV9889 | DRV_ADV7441;   
+                                break;
+        case BDT_ID_SDI8_BOARD: hdoipd.drivers = DRV_GS2971  | DRV_GS2972;    
+                                break;
+        default:                report("Video card detection failed");
+
+    }
+
 
     hdoipd.auto_stream = reg_test("auto-stream", "true");
 

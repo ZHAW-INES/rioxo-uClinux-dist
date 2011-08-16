@@ -94,12 +94,19 @@
 #define HOI_MSG_NEW_AUDIO           (0x7000010C)
 #define HOI_MSG_GET_FS              (0x7000010D)
 #define HOI_MSG_GET_ANALOG_TIMING   (0x7000010E)
+#define HOI_MSG_GET_DEV_ID          (0x7000010F)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
-#define DRV_ALL                     (0x00000003)
+#define DRV_ALL                     (0x0000000F)
 #define DRV_ADV9889                 (1<<0)
 #define DRV_ADV7441                 (1<<1)
+#define DRV_GS2971                  (1<<2)
+#define DRV_GS2972                  (1<<3)
+
+//Card List
+#define BDT_ID_HDMI_BOARD           (0x00)
+#define BDT_ID_SDI8_BOARD           (0x01)
 
 // Reset
 #define DRV_RST                     (0x7f)

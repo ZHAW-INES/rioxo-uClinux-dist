@@ -95,6 +95,9 @@ INCLUDE += driver/adv9889
   FILES += driver/adv9889/adv9889_drv.o
 INCLUDE += driver/adv7441a
   FILES += driver/adv7441a/adv7441a_drv.o
+INCLUDE += driver/bdt
+  FILES += driver/bdt/bdt_drv.o
+
 
 # +----------------------------------------------------------------------
 # | Module Object

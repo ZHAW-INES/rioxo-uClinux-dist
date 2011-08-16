@@ -54,8 +54,11 @@ void hoi_drv_init(t_hoi* handle)
 //    i2c_drv_init(&handle->i2c_tag_aud, handle->p_i2c_tag_aud, 400000);
     i2c_drv_init(&handle->i2c_tag_vid, handle->p_i2c_tag_vid, 400000);
  
+    // read video card id
+    bdt_drv_read_id(&handle->bdt, &handle->i2c_tag_vid);
+
     // init
-    led_drv_init(&handle->led, &handle->i2c_tag_vid, &handle->i2c_tag_aud, handle->p_led);
+    led_drv_init(&handle->led, &handle->i2c_tag_vid, &handle->i2c_tag_aud, handle->p_led, &handle->bdt);
     eti_drv_set_ptr(&handle->eti, handle->p_esi);
     eto_drv_set_ptr(&handle->eto, handle->p_eso);
     vio_drv_init(&handle->vio, handle->p_vio, handle->p_adv212);
@@ -195,12 +198,18 @@ void hoi_drv_handler(t_hoi* handle)
     aso_drv_handler(&handle->aso, handle->event);
     eto_drv_handler(&handle->eto, handle->event);
     eti_drv_handler(&handle->eti, handle->event);
-    hdcp_drv_handler(&handle->eti, &handle->eto, &handle->adv7441a, &handle->adv9889, &handle->vsi, &handle->vso, &handle->asi, &handle->aso, &handle->drivers, handle->event); //hdcp handler
-    adv9889_drv_handler(&handle->adv9889, handle->event);
-    adv7441a_handler(&handle->adv7441a, handle->event);
     led_drv_handler(&handle->led);
     stream_sync(&handle->sync);
     wdg_reset(handle->p_wdg); //reset watchdog
+    if (handle->drivers & DRV_ADV9889) {
+        adv9889_drv_handler(&handle->adv9889, handle->event);
+    }
+    if (handle->drivers & DRV_ADV7441) {
+        adv7441a_handler(&handle->adv7441a, handle->event);
+    }
+    if ((handle->drivers & DRV_ADV9889) && (handle->drivers & DRV_ADV7441)) {
+        hdcp_drv_handler(&handle->eti, &handle->eto, &handle->adv7441a, &handle->adv9889, &handle->vsi, &handle->vso, &handle->asi, &handle->aso, &handle->drivers, handle->event); //hdcp handler
+    }
 }
 
 void hoi_drv_timer(t_hoi* handle)
