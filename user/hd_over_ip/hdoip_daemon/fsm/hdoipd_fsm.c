@@ -508,9 +508,6 @@ void hdoipd_fsm_vtb(uint32_t event)
         case E_ADV7441A_NEW_VGA_RES:
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
         break;
-        case E_ADV7441A_NEW_AUDIO:
-            rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_ON);
-        break;
         case E_ADV7441A_NO_AUDIO:
             rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_OFF);
         break;
@@ -586,8 +583,6 @@ void hdoipd_event(uint32_t event)
         case E_ADV7441A_ACTIVITY_ON_SYNC:
         break;
         case E_ADV7441A_NEW_AUDIO:
-            hoi_drv_get_fs(&buff);
-            hoi_drv_new_audio(buff);
         break;
         case E_ADV7441A_NO_AUDIO:
         break;
@@ -663,7 +658,12 @@ void hdoipd_event(uint32_t event)
         break;
         case E_ASI_NEW_FS:
             hoi_drv_get_fs(&buff);
-            hoi_drv_new_audio(buff);
+            if (buff == 0) {
+                event = event & ~E_ASI_NEW_FS;                          // clear event to prevent that audio will be started in hdoipd_fsm_vtb
+                event = event | E_ADV7441A_NO_AUDIO;                    // set event to stop audio
+            } else {
+                hoi_drv_new_audio(buff);
+            }
         break;
         case E_ASO_SIZE_ERROR:
         break;
