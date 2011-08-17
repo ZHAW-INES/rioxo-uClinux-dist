@@ -13,7 +13,7 @@ static const int vio_phase[2][4] = {
 int vio_drv_pll_setup(void* p, t_vio_pll* pll, int in, int out, int rel, int mode)
 {
     const uint64_t fmin = 600000000;
-    const uint64_t fmax = 1300000000;
+    const uint64_t fmax = 1100000000;     // should be 1300000000 (see manual), but if its bigger than 1,1GHz, output frequency is not right
     int64_t cmin, cmax;
     // PLL config set
     bool b;
@@ -41,7 +41,7 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, int in, int out, int rel, int mod
     pll->fout[2] = fout * rel / 2;
     pll->fout[3] = fout;
     
-    // VCO is between 600 and 1300 MHz
+    // VCO is between 600 and 1100 MHz
     cmin = fmin / fout + 1;
     cmax = fmax / fout;
     if (cmax >= 512) cmax = 511;
@@ -118,7 +118,7 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, int in, int out, int rel, int mod
     pll->c[3]       = c0;
     pll->ppm        = (int)(1000000*ferr/fout) + (int32_t)(SYS_TOL*1.0e6);
     pll->mode       = mode;
-    
+
     return ERR_VIO_SUCCESS;
 }
 

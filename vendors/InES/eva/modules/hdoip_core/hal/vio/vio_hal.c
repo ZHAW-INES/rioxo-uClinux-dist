@@ -166,7 +166,7 @@ void vio_set_control(void* p, t_video_timing* p_vt, int ppm, int sel)
         s = (int32_t)((int64_t)(1<<(24+VIO_PLL_CTRL_WIDTH)) / VIO_PLL_CTRL_DIV / ((int64_t)ppm * (int64_t)h * (int64_t)v / 1000000));
         // Threshold (pixel count)
         t = (int32_t)((int64_t)ppm * VIO_PLL_CTRL_MAX * (int64_t)h * (int64_t)v / 1000000);
-        
+
         HOI_WR32(p, VIO_OFF_TG_THRESHOLD, t);
         HOI_WR32(p, VIO_OFF_TG_SCALE, s);
     }
