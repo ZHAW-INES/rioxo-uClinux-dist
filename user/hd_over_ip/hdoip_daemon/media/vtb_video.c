@@ -117,6 +117,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
             if(ret != -1) {
                 if((ret == -2) || !get_multicast_enable()) { // No E-EDID for video exists or unicast -> write edid without merge
                     report(INFO "E-EDID loaded");
+                    edid_merge((t_edid *)m->edid.edid, (t_edid *)m->edid.edid); // modify edid
                     edid_write_file((t_edid *)m->edid.edid, EDID_PATH_VIDEO_IN);
                     hoi_drv_wredid((t_edid *)m->edid.edid);
                     if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {

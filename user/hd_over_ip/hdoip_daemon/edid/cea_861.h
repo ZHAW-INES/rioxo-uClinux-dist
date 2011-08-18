@@ -48,6 +48,13 @@
 #define CEA861_SPEAKER_TC(p)        ((p[2] & 0x02)>>1)
 #define CEA861_SPEAKER_FLH_FRH(p)   ((p[2] & 0x01))
 
+// vendor specific data block
+#define CEA861_IEEE_REG0(p)          (p[1])
+#define CEA861_IEEE_REG1(p)          (p[2])
+#define CEA861_IEEE_REG2(p)          (p[3])
+#define CEA861_DC_48BIT(p)          ((p[6] & 0x40)>>6)
+#define CEA861_DC_36BIT(p)          ((p[6] & 0x20)>>5)
+#define CEA861_DC_30BIT(p)          ((p[6] & 0x10)>>4)
 
 
 #define CEA861_VIDEO_SVD(p)         (p&0x7F)

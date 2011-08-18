@@ -59,7 +59,13 @@ void cea_861_report(t_ext_cea_861* ext)
                                             report(CONT "  %s %s",cea_861_svd[CEA861_VIDEO_SVD(block[j])], (CEA861_VIDEO_NATIVE(block[j]) == 0 ? "" : "[native]"));
                                         }
                                         break;
-                case CEA861_TAG_VENDOR: report(CONT "vendor specific data block (not parsed)");
+                case CEA861_TAG_VENDOR: report(CONT "vendor specific data block");
+                                        if ((CEA861_IEEE_REG0(block) == 0x03) && (CEA861_IEEE_REG1(block) == 0x0C) && (CEA861_IEEE_REG2(block) == 0x00)) { // if vendor is "HDMI Licensing, LLC"
+                                            report(CONT "  supported deep colors: ");
+                                            if (CEA861_DC_48BIT(block)) report(CONT "    48bit");
+                                            if (CEA861_DC_36BIT(block)) report(CONT "    36bit");
+                                            if (CEA861_DC_30BIT(block)) report(CONT "    30bit");
+                                        }
                                         break;
                 case CEA861_TAG_SPEAKER:report(CONT "speaker allocation data block");
 
@@ -145,6 +151,23 @@ void cea_861_merge(t_ext_cea_861 *cea, t_ext_cea_861 *cea1, t_ext_cea_861 *cea2)
                                             if(cnt != 1) {
                                                 ptr3[0] = (ptr1[i] & 0xE0) | ((cnt-1) & 0x1F);
                                                 cea->offset += cnt;
+                                            }
+                                            break;
+                    case CEA861_TAG_VENDOR: if ((ptr1[i+1] == 0x03) && (ptr1[i+2] == 0x0C) && (ptr1[i+3] == 0x00)) { // if vendor is "HDMI Licensing, LLC"
+                                                ptr3[0] = ptr1[i];
+                                                ptr3[1] = ptr1[i+1];
+                                                ptr3[2] = ptr1[i+2];
+                                                ptr3[3] = ptr1[i+3];
+                                                ptr3[4] = ptr1[i+4];
+                                                ptr3[5] = ptr1[i+5];
+                                                ptr3[6] = ptr1[i+6] & 0xAF; // ADV7441A doesnt support 30bit and 48bit deep color mode
+                                                ptr3[7] = ptr1[i+7];
+                                                ptr3[8] = ptr1[i+8];
+                                                ptr3[9] = ptr1[i+9];
+                                                ptr3[10] = ptr1[i+10];
+                                                ptr3[11] = ptr1[i+11];
+                                                ptr3[12] = ptr1[i+12];
+                                                cea->offset += 13;
                                             }
                                             break;
                     default:                break;
