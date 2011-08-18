@@ -4564,6 +4564,9 @@ config USER_HDCP
 config USER_USBIP
 	bool "USB over IP"
 
+config USER_HID_GADGET_TEST
+	bool "HID gadget test"
+
 endmenu
 
 #############################################################################
