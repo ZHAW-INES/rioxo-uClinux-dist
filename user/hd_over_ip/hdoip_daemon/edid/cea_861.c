@@ -83,7 +83,7 @@ void cea_861_report(t_ext_cea_861* ext)
                                         break;
                 case CEA861_TAG_DTC:    report(CONT "VESA DTC data block");
                                         break;
-                case CEA861_TAG_EXTENDED:report(CONT "use Extended Tag (not parsed)");
+                case CEA861_TAG_EXTENDED:report(CONT "use Extended Tag");
                                         break;
             }
         }
@@ -99,8 +99,10 @@ void cea_861_report(t_ext_cea_861* ext)
 
 void cea_861_merge(t_ext_cea_861 *cea, t_ext_cea_861 *cea1, t_ext_cea_861 *cea2)
 {
-    int i, j, size1, size2, cnt,k,l;
+    int i, j, size1, size2, cnt, k, l;
     uint8_t *ptr1, *ptr2, *ptr3;
+    uint8_t SAD1[16][3] = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}}; // SAD = Short Audio Descriptor
+    uint8_t SAD2[16][3] = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}};
 
     ptr1 = (uint8_t *) cea1;
     ptr2 = (uint8_t *) cea2;
@@ -120,17 +122,37 @@ void cea_861_merge(t_ext_cea_861 *cea, t_ext_cea_861 *cea1, t_ext_cea_861 *cea2)
             if((ptr1[i] & CEA861_TAG_MASK) == (ptr2[j] & CEA861_TAG_MASK)) {
                 ptr3 = ((uint8_t *) cea) + cea->offset;
                 switch(ptr1[i] & CEA861_TAG_MASK) {
-                    case CEA861_TAG_AUDIO:  ptr3[0] = ptr1[i];
-                                            ptr3[2] = ptr1[i+2] & ptr2[j+2]; // sampling rates
-                                            if((ptr1[i+1]&0x78) == (ptr2[j+1]&0x78)) {// if same audio format code
-                                                ptr3[1] = ptr1[i+1] & ptr2[j+1];
-                                                ptr3[3] = ptr1[i+3] & ptr2[j+3];
-                                            } else {
-                                                ptr3[1] = ptr1[i+1];
-                                                ptr3[3] = ptr1[i+3];
+                    case CEA861_TAG_AUDIO:  // write only SAD with same audio format code
+                                            l = (size1-1)/3;
+                                            for (k=0 ; k<l ; k++) {
+                                                SAD1[((ptr1[i+1+(k*3)])&0x78)>>3][0] = ptr1[i+1+(k*3)];
+                                                SAD1[((ptr1[i+1+(k*3)])&0x78)>>3][1] = ptr1[i+2+(k*3)];
+                                                SAD1[((ptr1[i+1+(k*3)])&0x78)>>3][2] = ptr1[i+3+(k*3)];
                                             }
 
-                                            cea->offset += 4;
+                                            l = (size2-1)/3;
+                                            for (k=0 ; k<l ; k++) {
+                                                SAD2[((ptr2[j+1+(k*3)])&0x78)>>3][0] = ptr2[j+1+(k*3)];
+                                                SAD2[((ptr2[j+1+(k*3)])&0x78)>>3][1] = ptr2[j+2+(k*3)];
+                                                SAD2[((ptr2[j+1+(k*3)])&0x78)>>3][2] = ptr2[j+3+(k*3)];
+                                            }
+
+                                            l = 0;
+                                            for (k=0 ; k<16 ; k++) {
+                                                if ((SAD1[k][0] != 0) && (SAD2[k][0] != 0)) { //search same audio format code
+                                                    l++;
+                                                    if ((SAD1[k][0] & 0x07) > (SAD2[k][0] & 0x07)) {
+                                                        ptr3[1+((l-1)*3)] = SAD2[k][0];
+                                                    } else {
+                                                        ptr3[1+((l-1)*3)] = SAD1[k][0];
+                                                    }
+                                                    ptr3[2+((l-1)*3)] = SAD1[k][1] & SAD2[k][1];
+                                                    ptr3[3+((l-1)*3)] = SAD1[k][2] & SAD2[k][2];
+                                                }
+                                            }
+
+                                            ptr3[0] = ((ptr1[i] & (~0x1F)) | ((uint8_t)(l*3))); //write size due to count of SAD
+                                            cea->offset += (l*3)+1;
                                             break;
                     case CEA861_TAG_SPEAKER:ptr3[0] = ptr1[i];
                                             ptr3[1] = ptr1[i+1] & ptr2[j+1];
@@ -153,22 +175,30 @@ void cea_861_merge(t_ext_cea_861 *cea, t_ext_cea_861 *cea1, t_ext_cea_861 *cea2)
                                                 cea->offset += cnt;
                                             }
                                             break;
-                    case CEA861_TAG_VENDOR: if ((ptr1[i+1] == 0x03) && (ptr1[i+2] == 0x0C) && (ptr1[i+3] == 0x00)) { // if vendor is "HDMI Licensing, LLC"
-                                                ptr3[0] = ptr1[i];
-                                                ptr3[1] = ptr1[i+1];
-                                                ptr3[2] = ptr1[i+2];
-                                                ptr3[3] = ptr1[i+3];
-                                                ptr3[4] = ptr1[i+4];
-                                                ptr3[5] = ptr1[i+5];
-                                                ptr3[6] = ptr1[i+6] & 0xAF; // ADV7441A doesnt support 30bit and 48bit deep color mode
-                                                ptr3[7] = ptr1[i+7];
-                                                ptr3[8] = ptr1[i+8];
-                                                ptr3[9] = ptr1[i+9];
-                                                ptr3[10] = ptr1[i+10];
-                                                ptr3[11] = ptr1[i+11];
-                                                ptr3[12] = ptr1[i+12];
-                                                cea->offset += 13;
+                    case CEA861_TAG_VENDOR: ptr3[0] = ptr1[i];
+                                            for(k=1 ; k<size1 ; k++) {
+                                                if ((k == 6) && ((ptr1[i+1] == 0x03) && (ptr1[i+2] == 0x0C) && (ptr1[i+3] == 0x00))) { // if vendor is "HDMI Licensing, LLC"
+                                                    ptr3[k] = ptr1[i+k] & 0xAF; // do NOT support 30bit and 48bit deep color
+                                                } else {
+                                                    ptr3[k] = ptr1[i+k];
+                                                }
                                             }
+                                            cea->offset += size1;
+                                            
+                                            break;
+                    case CEA861_TAG_EXTENDED: //copy block 1:1 from ptr1
+                                            ptr3[0] = ptr1[i];
+                                            for(k=1 ; k<size1 ; k++) {
+                                                ptr3[k] = ptr1[i+k];
+                                            }
+                                            cea->offset += size1;
+                                            break;
+
+                    case CEA861_TAG_DTC:    ptr3[0] = ptr1[i]; //copy block 1:1 from ptr1
+                                            for(k=1 ; k<size1 ; k++) {
+                                                ptr3[k] = ptr1[i+k];
+                                            }
+                                            cea->offset += size1;
                                             break;
                     default:                break;
                 }

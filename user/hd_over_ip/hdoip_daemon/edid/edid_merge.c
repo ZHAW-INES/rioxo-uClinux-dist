@@ -15,7 +15,7 @@
 void edid_merge_display_dsc(uint8_t *edid, uint8_t *dscs1, uint8_t *dscs2)
 {
     int offset = 0, i, j;
-    int mask_drl=0, mask_est=0, mask_cvt=0;
+    int mask_drl=0, mask_est=0, mask_cvt=0, mask_nam=0;
     uint32_t tmp1, tmp2;
     uint8_t *ptr1, *ptr2, *ptr3;
     uint8_t *ptr_drl1, *ptr_drl2;
@@ -36,23 +36,27 @@ void edid_merge_display_dsc(uint8_t *edid, uint8_t *dscs1, uint8_t *dscs2)
                     }
                 } else {
                     switch(EDID_DSC_TAG(ptr2)) {
-                        case EDID_TAG_DRL   :mask_drl |= 0x02; ptr_drl2 = ptr2;
-                                             break;
-                        case EDID_TAG_EST3  :mask_est |= 0x02; ptr_est2 = ptr2;
-                                             break;
-                        case EDID_TAG_CVT   :mask_cvt |= 0x02; ptr_cvt2 = ptr2;
-                                             break;
+                        case EDID_TAG_DRL           :mask_drl |= 0x02; ptr_drl2 = ptr2;
+                                                    break;
+                        case EDID_TAG_EST3          :mask_est |= 0x02; ptr_est2 = ptr2;
+                                                    break;
+                        case EDID_TAG_CVT           :mask_cvt |= 0x02; ptr_cvt2 = ptr2;
+                                                    break;
+                        case EDID_TAG_PRODUCT_NAME  :mask_nam |= 0x02;
+                                                    break;
                     }
                 }
             }
         } else {
             switch(EDID_DSC_TAG(ptr1)) {
-                case EDID_TAG_DRL   :mask_drl |= 0x01; ptr_drl1 = ptr1;
-                                     break;
-                case EDID_TAG_EST3  :mask_est |= 0x01; ptr_est1 = ptr1;
-                                     break;
-                case EDID_TAG_CVT   :mask_cvt |= 0x01; ptr_cvt1 = ptr1;
-                                     break;
+                case EDID_TAG_DRL           :mask_drl |= 0x01; ptr_drl1 = ptr1;
+                                            break;
+                case EDID_TAG_EST3          :mask_est |= 0x01; ptr_est1 = ptr1;
+                                            break;
+                case EDID_TAG_CVT           :mask_cvt |= 0x01; ptr_cvt1 = ptr1;
+                                            break;
+                case EDID_TAG_PRODUCT_NAME  :mask_nam |= 0x01;
+                                            break;
             }
         }
     }
@@ -112,6 +116,29 @@ void edid_merge_display_dsc(uint8_t *edid, uint8_t *dscs1, uint8_t *dscs2)
                 offset++;
             }
         }
+    }
+
+    // Display product name
+    ptr3 = edid + offset * 18;
+    if(mask_nam == 0x3) { // both has Display product name
+        ptr3[0] = 0x00;
+        ptr3[1] = 0x00;
+        ptr3[2] = 0x00;
+        ptr3[3] = 0xFC;
+        ptr3[4] = 0x00;
+        ptr3[5] = 'R';
+        ptr3[6] = 'I';
+        ptr3[7] = 'O';
+        ptr3[8] = 'X';
+        ptr3[9] = 'O';
+        ptr3[10] = 0x0A;
+        ptr3[11] = 0x20;
+        ptr3[12] = 0x20;
+        ptr3[13] = 0x20;
+        ptr3[14] = 0x20;
+        ptr3[15] = 0x20;
+        ptr3[16] = 0x20;
+        ptr3[17] = 0x20;
     }
 }
 
@@ -202,6 +229,14 @@ void edid_merge(t_edid *edid1, t_edid *edid2)
         }
     } else {
         edid.extension_count = 0;
+    }
+
+    // if no extension block is written, fill up extension block space with 0xFF
+    if (edid.extension_count == 0) {
+        ptr3 = &edid.extension_block.tag;
+        for (i=0 ; i<128 ; i++) {
+            *(ptr3+i) = 0xFF;
+        }
     }
 
     //***************************************************************************
