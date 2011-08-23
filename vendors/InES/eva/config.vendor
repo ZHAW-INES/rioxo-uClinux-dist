@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Dist builder
-# Fri Jul 22 14:04:18 2011
+# Fri Aug 19 11:40:40 2011
 #
 CONFIG_DISTVERSION="4.0"
 
@@ -1307,3 +1307,4 @@ CONFIG_USER_HDOIP_APP=y
 # CONFIG_USER_BCRYPT is not set
 # CONFIG_USER_HDCP is not set
 CONFIG_USER_USBIP=y
+CONFIG_USER_HID_GADGET_TEST=y

@@ -1,3 +1,22 @@
 #!/bin/sh
 
+HIDG_CLASS="/sys/class/hidg"
+
+echo "I: loading drivers..."
+/sbin/modprobe isp1763_base otg_role=1
+/sbin/modprobe isp1763_udc
 /sbin/modprobe vhci-hcd
+/sbin/modprobe g_hid
+
+if [ ! -d $HIDG_CLASS ] ; then
+	echo "E: error loading hid gadget driver"
+	exit 1
+fi
+
+for d in /sys/class/hidg/*; do
+	dev=`cat $d/dev`
+	n=${d##*hidg}
+
+	echo "I: creating device node hidg$n (${dev%:*} ${dev#*:})"
+	/bin/mknod /dev/hidg$n c ${dev%:*} ${dev#*:}
+done
