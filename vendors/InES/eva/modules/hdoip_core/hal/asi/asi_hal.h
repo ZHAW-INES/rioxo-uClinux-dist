@@ -55,6 +55,8 @@
 #define asi_get_payload_words(p)        HOI_RD32((p), ASI_OFF_PAYLOAD_WORDS)
 #define asi_get_i2s_size(p)             HOI_RD32((p), AIS_OFF_SIZE_RO)
 #define asi_get_fs(p)                   HOI_RD32((p), ASI_OFF_FS)
+#define asi_get_ch_cnt(p)               HOI_RD32((p), ASI_OFF_CH_CNT)
+
 
 /* function prototypes */
 void asi_set_dst_mac(void* p, uint8_t* mac);

@@ -76,6 +76,8 @@ int hoi_drv_hdcp_viddis_eti();
 int hoi_drv_hdcp_viddis_eto();
 int hoi_drv_hdcp_auddis_eti();
 int hoi_drv_hdcp_auddis_eto();
+int hoi_drv_hdcp_adv9889dis();
+int hoi_drv_hdcp_adv9889en();
 
 int hoi_drv_poll();
 int hoi_drv_getversion(t_hoic_getversion* cmd);

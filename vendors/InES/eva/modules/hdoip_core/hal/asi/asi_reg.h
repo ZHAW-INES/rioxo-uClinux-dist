@@ -51,6 +51,7 @@
 #define ASI_OFF_PAYLOAD_WORDS       (ASI_BASE_PACKETIZE + 0x003C)
 #define ASI_OFF_SIZE_RO             (ASI_BASE_PACKETIZE + 0x0040)
 #define ASI_OFF_FS                  (ASI_BASE_PACKETIZE + 0x0044)
+#define ASI_OFF_CH_CNT              (ASI_BASE_PACKETIZE + 0x004C)
 
 /** bit indexes
  *

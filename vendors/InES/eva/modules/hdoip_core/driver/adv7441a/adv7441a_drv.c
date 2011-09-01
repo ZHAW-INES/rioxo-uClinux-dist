@@ -302,7 +302,7 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1CH, 0x18);
 
     /* Audio Mute options and conversion mode (0x1D) */
-    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, ADV7441A_BIT_UP_CONVERSION_MODE | ADV7441A_BIT_DELAY_UNMUTE_1_SEC);
+    adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, ADV7441A_BIT_UP_CONVERSION_MODE);
 
     /* Set Audio PLL Divider to 4 (0x3C)*/
     adv7441a_hdmi_map_write(handle, ADV7441A_REG_PLL_DIVIDER, 0x42);
@@ -859,10 +859,11 @@ int adv7441a_irq2_handler(t_adv7441a* handle, t_queue* event_queue)
  * @param fs     correct sampling rate
  * @return error code
  */
-int adv7441a_audio_fs_change(t_adv7441a* handle, uint32_t fs) {
+int adv7441a_audio_fs_change(t_adv7441a* handle, uint32_t fs, uint32_t ch_cnt) {
 
     if((adv7441a_get_audio_timing(handle) == ERR_ADV7441A_SUCCESS) || ((handle->status & ADV7441A_STATUS_AUDIO) == 0)) {
         handle->aud_st.fs = fs;
+        handle->aud_st.channel_cnt = ch_cnt;
         REPORT(INFO, "[HDMI IN] audio sampling rate has changed (audio unmuted)\n");
         REPORT(INFO, "[HDMI IN] Audio fs = %d Hz", handle->aud_st.fs);
         REPORT(INFO, "[HDMI IN] Audio width = %d Bit", handle->aud_st.bit_width);

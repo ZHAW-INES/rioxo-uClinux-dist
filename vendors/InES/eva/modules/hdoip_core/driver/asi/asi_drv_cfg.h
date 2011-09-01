@@ -34,6 +34,7 @@
 typedef struct {
     uint32_t                    status;
     uint32_t                    fs;
+    uint32_t                    ch_cnt;
     uint32_t                    sampling_rate;
     uint32_t                    sampling_rate_old;
     void*                       p_asi;

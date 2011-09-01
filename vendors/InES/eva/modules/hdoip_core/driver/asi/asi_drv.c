@@ -255,8 +255,11 @@ int asi_drv_get_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params)
  */
 int asi_drv_handler(t_asi* handle, t_queue* event_queue)
 {
+    int i;
     uint32_t status =  asi_get_status(handle->p_asi,0xFFFFFFFF);
     uint32_t fs = asi_get_fs(handle->p_asi);
+    uint32_t ch_cnt_tmp = asi_get_ch_cnt(handle->p_asi);
+    uint32_t ch_cnt = 0;
 
     if((status & ASI_STAT_RBFULL) != 0) {
         if((handle->status & ASI_DRV_STATUS_RBF_ERROR) == 0) {
@@ -291,12 +294,28 @@ int asi_drv_handler(t_asi* handle, t_queue* event_queue)
         }
         handle->sampling_rate_old = handle->sampling_rate;
     }
-
     handle->fs = fs;
+
+
+
+    for(i=0;i<32;i++) {
+        ch_cnt += ((ch_cnt_tmp >> i) & 0x00000001);
+    }
+    if ((handle->ch_cnt) != ch_cnt) {
+        queue_put(event_queue, E_ASI_NEW_FS);
+        queue_put(event_queue, E_ADV7441A_NO_AUDIO);        // audio is restarting after this stop
+    }
+    handle->ch_cnt = ch_cnt;
 
     return ERR_ASI_SUCCESS;
 }
 
-int asi_drv_get_fs(t_asi* handle) {
+int asi_drv_get_fs(t_asi* handle)
+{
     return handle->sampling_rate;
+}
+
+int asi_drv_get_ch_cnt(t_asi* handle) 
+{
+    return handle->ch_cnt;
 }

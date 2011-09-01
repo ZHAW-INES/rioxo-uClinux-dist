@@ -526,8 +526,11 @@ int hoi_drv_msg_led(t_hoi* handle, t_hoi_msg_param* msg)
 
 int hoi_drv_msg_new_audio(t_hoi* handle, t_hoi_msg_param* msg)
 {
+	int ch_cnt;
+
     if (handle->drivers & DRV_ADV7441) {
-        adv7441a_audio_fs_change(&handle->adv7441a, msg->value);
+        ch_cnt = asi_drv_get_ch_cnt(&handle->asi);
+        adv7441a_audio_fs_change(&handle->adv7441a, msg->value, ch_cnt);
     }
     return SUCCESS;
 }
