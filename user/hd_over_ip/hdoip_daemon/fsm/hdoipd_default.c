@@ -59,6 +59,8 @@ void hdoipd_set_default()
     reg_set("alive-check-port", "2002");
 
     reg_set("led_instruction", "0");
+   
+    reg_set(CFGTAG, "v0.3");
 }
 
 static void update_0_0_to_0_1()

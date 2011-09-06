@@ -39,6 +39,10 @@ void hoi_drv_init(t_hoi* handle)
     handle->p_ver           = ioremap(BASE_VER,         0xffffffff);
     handle->p_sysid         = ioremap(BASE_SYSID,       0xffffffff);
     handle->p_led           = ioremap(BASE_LED,         0xffffffff);
+    handle->p_video_mux     = ioremap(BASE_VIDEO_MUX,   0xffffffff);
+    handle->p_spi_tx        = ioremap(BASE_SPI_TX,      0xffffffff);
+    handle->p_spi_rx        = ioremap(BASE_SPI_RX,      0xffffffff);
+
 
     // init
     handle->event = queue_init(100);
@@ -48,14 +52,20 @@ void hoi_drv_init(t_hoi* handle)
     // timer init
     tmr_init(handle->p_tmr);
 
-    // init i2c with 400kHz
-    i2c_drv_init(&handle->i2c_tx, handle->p_tx, 100000);
-    i2c_drv_init(&handle->i2c_rx, handle->p_rx, 400000);
-//    i2c_drv_init(&handle->i2c_tag_aud, handle->p_i2c_tag_aud, 400000);
+    // init io-expander i2c with 400kHz
+//  i2c_drv_init(&handle->i2c_tag_aud, handle->p_i2c_tag_aud, 400000);
     i2c_drv_init(&handle->i2c_tag_vid, handle->p_i2c_tag_vid, 400000);
  
     // read video card id
     bdt_drv_read_id(&handle->bdt, &handle->i2c_tag_vid);
+    // set video card multiplexer
+    bdt_drv_set_video_mux(&handle->bdt, handle->p_video_mux);
+
+    if (bdt_return_device(&handle->bdt) == BDT_ID_HDMI_BOARD) {
+        // init hdmi i2c with 400kHz/100kHz
+        i2c_drv_init(&handle->i2c_tx, handle->p_tx, 100000);
+        i2c_drv_init(&handle->i2c_rx, handle->p_rx, 400000);
+    }
 
     // init
     led_drv_init(&handle->led, &handle->i2c_tag_vid, &handle->i2c_tag_aud, handle->p_led, &handle->bdt);
@@ -209,6 +219,12 @@ void hoi_drv_handler(t_hoi* handle)
     }
     if ((handle->drivers & DRV_ADV9889) && (handle->drivers & DRV_ADV7441)) {
         hdcp_drv_handler(&handle->eti, &handle->eto, &handle->adv7441a, &handle->adv9889, &handle->vsi, &handle->vso, &handle->asi, &handle->aso, &handle->drivers, handle->event); //hdcp handler
+    }
+    if (handle->drivers & DRV_GS2971) {
+        gs2971_handler(&handle->gs2971, handle->event);
+    }
+    if (handle->drivers & DRV_GS2972) {
+        gs2972_handler(&handle->gs2972, handle->event);
     }
 }
 

@@ -21,7 +21,7 @@
 /* HDCP events */
 #define E_HDCP_STREAMING_ERROR (E_ADV7441A_ID + 0x00000009)  /* HDCP Error, streaming without permission */
 
-/* ETO events */
+/* AD9889 events */
 #define E_ADV9889_ID            (0x90000000)
 #define E_ADV9889_CNT           3
 #define E_ADV9889_CABLE_ON      (E_ADV9889_ID + 0x00000001)  /* HDMI connected */

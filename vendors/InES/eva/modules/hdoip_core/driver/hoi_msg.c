@@ -55,14 +55,13 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
         adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, &handle->vio, (char*)adv7441a_edid_table);
     }
     if (lddrv & DRV_GS2971) {
-        //TODO
+        gs2971_driver_init(&handle->gs2971, &handle->p_spi_rx, &handle->i2c_tag_vid);
     }
     if (lddrv & DRV_GS2972) {
-        //TODO
+        gs2972_driver_init(&handle->gs2972, &handle->p_spi_tx, &handle->i2c_tag_vid);
     }
 
     handle->drivers = msg->drivers & DRV_ALL;
-
     return SUCCESS;
 }
 

@@ -92,17 +92,25 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     uint32_t compress = 0;
     report(VRB_METHOD "vrb_video_play");
 
-    //Test if HDCP parameters were set correctly
-	if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETI_VIDEO_EN)){
-		if (hdoipd.hdcp.ske_executed){
-			hoi_drv_hdcp(hdoipd.hdcp.keys); 	/* write keys to kernel */
-			report(INFO "Video encryption enabled (eti)!");
-			hoi_drv_hdcp_viden_eti();
-		}
-		else {
-			report(INFO "No valid HDCP ske executed!");
-			return RSCP_ERRORNO;
-		}
+    
+	if (hdoipd.hdcp.enc_state) {
+        //Test if HDCP parameters were set correctly
+        if (!(get_hdcp_status() & HDCP_ETI_VIDEO_EN)) {
+		    if (hdoipd.hdcp.ske_executed){
+			    hoi_drv_hdcp(hdoipd.hdcp.keys); 	/* write keys to kernel */ 
+			    report(INFO "Video encryption enabled (eti)!");
+			    hoi_drv_hdcp_viden_eti();
+                // enable HDCP on AD9889
+                hoi_drv_hdcp_adv9889en();
+		    }
+		    else {
+			    report(INFO "No valid HDCP ske executed!");
+			    return RSCP_ERRORNO;
+		    }
+        } else {
+            // disable HDCP on AD9889
+            hoi_drv_hdcp_adv9889dis();
+        }
 	}
 
     media->result = RSCP_RESULT_PLAYING;
@@ -166,6 +174,9 @@ int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rsc
         osd_printf("video remote off...\n");
     }
 
+    // disable HDCP on AD9889
+    hoi_drv_hdcp_adv9889dis();
+
     // TODO: start sending alive packets should not be in media
     // start sending hello frames to vtb
     if(hdoipd_rsc(RSC_VIDEO_SINK)) {
@@ -226,6 +237,10 @@ void vrb_video_pause(t_rscp_media *media)
 #ifdef ETI_PATH
         hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0);
 #endif
+
+        // disable HDCP on AD9889
+        hoi_drv_hdcp_adv9889dis();
+
         hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
         hdoipd_set_vtb_state(VTB_VID_IDLE);
     }

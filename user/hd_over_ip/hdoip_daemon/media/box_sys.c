@@ -26,6 +26,9 @@ int box_sys_hello(t_rscp_media UNUSED *media, intptr_t UNUSED m, t_rscp_connecti
         // stop sending alive packets
         alive_check_stop_vrb_alive();
 
+        // new connection = new hdcp-key exchange
+        hdoipd.hdcp.ske_executed = 0;
+
         if(hdoipd.auto_stream) {
             hdoipd_set_task_start_vrb();
         }

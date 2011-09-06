@@ -15,19 +15,14 @@ static inline int adv9889_read(t_adv9889* handle, uint8_t a) {
 }
 
 int adv9889_drv_hdcp_on(t_adv9889* handle) 
-{
-    uint8_t reg;
-
+{   
     adv9889_drv_av_mute(handle);
-    
-    reg = adv9889_read(handle, ADV9889_OFF_MODE);
-    adv9889_write(handle, ADV9889_OFF_MODE, reg | ADV9889_MODE_HDCP | ADV9889_MODE_ENCRYPT);
-   
     handle->repeater = 0;
     handle->bksv_cnt = 0;
     handle->hdcp_cnt = 0; 
     handle->hdcp_state = HDCP_INIT; 
-    REPORT(INFO, "[HDMI OUT] HDCP enabled");
+    handle->hdcp_en = true;
+    handle->hdcp_wait_cnt = 0;
     
     return SUCCESS;
 }
@@ -39,7 +34,9 @@ int adv9889_drv_hdcp_off(t_adv9889* handle)
     reg = adv9889_read(handle, ADV9889_OFF_MODE);
     adv9889_write(handle, ADV9889_OFF_MODE, reg & ~(ADV9889_MODE_HDCP | ADV9889_MODE_ENCRYPT));
     
-    handle->hdcp_state = HDCP_OFF; 
+    handle->hdcp_en = false;
+    handle->hdcp_wait_cnt = 0;
+    handle->hdcp_state = HDCP_OFF;
     REPORT(INFO, "[HDMI OUT] HDCP disabled");
 	
     return SUCCESS;
@@ -70,6 +67,8 @@ int adv9889_drv_init(t_adv9889* handle, t_i2c* p_i2c, t_vio* p_vio)
     handle->av_mute         = 0;
     handle->hdcp_state      = HDCP_OFF;
     handle->hdcp_cnt        = 0;
+    handle->hdcp_en         = false;
+    handle->hdcp_wait_cnt   = 0;
     handle->repeater        = 0;
     handle->bksv_cnt        = 0;
     handle->edid_timeout    = 0;
@@ -124,7 +123,7 @@ int adv9889_drv_powerup(t_adv9889* handle)
     adv9889_write(handle, ADV9889_OFF_FORMAT, ADV9889_FORMAT_SET_AVMUTE);
 
     // Interrupt enable
-    adv9889_write(handle, ADV9889_OFF_INTEN1, ADV9889_INT1_ON | ADV9889_INT1_EDID);
+    adv9889_write(handle, ADV9889_OFF_INTEN1, ADV9889_INT1_ON | ADV9889_INT1_EDID | ADV9889_INT1_VS);
     adv9889_write(handle, ADV9889_OFF_INTEN2, ADV9889_INT2_HDCP_ERR | ADV9889_INT2_BKSV);
 
     return SUCCESS;
@@ -170,7 +169,8 @@ int adv9889_drv_boot(t_adv9889* handle)
     adv9889_write(handle, ADV9889_OFF_AUDIO, ADV9889_AUDIO_I2S);
     adv9889_write(handle, ADV9889_OFF_SETTINGS, ADV9889_ACCURACY_1000PPM);
 
-    adv9889_write(handle, ADV9889_OFF_CLOCK, ADV9889_CLOCK_POS_EDGE);
+    // Selected Chip is AD9889 (internal HDCP keys)
+    adv9889_write(handle, ADV9889_OFF_CLOCK, ADV9889_CLOCK_POS_EDGE | ADV9889_CLOCK_9389);
     adv9889_write(handle, ADV9889_OFF_POLARITY, (ADV9889_POLARITY_DEFAULT | ADV9889_POLARITY_VSYNC_I | ADV9889_POLARITY_HSYNC_I));
 
     adv9889_write(handle, ADV9889_OFF_INFO2, ADV9889_INFO2_AAR_SAME); 
@@ -182,7 +182,7 @@ int adv9889_drv_boot(t_adv9889* handle)
     } else {
         REPORT(INFO, "adv9889 activate DVI");
     }
-    
+
     // configure audio
     adv9889_drv_setup_audio(handle, handle->audio_cnt, handle->audio_fs, handle->audio_width);
 
@@ -249,9 +249,13 @@ int adv9889_drv_av_mute(t_adv9889* handle)
 
     /* ADV9889B AV mute set */
     tmp = adv9889_read(handle, ADV9889_OFF_FORMAT);
-    adv9889_write(handle, ADV9889_OFF_FORMAT, ADV9889_FORMAT_SET_AVMUTE);
-  
-    /* Color space converter (VIO) => black picture */
+    adv9889_write(handle, ADV9889_OFF_FORMAT, (tmp | ADV9889_FORMAT_SET_AVMUTE) & (~ADV9889_FORMAT_CLR_AVMUTE));
+
+    /* Enable general Control Packet (Rx should know that a/v is muted)*/
+    tmp = adv9889_read(handle, ADV9889_OFF_CONTROL_PACKET);
+    adv9889_write(handle, ADV9889_OFF_CONTROL_PACKET, tmp | ADV9889_ENABLE_CTRL_PKT);
+ 
+  /* Color space converter (VIO) => black picture */
     vio_drv_set_black_output(handle->p_vio);
  
     /* Audio input: I2S => SPDIF */ 
@@ -270,7 +274,7 @@ int adv9889_drv_av_unmute(t_adv9889* handle)
 
     /* AV mute clear */
     tmp = adv9889_read(handle, ADV9889_OFF_FORMAT);
-    adv9889_write(handle, ADV9889_OFF_FORMAT, ADV9889_FORMAT_CLR_AVMUTE);
+    adv9889_write(handle, ADV9889_OFF_FORMAT, (tmp | ADV9889_FORMAT_CLR_AVMUTE) & (~ADV9889_FORMAT_SET_AVMUTE));
 
     /* Color space converter (VIO) => normal operation */
     vio_drv_clr_black_output(handle->p_vio);
@@ -324,7 +328,6 @@ int adv9889_drv_handler(t_adv9889* handle, t_queue* event_queue)
             case HDCP_VID_ACTIVE_LOOP:  handle->hdcp_cnt++;
                                         if(handle->hdcp_cnt >= HDCP_CHECK_LINK_INT) {
                                             handle->hdcp_cnt = 0;
-    
                                             // HDCP link not okay?
                                             if((adv9889_read(handle, ADV9889_OFF_MODE_STATUS) & ADV9889_MSTATUS_ENCRYPTED) == 0) {
                                                 REPORT(INFO, "[HDMI OUT] HDCP link isn't okay");
@@ -393,14 +396,25 @@ int adv9889_irq_handler(t_adv9889* handle, t_queue* event_queue)
         }
     }
 
+    // is used to enable HDCP after some vsync pulses
+    if (irq & ADV9889_INT1_VS) {
+        if (handle->hdcp_en) {
+            if (handle->hdcp_wait_cnt == 5) {
+                // enable HDCP
+                tmp = adv9889_read(handle, ADV9889_OFF_MODE);
+                adv9889_write(handle, ADV9889_OFF_MODE, tmp | ADV9889_MODE_HDCP | ADV9889_MODE_ENCRYPT);
+                REPORT(INFO, "[HDMI OUT] HDCP enabled");
+            }
+            if (handle->hdcp_wait_cnt < 6){
+                handle->hdcp_wait_cnt ++;
+            }
+        } 
+    }
+
     if(handle->hdcp_state != HDCP_OFF) {
         if (irq2 & ADV9889_INT2_HDCP_ERR) {
             tmp = adv9889_read(handle, ADV9889_OFF_HDCP_STATE); 
-
             REPORT(INFO, "[HDMI OUT] HDCP error : %d (state : %d)", (tmp&0xF0)>>4, (tmp&0xF));
-       
-            adv9889_drv_av_mute(handle);
-            adv9889_drv_hdcp_off(handle);
         }
     }
 

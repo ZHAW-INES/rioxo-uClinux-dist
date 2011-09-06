@@ -14,7 +14,7 @@
  * @return
  */
 int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv9889* h_adv9889, t_vsi* h_vsi ,t_vso* h_vso, t_asi* h_asi, t_aso* h_aso, uint32_t* h_drivers, t_queue* event_queue)
-{
+{ 
 	//get aes status
     uint32_t audio_enc_en_eto, video_enc_en_eto, audio_enc_en_eti, video_enc_en_eti;
 	eto_drv_aes_stat(h_eto, &audio_enc_en_eto, &video_enc_en_eto);
@@ -25,31 +25,25 @@ int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv98
     	if ((h_adv7441a->status & ADV7441A_STATUS_ENCRYPTED)  && ((!(video_enc_en_eto) && (h_vsi->status & VSI_DRV_STATUS_ACTIV)) || (!(audio_enc_en_eto) && (h_asi->status & ASI_DRV_STATUS_ACTIV))))
     	{
     	    //vsi_drv_stop(h_vsi);	 				//stop transmitting video
-    		adv9889_drv_av_mute(h_adv9889);		 	//mute audio and send black video picture
     	    REPORT(INFO, "HDMI AUDIO/VIDEO SOURCE CHANGED, HDCP ERROR!");
     	    queue_put(event_queue, E_HDCP_STREAMING_ERROR);
-    	}
-    	else{
-    		if(h_adv9889->av_mute == AV_MUTED){
-    			adv9889_drv_av_unmute(h_adv9889);
-    		}
     	}
     }
 
     //NOT YET ENABLED BECAUSE NO KEYS AVAILABLE FOR AD9889
     if (*h_drivers & DRV_ADV9889) {  //HDMI transmitter?
     	//check if video encryption status is okay, otherwise stop video
-   /* 	if (!(h_adv9889->hdcp_state & HDCP_VID_ACTIVE_LOOP)  && (video_enc_en_eti) && (h_vso->status & VSO_DRV_STATUS_ACTIV))
+    	if (!((h_adv9889->hdcp_state & HDCP_VID_ACTIVE_LOOP) || (h_adv9889->hdcp_state & HDCP_VID_ACTIVE))  && (video_enc_en_eti) && (h_vso->status & VSO_DRV_STATUS_ACTIV))
     	{
     	   	vso_drv_stop(h_vso);    //stop transmitting video
     	   	REPORT(INFO, "HDMI VIDEO SINK CHANGED, HDCP ERROR!");
     	}
     	//check if audio encryption status is okay, otherwise stop audio
-    	if (!(h_adv9889->hdcp_state & HDCP_VID_ACTIVE_LOOP)  && (audio_enc_en_eti) && (h_aso->status & ASO_DRV_STATUS_ACTIV))
+    	if (!((h_adv9889->hdcp_state & HDCP_VID_ACTIVE_LOOP) || (h_adv9889->hdcp_state & HDCP_VID_ACTIVE))  && (audio_enc_en_eti) && (h_aso->status & ASO_DRV_STATUS_ACTIV))
     	{
     	   	aso_drv_stop(h_aso);    //stop transmitting video
     	   	REPORT(INFO, "HDMI AUDIO SINK CHANGED, HDCP ERROR!");
-    	}*/
+    	}
     }
     return ERR_HDCP_SUCCESS;
 }

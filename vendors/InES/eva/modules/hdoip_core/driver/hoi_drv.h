@@ -16,6 +16,8 @@
 #include "i2c_drv.h"
 #include "adv7441a_drv.h"
 #include "adv9889_drv.h"
+#include "gs2971_drv.h"
+#include "gs2972_drv.h"
 #include "adv212_drv.h"
 #include "led_drv.h"
 #include "eti_drv.h"
@@ -32,6 +34,7 @@
 #include "ver_hal.h"
 #include "stream_sync.h"
 #include "bdt_drv.h"
+#include "spi_drv.h"
 
 
 #define HANDLER_TIMER_INTERVAL      (HZ/20)
@@ -58,6 +61,9 @@ typedef struct {
     void                *p_ver;
     void                *p_sysid;
     void                *p_led;
+    void                *p_video_mux;
+    void                *p_spi_tx;
+    void                *p_spi_rx;
 
     t_i2c               i2c_tx;
     t_i2c               i2c_rx;
@@ -79,6 +85,8 @@ typedef struct {
     //t_hdcp				hdcp;
     t_adv9889           adv9889;
     t_adv7441a          adv7441a;
+    t_gs2971            gs2971;
+    t_gs2972            gs2972;
     t_sync_means        sync;
     t_bdt               bdt;
 

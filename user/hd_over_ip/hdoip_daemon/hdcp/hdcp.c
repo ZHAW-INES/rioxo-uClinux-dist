@@ -314,6 +314,8 @@ int hdcp_calculate_h(char* rtx, uint32_t* repeater, char* H, char* km, char* kd)
 	char dkey1[33];
 	char repeater_s[3]="";
 
+    kd[0]='\0';
+
 	if (*repeater) strcat(repeater_s,"01"); //convert int to string
     else strcat(repeater_s,"00");
 

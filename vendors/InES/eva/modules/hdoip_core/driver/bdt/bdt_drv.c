@@ -5,6 +5,7 @@
  *      Author: buan
  */
 #include "bdt_drv.h"
+#include "hoi_msg.h"
 
 static inline void bdt_write(t_bdt* handle, uint8_t x)
 {
@@ -21,9 +22,23 @@ uint32_t bdt_return_device(t_bdt* handle)
     return (uint32_t) handle->device;
 }
 
-int bdt_drv_read_id(t_bdt* handle, t_i2c* p_i2c)
+void bdt_drv_read_id(t_bdt* handle, t_i2c* p_i2c)
 {
     if (p_i2c) handle->p_i2c = p_i2c;
 
-    handle->device           = (bdt_read(handle) >> 4) & 0x0F;
+    handle->device = (bdt_read(handle) >> 4) & 0x0F;
+}
+
+void bdt_drv_set_video_mux(t_bdt* handle, void* p_video_mux)
+{
+    switch (handle->device) {
+        case BDT_ID_HDMI_BOARD: bdt_set_video_mux(p_video_mux, INPUT_MUX_HDMI);
+                                printk("\nset video mux to HDMI\n");
+                                break;
+        case BDT_ID_SDI8_BOARD: bdt_set_video_mux(p_video_mux, INPUT_MUX_SDI);
+                                printk("\nset video mux to SDI\n");
+                                break;
+        default:                bdt_set_video_mux(p_video_mux, INPUT_MUX_IDLE);
+                                printk("\nset video mux to IDLE\n");
+    }
 }

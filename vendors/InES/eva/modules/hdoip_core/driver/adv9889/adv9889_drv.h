@@ -46,6 +46,8 @@ typedef struct {
     int             av_mute;
     int             hdcp_state;
     int             hdcp_cnt;
+    bool            hdcp_en;
+    uint32_t        hdcp_wait_cnt;
     bool            repeater;
     uint8_t         bksv_cnt;
     uint8_t         bksv[14*5];

@@ -43,6 +43,8 @@ INCLUDE += hal/i2c
   FILES += hal/i2c/i2c_hal.o
 INCLUDE += hal/adv9889
 INCLUDE += hal/adv7441a
+INCLUDE += hal/gs2971
+INCLUDE += hal/gs2972
 INCLUDE += hal/adv212
 INCLUDE += hal/ext_pio
   FILES += hal/adv212/adv212.o
@@ -95,9 +97,14 @@ INCLUDE += driver/adv9889
   FILES += driver/adv9889/adv9889_drv.o
 INCLUDE += driver/adv7441a
   FILES += driver/adv7441a/adv7441a_drv.o
+INCLUDE += driver/gs2971
+  FILES += driver/gs2971/gs2971_drv.o
+INCLUDE += driver/gs2972
+  FILES += driver/gs2972/gs2972_drv.o
 INCLUDE += driver/bdt
   FILES += driver/bdt/bdt_drv.o
-
+INCLUDE += driver/spi
+  FILES += driver/spi/spi_drv.o
 
 # +----------------------------------------------------------------------
 # | Module Object

@@ -44,6 +44,9 @@
 #define BASE_VER            (na_acb_firmware_revision)
 #define BASE_SYSID          (na_sysid)
 #define BASE_LED            (na_acb_led)
+#define BASE_VIDEO_MUX      (na_acb_video_mux)
+#define BASE_SPI_TX         (na_spi_tx)
+#define BASE_SPI_RX         (na_spi_rx)
 
 // Register area sizes
 #define TSE_MAC_SIZE        0x400
