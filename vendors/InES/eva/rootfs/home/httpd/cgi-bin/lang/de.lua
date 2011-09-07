@@ -44,6 +44,7 @@ label = {
     err_datarate_not_number = "Max. Datenrate ist keine Nummer";
     err_datarate_not_in_range = "Max. Datenrate ist nicht im G&uuml;ltigkeitsbereich (1 .. 800)";
     err_net_delay_not_number = "Max. Netzwerkverz&ouml;gerung ist keine Nummer";
+    err_net_delay_not_in_range = "Max. Netzwerkverz&ouml;gerung ist nicht im G&uuml;ltigkeitsbereich (1 ..100)";
 
     -- Page names
     page_streaming = "Stream Konfiguration";

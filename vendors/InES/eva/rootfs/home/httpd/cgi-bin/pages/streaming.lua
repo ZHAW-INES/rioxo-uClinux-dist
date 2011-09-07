@@ -162,7 +162,11 @@ function show(t)
 
         if(t.mode_vrb) then
 	        if(tonumber(t.net_delay) ~= nil) then
-	            hdoip.pipe.setParam(hdoip.pipe.REG_ST_NET_DELAY, t.net_delay)
+                if ((tonumber(t.net_delay) > 100) or (tonumber(t.net_delay) < 1)) then
+    	            hdoip.html.AddError(t, label.err_net_delay_not_in_range)
+                else
+                    hdoip.pipe.setParam(hdoip.pipe.REG_ST_NET_DELAY, t.net_delay)
+                end
 	        else
 	            hdoip.html.AddError(t, label.err_net_delay_not_number)
 	        end 
