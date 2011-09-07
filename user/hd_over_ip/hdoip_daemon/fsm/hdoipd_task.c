@@ -477,13 +477,14 @@ void task_get_rscp_state(char** s)
         buf_ptr += sprintf(buf_ptr, "not connected\n");
     }
 
-    image_pixel = (vid_timing.height + vid_timing.vfront + vid_timing.vback + vid_timing.vpulse) * (vid_timing.width + vid_timing.hfront + vid_timing.hback + vid_timing.hpulse);
-    image_freq = (vid_timing.pfreq / (image_pixel / 100));
+
 
     if (hdoipd.state & HOID_VTB) {
         if (hdoipd.rsc_state & RSC_VIDEO_IN) {
             hoi_drv_info(&vid_timing, &advcnt);
-            buf_ptr += sprintf(buf_ptr, "resolution     : %d x %d @ %d.%02d Hz\n", vid_timing.width, vid_timing.height, (image_freq/100), (image_freq%100));
+            image_pixel = (vid_timing.height + vid_timing.vfront + vid_timing.vback + vid_timing.vpulse) * (vid_timing.width + vid_timing.hfront + vid_timing.hback + vid_timing.hpulse);
+            image_freq = (vid_timing.pfreq / (image_pixel / 100));
+            buf_ptr += sprintf(buf_ptr, "resolution     : %d x %d @ %d.%02d Hz / %d MHz\n", vid_timing.width, vid_timing.height, (image_freq/100), (image_freq%100), (vid_timing.pfreq/1000000));
         } else {
             buf_ptr += sprintf(buf_ptr, "resolution     : (no input)\n");
         }

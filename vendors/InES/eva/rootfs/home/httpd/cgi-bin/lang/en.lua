@@ -41,7 +41,8 @@ label = {
     err_aud_port_not_number = "Audio port is not a number";
     err_vid_port_not_in_range = "Video port is not in range (0 .. 65535)";
     err_vid_port_not_number = "Video port is not a number";
-    err_datarate_not_number = "Datarate is not a number";
+    err_datarate_not_number = "Max. datarate is not a number";
+    err_datarate_not_in_range = "Max. datarate is not in range (1 .. 800)";
     err_net_delay_not_number = "Max. network delay is not a number";
 
     -- Page names
@@ -112,7 +113,7 @@ label = {
     p_st_media_sel = "Media select";
     p_st_vid_port = "Video UDP Port";
     p_st_aud_port = "Audio UDP Port";
-    p_st_datarate = "Datarate";
+    p_st_datarate = "Max. datarate";
     p_st_net_delay = "Max. network delay";
     p_st_auto_stream = "Auto stream";
     p_st_force_hdcp = "Force HDCP"; 

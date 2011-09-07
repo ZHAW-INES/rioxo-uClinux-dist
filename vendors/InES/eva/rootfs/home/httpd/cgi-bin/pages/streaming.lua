@@ -128,7 +128,11 @@ function show(t)
 
         if(t.mode_vtb) then
             if(tonumber(t.st_bw) ~= nil) then
-                hdoip.pipe.setParam(hdoip.pipe.REG_ST_BW, (tonumber(t.st_bw) / 8 * 2^20))
+                if ((tonumber(t.st_bw) > 800) or (tonumber(t.st_bw) < 1)) then
+                    hdoip.html.AddError(t, label.err_datarate_not_in_range)
+                else
+                    hdoip.pipe.setParam(hdoip.pipe.REG_ST_BW, (tonumber(t.st_bw) / 8 * 2^20))
+                end
             else
                 hdoip.html.AddError(t, label.err_datarate_not_number)
             end

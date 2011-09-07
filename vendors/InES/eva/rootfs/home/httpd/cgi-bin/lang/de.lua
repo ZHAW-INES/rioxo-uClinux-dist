@@ -41,7 +41,8 @@ label = {
     err_aud_port_not_number = "Audio Port ist keine Nummer";
     err_vid_port_not_in_range = "Video port ist nicht im G&uuml;ltigkeitsbereich (0 .. 65535)";
     err_vid_port_not_number = "Video Port ist keine Nummer";
-    err_datarate_not_number = "Datenrate ist keine Nummer";
+    err_datarate_not_number = "Max. Datenrate ist keine Nummer";
+    err_datarate_not_in_range = "Max. Datenrate ist nicht im G&uuml;ltigkeitsbereich (1 .. 800)";
     err_net_delay_not_number = "Max. Netzwerkverz&ouml;gerung ist keine Nummer";
 
     -- Page names
@@ -111,7 +112,7 @@ label = {
     p_st_media_sel = "Media Selektierung";
     p_st_vid_port = "Video UDP Port";
     p_st_aud_port = "Audio UDP Port";
-    p_st_datarate = "Datenrate";
+    p_st_datarate = "Max. Datenrate";
     p_st_net_delay = "Max. Netzwerkverz&ouml;gerung";
     p_st_auto_stream = "Auto Stream";
     p_st_force_hdcp = "HDCP erzwingen"; 
