@@ -52,6 +52,7 @@ int asi_drv_init(t_asi* handle, void* p_asi)
 
     handle->p_asi = p_asi;
     handle->status = 0;
+    handle->audio_event_queue = 0;
 
     asi_drv_stop(handle); 
 
@@ -270,6 +271,7 @@ int asi_drv_handler(t_asi* handle, t_queue* event_queue)
         handle->status = handle->status & ~ASI_DRV_STATUS_RBF_ERROR;
     }
 
+    // detect sampling rate
     if ((handle->fs) != fs) {
         switch (fs/200) {                           // mysterious bug in gateware: why is double of fs measured
             case (31):  case (32):  handle->sampling_rate = 32000;
@@ -289,23 +291,33 @@ int asi_drv_handler(t_asi* handle, t_queue* event_queue)
             default:                handle->sampling_rate = 0;
         }
         if (handle->sampling_rate_old != handle->sampling_rate) {
-            queue_put(event_queue, E_ASI_NEW_FS);
-            queue_put(event_queue, E_ADV7441A_NO_AUDIO);        // audio is restarting after this stop
+            handle->audio_event_queue = 1;
         }
         handle->sampling_rate_old = handle->sampling_rate;
     }
     handle->fs = fs;
 
 
-
+    // detect number of channels
     for(i=0;i<32;i++) {
         ch_cnt += ((ch_cnt_tmp >> i) & 0x00000001);
     }
     if ((handle->ch_cnt) != ch_cnt) {
+        handle->audio_event_queue = 1;
+    }
+    handle->ch_cnt = ch_cnt;
+
+
+    // To prevent that an audio event appears immediately after another audio event, wait some time before send an event to deamon.
+    // That occur on hdmi source plug in, than changes fs and ch-count almost at same time.
+    if (handle->audio_event_queue != 0) {
+        handle->audio_event_queue++;
+    }
+    if (handle->audio_event_queue == 30) {
+        handle->audio_event_queue = 0;
         queue_put(event_queue, E_ASI_NEW_FS);
         queue_put(event_queue, E_ADV7441A_NO_AUDIO);        // audio is restarting after this stop
     }
-    handle->ch_cnt = ch_cnt;
 
     return ERR_ASI_SUCCESS;
 }

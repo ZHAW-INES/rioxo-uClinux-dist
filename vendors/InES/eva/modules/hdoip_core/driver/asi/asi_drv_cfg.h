@@ -39,6 +39,7 @@ typedef struct {
     uint32_t                    sampling_rate_old;
     void*                       p_asi;
     struct hdoip_eth_params     eth_params;
+    uint32_t                    audio_event_queue;
 } t_asi;
 
 
