@@ -95,6 +95,7 @@
 #define HOI_MSG_GET_FS              (0x7000010D)
 #define HOI_MSG_GET_ANALOG_TIMING   (0x7000010E)
 #define HOI_MSG_GET_DEV_ID          (0x7000010F)
+#define HOI_MSG_GET_RESET_TO_DEFAULT (0x70000110)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)

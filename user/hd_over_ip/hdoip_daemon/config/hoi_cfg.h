@@ -24,7 +24,7 @@ void hoi_cfg_default_gw(char *gw);
 void hoi_cfg_ip_addr(char *ifname, char *ip, char *netmask);
 
 int hoi_cfg_write(char* filename);
-int hoi_cfg_read(char* filename);
+int hoi_cfg_read(char* filename, bool reset_to_default_values);
 int hoi_cfg_get_dns_server(char* dns1, char* dns2);
 int hoi_cfg_set_dns_server(char* dns1, char* dns2);
 int hoi_cfg_get_default_gw(char *gw);

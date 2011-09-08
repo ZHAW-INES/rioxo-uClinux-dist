@@ -736,6 +736,12 @@ int hoi_drv_msg_get_device_id(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
+int hoi_drv_msg_get_reset_to_default(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    msg->value = bdt_drv_get_reset_to_default(&handle->bdt, handle->p_video_mux);
+    return SUCCESS;
+}
+
 int hoi_drv_msg_set_stime(t_hoi* handle, t_hoi_msg_param* msg)
 {
     tmr_set_slave(handle->p_tmr, msg->value);
@@ -856,6 +862,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_GET_FS,                hoi_drv_msg_get_fs);
         call(HOI_MSG_GET_ANALOG_TIMING,     hoi_drv_msg_get_analog_timing);
         call(HOI_MSG_GET_DEV_ID,            hoi_drv_msg_get_device_id);
+        call(HOI_MSG_GET_RESET_TO_DEFAULT,  hoi_drv_msg_get_reset_to_default);
         call(HOI_MSG_OFF,                   hoi_drv_msg_off);
         call(HOI_MSG_IFMT,                  hoi_drv_msg_ifmt);
         call(HOI_MSG_OFMT,                  hoi_drv_msg_ofmt);

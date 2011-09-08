@@ -31,7 +31,7 @@ void hdoipd_set_default()
     reg_set("remote-uri", "rscp://192.168.1.201");
     reg_set("hello-uri", "rscp://192.168.1.201");
     reg_set("compress", "jp2k");
-    reg_set("bandwidth", "10000000");
+    reg_set("bandwidth", "10485760");
     reg_set("advcnt-min", "0");
     reg_set("network-delay", "20");
     reg_set("network-alive", "1");
@@ -59,8 +59,8 @@ void hdoipd_set_default()
     reg_set("alive-check-port", "2002");
 
     reg_set("led_instruction", "0");
-   
-    reg_set(CFGTAG, "v0.3");
+
+    reg_set(CFGTAG, "origin");
 }
 
 static void update_0_0_to_0_1()
@@ -147,6 +147,11 @@ void hdoipd_registry_update()
     if (!reg_get(CFGTAG)) {
         // version 0.0
         update_0_0_to_0_1();
+        update = true;
+    }
+
+    if (reg_test(CFGTAG, "origin")) {
+        reg_set(CFGTAG, "v0.3");
         update = true;
     }
 

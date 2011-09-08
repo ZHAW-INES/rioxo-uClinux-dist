@@ -754,6 +754,7 @@ void hdoipd_start()
 bool hdoipd_init(int drv)
 {
     uint32_t dev_id;
+    uint32_t reset_to_default;
 
     pthread_mutexattr_t attr;
 
@@ -780,7 +781,9 @@ bool hdoipd_init(int drv)
 
     hdoipd_register_task();
 
-    hoi_cfg_read(CFG_FILE);
+    // if reset button was not pressed longer than 5sec, load config 
+    hoi_drv_get_reset_to_default(&reset_to_default);
+    hoi_cfg_read(CFG_FILE, (bool) reset_to_default);
 
     hdoipd_registry_update();
 
@@ -800,9 +803,7 @@ bool hdoipd_init(int drv)
         case BDT_ID_SDI8_BOARD: hdoipd.drivers = DRV_GS2971  | DRV_GS2972;    
                                 break;
         default:                report("Video card detection failed");
-
     }
-
 
     hdoipd.auto_stream = reg_test("auto-stream", "true");
 

@@ -42,3 +42,14 @@ void bdt_drv_set_video_mux(t_bdt* handle, void* p_video_mux)
                                 printk("\nset video mux to IDLE\n");
     }
 }
+
+int bdt_drv_get_reset_to_default(t_bdt* handle, void* p_video_mux)
+{
+    int set_to_default = bdt_get_reset_to_default(p_video_mux);
+
+    if (set_to_default) {
+        bdt_set_reset_to_default(p_video_mux);
+    }
+
+    return set_to_default;
+}

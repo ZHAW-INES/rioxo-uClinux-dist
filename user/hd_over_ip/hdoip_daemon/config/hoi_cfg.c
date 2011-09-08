@@ -59,7 +59,7 @@ void strtrim(char** p)
     *p = s;
 }
 
-int hoi_cfg_read(char* filename)
+int hoi_cfg_read(char* filename, bool reset_to_default_values)
 {
     FILE *fd;
     char *line = 0, *key, *value;
@@ -79,7 +79,13 @@ int hoi_cfg_read(char* filename)
             if (key && value) {
                 strtrim(&key);
                 strtrim(&value);
-                reg_verify_set(key, value);
+                if (reset_to_default_values) {
+                    if (!strcmp(key, "system-mac")) {
+                        reg_verify_set(key, value);
+                    }
+                } else {
+                    reg_verify_set(key, value);
+                }
             }
         }
     }
