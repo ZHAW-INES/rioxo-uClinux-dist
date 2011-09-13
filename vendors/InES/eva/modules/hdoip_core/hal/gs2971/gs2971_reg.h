@@ -8,7 +8,17 @@
 #define GS2971_ERROR_STAT_2               (0x003)
 #define GS2971_EDH_FLAG_IN                (0x004)
 #define GS2971_EDH_FLAG_OUT               (0x005)
-#define GS2971_DATA_FORMAT_DS1            (0x006)
+
+//-------------------------------------------------------
+#define GS2971_DATA_FORMAT_DS1              (0x006)
+//-------------------------------------------------------
+#define DATA_FORMAT_DS1_YDATA_MASK          (0x000F)
+#define DATA_FORMAT_DS1_YDATA_SHIFT         (0)
+#define DATA_FORMAT_DS1_CDATA_MASK          (0x00F0)
+#define DATA_FORMAT_DS1_CDATA_SHIFT         (4)
+#define DATA_FORMAT_DS1_VD_STD_MASK         (0x3F00)
+#define DATA_FORMAT_DS1_VD_STD_SHIFT        (8)
+
 #define GS2971_DATA_FORMAT_DS2            (0x007)
 #define GS2971_IO_CONFIG                  (0x008)
 #define GS2971_IO_CONFIG2                 (0x009)
@@ -32,14 +42,46 @@
 #define GS2971_VIDEO_FORMAT_352_B_2       (0x01C)
 #define GS2971_VIDEO_FORMAT_352_INS_A     (0x01D)
 #define GS2971_VIDEO_FORMAT_352_INS_B     (0x01E)
-#define GS2971_RASTER_STRUC_1             (0x01F)
-#define GS2971_RASTER_STRUC_2             (0x020)
-#define GS2971_RASTER_STRUC_3             (0x021)
-#define GS2971_RASTER_STRUC_4             (0x022)
+
+//-------------------------------------------------------
+#define GS2971_RASTER_STRUC_1                   (0x01F)
+//-------------------------------------------------------
+#define RASTER_STRUC_1_WORDS_PER_AVTLINE_MASK   (0x3FFF)
+#define RASTER_STRUC_1_WORDS_PER_AVTLINE_SHIFT  (0)
+
+//-------------------------------------------------------
+#define GS2971_RASTER_STRUC_2                   (0x020)
+//-------------------------------------------------------
+#define RASTER_STRUC_2_WORDS_PER_LINE_MASK      (0x3FFF)
+#define RASTER_STRUC_2_WORDS_PER_LINE_SHIFT     (0)
+
+//-------------------------------------------------------
+#define GS2971_RASTER_STRUC_3                   (0x021)
+//-------------------------------------------------------
+#define RASTER_STRUC_3_LINES_PER_FRAME_MASK     (0x07FF)
+#define RASTER_STRUC_3_LINES_PER_FRAME_SHIFT    (0)
+
+//-------------------------------------------------------
+#define GS2971_RASTER_STRUC_4                   (0x022)
+//-------------------------------------------------------
+#define RASTER_STRUC_4_ACTLINE_PER_FIELD_MASK   (0x07FF)
+#define RASTER_STRUC_4_ACTLINE_PER_FIELD_SHIFT  (0)
+#define RASTER_STRUC_4_INT_PROG                 (0x0800)
+#define RASTER_STRUC_4_STD_LOCK                 (0x1000)
+#define RASTER_STRUC_4_M                        (0x2000)
+#define RASTER_STRUC_4_RATE_SEL_READBACK_MASK   (0xC000)
+#define RASTER_STRUC_4_RATE_SEL_READBACK_SHIFT  (14)
+
 #define GS2971_FLYWHEEL_STATUS            (0x023)
 #define GS2971_RATE_SEL                   (0x024)
+
+//-------------------------------------------------------
 #define GS2971_TIM_861_FORMAT             (0x025)
+//-------------------------------------------------------
+
+//-------------------------------------------------------
 #define GS2971_TIM_861_CFG                (0x026)
+//-------------------------------------------------------
 
 #define GS2971_ERROR_MASK_1               (0x037)
 #define GS2971_ERROR_MASK_2               (0x038)

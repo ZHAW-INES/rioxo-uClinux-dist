@@ -121,5 +121,8 @@ label = {
     p_st_multicast_group = "Multicastgruppe";
     p_st_unicast = "Unicast";
     p_st_multicast = "Multicast";
-
+    p_osd_time = "OSD Dauer";
+    p_osd_off = "immer aus";
+    p_osd_tmp = "3s";
+    p_osd_on = "immer an";
 }

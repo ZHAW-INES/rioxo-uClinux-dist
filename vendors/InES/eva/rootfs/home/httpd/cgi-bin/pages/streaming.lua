@@ -7,6 +7,7 @@ local REG_ST_URI_LABEL = "st_uri"
 local REG_ST_RSCP_PORT_LABEL = "st_rscp_port"
 local REG_ST_BW_LABEL = "st_bw"
 local REG_ST_NET_DELAY_LABEL = "net_delay"
+local REG_ST_OSD_LABEL = "osd_time"
 local REG_ST_VID_PORT_LABEL = "vid_port"
 local REG_ST_AUD_PORT_LABEL = "aud_port"
 
@@ -17,6 +18,10 @@ local MEDIA_SEL_VID = "video"
 -- Streamin page
 -- ------------------------------------------------------------------
 function show(t)
+    local t_osd_mode =      {[0] = (label.p_osd_off); [1] = (label.p_osd_tmp); [2] = (label.p_osd_on);}
+    local t_osd_mode_conv = {[0] = "off"; [1] = "tmp"; [2] = "on";}
+    local t_osd_mode_reg = {["off"] = 0; ["tmp"] = 1; ["on"] = 2}
+
 
     if(t.sent == nil) then
         t.st_uri = hdoip.pipe.getParam(hdoip.pipe.REG_ST_URI)
@@ -254,6 +259,8 @@ function show(t)
 	    hdoip.html.Text(label.p_st_net_delay);                                                  hdoip.html.TableInsElement(1);
 	    hdoip.html.FormText(REG_ST_NET_DELAY_LABEL, t.net_delay, 4, 0); 
 	    hdoip.html.Text(label.u_ms);                                                            hdoip.html.TableInsElement(2);
+  --      hdoip.html.Text(label.p_osd_time);                                                      hdoip.html.TableInsElement(1);
+  --      hdoip.html.FormRadio(REG_ST_OSD_LABEL, t_osd_mode, 3, t.osd_mode)                       hdoip.html.TableInsElement(1);
     end
 
     hdoip.html.TableBottom()

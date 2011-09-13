@@ -24,8 +24,9 @@
 
 #define bdt_set_video_mux(p, v)             HOI_WR32((p), MUX_CONTROL_OFFSET, (v))
 #define bdt_get_video_mux_status(p)         HOI_RD32((p), MUX_STATUS_OFFSET)
-#define bdt_get_reset_to_default(p)         (HOI_RD32((p), MUX_RESET_OFFSET) & 1)
+#define bdt_get_reset_to_default(p)         (HOI_RD32((p), MUX_RESET_OFFSET) & (1))
 #define bdt_set_reset_to_default(p)         HOI_WR32((p), MUX_RESET_OFFSET, (0x2))
+#define bdt_clr_reset_to_default(p)         HOI_WR32((p), MUX_RESET_OFFSET, (0x0))
 
 //card list is in "hoi_msg.h"
 

@@ -2,8 +2,38 @@
 #define GS2972_REG_H_
 
 // Video Core Registers
-#define GS2972_IOPROC                             (0x000)
-#define GS2972_ERROR_STAT                         (0x001)
+//-------------------------------------------------------
+#define GS2972_IOPROC                           (0x000)
+//-------------------------------------------------------
+#define IOPROC_RW_DEFAULT                       (0x0000)
+#define IOPROC_RW_TRS_INS                       (0x0001)
+#define IOPROC_RW_LNUM_INS                      (0x0002)
+#define IOPROC_RW_CRC_INS                       (0x0004)
+#define IOPROC_RW_ANC_CSUM_INS                  (0x0008)
+#define IOPROC_RW_EDH_CRC_INS                   (0x0010)
+#define IOPROC_RW_ILLEGAR_WORD_REMAP            (0x0020)
+#define IOPROC_RW_SMPTE_325M_INS                (0x0040)
+#define IOPROC_RW_H_CONFIG                      (0x0100)
+#define IOPROC_RW_CONV_372                      (0x0200)
+#define IOPROC_RW_AUDIO_EMBED                   (0x0400)
+#define IOPROC_RW_ANC_INS                       (0x0800)
+#define IOPROC_RW_EDH_CRC_UPDATE                (0x1000)
+#define IOPROC_RW_AUDIO_LEVELB_STREAM_2_1B      (0x2000)
+#define IOPROC_RW_DELAY_LINE_ENABLE             (0x4000)
+
+//-------------------------------------------------------
+#define GS2972_ERROR_STAT                       (0x001)
+//-------------------------------------------------------
+#define ERROR_STAT_R_ERROR_MASK                 (0x007F)
+#define ERROR_STAT_R_LOCK_ERR                   (0x0001)
+#define ERROR_STAT_R_NO_352M_ERR                (0x0002)
+#define ERROR_STAT_R_TIMING_ERR                 (0x0004)
+#define ERROR_STAT_R_FORMAT_ERR                 (0x0008)
+#define ERROR_STAT_R_Y1_CS_ERR                  (0x0010)
+#define ERROR_STAT_R_Y1_EDH_CS_ERR              (0x0020)
+#define ERROR_STAT_R_TRS_PERR                   (0x0040)
+
+
 #define GS2972_EDH_FLAG_EXT                       (0x002)
 #define GS2972_EDH_FLAG_PGM                       (0x003)
 #define GS2972_DATA_FORMAT                        (0x004)
@@ -50,8 +80,25 @@
 
 #define GS2972_SDTI_TDM                           (0x20A)
 #define GS2972_LEVELB_INDICATION                  (0x20D)
-#define GS2972_DRIVE_STRENGTH                     (0x20E)
-#define GS2972_DRIVE_STRENGTH2                    (0x20F)
+
+//-------------------------------------------------------
+#define GS2972_DRIVE_STRENGTH                   (0x20E)
+//-------------------------------------------------------
+#define DRIVE_STRENGTH_RW_4_MA                  (0x0000)
+#define DRIVE_STRENGTH_RW_6_MA                  (0x0015)
+#define DRIVE_STRENGTH_RW_8_MA                  (0x002A)
+#define DRIVE_STRENGTH_RW_10_MA                 (0x003F)
+
+//-------------------------------------------------------
+#define GS2972_DRIVE_STRENGTH2                  (0x20F)
+//-------------------------------------------------------
+#define DRIVE_STRENGTH2_RW_4_MA                 (0x0000)
+#define DRIVE_STRENGTH2_RW_6_MA                 (0x0001)
+#define DRIVE_STRENGTH2_RW_8_MA                 (0x0002)
+#define DRIVE_STRENGTH2_RW_10_MA                (0x0003)
+
+
+
 
 
 // SD Audio Core Registers
@@ -109,6 +156,10 @@
 #define GS2972_A_AUDIO_CTRL_GRPB_REG_10           (0x455)
 #define GS2972_A_AUDIO_CTRL_GRPB_REG_11           (0x456)
 #define GS2972_A_AUDIO_CTRL_GRPB_REG_12           (0x457)
+
+
+
+
 
 // HD and 3G Audio Core Registers
 #define GS2972_B_CFG_AUD                          (0x800)

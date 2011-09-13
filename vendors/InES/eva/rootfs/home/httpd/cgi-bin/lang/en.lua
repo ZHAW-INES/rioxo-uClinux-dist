@@ -122,5 +122,9 @@ label = {
     p_st_multicast_group = "Multicast group";
     p_st_unicast = "Unicast";
     p_st_multicast = "Multicast";
+    p_osd_time = "OSD time";
+    p_osd_off = "always off";
+    p_osd_tmp = "3s";
+    p_osd_on = "always on";
 }
 

@@ -11,6 +11,8 @@
 #include "gs2971_reg.h"
 #include "spi_drv.h"
 
+#define LOOP_ON     0x0001
+#define LOOP_OFF    0x0000
 
 typedef struct {
     void        *p_spi;
@@ -19,5 +21,8 @@ typedef struct {
 
 void gs2971_driver_init(t_gs2971 *handle, void* spi_ptr, void* i2c_ptr);
 void gs2971_handler(t_gs2971 *handle, t_queue *event_queue);
+void gs2971_driver_set_slew_rate(t_gs2971 *handle, int data_rate);
+void gs2971_driver_configure_loopback(t_gs2971 *handle, int enable);
+void report_incoming_video(t_gs2971 *handle, int format_code);
 
 #endif /* GS2971_DRV_H_ */
