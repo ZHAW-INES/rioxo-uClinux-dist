@@ -276,10 +276,12 @@ int led_drv_set_status(t_led* handle, uint32_t instruction)
                                                 break;
 
         case CONFIGURE_VRB                  :   led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_ON);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
                                                 break;
 
 
-        case CONFIGURE_VTB                  :   led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_ON);
+        case CONFIGURE_VTB                  :   led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_ON);
                                                 break;
 
         /* Mixed */

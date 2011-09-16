@@ -80,7 +80,7 @@ int hoi_cfg_read(char* filename, bool reset_to_default_values)
                 strtrim(&key);
                 strtrim(&value);
                 if (reset_to_default_values) {
-                    if (!strcmp(key, "system-mac")) {
+                    if ((!strcmp(key, "system-mac")) || (!strcmp(key, "serial-number"))) {
                         reg_verify_set(key, value);
                     }
                 } else {
