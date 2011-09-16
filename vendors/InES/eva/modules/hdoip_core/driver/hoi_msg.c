@@ -52,13 +52,13 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
         adv9889_drv_init(&handle->adv9889, &handle->i2c_tx, &handle->vio);
     }
     if (lddrv & DRV_ADV7441) {
-        adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, &handle->vio, (char*)adv7441a_edid_table);
+        adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, &handle->vio, (char*)adv7441a_edid_table, handle->p_video_mux);
     }
     if (lddrv & DRV_GS2971) {
-        gs2971_driver_init(&handle->gs2971, handle->p_spi_rx, &handle->i2c_tag_vid);
+        gs2971_driver_init(&handle->gs2971, handle->p_spi_rx, &handle->i2c_tag_vid, handle->p_video_mux);
     }
     if (lddrv & DRV_GS2972) {
-        gs2972_driver_init(&handle->gs2972, handle->p_spi_tx, &handle->i2c_tag_vid);
+        gs2972_driver_init(&handle->gs2972, handle->p_spi_tx, &handle->i2c_tag_vid, handle->p_video_mux);
     }
 
     handle->drivers = msg->drivers & DRV_ALL;

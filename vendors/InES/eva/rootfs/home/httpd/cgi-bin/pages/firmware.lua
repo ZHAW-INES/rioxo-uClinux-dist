@@ -71,11 +71,17 @@ function show(t)
 
     hdoip.pipe.getVersion(t)
 
+    serial = hdoip.pipe.getParam(hdoip.pipe.REG_SERIAL)
+
     hdoip.html.Header(t, label.page_name .. label.page_firmware, script_path)
 
     if(t.fpga_svn ~= nil) then
         hdoip.html.Title(label.p_fw_act_firmware)
         hdoip.html.TableHeader(2)
+
+
+        hdoip.html.Text(label.p_serial_number);                                      hdoip.html.TableInsElement(1)
+        hdoip.html.Text(serial);                                                     hdoip.html.TableInsElement(1)
         hdoip.html.Text(label.p_fw_fpga_ver);                                        hdoip.html.TableInsElement(1)
         hdoip.html.Text(t.fpga_date_str.." (SVN : "..t.fpga_svn..")");               hdoip.html.TableInsElement(1)
         hdoip.html.Text(label.p_fw_sopc_ver);                                        hdoip.html.TableInsElement(1)
@@ -84,6 +90,7 @@ function show(t)
         hdoip.html.Text(t.sw_version_str);                                           hdoip.html.TableInsElement(1)
         hdoip.html.Text(label.p_fw_software_tag);                                    hdoip.html.TableInsElement(1)
         hdoip.html.Text(t.sw_tag);                                                   hdoip.html.TableInsElement(1)
+
         hdoip.html.TableBottom()
     end
 

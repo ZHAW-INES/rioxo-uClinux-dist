@@ -46,15 +46,15 @@
 // input pixel transformation
 #define VIO_OFF_INPUT_PT            (0x0140)
 // overlay text
-#define VIO_OFF_OSD_SCREEN          (0x8000)
-#define VIO_OFF_OSD_CHAR            (0xc000)
-#define VIO_OFF_OSD_CONFIG          (0xe020)
-#define VIO_OFF_OSD_SCREEN_WIDTH    (0xe024)
-#define VIO_OFF_OSD_SCREEN_HEIGHT   (0xe026)
-#define VIO_OFF_OSD_CHAR_WIDTH      (0xe028)
-#define VIO_OFF_OSD_CHAR_HEIGHT     (0xe02a)
+#define VIO_OFF_OSD_SCREEN          (0x10000)
+#define VIO_OFF_OSD_CHAR            (0x1c000)
+#define VIO_OFF_OSD_CONFIG          (0x1e020)
+#define VIO_OFF_OSD_SCREEN_WIDTH    (0x1e024)
+#define VIO_OFF_OSD_SCREEN_HEIGHT   (0x1e026)
+#define VIO_OFF_OSD_CHAR_WIDTH      (0x1e028)
+#define VIO_OFF_OSD_CHAR_HEIGHT     (0x1e02a)
 // output pixel transformation
-#define VIO_OFF_OUTPUT_PT           (0xe080)
+#define VIO_OFF_OUTPUT_PT           (0x1e080)
 // Timing measurement
 #define VIO_OFF_TM_V                (0x0160)
 #define VIO_OFF_TM_H                (0x0162)

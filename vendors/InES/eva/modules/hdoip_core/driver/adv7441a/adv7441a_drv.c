@@ -185,7 +185,7 @@ int adv7441a_set_edid(t_adv7441a* handle, char* edid)
  * @param edid pointer to the EDID file
  * @return error code
  */
-int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid)
+int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid, void* p_video_mux)
 {
     REPORT(INFO, "+--------------------------------------------------+");
     REPORT(INFO, "| ADV7441A-Driver: Initialize HDMI-RX              |");
@@ -195,6 +195,9 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     handle->p_vio = p_vio;
     adv7441a_handle = handle;
     handle->status = 0; // clear status
+
+    // clear reset pin
+    bdt_drv_clear_reset_0(p_video_mux);
 
     adv7441a_sw_reset(handle);
 

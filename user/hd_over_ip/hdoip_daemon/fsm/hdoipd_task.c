@@ -6,6 +6,7 @@
  */
 #include "hoi_drv_user.h"
 #include "hdoipd.h"
+#include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "multicast.h"
 #include "rscp_listener.h"
@@ -630,6 +631,18 @@ void task_set_led_instruction(char* p)
     hoi_drv_set_led_status(atoi(p));
 }
 
+void task_set_osd_time(char* p)
+{
+    report("\n osd-time: %d", atoi(p));
+    if (atoi(p) == 100) {
+        hoi_drv_osdon();
+        hdoipd.rsc_state |= RSC_OSD;
+    } else {
+        hoi_drv_osdoff();
+        hdoipd.rsc_state &= ~RSC_OSD;
+    }
+}
+
 void task_set_network_delay(char* p)
 {
     update_vector |= HOID_TSK_EXEC_RESTART_VRB;
@@ -690,6 +703,7 @@ void hdoipd_register_task()
     set_listener("alive-check-interval", task_set_alive_update);
     set_listener("alive-check-port", task_set_alive_update);
     set_listener("led_instruction", task_set_led_instruction);
+    set_listener("osd-time", task_set_osd_time);
 }
 
 

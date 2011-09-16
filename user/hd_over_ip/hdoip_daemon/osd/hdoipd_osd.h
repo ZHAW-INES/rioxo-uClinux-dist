@@ -12,7 +12,6 @@
 #include "hdoipd.h"
 
 #define OSD_BUFFER_LENGTH   256
-#define OSD_TIMEOUT         10
 
 void hdoipd_osd_deactivate();
 void hdoipd_osd_activate();
@@ -29,10 +28,12 @@ extern char osdtmp[OSD_BUFFER_LENGTH];
 
 static inline void osd_permanent(bool b)
 {
+    int osd_timeout = reg_get_int("osd-time");
+
     if (b) {
         hdoipd.osd_timeout = -1;
     } else {
-        if ((hdoipd.osd_timeout < 0) || (hdoipd.osd_timeout > OSD_TIMEOUT)) hdoipd.osd_timeout = OSD_TIMEOUT;
+        if ((hdoipd.osd_timeout < 0) || (hdoipd.osd_timeout > osd_timeout)) hdoipd.osd_timeout = osd_timeout;
     }
 }
 

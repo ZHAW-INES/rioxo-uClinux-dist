@@ -22,12 +22,12 @@ void vio_osd_init(void* p, t_osd_font* font)
     HOI_WR16(p, VIO_OFF_OSD_CHAR_WIDTH, font->width - 1);
     HOI_WR16(p, VIO_OFF_OSD_CHAR_HEIGHT, font->height - 1);
     
-    memset(OFFSET(p, VIO_OFF_OSD_SCREEN), ' ', 0x4000);
+    memset(OFFSET(p, VIO_OFF_OSD_SCREEN), ' ', 0x8000);
     memset(OFFSET(p, VIO_OFF_OSD_CHAR), 0, 0x2000);
     
     tab = &((uint16_t*)OFFSET(p, VIO_OFF_OSD_CHAR))[font->start*16];
     
-    // copy <num> 32 Byte tabel entrys (16x16 Bit)
+    // copy <num> 32 Byte table entrys (16x16 Bit)
     memcpy(tab, font->bitmap, font->length * 32);
 
     HOI_WR32(p, VIO_OFF_OSD_CONFIG, VIO_OSD_CFG_ACTIVE);
@@ -59,7 +59,7 @@ void vio_osd_set_resolution(void* p, uint32_t width, uint32_t height)
  */
 void vio_osd_clear_screen(void* p)
 {
-    memset(OFFSET(p, VIO_OFF_OSD_SCREEN), ' ', 0x4000);
+    memset(OFFSET(p, VIO_OFF_OSD_SCREEN), ' ', 0x8000);
 }
 
 

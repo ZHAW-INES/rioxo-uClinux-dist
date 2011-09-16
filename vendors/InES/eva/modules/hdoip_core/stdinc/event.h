@@ -28,6 +28,12 @@
 #define E_ADV9889_CABLE_OFF     (E_ADV9889_ID + 0x00000002)  /* no HDMI connected */
 #define E_ADV9889_NEXT_EDID     (E_ADV9889_ID + 0x00000003)  /* next edid segment ready */
 
+/* GS2971 events*/
+#define E_GS2971_ID             (0xA0000000)
+#define E_GS2971_CNT            2
+#define E_GS2971_VIDEO_ON       (E_GS2971_ID + 0x00000001)
+#define E_GS2971_VIDEO_OFF      (E_GS2971_ID + 0x00000002)
+
 /* VSI events */
 #define E_VSI_ID		        (0x20000000)
 #define E_VSI_CNT		        2

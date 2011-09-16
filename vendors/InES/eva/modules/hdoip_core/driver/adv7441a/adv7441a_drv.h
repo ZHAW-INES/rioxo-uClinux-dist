@@ -13,10 +13,10 @@
 #include "adv7441a_reg.h"
 #include "adv7441a_drv_cfg.h"
 #include "adv7441a_drv_i2c.h"
-
+#include "bdt_drv.h"
 
 /* function prototypes */
-int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid);
+int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid, void* p_video_mux);
 int adv7441a_handler(t_adv7441a* handle, t_queue* event_queue);
 int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue);
 int adv7441a_irq2_handler(t_adv7441a* handle, t_queue* event_queue);

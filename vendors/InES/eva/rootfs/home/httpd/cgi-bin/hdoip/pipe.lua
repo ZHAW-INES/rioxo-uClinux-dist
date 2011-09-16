@@ -15,6 +15,7 @@ REG_SYS_GW = "system-gateway"
 REG_SYS_DHCP = "system-dhcp"
 REG_AUTO_STREAM = "auto-stream"
 REG_IDENTIFICATION = "led_instruction"
+REG_OSD_TIME = "osd-time"
 REG_MODE_START = "mode-start"
 REG_ST_MODE_MEDIA = "mode-media"
 REG_ST_URI = "remote-uri"
@@ -47,6 +48,7 @@ REG_AMX_HELLO_MSG = "amx-hello-msg"
 REG_AMX_HELLO_INTERVAL = "amx-hello-interval"
 REG_MULTICAST_EN = "multicast_en"
 REG_MULTICAST_GROUP = "multicast_group"
+REG_SERIAL = "serial-number"
 
 local PIPE_CMD = "/tmp/web.cmd"
 local PIPE_RSP = "/tmp/web.rsp"
@@ -187,7 +189,7 @@ function getVersion(t)
         
         t.fpga_date = hdoip.convert.bin2dec(string.sub(ret,1,4),4)
         t.fpga_date_str = os.date("%x %X",t.fpga_date)
-    
+   
         t.fpga_svn  = hdoip.convert.bin2dec(string.sub(ret,5,8),4)
         t.sopc_date = hdoip.convert.bin2dec(string.sub(ret,9,12),4)
         t.sopc_date_str = os.date("%x %X",t.sopc_date)

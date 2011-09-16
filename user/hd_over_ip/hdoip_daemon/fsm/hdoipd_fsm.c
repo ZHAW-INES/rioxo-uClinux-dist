@@ -638,6 +638,12 @@ void hdoipd_event(uint32_t event)
                 hdoipd_start();
             }
         break;
+        case E_GS2971_VIDEO_ON:
+            report(INFO "SDI Input on");
+        break;
+        case E_GS2971_VIDEO_OFF:
+            report(INFO "SDI Input off");
+        break;
         // ...
         case E_VSI_FIFO2_FULL:
         break;
@@ -861,7 +867,7 @@ bool hdoipd_init(int drv)
 
         // setup default output
         osd_permanent(true);
-        osd_printf("Welcome to <rioxo> - 2011 Barox\n\n");
+        osd_printf("Welcome to rioxo\n\n");
     }
     unlock("hdoipd_init");
 

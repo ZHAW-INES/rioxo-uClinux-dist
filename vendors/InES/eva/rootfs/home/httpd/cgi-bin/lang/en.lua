@@ -7,7 +7,8 @@ label = {
     u_decimal = "[decimal]";
     u_mbps = "[MBit / s]";
     u_ms = "[ms]";
- 
+    u_s = "[s]";
+
     device_name = "Device name : ";
 
     lang_en = "English";
@@ -44,7 +45,9 @@ label = {
     err_datarate_not_number = "Max. datarate is not a number";
     err_datarate_not_in_range = "Max. datarate is not in range (1 .. 800)";
     err_net_delay_not_number = "Max. network delay is not a number";
-    err_net_delay_not_in_range = "Max. network delay is not in range (1 ..100)";
+    err_net_delay_not_in_range = "Max. network delay is not in range (1 .. 100)";
+    err_osd_time_not_number = "OSD time is not a number";
+    err_osd_time_not_in_range = "OSD time is not in range (0 .. 100)";
 
     -- Page names
     page_streaming = "Stream configuration";
@@ -84,6 +87,7 @@ label = {
     p_stat_title = "Status";
 
     -- Page firmware
+    p_serial_number = "Serial number";
     p_fw_fpga_ver = "Gateware";
     p_fw_sopc_ver = "SOPC";
     p_fw_software_ver = "Software";
@@ -123,8 +127,5 @@ label = {
     p_st_unicast = "Unicast";
     p_st_multicast = "Multicast";
     p_osd_time = "OSD time";
-    p_osd_off = "always off";
-    p_osd_tmp = "3s";
-    p_osd_on = "always on";
 }
 

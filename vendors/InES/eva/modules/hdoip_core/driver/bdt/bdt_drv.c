@@ -4,6 +4,7 @@
  *  Created on: 06.07.2011
  *      Author: buan
  */
+#include "i2c_drv.h"
 #include "bdt_drv.h"
 #include "hoi_msg.h"
 
@@ -53,4 +54,18 @@ int bdt_drv_get_reset_to_default(t_bdt* handle, void* p_video_mux)
     }
 
     return set_to_default;
+}
+
+// disable reset of video card rx chip
+void bdt_drv_clear_reset_0(void* p_video_mux)
+{
+    uint32_t tmp = bdt_get_reset_chip(p_video_mux);
+    bdt_set_reset_chip_0(p_video_mux, tmp);
+}
+
+// disable reset of video card tx chip
+void bdt_drv_clear_reset_1(void* p_video_mux)
+{
+    uint32_t tmp = bdt_get_reset_chip(p_video_mux);
+    bdt_set_reset_chip_1(p_video_mux, tmp);
 }

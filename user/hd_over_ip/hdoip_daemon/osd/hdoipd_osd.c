@@ -28,6 +28,7 @@ void hdoipd_osd_deactivate()
 void hdoipd_osd_activate()
 {
     t_video_timing* timing;
+    int osd_timeout = reg_get_int("osd-time");
 
     if (!(hdoipd.rsc_state & RSC_OSD)) {
         // if we dont have active video IN or Out -> create own resolution
@@ -43,7 +44,7 @@ void hdoipd_osd_activate()
         report(CHANGE "osd on");
         hdoipd_set_rsc(RSC_OSD);
     }
-    if (hdoipd.osd_timeout >= 0) hdoipd.osd_timeout = OSD_TIMEOUT;
+    if (hdoipd.osd_timeout >= 0) hdoipd.osd_timeout = osd_timeout;
 }
 
 void* hdoipd_osd_timer(void UNUSED *d)

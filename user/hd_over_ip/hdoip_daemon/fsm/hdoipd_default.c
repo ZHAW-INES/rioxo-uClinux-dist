@@ -59,6 +59,8 @@ void hdoipd_set_default()
     reg_set("alive-check-port", "2002");
 
     reg_set("led_instruction", "0");
+    reg_set("osd-time", "10");
+    reg_set("serial-number", "00000000000000");
 
     reg_set(CFGTAG, "origin");
 }

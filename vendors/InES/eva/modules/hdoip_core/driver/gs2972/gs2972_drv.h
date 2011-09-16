@@ -17,7 +17,7 @@ typedef struct {
     void        *p_i2c;
 } t_gs2972;
 
-void gs2972_driver_init(t_gs2972 *handle, void* spi_ptr, void* i2c_ptr);
+void gs2972_driver_init(t_gs2972 *handle, void *spi_ptr, void *i2c_ptr, void *video_mux_ptr);
 void gs2972_handler(t_gs2972 *handle, t_queue *event_queue);
 void gs2972_driver_set_rate_sel(t_gs2972 *handle, int data_rate);
 
