@@ -242,8 +242,12 @@ int led_drv_set_status(t_led* handle, uint32_t instruction)
                                                 led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
                                                 break;
 
-        case DVI_IN_DISCONNECTED            :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
+        case DVI_IN_DISCONNECTED_VRB        :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
                                                 led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
+                                                break;
+
+        case DVI_IN_DISCONNECTED_VTB        :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_ON);
                                                 break;
 
         case DVI_OUT_CONNECTED_NO_AUDIO     :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_FLASHING_3S);
@@ -254,9 +258,14 @@ int led_drv_set_status(t_led* handle, uint32_t instruction)
                                                 led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
                                                 break;
 
-        case DVI_OUT_DISCONNECTED           :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
+        case DVI_OUT_DISCONNECTED_VRB       :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_ON);
+                                                break;
+
+        case DVI_OUT_DISCONNECTED_VTB       :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
                                                 led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
                                                 break;
+
 
         case STREAM_ERROR_HDMI_IN           :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
                                                 led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_ON);
@@ -264,6 +273,13 @@ int led_drv_set_status(t_led* handle, uint32_t instruction)
 
         case STREAM_ERROR_HDMI_OUT          :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
                                                 led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_ON);
+                                                break;
+
+        case CONFIGURE_VRB                  :   led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_ON);
+                                                break;
+
+
+        case CONFIGURE_VTB                  :   led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_ON);
                                                 break;
 
         /* Mixed */

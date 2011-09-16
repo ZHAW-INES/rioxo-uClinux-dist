@@ -250,6 +250,8 @@ void hdoipd_goto_vtb()
                 // set output uses slave timer
                 hoi_drv_timer(DRV_TMR_OUT);
 
+                hoi_drv_set_led_status(CONFIGURE_VTB);
+
                 rscp_listener_add_media(&hdoipd.listener, &vtb_audio);
                 rscp_listener_add_media(&hdoipd.listener, &vtb_video);
                 rscp_listener_add_media(&hdoipd.listener, &box_sys);
@@ -283,6 +285,7 @@ void hdoipd_goto_vrb()
 
                 hdoipd_set_state(HOID_VRB);
 
+                hoi_drv_set_led_status(CONFIGURE_VRB);
                 // register remote for "hello"
                 //box_sys_set_remote(reg_get("remote-uri"));
                 // first thing to try is setup a new connection based on registry
@@ -550,12 +553,20 @@ void hdoipd_event(uint32_t event)
         break;
         case E_ADV9889_CABLE_OFF:
             hdoipd_clr_rsc(RSC_VIDEO_SINK);
-            hoi_drv_set_led_status(DVI_OUT_DISCONNECTED);
+            if (hdoipd_state(HOID_VTB)) {
+                hoi_drv_set_led_status(DVI_OUT_DISCONNECTED_VTB);
+            } else {
+                hoi_drv_set_led_status(DVI_OUT_DISCONNECTED_VRB);
+            }
         break;
         case E_ADV7441A_NC:
             hdoipd_clr_rsc(RSC_VIDEO_IN);
             hdoipd_clr_rsc(RSC_AUDIO0_IN);
-            hoi_drv_set_led_status(DVI_IN_DISCONNECTED);
+            if (hdoipd_state(HOID_VTB)) {
+                hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VTB);
+            } else {
+                hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VRB);
+            }
         break;
         case E_ADV7441A_CONNECT:
         break;
@@ -577,7 +588,11 @@ void hdoipd_event(uint32_t event)
                 hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
                 event = event & ~E_ADV7441A_NEW_VGA_RES;                // clear event to prevent that video will be started in hdoipd_fsm_vtb
                 event = event | E_ADV7441A_NC;                          // set event to stop video
-                hoi_drv_set_led_status(DVI_IN_DISCONNECTED);
+                if (hdoipd_state(HOID_VTB)) {
+                    hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VTB);
+                } else {
+                    hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VRB);
+                }
             }
         break;
         case E_ADV7441A_ACTIVITY_ON_SYNC:

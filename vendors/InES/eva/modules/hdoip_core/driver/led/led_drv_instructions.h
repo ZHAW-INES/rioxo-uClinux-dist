@@ -20,16 +20,21 @@
 // HDMI-Board
 #define DVI_IN_CONNECTED_NO_AUDIO       (0x00000005)
 #define DVI_IN_CONNECTED_WITH_AUDIO     (0x00000006)
-#define DVI_IN_DISCONNECTED             (0x00000007)
-#define DVI_OUT_CONNECTED_NO_AUDIO      (0x00000008)
-#define DVI_OUT_CONNECTED_WITH_AUDIO    (0x00000009)
-#define DVI_OUT_DISCONNECTED            (0x0000000A)
-#define STREAM_ERROR_HDMI_IN            (0x0000000B)
-#define STREAM_ERROR_HDMI_OUT           (0x0000000C)
+#define DVI_IN_DISCONNECTED_VRB         (0x00000007)
+#define DVI_IN_DISCONNECTED_VTB         (0x00000008)
+#define DVI_OUT_CONNECTED_NO_AUDIO      (0x00000009)
+#define DVI_OUT_CONNECTED_WITH_AUDIO    (0x0000000A)
+#define DVI_OUT_DISCONNECTED_VRB        (0x0000000B)
+#define DVI_OUT_DISCONNECTED_VTB        (0x0000000C)
+#define STREAM_ERROR_HDMI_IN            (0x0000000D)
+#define STREAM_ERROR_HDMI_OUT           (0x0000000E)
+
+#define CONFIGURE_VRB                   (0x0000000F)
+#define CONFIGURE_VTB                   (0x00000010)
 
 // Mixed
-#define FIRMWARE_START                  (0x0000000D)
-#define IDENTIFICATION_ON               (0x0000000E)
-#define IDENTIFICATION_OFF              (0x0000000F)
+#define FIRMWARE_START                  (0x00000011)
+#define IDENTIFICATION_ON               (0x00000012)
+#define IDENTIFICATION_OFF              (0x00000013)
 
 #endif /* LED_DRV_INSTRUCTIONS_H_ */
