@@ -259,19 +259,19 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
         case EVENT_VIDEO_IN_ON:
             // No multicast for now...simply stop before starting new
         	report(INFO "vrb_video_update; EVENT_VIDEO_IN_ON");
-            if (rscp_media_splaying(media)) {
+            if (!rscp_media_splaying(media)) {
                 vrb_video_pause(media);
+                // restart
+                rscp_client_set_play(media->creator);  
+                return RSCP_PAUSE;
             }
-            // restart
-            rscp_client_set_play(media->creator);
-            return RSCP_PAUSE;
         break;
         case EVENT_VIDEO_IN_OFF:
         	report(INFO "vrb_video_update; EVENT_VIDEO_IN_OFF");
             vrb_video_pause(media);
             osd_permanent(true);
-            osd_printf("vtb.video stopped streaming...\n");
-            report(ERROR "vtb.video stopped streaming");
+            osd_printf("vtb.video stopped streaming - no video input\n");
+            report(ERROR "vtb.video stopped streaming - no video input");
             return RSCP_PAUSE;
         break;
     }

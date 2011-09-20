@@ -195,6 +195,7 @@ HOI_READ(get_fs, HOI_MSG_GET_FS);
 HOI_READ(get_analog_timing, HOI_MSG_GET_ANALOG_TIMING);
 HOI_READ(get_device_id, HOI_MSG_GET_DEV_ID);
 HOI_READ(get_reset_to_default, HOI_MSG_GET_RESET_TO_DEFAULT);
+HOI_READ(get_encrypted_status, HOI_MSG_GET_ENCRYPTED_STATUS);
 
 //------------------------------------------------------------------------------
 // capture/show image command

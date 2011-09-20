@@ -210,7 +210,7 @@ bool hdoipd_goto_ready()
             return false;
         break;
     }
-    osd_printf("Device is idle");
+    osd_printf("Device is idle\n");
     return true;
 }
 
@@ -571,6 +571,16 @@ void hdoipd_event(uint32_t event)
         case E_ADV7441A_CONNECT:
         break;
         case E_ADV7441A_NEW_HDMI_RES:
+            hoi_drv_get_encrypted_status(&buff);
+            // check if encryption is enabled
+            if (buff) {
+            	report(INFO "\n ******* Incomming stream is encrypted!! ****** ");
+                hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
+            } else {
+                report(INFO "\n ******* Incomming stream is not encrypted!! ****** ");
+                hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
+            }
+
             hdoipd_set_rsc(RSC_VIDEO_IN);
             hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
             hdoipd_set_rsc(RSC_AUDIO0_IN);
@@ -638,12 +648,8 @@ void hdoipd_event(uint32_t event)
             hdoipd_clr_rsc(RSC_EAO);
         break;
         case E_ADV7441A_HDCP:
-        	report(INFO "\n ******* Incomming stream is encrypted!! ****** ");
-            hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
         break;
         case E_ADV7441A_NO_HDCP:
-        	report(INFO "\n ******* Incomming stream is !!! NOT !!! encrypted!! ****** ");
-        	hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
         break;
         case E_HDCP_STREAMING_ERROR:   // restart VTB if Kernel detects HDCP streaming error
         	report(INFO "*********** HDCP streaming error ***********");

@@ -224,19 +224,17 @@ int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
 
         case EVENT_AUDIO_IN0_ON:
             // No multicast for now...simply stop before starting new
-            if (rscp_media_splaying(media)) {
+            if (!rscp_media_splaying(media)) {
                 vrb_audio_pause(media);
+                // restart
+                rscp_client_set_play(media->creator);
+                return RSCP_PAUSE;
             }
-
-            // restart
-            rscp_client_set_play(media->creator);
-
-            return RSCP_PAUSE;
         break;
         case EVENT_AUDIO_IN0_OFF:
             vrb_audio_pause(media);
-            osd_printf("vtb.audio stopped streaming...\n");
-            report(ERROR "vtb.audio stopped streaming");
+            osd_printf("vtb.audio stopped streaming - no audio input\n");
+            report(ERROR "vtb.audio stopped streaming - no audio input");
             return RSCP_PAUSE;
         break;
     }

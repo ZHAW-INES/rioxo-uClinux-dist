@@ -630,6 +630,17 @@ int adv7441a_get_analog_video_timing(t_adv7441a* handle)
 }
 
 
+/** returns HDCP encrypted status 
+ *
+ * @param handle pointer to the adv7441a handle
+ * @return HDCP is encrypted
+ */
+int adv7441a_get_hdcp_status(t_adv7441a* handle)
+{
+    return (adv7441a_usr_map1_read(handle, ADV7441A_REG_REGISTER_05H) & ADV7441A_BIT_HDMI_CONTENT_ENCRYPTED);
+}
+
+
 /** IRQ1 interrupt handler 
  *
  * @param handle pointer to the adv7441a handle
@@ -754,7 +765,6 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
 			    handle->status = handle->status | ADV7441A_STATUS_CONNECTION;
                 REPORT(INFO, "[HDMI IN] vertical synch filter has locked\n");
 			    REPORT(INFO, "[HDMI IN] link on port A established\n");
-
 			    queue_put(event_queue, E_ADV7441A_NEW_HDMI_RES);
             } else {
                 REPORT(INFO, "[HDMI IN] vertical synch filter not locked\n");
