@@ -10,7 +10,6 @@
  */
 int led_drv_tgl(t_led* handle, uint32_t mask)
 {
-//TODO: how can leds be set in PCA 9575 ?
     uint8_t old_val;
     handle->led_set = ((handle->led_set & mask) ^ mask) | (handle->led_set & ~mask);
 
@@ -28,7 +27,7 @@ int led_drv_tgl(t_led* handle, uint32_t mask)
         }
         if (mask & LED_SDI_OUT_RNG) {
             old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR);
-            //i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_MASK) | ~((handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_MASK));
+            i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_OUT_MASK) | ~((handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_OUT_MASK));
         }
     }
 
@@ -43,7 +42,6 @@ int led_drv_tgl(t_led* handle, uint32_t mask)
  */
 int led_drv_clr(t_led* handle, uint32_t mask)
 {
-//TODO: how can leds be set in PCA 9575 ?
     uint8_t old_val;
     uint32_t update = (handle->led_set & mask);
     handle->led_set &= ~mask;
@@ -62,7 +60,7 @@ int led_drv_clr(t_led* handle, uint32_t mask)
         }
         if (mask & LED_SDI_OUT_RNG) {
             old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR);
-            //i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_MASK) | ~((handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_MASK));
+            i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_OUT_MASK) | ~((handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_OUT_MASK));
         }
     }
 
@@ -77,7 +75,6 @@ int led_drv_clr(t_led* handle, uint32_t mask)
  */
 int led_drv_set(t_led* handle, uint32_t mask)
 {
-//TODO: how can leds be set in PCA 9575 ?
     uint8_t old_val;
     uint32_t update = (handle->led_set | mask) - handle->led_set;
     handle->led_set |= mask;
@@ -96,7 +93,7 @@ int led_drv_set(t_led* handle, uint32_t mask)
         }
         if (mask & LED_SDI_OUT_RNG) {
             old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR);
-            //i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_MASK) | ~((handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_MASK));
+            i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_OUT_MASK) | ~((handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_OUT_MASK));
         }
     }
 
@@ -231,9 +228,11 @@ int led_drv_set_status(t_led* handle, uint32_t instruction)
                                                 break;
 
         case STREAM_ACTIVE                  :   led_drv_control_set(handle, LED_POWER_GREEN,     LED_ON);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
                                                 break;
 
-        /* HDMI-Board */
+        /* VIDEO-Board */
         case DVI_IN_CONNECTED_NO_AUDIO      :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_FLASHING_3S);
                                                 led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
                                                 break;
@@ -277,11 +276,19 @@ int led_drv_set_status(t_led* handle, uint32_t instruction)
 
         case CONFIGURE_VRB                  :   led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_ON);
                                                 led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_OFF);
                                                 break;
 
 
         case CONFIGURE_VTB                  :   led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
                                                 led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_ON);
                                                 break;
 
         /* Mixed */
@@ -293,38 +300,32 @@ int led_drv_set_status(t_led* handle, uint32_t instruction)
                                                 led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
                                                 led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
                                                 led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_OFF);
                                                 break;
 
         case IDENTIFICATION_ON              :   led_drv_control_set(handle, LED_POWER_RED,       LED_FLASHING_1S);
                                                 led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_FLASHING_1S);
                                                 led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_FLASHING_1S);
                                                 break;
 
         case IDENTIFICATION_OFF             :   led_drv_control_set(handle, LED_POWER_RED,       LED_OFF);
                                                 led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
                                                 led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
-                                                break;
-
-        /* SDI-Board */
-        case SDI_TEST_1                     :   led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_ON);
                                                 led_drv_control_set(handle, LED_SDI_IN_RED,      LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_OFF);
                                                 led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_OFF);
-                                                break;
-        case SDI_TEST_2                     :   led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_OFF);
-                                                break;
-        case SDI_TEST_3                     :   led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_OFF);
-                                                break;
-        case SDI_TEST_4                     :   led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_OFF);
                                                 break;
 
         default                             :   break;

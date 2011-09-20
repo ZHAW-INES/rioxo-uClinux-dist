@@ -25,10 +25,10 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     init_io_exp_rx(handle->p_i2c);
 
     // disable all led
-    clr_io_exp_rx_pin(handle->p_i2c, RX_LED_1); //led green input
+    set_io_exp_rx_pin(handle->p_i2c, RX_LED_1); //led green input
     set_io_exp_rx_pin(handle->p_i2c, RX_LED_2); //led red input
     set_io_exp_rx_pin(handle->p_i2c, RX_LED_3); //led green loopback
-    clr_io_exp_rx_pin(handle->p_i2c, RX_LED_4); //led red loopback
+    set_io_exp_rx_pin(handle->p_i2c, RX_LED_4); //led red loopback
 
     // power up device
     clr_io_exp_rx_pin(handle->p_i2c, RX_STANDBY);

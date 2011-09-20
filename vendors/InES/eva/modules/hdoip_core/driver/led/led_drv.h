@@ -56,6 +56,7 @@
 #define LED_I2C_SDI_IN_ADDR      (0x00000046)
 #define LED_I2C_SDI_OUT_ADDR     (0x00000044)
 #define LED_SDI_IN_MASK          (0x0000000F)
+#define LED_SDI_OUT_MASK         (0x0000000F)
 #define LED_SDI_IN_RNG           (0x00000F00)
 #define LED_SDI_OUT_RNG          (0x0000F000)
 #define LED_SDI_IN_BIT_SHIFT     (0x00000008)
@@ -69,12 +70,12 @@
 #define LED_SDI_LOOP_RED         (0x00080000)
 
 //TODO: set correct value
-#define LED_SDI_OUT1_ORANGE      (0x00300000)
-#define LED_SDI_OUT1_GREEN       (0x00100000)
-#define LED_SDI_OUT1_RED         (0x00200000)
-#define LED_SDI_OUT2_ORANGE      (0x00C00000)
-#define LED_SDI_OUT2_GREEN       (0x00400000)
-#define LED_SDI_OUT2_RED         (0x00800000)
+#define LED_SDI_OUT2_ORANGE      (0x00300000)
+#define LED_SDI_OUT2_GREEN       (0x00100000)
+#define LED_SDI_OUT2_RED         (0x00200000)
+#define LED_SDI_OUT1_ORANGE      (0x00C00000)
+#define LED_SDI_OUT1_GREEN       (0x00400000)
+#define LED_SDI_OUT1_RED         (0x00800000)
 
 typedef struct {
     void        *p_led;

@@ -32,15 +32,9 @@
 #define CONFIGURE_VRB                   (0x00000013)
 #define CONFIGURE_VTB                   (0x00000010)
 
-// SDI-Board
-#define SDI_TEST_1                      (0x00000100)
-#define SDI_TEST_2                      (0x00000200)
-#define SDI_TEST_3                      (0x00000300)
-#define SDI_TEST_4                      (0x00000400)
-
 // Mixed
 #define FIRMWARE_START                  (0x00000011)
-#define IDENTIFICATION_ON               (0x0000000E)    //do not change this
-#define IDENTIFICATION_OFF              (0x0000000F)    //do not change this
+#define IDENTIFICATION_ON               (0x0000000E)    //do not change this (value is used in webinterface)
+#define IDENTIFICATION_OFF              (0x0000000F)    //do not change this (value is used in webinterface)
 
 #endif /* LED_DRV_INSTRUCTIONS_H_ */
