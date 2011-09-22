@@ -294,7 +294,6 @@ void hdoipd_goto_vrb()
                 //    hdoipd_set_task_start_vrb();
                 //}
                 hdoipd.alive_check.init_done = 0;
-
                 alive_check_start_vrb_alive();
             }
         } else {
@@ -548,8 +547,13 @@ void hdoipd_event(uint32_t event)
 
         // resource state
         case E_ADV9889_CABLE_ON:
-            hdoipd_set_rsc(RSC_VIDEO_SINK);
-            hoi_drv_set_led_status(DVI_OUT_CONNECTED_NO_AUDIO);
+            // interrupt appears sometimes often than one time
+            if ((!hdoipd_rsc(RSC_VIDEO_SINK))) {
+                hdoipd_set_rsc(RSC_VIDEO_SINK);
+                hoi_drv_set_led_status(DVI_OUT_CONNECTED_NO_AUDIO);
+            } else {
+                event = event & ~E_ADV9889_CABLE_ON;                // clear event to prevent that video will be started in hdoipd_fsm_vrb
+            }
         break;
         case E_ADV9889_CABLE_OFF:
             hdoipd_clr_rsc(RSC_VIDEO_SINK);
@@ -571,16 +575,6 @@ void hdoipd_event(uint32_t event)
         case E_ADV7441A_CONNECT:
         break;
         case E_ADV7441A_NEW_HDMI_RES:
-            hoi_drv_get_encrypted_status(&buff);
-            // check if encryption is enabled
-            if (buff) {
-            	report(INFO "\n ******* Incomming stream is encrypted!! ****** ");
-                hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
-            } else {
-                report(INFO "\n ******* Incomming stream is not encrypted!! ****** ");
-                hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
-            }
-
             hdoipd_set_rsc(RSC_VIDEO_IN);
             hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
             hdoipd_set_rsc(RSC_AUDIO0_IN);
@@ -648,12 +642,17 @@ void hdoipd_event(uint32_t event)
             hdoipd_clr_rsc(RSC_EAO);
         break;
         case E_ADV7441A_HDCP:
+            report(INFO "\n ******* Incomming stream is encrypted!! ****** ");
+            hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
         break;
         case E_ADV7441A_NO_HDCP:
+            report(INFO "\n ******* Incomming stream is not encrypted!! ****** ");
+      // TODO: once, if encryption is enable, is remains enabled -> disabling causes error (decoder crashes)
+      //      hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
         break;
         case E_HDCP_STREAMING_ERROR:   // restart VTB if Kernel detects HDCP streaming error
         	report(INFO "*********** HDCP streaming error ***********");
-            if (hdoipd_state(HOID_VTB|HOID_VRB)) {
+            if ((hdoipd_state(HOID_VTB)) && (hdoipd_rsc(RSC_VIDEO_IN)) || (hdoipd_state(HOID_VRB)) && (hdoipd_rsc(RSC_VIDEO_SINK))) {
                 hdoipd_force_ready();
                 report(INFO "HDCP ERROR, restarting system");
                 hdoipd_start();

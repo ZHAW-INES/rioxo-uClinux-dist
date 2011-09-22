@@ -2,6 +2,7 @@
 #include "adv212_str.h"
 #include "vid_const.h"
 #include "adv7441a_drv.h"
+#include "hoi_msg.h"
 
 /** Sampling conversion
  */
@@ -125,7 +126,7 @@ int vio_drv_init(t_vio* handle, void* p_vio, void* p_adv)
     handle->p_vio = p_vio;
     handle->p_adv = p_adv;
     
-    vio_drv_reset(handle);
+    vio_drv_reset(handle, BDT_ID_HDMI_BOARD);
     
     VIO_REPORT_BASE(handle);
 
@@ -169,13 +170,26 @@ int vio_drv_setup_osd(t_vio* handle, t_osd_font* font)
  * 
  * @param handle vio handle 
  */
-int vio_drv_reset(t_vio* handle)
+int vio_drv_reset(t_vio* handle, uint32_t device)
 {
 	handle->config 		= 0;
 	handle->active		= false;
-    handle->format_in   = vio_format(CS_RGB, SM_444);
+
+    switch (device) {
+        case (BDT_ID_HDMI_BOARD):
+            handle->format_in   = vio_format(CS_RGB, SM_444);
+            handle->format_out  = vio_format(CS_RGB, SM_444);
+            break;
+        case (BDT_ID_SDI8_BOARD):
+            // SDI can be 444 or 422, correct format should be set before video is starting
+            handle->format_in   = vio_format(CS_YUV, SM_422);
+            handle->format_out  = vio_format(CS_YUV, SM_422);
+            break;
+        default:
+            REPORT(ERROR, "VIO-Driver: could not identify video board");
+    }
+
     handle->format_proc = vio_format(CS_RGB, SM_444);
-    handle->format_out  = vio_format(CS_RGB, SM_444);
     handle->bandwidth   = 1000000;
     memset(&handle->adv, 0, sizeof(t_adv212));
     memset(&handle->osd, 0, sizeof(t_osd));
@@ -844,6 +858,7 @@ void vio_drv_get_advcnt(t_vio* handle, uint32_t* advcnt)
         *advcnt = 0;
     }
 }
+
 
 
 void vio_drv_handler(t_vio* handle, t_queue* event)

@@ -94,7 +94,7 @@ void hoi_drv_reset(t_hoi* handle, uint32_t rv)
     // Stop Video I/O
     if (rv & (DRV_RST_VID_OUT | DRV_RST_VID_IN)) {
         REPORT(INFO, "reset vio");
-        vio_drv_reset(&handle->vio);
+        vio_drv_reset(&handle->vio, bdt_return_device(&handle->bdt));
     }
 
     // Deactivate VRP

@@ -14,6 +14,7 @@
 #include "rscp_string.h"
 #include "box_sys.h"
 #include "hdoipd_fsm.h"
+#include "edid.h"
 
 int alive_check_client_open(t_alive_check *handle, bool enable, int interval, char *dest, uint16_t port, int broadcast, bool load_new_config)
 {
@@ -237,43 +238,70 @@ int alive_check_init_msg_vrb_alive()
 void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
 {
     int  msg_length = 30;
-    char hello_msg[msg_length];    
+    int  edid_length = 256;
+    char hello_msg[msg_length+(edid_length*2)];    
     char client_ip[30];
+    char edid_string[edid_length*2];
+    char buff[2];
+    uint8_t edid_table[edid_length];
+    int i;
+    t_rscp_edid edid;
 
     if reg_test("mode-start", "vrb") {
         if (hdoipd.alive_check.init_done) {
-            memset(hello_msg, 0, msg_length);
-            if (reg_test("system-dhcp", "true")) {
-                sprintf(hello_msg, "%s/%s/%s","HELLO", "VRB", reg_get("system-hostname"));
-            } else {
-                sprintf(hello_msg, "%s/%s/%s","HELLO", "VRB", reg_get("system-ip"));
+            memset(hello_msg, 0, (msg_length+(edid_length*2)));
+            memset(edid_string, 0, (edid_length*2));
+
+            //read edid and convert into string
+            hoi_drv_rdedid(edid.edid);
+            for (i=0; i<edid_length; i++) {
+                sprintf(buff, "%02x", edid.edid[i]);
+                strcat(edid_string, buff);
             }
+        
+            if (reg_test("system-dhcp", "true")) {
+                sprintf(hello_msg, "%s/%s/%s/","HELLO", "VRB", reg_get("system-hostname"));
+            } else {
+                sprintf(hello_msg, "%s/%s/%s/","HELLO", "VRB", reg_get("system-ip"));
+            }
+
+            strcat(hello_msg, edid_string);
+
             alive_check_client_handler(handle, hello_msg);
         }
     }
 
     if reg_test("mode-start", "vtb") {
-    	memset(hello_msg, 0, msg_length);
-        if (!alive_check_server_handler(handle, hello_msg, msg_length)) {
-            if (!alive_check_test_msg_vrb_alive(hello_msg, client_ip)) {
+    	memset(hello_msg, 0, (msg_length+(edid_length*2)));
+        if (!alive_check_server_handler(handle, hello_msg, (msg_length+(edid_length*2)))) {
+            if (!alive_check_test_msg_vrb_alive(hello_msg, client_ip, edid_table)) {
                 // response only when not already unicast is streaming
                 if ((!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) || get_multicast_enable()) {
-                    alive_check_response_vrb_alive(client_ip);
+                    hoi_drv_wredid((t_edid *)edid_table);
+                    if (hdoipd_rsc(RSC_VIDEO_IN)) {
+                        alive_check_response_vrb_alive(client_ip);
+                    }
                 }
             }
         }
     }
 }
 
-int alive_check_test_msg_vrb_alive(char *hello_msg, char *client_ip)
+int alive_check_test_msg_vrb_alive(char *hello_msg, char *client_ip, uint8_t *edid)
 {
+    int i;
     char type[30];
     char msg[30]; 
+    char buff[2];
     
     strcpy(msg, ((char*) str_next_token(&hello_msg, "/")));
     strcpy(type, ((char*) str_next_token(&hello_msg, "/")));
+    strcpy(client_ip, ((char*) str_next_token(&hello_msg, "/")));
 
-    strcpy(client_ip, hello_msg);
+    for (i=0; i<256; i++) {
+        strncpy(buff, (hello_msg+(i*2)), 2);
+        edid[i] = return_next_byte(buff);
+    }
 
     if (!strcmp(msg, "HELLO")) {
         if (!strcmp(type, "VRB")) {
@@ -316,4 +344,25 @@ void alive_check_start_vrb_alive()
 void alive_check_stop_vrb_alive()
 {
     alive_check_client_update(&hdoipd.alive_check, false, 0, 0, 0, 0, false);
+}
+
+uint8_t return_next_byte(char* s)
+{
+    uint8_t r = 0;
+
+    if ((s[0] >= '0') && (s[0] <= '9')) 
+        r = r + (s[0] - '0');
+    else if ((s[0] >= 'a') && (s[0] <= 'f'))
+        r = r + (s[0] - 'a' + 10);
+    else if ((s[0] >= 'A') && (s[0] <= 'F'))
+        r = r + (s[0] - 'A' + 10);
+    r = r << 4;
+
+    if ((s[1] >= '0') && (s[1] <= '9'))
+        r = r + (s[1] - '0');
+    else if ((s[1] >= 'a') && (s[1] <= 'f'))
+        r = r + (s[1] - 'a' + 10);
+    else if ((s[1] >= 'A') && (s[1] <= 'F'))
+        r = r + (s[1] - 'A' + 10);
+    return r;
 }

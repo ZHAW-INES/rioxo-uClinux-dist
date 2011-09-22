@@ -47,7 +47,9 @@ int vso_drv_stop(t_vso* handle)
     PTR(handle->p_vso);
 
 	vso_disable(handle->p_vso);
-  	vso_drv_clear_reordering(handle);	
+  	vso_drv_clear_reordering(handle);
+
+    while(vso_get_status(handle->p_vso, VSO_ST_IDLE) == 0);
     handle->status = handle->status & ~VSO_DRV_STATUS_ACTIV;
 	return ERR_VSO_SUCCESS;
 }
@@ -96,7 +98,6 @@ int vso_drv_set_buf(t_vso* handle, void* start_ptr, size_t size)
     t_rbf_dsc dsc;
 
     PTR(handle);    PTR(handle->p_vso);    PTR(start_ptr);
-
     rbf_dsc(&dsc, start_ptr, size);
     vso_set_dsc(handle->p_vso, &dsc);
 

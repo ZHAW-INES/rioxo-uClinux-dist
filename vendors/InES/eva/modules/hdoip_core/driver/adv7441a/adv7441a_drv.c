@@ -14,11 +14,9 @@ static int adv7441a_drv_aud_pll_reset(t_adv7441a* handle)
 	return ERR_ADV7441A_SUCCESS;
 }
 
-
 int adv7441a_drv_dumb_reg(t_adv7441a* handle)
 {
     int i;
-
     printk("\n\nkernel time;register map;map addr;offset;value\n");
     for(i=0; i<0xFF; i++) {
         printk(";User map;0x%02x;0x%02x;0x%02x\n",ADV7441A_I2C_USR_MAP,i,adv7441a_usr_map_read(handle, i));
@@ -63,7 +61,6 @@ int adv7441a_sw_reset(t_adv7441a* handle)
 int adv7441a_on(t_adv7441a* handle) 
 {
 	int tmp;	
-
 	if((handle->status & ADV7441A_STATUS_ACTIVE) == 0) {
 		tmp = adv7441a_usr_map_read(handle, ADV7441A_REG_OUTPUT_CONTROL);
 		adv7441a_usr_map_write(handle, ADV7441A_REG_OUTPUT_CONTROL, tmp & ~(ADV7441A_BIT_TOD)); /* output drivers active */
@@ -83,7 +80,6 @@ int adv7441a_on(t_adv7441a* handle)
 int adv7441a_off(t_adv7441a* handle) 
 {
 	int tmp;
-
 	if((handle->status & ADV7441A_STATUS_ACTIVE) != 0) {
 		tmp = adv7441a_usr_map_read(handle, ADV7441A_REG_OUTPUT_CONTROL);
 		adv7441a_usr_map_write(handle, ADV7441A_REG_OUTPUT_CONTROL, tmp | ADV7441A_BIT_TOD); /* output drivers tri-stated */
@@ -103,7 +99,6 @@ int adv7441a_off(t_adv7441a* handle)
 int adv7441a_audio_mute(t_adv7441a* handle) 
 {
 	int tmp;
-
 	if(handle->aud_st.mute != 1) {
 		tmp = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_1DH);
 		adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, tmp | ADV7441A_BIT_MUTE_AUDIO);	
@@ -120,7 +115,6 @@ int adv7441a_audio_mute(t_adv7441a* handle)
 int adv7441a_audio_unmute(t_adv7441a* handle) 
 {
 	int tmp;
-
 	if(handle->aud_st.mute != 0) {	
 		tmp = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_1DH);
 		adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_1DH, tmp & ~ADV7441A_BIT_MUTE_AUDIO);	
@@ -132,7 +126,6 @@ int adv7441a_audio_unmute(t_adv7441a* handle)
 int adv7441a_enable_portA(t_adv7441a* handle)
 {
     uint8_t tmp;
-
     tmp = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_01H);
     adv7441a_ksv_map_write(handle, ADV7441A_REG_CTRL_BITS, ADV7441A_BIT_EDID_A_ENABLE); // EDID enabled
     adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_01H, tmp & ~(ADV7441A_BIT_CLOCK_TERM_PORT_A));
@@ -145,7 +138,6 @@ int adv7441a_enable_portA(t_adv7441a* handle)
 int adv7441a_disable_portA(t_adv7441a* handle)
 {
     uint8_t tmp;
-
     vio_drv_set_hpd((handle->p_vio), false);
 
     tmp = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_01H);
@@ -164,7 +156,6 @@ int adv7441a_disable_portA(t_adv7441a* handle)
 int adv7441a_set_edid(t_adv7441a* handle, char* edid)
 {
 	int i;
-
 	adv7441a_disable_portA(handle);
 
 	for(i=0 ; i<0xFF ; i++) {	
@@ -393,7 +384,7 @@ int adv7441a_set_tmds_equa(t_adv7441a* handle)
  */
 //static
 int adv7441a_get_audio_timing(t_adv7441a* handle)
-{ 
+{
 	uint8_t tmp;
 	uint8_t tmp_bit_width, tmp_mute, tmp_channel_cnt;
 	uint32_t tmp_fs;
@@ -872,8 +863,8 @@ int adv7441a_irq2_handler(t_adv7441a* handle, t_queue* event_queue)
  * @param fs     correct sampling rate
  * @return error code
  */
-int adv7441a_audio_fs_change(t_adv7441a* handle, uint32_t fs, uint32_t ch_cnt) {
-
+int adv7441a_audio_fs_change(t_adv7441a* handle, uint32_t fs, uint32_t ch_cnt)
+{
     if((adv7441a_get_audio_timing(handle) == ERR_ADV7441A_SUCCESS) || ((handle->status & ADV7441A_STATUS_AUDIO) == 0)) {
         handle->aud_st.fs = fs;
         handle->aud_st.channel_cnt = ch_cnt;

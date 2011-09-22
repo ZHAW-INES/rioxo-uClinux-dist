@@ -43,10 +43,12 @@ int  alive_check_server_handler(t_alive_check *handle, char *hello_msg, int msg_
 int  alive_check_server_update(t_alive_check *handle, bool enable, uint16_t port, bool load_new_config);
 
 void alive_check_handle_msg_vrb_alive(t_alive_check *handle);
-int  alive_check_test_msg_vrb_alive(char *hello_msg, char *client_ip);
+int  alive_check_test_msg_vrb_alive(char *hello_msg, char *client_ip, uint8_t *edid);
 int  alive_check_response_vrb_alive(char *client_ip);
 int  alive_check_init_msg_vrb_alive();
 void alive_check_start_vrb_alive();
 void alive_check_stop_vrb_alive();
+
+uint8_t return_next_byte(char* s);
 
 #endif /* ALIVE_CHECK_H_ */
