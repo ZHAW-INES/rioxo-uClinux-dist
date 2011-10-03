@@ -94,6 +94,7 @@ label = {
     p_fw_software_tag = "Tag";
     p_fw_upload = "Upload new Firmware";
     p_fw_act_firmware = "Current Firmware version";
+    p_fw_hw_ver = "Hardware version";
 
     -- Page ethernet
     p_eth_vrb = "Receiver (Monitor)";

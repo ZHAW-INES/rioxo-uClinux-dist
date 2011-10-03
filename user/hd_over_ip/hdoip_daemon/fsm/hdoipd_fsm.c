@@ -500,6 +500,12 @@ void hdoipd_fsm_vrb(uint32_t event)
 void hdoipd_fsm_vtb(uint32_t event)
 {
     switch (event) {
+        case E_GS2971_VIDEO_ON:
+            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
+        break;
+        case E_GS2971_VIDEO_OFF:
+            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
+        break;
         case E_ADV7441A_NC:
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
             rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_OFF);
@@ -659,10 +665,22 @@ void hdoipd_event(uint32_t event)
             }
         break;
         case E_GS2971_VIDEO_ON:
-            report(INFO "SDI Input on");
+            hdoipd_set_rsc(RSC_VIDEO_IN);
+            hdoipd_set_rsc(RSC_VIDEO_IN_SDI);
+            hdoipd_set_rsc(RSC_AUDIO0_IN);
+            hoi_drv_set_led_status(SDI_IN_CONNECTED_NO_AUDIO);
         break;
         case E_GS2971_VIDEO_OFF:
-            report(INFO "SDI Input off");
+            hdoipd_clr_rsc(RSC_VIDEO_IN);
+            hdoipd_clr_rsc(RSC_VIDEO_IN_SDI);
+            hdoipd_clr_rsc(RSC_AUDIO0_IN);
+            hoi_drv_set_led_status(SDI_IN_DISCONNECTED);
+        break;
+        case E_GS2971_LOOP_ON:
+            hoi_drv_set_led_status(SDI_LOOP_ON_NO_AUDIO);
+        break;
+        case E_GS2971_LOOP_OFF:
+            hoi_drv_set_led_status(SDI_LOOP_OFF);
         break;
         // ...
         case E_VSI_FIFO2_FULL:

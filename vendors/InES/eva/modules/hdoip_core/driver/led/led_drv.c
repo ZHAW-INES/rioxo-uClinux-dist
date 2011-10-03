@@ -340,6 +340,24 @@ int led_drv_set_status(t_led* handle, uint32_t instruction)
                                                 led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_OFF);
                                                 break;
 
+
+
+        case SDI_IN_CONNECTED_NO_AUDIO      :   led_drv_control_set(handle, LED_SDI_IN_RED,      LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_FLASHING_3S);
+                                                break;
+
+        case SDI_IN_DISCONNECTED            :   led_drv_control_set(handle, LED_SDI_IN_RED,      LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_OFF);
+                                                break;
+
+        case SDI_LOOP_ON_NO_AUDIO           :   led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_FLASHING_3S);
+                                                break;
+
+        case SDI_LOOP_OFF                   :   led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_OFF);
+                                                break;
+
         default                             :   break;
     }
 }

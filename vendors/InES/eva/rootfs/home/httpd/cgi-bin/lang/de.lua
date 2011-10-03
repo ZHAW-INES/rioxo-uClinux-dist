@@ -93,6 +93,7 @@ label = {
     p_fw_software_tag = "Bezeichnung";
     p_fw_upload = "Neue Firmware raufladen";
     p_fw_act_firmware = "Aktuelle Firmware-Version";
+    p_fw_hw_ver = "Hardware Version";
 
     -- Page ethernet
     p_eth_vrb = "Empf&auml;nger (Monitor)";

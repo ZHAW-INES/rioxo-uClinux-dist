@@ -16,6 +16,8 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
 {
     handle->p_spi = spi_ptr;
     handle->p_i2c = i2c_ptr;
+    handle->video_status = false;
+    handle->no_phase_info = false;
 
     REPORT(INFO, "+--------------------------------------------------+");
     REPORT(INFO, "| GS2971-Driver: Initialize SDI-RX                 |");
@@ -39,8 +41,8 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     // enable extracting audio data
     set_io_exp_rx_pin(handle->p_i2c, RX_AUDIO_EN);
 
-    // reclock output signal to loopback
-    set_io_exp_rx_pin(handle->p_i2c, RX_RC_BYP);
+    // do not reclock output signal to loopback
+    clr_io_exp_rx_pin(handle->p_i2c, RX_RC_BYP);
 
     // clear reset pin
     bdt_drv_clear_reset_0(video_mux_ptr);
@@ -75,8 +77,10 @@ void gs2971_hd_3g_audio_handler(t_gs2971 *handle)
 {
     // TODO: use interrupt for no_phasea_data
     bool no_phase_info, m;
+    uint16_t aud_det;
 
     no_phase_info = (bool) (spi_read_reg_16(handle->p_spi, GS2971_B_CFG_AUD_3) & B_CFG_AUD_3_NO_PHASEA_DATA);
+    aud_det = spi_read_reg_16(handle->p_spi, GS2971_B_AUD_DET1);
 
     if (handle->no_phase_info != no_phase_info){
         if (no_phase_info) {
@@ -96,10 +100,9 @@ void gs2971_hd_3g_audio_handler(t_gs2971 *handle)
 }
 
 void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
-{/*
+{
     bool pll_locked, smpte, format_err, video_status;
     uint16_t video_format = (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_RATE_SEL_READBACK_MASK) >> RASTER_STRUC_4_RATE_SEL_READBACK_SHIFT;
-    int format_code;
 
     pll_locked = (bool) read_io_exp_rx_pin(handle->p_i2c, RX_STAT_3);
     smpte = (bool) read_io_exp_rx_pin(handle->p_i2c, RX_SMPTE_BYPASS);
@@ -110,41 +113,23 @@ void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
     if (video_status != handle->video_status) {
         if (video_status) {
             queue_put(event_queue, E_GS2971_VIDEO_ON);
+            // enable loopback
+            gs2971_driver_configure_loopback(handle, LOOP_ON);
+            queue_put(event_queue, E_GS2971_LOOP_ON);
         } else {        
             queue_put(event_queue, E_GS2971_VIDEO_OFF);
+            // disable loopback
+            gs2971_driver_configure_loopback(handle, LOOP_OFF);
+            queue_put(event_queue, E_GS2971_LOOP_OFF);
         }
     }
-
-
-//------- DEBUG STUFF ------------------
-
-    REPORT(INFO, "\n---------- BEGIN DEBUG ----------\n");
-    if (pll_locked) {
-        REPORT(INFO, "Input reclocker PLL is locked");
-    }
-
-    if (smpte) {
-        REPORT(INFO, "SMPTE Input signal detected");
-    }
-
-    if (format_err) {
-        REPORT(INFO, "EIA/CEA 861 Format error");
-    }
-
-
-    format_code = (spi_read_reg_16(handle->p_spi, GS2971_DATA_FORMAT_DS1) & DATA_FORMAT_DS1_VD_STD_MASK) >> DATA_FORMAT_DS1_VD_STD_SHIFT;
-    gs2971_report_incoming_video(handle, format_code);
-    gs2971_get_video_timing(handle);
-//-----------------------
-
-
 
     if ((video_format == RATE_SEL_READBACK_HD) || (video_format == RATE_SEL_READBACK_3G)) {
         gs2971_hd_3g_audio_handler(handle);
     }
 
     handle->video_status = video_status;
-*/
+
 }
 
 void gs2971_driver_set_slew_rate(t_gs2971 *handle, int data_rate)
@@ -161,7 +146,22 @@ void gs2971_driver_set_slew_rate(t_gs2971 *handle, int data_rate)
 
 void gs2971_driver_configure_loopback(t_gs2971 *handle, int enable)
 {
+    int data_rate;
+    uint16_t video_format;
     if (enable == LOOP_ON) {
+        video_format = (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_RATE_SEL_READBACK_MASK) >> RASTER_STRUC_4_RATE_SEL_READBACK_SHIFT;
+        switch (video_format) {
+            case RATE_SEL_READBACK_SD_1:    data_rate = 270;
+                                            break;
+            case RATE_SEL_READBACK_SD_2:    data_rate = 270;
+                                            break;
+            case RATE_SEL_READBACK_HD:      data_rate = 1485;
+                                            break;
+            case RATE_SEL_READBACK_3G:      data_rate = 2970;
+                                            break;
+            default:                        data_rate = 0;
+        }
+        gs2971_driver_set_slew_rate(handle, data_rate);
         set_io_exp_rx_pin(handle->p_i2c, RX_SDO_EN);
     } else {
         clr_io_exp_rx_pin(handle->p_i2c, RX_SDO_EN);
@@ -179,7 +179,7 @@ void gs2971_report_incoming_video(t_gs2971 *handle, int format_code)
     }
 }
 
-void gs2971_get_video_timing(t_gs2971 *handle)
+void gs2971_get_video_timing_info(t_gs2971 *handle)
 {
     uint32_t width, total_width, height, total_height, interlaced, rate_sel;
 
@@ -194,4 +194,89 @@ void gs2971_get_video_timing(t_gs2971 *handle)
         REPORT(INFO, "resolution(%d/%d)x(%d/%d) \ninterlaced: %x \nrate_sel: %x", width, total_width, height, total_height, interlaced, rate_sel);
 
     }
+}
+
+void gs2971_debug(t_gs2971 *handle)
+{
+    int format_code;
+
+    format_code = (spi_read_reg_16(handle->p_spi, GS2971_DATA_FORMAT_DS1) & DATA_FORMAT_DS1_VD_STD_MASK) >> DATA_FORMAT_DS1_VD_STD_SHIFT;
+    gs2971_report_incoming_video(handle, format_code);
+    gs2971_get_video_timing_info(handle);
+}
+
+int gs2971_get_video_timing(t_gs2971 *handle)
+{
+    int i, height, total_height, width, total_width, interlaced;
+
+    interlaced = (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_INT_PROG) >> RASTER_STRUC_4_INT_PROG_SHIFT;  // 1 = interlaced timing detected
+
+    handle->vid_st.interlaced = interlaced;  // 1 = interlaced timing detected
+    handle->vid_st.vsync_pol  = 1;  // 1 = high active
+    handle->vid_st.hsync_pol  = 1;  // 1 = high active
+    handle->vid_st.field_pol  = 0;  // 1 = high is odd field
+
+    // timing is only needed when interlaced
+    if ((interlaced) == 0) {
+        return 1;
+    }
+
+    // get timing
+    width =         spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_1) & RASTER_STRUC_1_WORDS_PER_AVTLINE_MASK;
+    total_width =   spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_2) & RASTER_STRUC_2_WORDS_PER_LINE_MASK;
+    height =        spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_ACTLINE_PER_FIELD_MASK;
+    total_height =  spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_3) & RASTER_STRUC_3_LINES_PER_FRAME_MASK;
+
+    // search timing in table
+    for (i=0;i<INTERLACE_TIMING_TABLE_LENGTH;i++) {
+        if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_WIDTH]) == width) {
+            if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_TOTAL_WIDTH]) == total_width) {
+                if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_HEIGHT]) == height) {
+                    if ((((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_TOTAL_HEIGHT]) + (sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_TOTAL_HEIGHT]))/2) == total_height) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // write found timing in registers
+    // Horizontal
+    handle->vid_st.h_total_line_width      = sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_TOTAL_WIDTH];
+    handle->vid_st.h_line_width            = sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_WIDTH];
+    handle->vid_st.h_front_porch_width     = sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_FRONT];
+    handle->vid_st.h_sync_width            = sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_PULSE];
+    handle->vid_st.h_back_porch_width      = sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_BACK];
+
+    // Vertical Field 0
+    handle->vid_st.f1_total_height         = sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_TOTAL_HEIGHT];
+    handle->vid_st.f1_height               = sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_HEIGHT];
+    handle->vid_st.f1_front_porch_width    = sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_FRONT];
+    handle->vid_st.f1_vs_pulse_width       = sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_PULSE];
+    handle->vid_st.f1_back_porch_width     = sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_BACK];
+
+    // Vertical Field 1
+    handle->vid_st.f0_total_height         = sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_TOTAL_HEIGHT];
+    handle->vid_st.f0_height               = sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_HEIGHT];
+    handle->vid_st.f0_front_porch_width    = sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_FRONT];
+    handle->vid_st.f0_vs_pulse_width       = sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_PULSE];
+    handle->vid_st.f0_back_porch_width     = sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_BACK];
+
+    return 1;
+}
+
+int gs2971_get_audio_config(t_gs2971 *handle)
+{
+    handle->aud_st.fs = 48000;
+    handle->aud_st.channel_cnt = 8;
+    handle->aud_st.bit_width = 24;
+    handle->aud_st.mute= 0;
+
+    REPORT(INFO, "[SDI IN] audio sampling rate has changed\n");
+    REPORT(INFO, "[SDI IN] Audio fs = %d Hz", handle->aud_st.fs);
+    REPORT(INFO, "[SDI IN] Audio width = %d Bit", handle->aud_st.bit_width);
+    REPORT(INFO, "[SDI IN] Audio count = %d", handle->aud_st.channel_cnt);
+    REPORT(INFO, "[SDI IN] Audio mute = %d\n", handle->aud_st.mute);
+
+    return 1;
 }

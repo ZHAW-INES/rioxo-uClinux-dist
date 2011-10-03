@@ -2,6 +2,7 @@
 #include "adv212_str.h"
 #include "vid_const.h"
 #include "adv7441a_drv.h"
+#include "gs2971_drv.h"
 #include "hoi_msg.h"
 
 /** Sampling conversion
@@ -938,7 +939,29 @@ void vio_copy_adv7441_timing(t_video_timing* timing, void* handle)
     timing->vpolarity    = handle_adv->vid_st.vsync_pol;
     timing->hpolarity    = handle_adv->vid_st.hsync_pol;
     timing->fpolarity    = handle_adv->vid_st.field_pol;
+} 
 
+
+void vio_copy_gs2971_timing(t_video_timing* timing, void* handle)
+{
+    t_gs2971* handle_gs = (t_gs2971*) handle;
+
+    timing->width        = handle_gs->vid_st.h_line_width;
+    timing->height       = handle_gs->vid_st.f0_height;
+    timing->height_1     = handle_gs->vid_st.f1_height;
+    timing->hfront       = handle_gs->vid_st.h_front_porch_width;
+    timing->hpulse       = handle_gs->vid_st.h_sync_width;
+    timing->hback        = handle_gs->vid_st.h_back_porch_width;
+    timing->vfront       = handle_gs->vid_st.f0_front_porch_width;
+    timing->vpulse       = handle_gs->vid_st.f0_vs_pulse_width;
+    timing->vback        = handle_gs->vid_st.f0_back_porch_width;
+    timing->vfront_1     = handle_gs->vid_st.f1_front_porch_width;
+    timing->vpulse_1     = handle_gs->vid_st.f1_vs_pulse_width;
+    timing->vback_1      = handle_gs->vid_st.f1_back_porch_width;
+    timing->interlaced   = handle_gs->vid_st.interlaced;
+    timing->vpolarity    = handle_gs->vid_st.vsync_pol;
+    timing->hpolarity    = handle_gs->vid_st.hsync_pol;
+    timing->fpolarity    = handle_gs->vid_st.field_pol;
 } 
 
 
@@ -961,9 +984,9 @@ void vio_config_tg(t_vio* handle, int config)
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_HSYNC);
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_AVID);
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_TRIG);
-    
-            if(handle->timing.interlaced == 0) {               
-                // override timing with measured timing      
+
+            if(handle->timing.interlaced == 0) {
+                // override timing with measured timing
                 vio_get_timing(handle->p_vio, &handle->timing);
                 // use external timing
                 vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_FIELD);

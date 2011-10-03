@@ -148,6 +148,7 @@
 #define RASTER_STRUC_4_ACTLINE_PER_FIELD_MASK   (0x07FF)
 #define RASTER_STRUC_4_ACTLINE_PER_FIELD_SHIFT  (0)
 #define RASTER_STRUC_4_INT_PROG                 (0x0800)
+#define RASTER_STRUC_4_INT_PROG_SHIFT           (11)
 #define RASTER_STRUC_4_STD_LOCK                 (0x1000)
 #define RASTER_STRUC_4_M                        (0x2000)
 #define RASTER_STRUC_4_RATE_SEL_READBACK_MASK   (0xC000)
@@ -414,6 +415,10 @@
 //-------------------------------------------------------
 #define GS2971_B_AUD_DET1                       (0x202)
 //-------------------------------------------------------
+#define B_AUD_DET1_ADPG1_DET                    (0x002)
+#define B_AUD_DET1_ADPG2_DET                    (0x004)
+#define B_AUD_DET1_ADPG3_DET                    (0x008)
+#define B_AUD_DET1_ADPG4_DET                    (0x010)
 
 //-------------------------------------------------------
 #define GS2971_B_AUD_DET2                       (0x203)

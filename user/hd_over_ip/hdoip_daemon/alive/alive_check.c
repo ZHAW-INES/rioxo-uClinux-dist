@@ -246,6 +246,7 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
     uint8_t edid_table[edid_length];
     int i;
     t_rscp_edid edid;
+    uint32_t dev_id;
 
     if reg_test("mode-start", "vrb") {
         if (hdoipd.alive_check.init_done) {
@@ -277,7 +278,10 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
             if (!alive_check_test_msg_vrb_alive(hello_msg, client_ip, edid_table)) {
                 // response only when not already unicast is streaming
                 if ((!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) || get_multicast_enable()) {
-                    hoi_drv_wredid((t_edid *)edid_table);
+                    hoi_drv_get_device_id(&dev_id);
+                    if (dev_id == BDT_ID_HDMI_BOARD) {
+                        hoi_drv_wredid((t_edid *)edid_table);
+                    }
                     if (hdoipd_rsc(RSC_VIDEO_IN)) {
                         alive_check_response_vrb_alive(client_ip);
                     }

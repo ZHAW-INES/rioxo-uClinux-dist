@@ -3,8 +3,9 @@ module (..., package.seeall)
 require("hdoip.html")
 require("hdoip.pipe")
 
-local IMAGE_HDR_SIZE = 28
+local IMAGE_HDR_SIZE = 32
 local IMAGE_HDR_ID = "INES"
+local HW_VERSION_TAG = 1
 
 function rebooting(t)
     hdoip.html.Header(t, label.page_name .. "Rebooting", script_path)
@@ -47,21 +48,21 @@ function show(t)
                     t.err = t.err .. "This file is not a firmware image<br>\n"
                     os.execute("/bin/busybox rm "..firmware_image)
                 else
-                    if(string.byte(hdr, 5) == 20) then
+                    if(string.byte(hdr, 5) == 24) then
                         loadtime = string.byte(hdr, 21)
                         loadtime = loadtime + string.byte(hdr, 22) * 256
                         restarttime = string.byte(hdr, 25)
-                        rebooting_load_bar(t, loadtime, restarttime)
-                        hdoip.pipe.remote_update(firmware_image)
-                        return
+                        hw_version = string.byte(hdr, 29)
+                        if (hw_version == HW_VERSION_TAG) then
+                            rebooting_load_bar(t, loadtime, restarttime)
+                            hdoip.pipe.remote_update(firmware_image)
+                            return
+                        else
+                            t.err = t.err .. "This file is not valid for this hardware version<br>\n"
+                        end
+                    else
+                        t.err = t.err .. "This firmware image is too old<br>\n"
                     end
-
-                    if(string.byte(hdr, 5) == 12) then
-                        rebooting(t)
-                        hdoip.pipe.remote_update(firmware_image)
-                        return
-                    end
-                    t.err = t.err .. "This file is not a valid firmware image<br>\n"
                 end
             end
         else
@@ -86,7 +87,9 @@ function show(t)
         hdoip.html.Text(t.fpga_date_str.." (SVN : "..t.fpga_svn..")");               hdoip.html.TableInsElement(1)
         hdoip.html.Text(label.p_fw_sopc_ver);                                        hdoip.html.TableInsElement(1)
         hdoip.html.Text(t.sopc_date_str);                                            hdoip.html.TableInsElement(1)
-        hdoip.html.Text(label.p_fw_software_ver);                                    hdoip.html.TableInsElement(1)
+        hdoip.html.Text(label.p_fw_hw_ver);                                          hdoip.html.TableInsElement(1)
+        hdoip.html.Text(HW_VERSION_TAG);                                             hdoip.html.TableInsElement(1)
+        hdoip.html.Text(label.p_fw_software_ver);                                    hdoip.html.TableInsElement(1)        
         hdoip.html.Text(t.sw_version_str);                                           hdoip.html.TableInsElement(1)
         hdoip.html.Text(label.p_fw_software_tag);                                    hdoip.html.TableInsElement(1)
         hdoip.html.Text(t.sw_tag);                                                   hdoip.html.TableInsElement(1)

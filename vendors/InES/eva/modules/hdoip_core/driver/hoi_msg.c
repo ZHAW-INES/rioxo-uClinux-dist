@@ -10,6 +10,7 @@
 
 #include "adv7441a_drv_edid.h" // TODO no edid for init
 #include "adv7441a_drv.h"
+#include "gs2971_drv.h"
 
 // demo workaround:
 #include <linux/types.h>
@@ -24,7 +25,6 @@
 
 #include "wdg_hal.h"
 #include "hdcp_hal.h"
-
 //------------------------------------------------------------------------------
 // Load driver
 
@@ -292,6 +292,10 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
         }
         vio_copy_adv7441_timing(&handle->vio.timing, &handle->adv7441a);
     }
+    if (handle->drivers & DRV_GS2971) {
+        gs2971_get_video_timing(&handle->gs2971);
+        vio_copy_gs2971_timing(&msg->timing, &handle->gs2971);
+    }
 
     // setup vio
     if (msg->compress) {
@@ -531,6 +535,10 @@ int hoi_drv_msg_new_audio(t_hoi* handle, t_hoi_msg_param* msg)
         ch_cnt = asi_drv_get_ch_cnt(&handle->asi);
         adv7441a_audio_fs_change(&handle->adv7441a, msg->value, ch_cnt);
     }
+    if (handle->drivers & DRV_GS2971) {
+        gs2971_get_audio_config(&handle->gs2971);
+    }
+
     return SUCCESS;
 }
 
@@ -644,6 +652,10 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
         }
         vio_copy_adv7441_timing(&msg->timing, &handle->adv7441a);
     }
+    if (handle->drivers & DRV_GS2971) {
+        gs2971_get_video_timing(&handle->gs2971);
+        vio_copy_gs2971_timing(&msg->timing, &handle->gs2971);
+    }
 
     vio_get_input_frequency(handle->p_vio, &msg->timing);
     if (!msg->timing.interlaced) {
@@ -658,6 +670,12 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
         msg->audio_width[0] = handle->adv7441a.aud_st.bit_width;
         msg->audio_cnt[0] = handle->adv7441a.aud_st.channel_cnt;
     }
+    if (handle->drivers & DRV_GS2971) {
+        msg->audio_fs[0] = handle->gs2971.aud_st.fs;
+        msg->audio_width[0] = handle->gs2971.aud_st.bit_width;
+        msg->audio_cnt[0] = handle->gs2971.aud_st.channel_cnt;
+    }
+
     // read audio input timing (from audio board) [ch: 16..31]
     msg->audio_fs[1] = 0;
     msg->audio_width[1] = 0;

@@ -19,6 +19,11 @@ const char* event_str(uint32_t e)
         case E_ADV7441A_NEW_VGA_RES: return "VGA resolution changed";
         case E_ADV7441A_ACTIVITY_ON_SYNC: return "activity on video in sync detected";
 
+        case E_GS2971_VIDEO_ON: return "SDI video input on";
+        case E_GS2971_VIDEO_OFF: return "SDI video input off";
+        case E_GS2971_LOOP_ON: return "SDI loopback on";
+        case E_GS2971_LOOP_OFF: return "SDI loopback off";
+
         case E_ADV9889_CABLE_ON: return "HDMI sink connected";
         case E_ADV9889_CABLE_OFF: return "HDMI sink disconnected";
 

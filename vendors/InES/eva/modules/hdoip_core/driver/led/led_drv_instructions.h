@@ -28,9 +28,14 @@
 #define DVI_OUT_DISCONNECTED_VTB        (0x0000000C)
 #define STREAM_ERROR_HDMI_IN            (0x0000000D)
 #define STREAM_ERROR_HDMI_OUT           (0x00000012)
-
 #define CONFIGURE_VRB                   (0x00000013)
 #define CONFIGURE_VTB                   (0x00000010)
+
+// SDI-Board
+#define SDI_IN_CONNECTED_NO_AUDIO       (0x00000014)
+#define SDI_IN_DISCONNECTED             (0x00000015)
+#define SDI_LOOP_ON_NO_AUDIO            (0x00000016)
+#define SDI_LOOP_OFF                    (0x00000017)
 
 // Mixed
 #define FIRMWARE_START                  (0x00000011)

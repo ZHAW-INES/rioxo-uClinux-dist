@@ -103,7 +103,7 @@ else
     query.web_pass = hdoip.pipe.getParam(hdoip.pipe.REG_WEB_PASS)
 
     if((user ~= query.web_user) or (pass ~= query.web_pass)) then
-        query.page = 20
+        query.page = PAGE_ID_LOGIN
         query.login = false
     else 
         query.login = true
@@ -137,6 +137,7 @@ if(query.login) then
 	    hdoip.html.AddError(query, init_err)
 	end
 end
+
 -----------------------------------------------
 -- Page select
 if(query.page == 0) then

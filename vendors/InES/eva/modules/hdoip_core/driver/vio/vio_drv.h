@@ -107,6 +107,7 @@ int vio_drv_set_sync(t_vio* handle);
 void vio_drv_get_timing(t_vio* handle, t_video_timing* p_vt);
 void vio_drv_get_advcnt(t_vio* handle, uint32_t* advcnt);
 
-void vio_copy_adv7441_timing(t_video_timing* timing, void* handle_adv);
+void vio_copy_adv7441_timing(t_video_timing* timing, void* handle);
+void vio_copy_gs2971_timing(t_video_timing* timing, void* handle);
 void vio_config_tg(t_vio* handle, int config);
 #endif /*VIO_DRV_H_*/

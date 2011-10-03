@@ -30,9 +30,11 @@
 
 /* GS2971 events*/
 #define E_GS2971_ID             (0xA0000000)
-#define E_GS2971_CNT            2
+#define E_GS2971_CNT            4
 #define E_GS2971_VIDEO_ON       (E_GS2971_ID + 0x00000001)
 #define E_GS2971_VIDEO_OFF      (E_GS2971_ID + 0x00000002)
+#define E_GS2971_LOOP_ON        (E_GS2971_ID + 0x00000003)
+#define E_GS2971_LOOP_OFF       (E_GS2971_ID + 0x00000004)
 
 /* VSI events */
 #define E_VSI_ID		        (0x20000000)

@@ -297,24 +297,43 @@ int asi_drv_handler(t_asi* handle, t_queue* event_queue)
     }
     handle->fs = fs;
 
-
     // detect number of channels
     for(i=0;i<32;i++) {
         ch_cnt += ((ch_cnt_tmp >> i) & 0x00000001);
     }
     if ((handle->ch_cnt) != ch_cnt) {
-        handle->audio_event_queue = 1;
+        if (ch_cnt == 0) {
+            // wait 60s after no audio data is available to send a stop event
+            handle->stop_queue = true;
+            handle->stop_counter = 0;
+        } else {
+            if ((handle->ch_cnt_old != ch_cnt) || (handle->stop_queue == false)) {
+                handle->audio_event_queue = 1;
+            }
+            handle->stop_queue = false;
+        }
+        handle->ch_cnt_old = handle->ch_cnt;
     }
     handle->ch_cnt = ch_cnt;
 
+    // 60s timer to stop audio with delay
+    if (handle->stop_queue == true) {
+        if (handle->stop_counter == 20000) {
+            handle->stop_queue = false;
+            handle->audio_event_queue = 1;
+        } else {
+            handle->stop_counter ++;
+        }
+    }
 
-    // To prevent that an audio event appears immediately after another audio event, wait some time before send an event to deamon.
+    // To prevent that an audio event appears immediately after another audio event, wait some time (1s) before send an event to deamon.
     // That occur on hdmi source plug in, than changes fs and ch-count almost at same time.
     if (handle->audio_event_queue != 0) {
         handle->audio_event_queue++;
     }
     if (handle->audio_event_queue == 30) {
         handle->audio_event_queue = 0;
+        handle->stop_queue = false;
         queue_put(event_queue, E_ASI_NEW_FS);
         queue_put(event_queue, E_ADV7441A_NO_AUDIO);        // audio is restarting after this stop
     }

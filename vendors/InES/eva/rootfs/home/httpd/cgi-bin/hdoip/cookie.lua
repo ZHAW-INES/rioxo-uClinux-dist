@@ -41,7 +41,12 @@ function get(name)
     cookies = string.gsub(cookies, "%s*;%s*", ";")
     local pattern = ";" .. name .. "=(.-);"
     local _, __, value = string.find(cookies, pattern)
-    return value and hdoip.html.unescape(value)
+
+    if(value == nil) then
+        return nil
+    end
+
+    return hdoip.html.unescape(value)
 end
 
 function delete (t, name, options)
