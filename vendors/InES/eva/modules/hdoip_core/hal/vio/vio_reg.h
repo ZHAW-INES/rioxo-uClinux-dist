@@ -209,5 +209,6 @@
 
 // VIO_OFF_OSD_CONFIG
 #define VIO_OSD_CFG_ACTIVE          (1)
+#define VIO_OSD_CFG_YUV				(2)
 
 #endif /*VIO_REG_H_*/

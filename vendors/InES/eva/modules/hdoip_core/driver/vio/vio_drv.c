@@ -155,9 +155,9 @@ int vio_drv_halt(t_vio* handle)
  * @param handle vio handle
  * @param font a bitmap font table
  */
-int vio_drv_setup_osd(t_vio* handle, t_osd_font* font)
+int vio_drv_setup_osd(t_vio* handle, t_osd_font* font, uint32_t device)
 {
-	vio_osd_init(handle->p_vio, font);
+	vio_osd_init(handle->p_vio, font, device);
 
 	VIO_REPORT_FONT(font);
 

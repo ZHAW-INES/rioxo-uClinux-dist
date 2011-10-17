@@ -29,13 +29,24 @@ void hdoipd_osd_activate()
 {
     t_video_timing* timing;
     int osd_timeout = reg_get_int("osd-time");
+    int h_pixel, v_pixel, fps;
+
+    if (hdoipd.drivers & DRV_GS2972) {
+        h_pixel = 1280;
+        v_pixel = 720;
+        fps = 60;
+    } else {
+        h_pixel = 640;
+        v_pixel = 480;
+        fps = 60;
+    }
 
     if (!(hdoipd.rsc_state & RSC_OSD)) {
         // if we dont have active video IN or Out -> create own resolution
         // else we use the present video timing
         if (!(hdoipd_rsc(RSC_VIDEO_IN | RSC_VIDEO_OUT))) {
-            report(CHANGE "activate 640x480 debug output screen for osd");
-            if ((timing = hoi_res_timing(640, 480, 60))) {
+            report(CHANGE "activate %dx%d@%d debug output screen for osd", h_pixel, v_pixel, fps);
+            if ((timing = hoi_res_timing(h_pixel, v_pixel, fps))) {
                 hoi_drv_set_timing(timing);
                 hdoipd_set_rsc(RSC_VIDEO_OUT);
             }

@@ -157,7 +157,6 @@ int adv7441a_set_edid(t_adv7441a* handle, char* edid)
 {
 	int i;
 	adv7441a_disable_portA(handle);
-
 	for(i=0 ; i<0xFF ; i++) {	
 		if(i!=0x7F) { // not checksum field
 			adv7441a_edid_map_write(handle, i, edid[i]);

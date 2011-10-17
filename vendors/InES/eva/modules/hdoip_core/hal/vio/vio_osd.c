@@ -1,6 +1,5 @@
 #include "vio_hal.h"
 
-
 inline uint16_t reverse16(uint16_t x)
 {
     x = ((x >> 8) & 0x00ff) | ((x << 8) & 0xff00);
@@ -15,7 +14,7 @@ inline uint16_t reverse16(uint16_t x)
  * @param p pointer to i/o base
  * @param font the font used
  */
-void vio_osd_init(void* p, t_osd_font* font)
+void vio_osd_init(void* p, t_osd_font* font, uint32_t device)
 {
     uint16_t *tab;
 
@@ -30,7 +29,16 @@ void vio_osd_init(void* p, t_osd_font* font)
     // copy <num> 32 Byte table entrys (16x16 Bit)
     memcpy(tab, font->bitmap, font->length * 32);
 
-    HOI_WR32(p, VIO_OFF_OSD_CONFIG, VIO_OSD_CFG_ACTIVE);
+    // HDMI Board output is RGB
+    if (device == 0x00) { // TODO: use constant: BDT_ID_HDMI_BOARD
+        HOI_WR32(p, VIO_OFF_OSD_CONFIG, VIO_OSD_CFG_ACTIVE);
+    }
+
+    // SDI Board output is YUV
+    if (device == 0x01) { // TODO: use constant: BDT_ID_SDI8_BOARD
+        HOI_WR32(p, VIO_OFF_OSD_CONFIG, VIO_OSD_CFG_ACTIVE | VIO_OSD_CFG_YUV);
+    }
+
 }
 
 /** Initialize the OSD resolution

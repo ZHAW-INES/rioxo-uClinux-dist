@@ -25,7 +25,7 @@ const t_color_transform rgb2yuv = FRAC_M3x4(
 	   -0.1484, -0.2891,  0.4375,  0.5000,
 		0.4375, -0.3672, -0.0703,  0.5000
     );
-    
+
 // rgb range after clip y:[0..255] uv:[0..255]
 const t_color_transform yuv2rgb = FRAC_M3x4(
 		1.1563,  0.0   ,  1.6042, -0.8741,

@@ -36,6 +36,11 @@
 #define E_GS2971_LOOP_ON        (E_GS2971_ID + 0x00000003)
 #define E_GS2971_LOOP_OFF       (E_GS2971_ID + 0x00000004)
 
+/* GS2971 events*/
+#define E_GS2972_ID             (0xB0000000)
+#define E_GS2972_CNT            1
+#define E_GS2972_FORMAT_ERROR   (E_GS2972_ID + 0x00000001)
+
 /* VSI events */
 #define E_VSI_ID		        (0x20000000)
 #define E_VSI_CNT		        2

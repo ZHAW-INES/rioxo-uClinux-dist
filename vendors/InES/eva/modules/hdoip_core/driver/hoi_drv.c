@@ -75,7 +75,7 @@ void hoi_drv_init(t_hoi* handle)
     vso_drv_init(&handle->vso, handle->p_vso);
     asi_drv_init(&handle->asi, handle->p_asi);
     aso_drv_init(&handle->aso, handle->p_aso);
-    vio_drv_setup_osd(&handle->vio, (t_osd_font*)&vid_font_8x13);
+    vio_drv_setup_osd(&handle->vio, (t_osd_font*)&vid_font_8x13, bdt_return_device(&handle->bdt));
     vrp_drv_init(&handle->vrp, &handle->vio, handle->p_vrp);
     stream_sync_init(&handle->sync, SIZE_MEANS, SIZE_RISES,
             handle->p_aso, handle->p_vso, handle->p_tmr,

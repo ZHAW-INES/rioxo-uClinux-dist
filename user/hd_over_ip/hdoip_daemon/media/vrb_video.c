@@ -61,6 +61,16 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, vid);
 
+    // do not output HDCP encrypted content on SDI
+    if ((m->hdcp.hdcp_on == 1) && (hdoipd.drivers | DRV_GS2972)) {
+        report(INFO "encrypted video output on SDI is not allowed");
+        osd_permanent(true);
+        osd_printf("encrypted video output on SDI is not allowed\n");
+        rscp_client_set_teardown(client);
+        hdoipd_set_task_start_vrb();
+        return RSCP_REQUEST_ERROR;
+    }
+
     /*start hdcp session key exchange if necessary */
     report("Check if HDCP is necessary and start ske");
     hdoipd.hdcp.enc_state = m->hdcp.hdcp_on;
@@ -68,7 +78,7 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     if ((m->hdcp.hdcp_on == 1) && !(hdoipd.hdcp.ske_executed)){
 		if (rscp_client_hdcp(client) != RSCP_SUCCESS){
 			report(" ? Session key exchange failed");
-			rscp_err_hdcp(rsp);
+			//rscp_err_hdcp(rsp);  DONT CALL THIS AT VRB!!!!!!!!!!!!!!!
 			return RSCP_REQUEST_ERROR;
 		}
     }
@@ -148,6 +158,8 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     struct in_addr a1; a1.s_addr = vrb.remote.address;
     osd_printf("Streaming Video %d x %d from %s\n", m->timing.width, m->timing.height, inet_ntoa(a1));
 
+    hoi_drv_set_led_status(SDI_OUT_NO_AUDIO);
+
     return RSCP_SUCCESS;
 }
 
@@ -184,6 +196,8 @@ int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rsc
             alive_check_start_vrb_alive();
         }
     }
+
+    hoi_drv_set_led_status(SDI_OUT_OFF);
 
     return RSCP_SUCCESS;
 }
@@ -244,6 +258,8 @@ void vrb_video_pause(t_rscp_media *media)
         hdoipd_clr_rsc(RSC_VIDEO_OUT|RSC_OSD|RSC_VIDEO_SYNC);
         hdoipd_set_vtb_state(VTB_VID_IDLE);
     }
+
+    hoi_drv_set_led_status(SDI_OUT_OFF);
 }
 
 int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)

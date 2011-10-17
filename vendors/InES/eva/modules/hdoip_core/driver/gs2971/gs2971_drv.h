@@ -15,11 +15,15 @@
 #define LOOP_ON     0x0001
 #define LOOP_OFF    0x0000
 
+#define RECOGNIZE_INPUT_DELAY   10
+
 typedef struct {
     void                *p_spi;
     void                *p_i2c;
     bool                video_status;
     bool                no_phase_info;
+    uint32_t            delay_queue_input;
+    bool                input_active;
     t_adv7441a_vid_st   vid_st;
     t_adv7441a_aud_st   aud_st;
 } t_gs2971;

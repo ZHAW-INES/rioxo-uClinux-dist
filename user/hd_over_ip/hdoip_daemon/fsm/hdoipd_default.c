@@ -46,7 +46,7 @@ void hdoipd_set_default()
     reg_set("web-auth-en", "false");
     reg_set("web-user", "admin");
     reg_set("web-pass", "admin");
-    reg_set("amx-en", "true");
+    reg_set("amx-en", "false");
     reg_set("amx-hello-ip", "192.168.1.255");
     reg_set("amx-hello-port", "1000");
     reg_set("amx-hello-msg", "HELLO");

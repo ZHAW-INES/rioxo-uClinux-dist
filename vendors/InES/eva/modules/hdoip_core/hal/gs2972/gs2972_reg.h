@@ -33,14 +33,36 @@
 #define ERROR_STAT_R_Y1_EDH_CS_ERR              (0x0020)
 #define ERROR_STAT_R_TRS_PERR                   (0x0040)
 
+//-------------------------------------------------------
+#define GS2972_EDH_FLAG_EXT                     (0x002)
+//-------------------------------------------------------
 
-#define GS2972_EDH_FLAG_EXT                       (0x002)
-#define GS2972_EDH_FLAG_PGM                       (0x003)
-#define GS2972_DATA_FORMAT                        (0x004)
+//-------------------------------------------------------
+#define GS2972_EDH_FLAG_PGM                     (0x003)
+//-------------------------------------------------------
 
+//-------------------------------------------------------
+#define GS2972_DATA_FORMAT                      (0x004)
+//-------------------------------------------------------
+#define DATA_FORMAT_VD_STD_MASK                 (0x03E0)
+#define DATA_FORMAT_VD_STD_SHIFT                (5)
+#define DATA_FORMAT_INT                         (0x0010)
+#define DATA_FORMAT_STD_LOCK                    (0x0004)
+#define DATA_FORMAT_V_LOCK                      (0x0002)
+#define DATA_FORMAT_H_LOCK                      (0x0001)
+
+//-------------------------------------------------------
 #define GS2972_VSD_FORCE                          (0x006)
+//-------------------------------------------------------
+
+//-------------------------------------------------------
 #define GS2972_EDH_STATUS                         (0x007)
+//-------------------------------------------------------
+
+//-------------------------------------------------------
 #define GS2972_FIRST_AVAIL_POSITION               (0x008)
+//-------------------------------------------------------
+
 
 #define GS2972_VIDEO_FORMAT_352_OUT_WORD_1        (0x00A)
 #define GS2972_VIDEO_FORMAT_352_OUT_WORD_2        (0x00B)

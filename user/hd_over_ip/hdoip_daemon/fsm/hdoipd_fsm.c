@@ -250,8 +250,6 @@ void hdoipd_goto_vtb()
                 // set output uses slave timer
                 hoi_drv_timer(DRV_TMR_OUT);
 
-                hoi_drv_set_led_status(CONFIGURE_VTB);
-
                 rscp_listener_add_media(&hdoipd.listener, &vtb_audio);
                 rscp_listener_add_media(&hdoipd.listener, &vtb_video);
                 rscp_listener_add_media(&hdoipd.listener, &box_sys);
@@ -284,8 +282,6 @@ void hdoipd_goto_vrb()
                 rscp_listener_add_media(&hdoipd.listener, &box_sys);
 
                 hdoipd_set_state(HOID_VRB);
-
-                hoi_drv_set_led_status(CONFIGURE_VRB);
                 // register remote for "hello"
                 //box_sys_set_remote(reg_get("remote-uri"));
                 // first thing to try is setup a new connection based on registry
@@ -389,6 +385,15 @@ int hdoipd_start_vrb_cb(t_rscp_media* media, void* d)
 {
     int os = media->state;
     int ret = 0;
+    uint32_t dev_id;
+
+    // detect connected video card
+    hoi_drv_get_device_id(&dev_id);
+
+    // If SDI there is no event if a source is connected
+    if (dev_id == BDT_ID_SDI8_BOARD) {
+        hdoipd_set_rsc(RSC_VIDEO_SINK);
+    }
 
     if (rscp_media_sinit(media)) {
         if(hdoipd_vrb_setup(media, d) == -1) {
@@ -668,7 +673,7 @@ void hdoipd_event(uint32_t event)
             hdoipd_set_rsc(RSC_VIDEO_IN);
             hdoipd_set_rsc(RSC_VIDEO_IN_SDI);
             hdoipd_set_rsc(RSC_AUDIO0_IN);
-            hoi_drv_set_led_status(SDI_IN_CONNECTED_NO_AUDIO);
+            hoi_drv_set_led_status(SDI_IN_CONNECTED_WITH_AUDIO);
         break;
         case E_GS2971_VIDEO_OFF:
             hdoipd_clr_rsc(RSC_VIDEO_IN);
@@ -677,7 +682,7 @@ void hdoipd_event(uint32_t event)
             hoi_drv_set_led_status(SDI_IN_DISCONNECTED);
         break;
         case E_GS2971_LOOP_ON:
-            hoi_drv_set_led_status(SDI_LOOP_ON_NO_AUDIO);
+            hoi_drv_set_led_status(SDI_LOOP_ON_WITH_AUDIO);
         break;
         case E_GS2971_LOOP_OFF:
             hoi_drv_set_led_status(SDI_LOOP_OFF);
@@ -799,6 +804,7 @@ bool hdoipd_init(int drv)
 {
     uint32_t dev_id;
     uint32_t reset_to_default;
+    char *s;
 
     pthread_mutexattr_t attr;
 
@@ -847,6 +853,14 @@ bool hdoipd_init(int drv)
         case BDT_ID_SDI8_BOARD: hdoipd.drivers = DRV_GS2971  | DRV_GS2972;    
                                 break;
         default:                report("Video card detection failed");
+    }
+
+    // activate red LED on used video-board connectors 
+    s = reg_get("mode-start");
+    if (strcmp(s, "vtb") == 0) {
+        hoi_drv_set_led_status(CONFIGURE_VTB);
+    } else if (strcmp(s, "vrb") == 0) {
+        hoi_drv_set_led_status(CONFIGURE_VRB);
     }
 
     hdoipd.auto_stream = reg_test("auto-stream", "true");

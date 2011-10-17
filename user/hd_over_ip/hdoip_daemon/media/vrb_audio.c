@@ -56,6 +56,16 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, aud);
 
+    // do not output HDCP encrypted content on SDI
+    if ((m->hdcp.hdcp_on == 1) && (hdoipd.drivers | DRV_GS2972)) {
+        report(INFO "encrypted audio output on SDI is not allowed");
+        osd_permanent(true);
+        osd_printf("encrypted audio output on SDI is not allowed\n");
+        rscp_client_set_teardown(client);
+        hdoipd_set_task_start_vrb();
+        return RSCP_REQUEST_ERROR;
+    }
+
     /*start hdcp session key exchange if necessary */
     report("Check if HDCP is necessary and start ske");
     hdoipd.hdcp.enc_state = m->hdcp.hdcp_on;
@@ -63,7 +73,7 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     if ((m->hdcp.hdcp_on == 1) && !(hdoipd.hdcp.ske_executed)){
 		if (rscp_client_hdcp(client) != RSCP_SUCCESS){
 			report(" ? Session key exchange failed");
-			rscp_err_hdcp(rsp);
+			//rscp_err_hdcp(rsp);  DONT CALL THIS AT VRB!!!!!!!!!!!!!!!
 			return RSCP_REQUEST_ERROR;
 		}
     }
@@ -128,6 +138,8 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     struct in_addr a1; a1.s_addr = vrb.remote.address;
     osd_printf("Streaming Audio from %s\n", inet_ntoa(a1));
 
+    hoi_drv_set_led_status(SDI_OUT_WITH_AUDIO);
+
     return RSCP_SUCCESS;
 }
 
@@ -156,6 +168,8 @@ int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown UNUSED *m, t_rsc
 
     vrb.alive_ping = 1;
     vrb.timeout = 0;
+
+    hoi_drv_set_led_status(SDI_OUT_OFF);
 
     return RSCP_SUCCESS;
 }
@@ -209,6 +223,8 @@ void vrb_audio_pause(t_rscp_media *media)
         hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
         hdoipd_set_vtb_state(VTB_AUD_IDLE);
     }
+
+    hoi_drv_set_led_status(SDI_OUT_OFF);
 }
 
 

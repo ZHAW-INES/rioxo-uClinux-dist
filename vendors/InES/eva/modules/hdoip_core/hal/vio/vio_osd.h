@@ -15,7 +15,7 @@
 #define vio_osd_get_width(p)		(HOI_RD16(p, VIO_OFF_OSD_SCREEN_WIDTH))
 #define vio_osd_get_height(p)		(HOI_RD16(p, VIO_OFF_OSD_SCREEN_HEIGHT))
 
-void vio_osd_init(void* p, t_osd_font* font);
+void vio_osd_init(void* p, t_osd_font* font, uint32_t device);
 void vio_osd_set_resolution(void* p, uint32_t width, uint32_t height);
 void vio_osd_clear_screen(void* p);
 void vio_osd_move_screen(void* p, int y);

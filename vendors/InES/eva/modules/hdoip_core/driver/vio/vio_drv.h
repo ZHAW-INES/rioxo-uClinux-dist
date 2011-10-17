@@ -78,7 +78,7 @@ static inline void vio_drv_clr_cfg(t_vio* handle, uint32_t cfg)
 void vio_drv_handler(t_vio* handle, t_queue* event);
 void vio_drv_irq_adv212(t_vio* handle, int nr, t_queue* event);
 int vio_drv_init(t_vio* handle, void* p_vio, void* p_adv);
-int vio_drv_setup_osd(t_vio* handle, t_osd_font* font);
+int vio_drv_setup_osd(t_vio* handle, t_osd_font* font, uint32_t device);
 int vio_drv_set_black_output(t_vio* handle);
 int vio_drv_clr_black_output(t_vio* handle);
 int vio_drv_reset(t_vio* handle, uint32_t device);

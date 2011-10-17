@@ -18,6 +18,7 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     handle->p_i2c = i2c_ptr;
     handle->video_status = false;
     handle->no_phase_info = false;
+    handle->delay_queue_input = 0;
 
     REPORT(INFO, "+--------------------------------------------------+");
     REPORT(INFO, "| GS2971-Driver: Initialize SDI-RX                 |");
@@ -59,7 +60,6 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     // set lowest drive strength
     spi_write_reg_16(handle->p_spi, GS2971_IO_DRIVE_STRENGTH, IO_DRIVE_STRENGTH_4_MA);
 
-
     // ------AUDIO-CONFIG------
 
     // output always I2S-audio 24bit (SD)
@@ -70,7 +70,6 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
 
     // unmute audio channels 1-8 (HD/3G)
     spi_write_reg_16(handle->p_spi, GS2971_B_CH_MUTE, B_CH_MUTE_OFF);
-
 }
 
 void gs2971_hd_3g_audio_handler(t_gs2971 *handle)
@@ -112,24 +111,41 @@ void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
 
     if (video_status != handle->video_status) {
         if (video_status) {
-            queue_put(event_queue, E_GS2971_VIDEO_ON);
-            // enable loopback
-            gs2971_driver_configure_loopback(handle, LOOP_ON);
-            queue_put(event_queue, E_GS2971_LOOP_ON);
-        } else {        
-            queue_put(event_queue, E_GS2971_VIDEO_OFF);
-            // disable loopback
-            gs2971_driver_configure_loopback(handle, LOOP_OFF);
-            queue_put(event_queue, E_GS2971_LOOP_OFF);
+            handle->input_active = true;
+            handle->delay_queue_input = 0;
+        } else {
+            handle->input_active = false;
+            handle->delay_queue_input = 0;
         }
     }
 
     if ((video_format == RATE_SEL_READBACK_HD) || (video_format == RATE_SEL_READBACK_3G)) {
         gs2971_hd_3g_audio_handler(handle);
     }
-
     handle->video_status = video_status;
 
+    // prevent start/stop if "input active bit" toggles at higher frequency
+    if (handle->input_active == true) {
+        if (handle->delay_queue_input != RECOGNIZE_INPUT_DELAY) {
+            handle->delay_queue_input++;
+        }
+        if (handle->delay_queue_input == (RECOGNIZE_INPUT_DELAY - 1)) {
+            queue_put(event_queue, E_GS2971_VIDEO_ON);
+            // enable loopback
+            gs2971_driver_configure_loopback(handle, LOOP_ON);
+            queue_put(event_queue, E_GS2971_LOOP_ON);
+        }
+    } else {
+        if (handle->delay_queue_input != RECOGNIZE_INPUT_DELAY) {
+            handle->delay_queue_input++;
+        }
+        if (handle->delay_queue_input == (RECOGNIZE_INPUT_DELAY - 1)) {
+            queue_put(event_queue, E_GS2971_VIDEO_OFF);
+            // disable loopback
+            gs2971_driver_configure_loopback(handle, LOOP_OFF);
+            queue_put(event_queue, E_GS2971_LOOP_OFF);
+        }
+    }
 }
 
 void gs2971_driver_set_slew_rate(t_gs2971 *handle, int data_rate)

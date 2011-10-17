@@ -25,6 +25,7 @@
 
 #include "wdg_hal.h"
 #include "hdcp_hal.h"
+#include "sdi_edid.h"
 //------------------------------------------------------------------------------
 // Load driver
 
@@ -331,6 +332,11 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     // sync...
     vso_drv_stop(&handle->vso);
 
+    // if sdi, set output data rate
+    if (handle->drivers & DRV_GS2972) {
+        gs2972_driver_set_data_rate(&handle->gs2972, msg->timing.pfreq);
+    }
+
     // setup vso (20ms delay, 15ms scomm5 delay, 1ms packet timeout)
     vso_set_vsync_blanking(&handle->vso, &msg->timing);
     vid = vid_duration_in_us(&msg->timing);  
@@ -512,6 +518,11 @@ int hoi_drv_msg_set_timing(t_hoi* handle, t_hoi_msg_image* msg)
 
     vio_drv_debugx(&handle->vio, &msg->timing);
 
+    // if sdi, set output data rate
+    if (handle->drivers & DRV_GS2972) {
+        gs2972_driver_set_data_rate(&handle->gs2972, msg->timing.pfreq);
+    }
+
     return ret;
 }
 
@@ -618,12 +629,16 @@ int hoi_drv_msg_wraudtag(t_hoi* handle, t_hoi_msg_tag* msg)
 
 int hoi_drv_msg_rdedid(t_hoi* handle, t_hoi_msg_edid* msg)
 {
+    uint8_t *edid = msg->edid;
+
     if (handle->drivers & DRV_ADV9889) {
         adv9889_drv_get_edid(&handle->adv9889, msg->edid);
-    } else {
-        REPORT(INFO, "rdedid: no driver loaded");
-        // return NO_DRIVER_LOADED
-    }
+    } 
+
+    if (handle->drivers & DRV_GS2972) {
+        memcpy(edid, sdi_edid, 256);
+    } 
+
     return SUCCESS;
 }
 

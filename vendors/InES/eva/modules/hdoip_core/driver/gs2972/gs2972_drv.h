@@ -19,6 +19,7 @@ typedef struct {
 
 void gs2972_driver_init(t_gs2972 *handle, void *spi_ptr, void *i2c_ptr, void *video_mux_ptr);
 void gs2972_handler(t_gs2972 *handle, t_queue *event_queue);
-void gs2972_driver_set_rate_sel(t_gs2972 *handle, int data_rate);
+void gs2972_driver_set_data_rate(t_gs2972 *handle, uint32_t pfreq);
+void gs2972_debug(t_gs2972 *handle);
 
 #endif /* GS2972_DRV_H_ */
