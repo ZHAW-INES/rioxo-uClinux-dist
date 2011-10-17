@@ -658,8 +658,8 @@ void hdoipd_event(uint32_t event)
         break;
         case E_ADV7441A_NO_HDCP:
             report(INFO "\n ******* Incomming stream is not encrypted!! ****** ");
-      // TODO: once, if encryption is enable, is remains enabled -> disabling causes error (decoder crashes)
-      //      hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
+            // TODO: once, if encryption is enable, is remains enabled -> disabling causes error (decoder crashes)
+            //       hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
         break;
         case E_HDCP_STREAMING_ERROR:   // restart VTB if Kernel detects HDCP streaming error
         	report(INFO "*********** HDCP streaming error ***********");
@@ -673,19 +673,27 @@ void hdoipd_event(uint32_t event)
             hdoipd_set_rsc(RSC_VIDEO_IN);
             hdoipd_set_rsc(RSC_VIDEO_IN_SDI);
             hdoipd_set_rsc(RSC_AUDIO0_IN);
-            hoi_drv_set_led_status(SDI_IN_CONNECTED_WITH_AUDIO);
+            if (hdoipd_state(HOID_VTB)) {
+                hoi_drv_set_led_status(SDI_IN_CONNECTED_WITH_AUDIO);
+            }
         break;
         case E_GS2971_VIDEO_OFF:
             hdoipd_clr_rsc(RSC_VIDEO_IN);
             hdoipd_clr_rsc(RSC_VIDEO_IN_SDI);
             hdoipd_clr_rsc(RSC_AUDIO0_IN);
-            hoi_drv_set_led_status(SDI_IN_DISCONNECTED);
+            if (hdoipd_state(HOID_VTB)) {
+                hoi_drv_set_led_status(SDI_IN_DISCONNECTED);
+            }
         break;
         case E_GS2971_LOOP_ON:
-            hoi_drv_set_led_status(SDI_LOOP_ON_WITH_AUDIO);
+            if (hdoipd_state(HOID_VTB)) {
+                hoi_drv_set_led_status(SDI_LOOP_ON_WITH_AUDIO);
+            }
         break;
         case E_GS2971_LOOP_OFF:
-            hoi_drv_set_led_status(SDI_LOOP_OFF);
+            if (hdoipd_state(HOID_VTB)) {
+                hoi_drv_set_led_status(SDI_LOOP_OFF);
+            }
         break;
         // ...
         case E_VSI_FIFO2_FULL:
