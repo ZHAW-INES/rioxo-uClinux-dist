@@ -166,7 +166,8 @@ int rscp_parse_rtp_format(char* line, t_rscp_rtp_format* p)
     }
 
     nextsp(token, line);
-    p->rtptime = (uint32_t)atol(token);
+
+    p->rtptime = (uint32_t)atoll(token);
 
     return RSCP_SUCCESS;
 }

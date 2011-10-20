@@ -67,16 +67,16 @@ void* hdoipd_osd_timer(void UNUSED *d)
         };
         nanosleep(&ts, 0);
 
+        lock("hdoipd_osd_timer");
         if (hdoipd.osd_timeout > 0) {
-            lock("hdoipd_osd_timer");
-                if (hdoipd.osd_timeout > 0) {
-                    hdoipd.osd_timeout--;
-                    if (hdoipd.osd_timeout == 0) {
-                        hdoipd_osd_deactivate();
-                    }
-                }
-            unlock("hdoipd_osd_timer");
+            hdoipd.osd_timeout--;
         }
+        if (hdoipd.osd_timeout == 0) {
+            if (hdoipd_rsc(RSC_OSD)) {
+                hdoipd_osd_deactivate();
+            }
+        }
+        unlock("hdoipd_osd_timer");
 
         lock("hdoipd_tick_timer");
         alive_check_client_handler(&hdoipd.amx, reg_get("amx-hello-msg"));
