@@ -57,7 +57,7 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, aud);
 
     // do not output HDCP encrypted content on SDI
-    if ((m->hdcp.hdcp_on == 1) && (hdoipd.drivers | DRV_GS2972)) {
+    if ((m->hdcp.hdcp_on == 1) && (hdoipd.drivers & DRV_GS2972)) {
         report(INFO "encrypted audio output on SDI is not allowed");
         osd_permanent(true);
         osd_printf("encrypted audio output on SDI is not allowed\n");
