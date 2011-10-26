@@ -27,13 +27,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <linux/input.h>
 
 #include "hdoip_usbip.h"
 #include "util.h"
 
-#define EV_BUF_SIZE		32
+extern int readonly;
+
+#define EV_BUF_SIZE		64
 #define KEY_REPORT_SIZE		8
 #define MOUSE_REPORT_SIZE	3
 
@@ -205,21 +208,14 @@ err_out:
 	return -1;
 }
 
-static int filter_key_event(struct input_event *ev)
+static inline int filter_event(struct input_event *ev)
 {
 	switch (ev->type) {
 	case EV_SYN:
-	case EV_KEY:
-		return 0;
-	default:
-		return 1;
-	}
-}
-
-static int filter_mouse_event(struct input_event *ev)
-{
-	switch (ev->type) {
-	case EV_SYN:
+	/*
+	 * keyboards never emit EV_REL, so we don't need to care about the type
+	 * of device here and can use the function for mouse and keyboard.
+	 */
 	case EV_REL:
 	case EV_KEY:
 		return 0;
@@ -254,12 +250,16 @@ static int prepare_key_event(struct input_event *ev, char *report,
 		} else {
 			/* do we have a modifier key? */
 			if (keys_mod_map[ev->code] != INVALID) {
+				dbg("Modifier found: %d\n", ev->code);
 				report[0] |= keys_mod_map[ev->code];
 				*hold = (ev->value == 2);
 			} else if (keys_val_map[ev->code] != INVALID) {
+				dbg("Value found: %d\n", ev->code);
 				report[2 + *idx] = keys_val_map[ev->code];
 				(*idx)++;
 				*hold = (ev->value == 2);
+			} else {
+				dbg("Unknow event code: %d\n", ev->code);
 			}
 		}
 
@@ -282,14 +282,14 @@ static int prepare_mouse_event(struct input_event *ev, char *report,
 		ret = RET_SEND;
 		break;
 	case EV_REL:
-		/*
-		 * the stack will make sure we only get values in the proper
-		 * range, so we can safely cast it here.
-		 */
-		if (ev->code > 1) {
+		if (ev->code != REL_X && ev->code != REL_Y) {
 			warn("invalid code value in input device event\n");
 			ret = RET_INVALID;
 		} else {
+			/*
+			 * the stack will make sure we only get values in the
+			 * proper range, so we can safely cast it here.
+			 */
 			report[1 + ev->code] = (char) ev->value;
 			ret = RET_CONTINUE;
 		}
@@ -317,7 +317,6 @@ int hdoip_usbip_event_loop(int efd, int gfd, const char *type)
 	int ret;
 	int hold;
 	int report_sent;
-	int (*filter_event)(struct input_event *);
 	int (*prepare_event)(struct input_event *, char *, unsigned int *, int *);
 
 	ev = malloc(EV_BUF_SIZE * sizeof(struct input_event));
@@ -328,11 +327,9 @@ int hdoip_usbip_event_loop(int efd, int gfd, const char *type)
 
 	if (type[0] == 'k') {
 		report_size = KEY_REPORT_SIZE;
-		filter_event = filter_key_event;
 		prepare_event = prepare_key_event;
 	} else {
 		report_size = MOUSE_REPORT_SIZE;
-		filter_event = filter_mouse_event;
 		prepare_event = prepare_mouse_event;
 	}
 
@@ -340,7 +337,29 @@ int hdoip_usbip_event_loop(int efd, int gfd, const char *type)
 	report_sent = 0;
 
 	while (!hdoip_usbipd_exit) {
-		/* TODO: do a select() here */
+		fd_set rfds;
+		struct timeval timeout;
+		size_t n_events;
+
+		FD_ZERO(&rfds);
+		FD_SET(efd, &rfds);
+
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 5000;
+
+		ret = select(efd + 1, &rfds, NULL, NULL, &timeout);
+		if (ret < 0) {
+			if (errno == EINTR)
+				continue;	/* interrupted by signal */
+
+			err("select() on input event device failed: %s\n", strerror(errno));
+			rc = -1;
+			break;
+		} else if (ret == 0)
+			continue;	/* timeout */
+
+		if (!FD_ISSET(efd, &rfds))
+			continue;	/* no event data */
 
 		rd = read(efd, ev, EV_BUF_SIZE * sizeof(struct input_event));
 		if (rd < (ssize_t) sizeof(struct input_event)) {
@@ -349,17 +368,17 @@ int hdoip_usbip_event_loop(int efd, int gfd, const char *type)
 			break;
 		}
 
-		for (i = 0; i < rd / sizeof(struct input_event); i++) {
+		n_events = rd / sizeof(struct input_event);
+
+		for (i = 0; i < n_events; i++) {
 			/* Do we care about the event? */
 			if (filter_event(&ev[i]))
 				continue;
 
-#if 0
-			dbg("Event: time %ld.%06ld, type %d (%s), code %d, value %d\n",
-					ev[i].time.tv_sec, ev[i].time.tv_usec,
+			dbg("Input event #%d: time %ld.%06ld type %d (%s), code %d, value %d\n",
+					i + 1, ev[i].time.tv_sec, ev[i].time.tv_usec,
 					ev[i].type, event_names[ev[i].type],
 					ev[i].code, ev[i].value);
-#endif
 
 			ret = prepare_event(&ev[i], report, &idx, &hold);
 			switch (ret) {
@@ -369,9 +388,11 @@ int hdoip_usbip_event_loop(int efd, int gfd, const char *type)
 				break;
 			case RET_SEND:
 				/* write the report to the gadget */
-				if (write(gfd, report, report_size) != report_size) {
-					err("failed to write report to gadget\n");
-					return -1;
+				if (!readonly) {
+					if (write(gfd, report, report_size) != report_size) {
+						err("failed to write report to gadget\n");
+						return -1;
+					}
 				}
 				/* FALLTHROUGH */
 			default:

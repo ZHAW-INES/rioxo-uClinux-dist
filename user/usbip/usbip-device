@@ -16,7 +16,8 @@ fi
 for d in /sys/class/hidg/*; do
 	dev=`cat $d/dev`
 	n=${d##*hidg}
+	node="/dev/hidg$n"
 
-	echo "I: creating device node hidg$n (${dev%:*} ${dev#*:})"
-	/bin/mknod /dev/hidg$n c ${dev%:*} ${dev#*:}
+	echo "I: creating device node $node (${dev%:*} ${dev#*:})"
+	/bin/mknod $node c ${dev%:*} ${dev#*:}
 done
