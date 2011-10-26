@@ -1,4 +1,4 @@
-getty:unknown:/sbin/getty -L ttyS0 115200 vt100
+#getty:unknown:/sbin/getty -L ttyS0 115200 vt100
 inet:unknown:/bin/inetd -fe
 boa:unknown:/bin/boa -d
 #udhcpd:unknown:/sbin/udhcpd -f

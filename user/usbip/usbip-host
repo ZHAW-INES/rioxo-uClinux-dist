@@ -1,0 +1,9 @@
+#!/bin/sh
+
+echo "I: loading drivers..."
+/sbin/modprobe isp1763_base otg_role=0
+/sbin/modprobe isp1763_hcd
+/sbin/modprobe usbip-host
+
+echo "I: starting usbipd..."
+/bin/usbipd -D &
