@@ -33,6 +33,8 @@ label = {
     button_logout = "Ausloggen";
     button_login = "Anmelden";
     button_restore = "Wiederherstellen";
+    button_yes = "Ja";
+    button_no = "Nein";
 
     -- Errors
     err_ip_not_valid = "IP-Adresse ist nicht g&uuml;ltig";
@@ -56,6 +58,7 @@ label = {
     page_status = "Status";
     page_usb = "USB";
     page_default = "Fabrikeinstellungen wiederherstellen";
+    page_restart = "Neustart";
     page_settings = "Einstellungen";
     page_login = "Anmelden";
     tab_streaming = "Stream";
@@ -137,4 +140,7 @@ label = {
     p_st_unicast = "Unicast";
     p_st_multicast = "Multicast";
     p_osd_time = "OSD Zeit";
+
+    -- Page reboot
+    p_rb_desc = "Die ge&auml;nderte Einstellung wird erst nach einem Neustart des Ger&auml;ts wirksam.<br>Soll das Ger&auml;t neu gestartet werden?<br>";
 }

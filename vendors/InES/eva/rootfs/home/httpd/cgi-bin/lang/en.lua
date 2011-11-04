@@ -33,6 +33,8 @@ label = {
     button_logout = "Logout";
     button_login = "Login";
     button_restore = "Restore";
+    button_yes = "yes";
+    button_no = "no";
 
     -- Errors
     err_ip_not_valid = "IP is not valid";
@@ -56,6 +58,7 @@ label = {
     page_status = "Status";
     page_usb = "USB";
     page_default = "Factory defaults";
+    page_restart = "Reboot";
     page_settings = "Settings";
     page_login = "Login";
     tab_streaming = "Stream";
@@ -138,5 +141,8 @@ label = {
     p_st_unicast = "Unicast";
     p_st_multicast = "Multicast";
     p_osd_time = "OSD time";
+
+    -- Page reboot
+    p_rb_desc = "The new setting will take effect only after a restart of the device.<br>Should the device be restarted?<br>";
 }
 

@@ -6,6 +6,7 @@ require("pages.streaming")
 require("pages.firmware")
 require("pages.default")
 require("pages.debug")
+require("pages.restart")
 require("pages.settings")
 require("pages.login")
 require("hdoip.html")
@@ -158,6 +159,8 @@ elseif(query.page == 6) then
     pages.settings.show(query)
 elseif(query.page == 20) then
     pages.login.show(query)
+elseif(query.page == 40) then
+    pages.restart.show(query)
 else 
     pages.debug.show(query)
 end
