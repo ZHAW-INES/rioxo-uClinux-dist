@@ -129,7 +129,7 @@ int run_program(const char *command, const char *subsystem,
 		argv[0] = program;
 	}
 
-	pid = fork();
+	pid = vfork();
 	switch(pid) {
 	case 0:
 		/* child closes parent ends of pipes */

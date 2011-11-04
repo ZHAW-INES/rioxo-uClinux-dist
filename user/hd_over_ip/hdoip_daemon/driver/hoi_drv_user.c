@@ -20,6 +20,8 @@
 #include "version.h"
 #include "edid_merge.h"
 
+#include "usb.h"
+
 #include <netdb.h>
 extern int h_errno;
 
@@ -152,7 +154,6 @@ HOI_GET_STAT(vsostat);
 HOI_GET_STAT(ethstat);
 HOI_GET_STAT(viostat);
 HOI_GET_STAT(asoreg);
-
 
 //------------------------------------------------------------------------------
 // setup/read video format for input/output
@@ -513,6 +514,17 @@ int hoi_drv_getversion(t_hoic_getversion* cmd)
     strcpy(cmd->sw_tag, VERSION_TAG);
 
     return ret;
+}
+
+int hoi_drv_getusb(t_hoic_getusb* cmd)
+{
+  //  strcpy(cmd->device, "test: -> a b c d e f");
+
+    strcpy(cmd->device, "1-1.2"); //TODO: correct and variable device ID
+
+    usb_get_dev(cmd->device);
+
+    return 0;
 }
 
 //------------------------------------------------------------------------------

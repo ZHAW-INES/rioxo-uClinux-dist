@@ -49,6 +49,7 @@ REG_AMX_HELLO_INTERVAL = "amx-hello-interval"
 REG_MULTICAST_EN = "multicast_en"
 REG_MULTICAST_GROUP = "multicast_group"
 REG_SERIAL = "serial-number"
+REG_MODE_USB = "usb-mode"
 
 local PIPE_CMD = "/tmp/web.cmd"
 local PIPE_RSP = "/tmp/web.rsp"
@@ -62,6 +63,7 @@ local PIPE_CMD_REMOTE_UPDATE    = "3100000C"
 local PIPE_CMD_GETVERSION       = "3100000D"
 local PIPE_CMD_FACTORY_DEFAULT  = "3100000E"
 local PIPE_CMD_REBOOT           = "31000009"
+local PIPE_CMD_GETUSB           = "31000010"
 
 local fd_cmd, fd_rsp = nil, nil
 
@@ -200,6 +202,33 @@ function getVersion(t)
         local tmp2 = hdoip.convert.bin2dec(string.sub(ret,19,20),2) 
         t.sw_version_str = string.format("%d.%d",tmp2, tmp) 
         t.sw_tag = string.format("%s",string.sub(ret,21))
+    end
+end
+
+function getUSB(t)
+    if((fd_cmd ~= nil) and (fd_rsp ~= nil)) then
+        str = createCmdHeader(PIPE_CMD_GETUSB, 100)
+        
+        str = hdoip.convert.Str2HexFile(str) .. '                                                                                                    '
+
+        fd_cmd:write(str)
+        fd_cmd:flush()
+
+        -- Read command header
+        ret = nil
+        while(ret == nil) do
+            ret = fd_rsp:read(8)
+        end
+        
+        size = hdoip.convert.bin2dec(string.sub(ret,5,8),4)
+
+        ret = nil
+        while(ret == nil) do
+            ret = fd_rsp:read(size - 8)
+        end
+        
+        t.usb_vendor = string.format("%s",string.sub(ret,1,49))
+        t.usb_product = string.format("%s",string.sub(ret,50,99))
     end
 end
 

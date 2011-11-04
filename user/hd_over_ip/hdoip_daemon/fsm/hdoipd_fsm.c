@@ -25,6 +25,7 @@
 #include "rscp_include.h"
 #include "rscp_string.h"
 #include "edid.h"
+#include "usb.h"
 
 #include "vrb_video.h"
 #include "vtb_video.h"
@@ -542,6 +543,7 @@ void hdoipd_event(uint32_t event)
         case E_ETO_LINK_UP:
             hoi_drv_set_led_status(ETHERNET_ACTIVE);
             hdoipd_set_rsc(RSC_ETH_LINK);
+            usb_ethernet_connect(&hdoipd.usb_devices);
             if (hdoipd_state(HOID_READY)) {
                 hdoipd_start();
             }
@@ -936,6 +938,9 @@ bool hdoipd_init(int drv)
 #ifdef USE_OSD_TIMER
     hdoipd_osd_timer_start();
 #endif
+
+    // initialize usb handler
+    usb_handler_init(&hdoipd.usb_devices);
 
     hoi_drv_wdg_init(2000000000); //set and start watchdog (to 20 sec.)
     hoi_drv_wdg_enable();

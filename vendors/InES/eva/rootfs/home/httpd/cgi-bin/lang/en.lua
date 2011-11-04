@@ -54,6 +54,7 @@ label = {
     page_ethernet = "System configuration";
     page_firmware = "Firmware";
     page_status = "Status";
+    page_usb = "USB";
     page_default = "Factory defaults";
     page_settings = "Settings";
     page_login = "Login";
@@ -64,6 +65,7 @@ label = {
     tab_default = "Factory defaults";
     tab_settings = "Settings";
     tab_login = "Login";
+    tab_usb = "USB";
 
     -- Page default
     p_df_question = "Restore factory defaults?";
@@ -85,6 +87,14 @@ label = {
 
     -- Page status
     p_stat_title = "Status";
+
+    -- Page USB
+    p_usb_mode = "Mode";
+    p_usb_host = "Host";
+    p_usb_device = "Device";
+    p_usb_off = "Disabled";
+    p_usb_label_device = "Connected Device";
+    p_usb_reboot_note = "Note: Changes on \"Mode\" will take effect only after reboot";
 
     -- Page firmware
     p_serial_number = "Serial number";

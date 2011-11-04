@@ -81,6 +81,7 @@ int hoi_drv_hdcp_adv9889en();
 
 int hoi_drv_poll();
 int hoi_drv_getversion(t_hoic_getversion* cmd);
+int hoi_drv_getusb(t_hoic_getusb* cmd);
 
 int hoi_drv_reset(uint32_t rv);
 

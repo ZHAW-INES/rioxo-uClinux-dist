@@ -4,7 +4,7 @@ module (..., package.seeall)
 --local POST_READ = "/dev/stdin"
 local POST_READ = "/proc/self/fd/0"
 local POST_CHUNK_SIZE = 1000
-local POST_MAX_SIZE = 4*2^20 -- 4 MB
+local POST_MAX_SIZE = 5*2^20 -- 5 MB
 
 function getLength(post)
     post.length = tonumber(os.getenv("CONTENT_LENGTH"))

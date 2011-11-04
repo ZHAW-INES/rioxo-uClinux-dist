@@ -158,6 +158,12 @@ typedef struct {
 
 typedef struct {
     uint32_t            cseq;
+    char				device[50];
+    char                session[50];
+} t_rscp_req_usb;
+
+typedef struct {
+    uint32_t            cseq;
     char                session[50];
     uint32_t            event;
 } t_rscp_req_update;
@@ -209,6 +215,7 @@ typedef union {
     t_rscp_req_play     req_play;
     t_rscp_req_teardown req_teardown;
     t_rscp_req_hello    req_hello;
+    t_rscp_req_usb      req_usb;
     t_rscp_req_update   req_update;
     t_rscp_req_update   req_pause;
     t_rscp_rsp_option   rsp_option;

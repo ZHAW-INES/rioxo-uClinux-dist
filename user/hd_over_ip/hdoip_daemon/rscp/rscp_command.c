@@ -96,6 +96,11 @@ void rscp_header_hdcp(t_rscp_connection* msg, t_rscp_hdcp *hdcp)
     msgprintf(msg, "\r\n");
 }
 
+void rscp_header_usb(t_rscp_connection* msg, char* s)
+{
+    msgprintf(msg, "Device: %s\r\n", s);
+}
+
 void rscp_header_timing(t_rscp_connection* msg, t_video_timing* timing)
 {
     // Timing:   Horizontal       : pfreq width fp p bp pol 
@@ -237,4 +242,12 @@ void rscp_response_hdcp(t_rscp_connection* msg, char* session, char* id, char* c
     rscp_eoh(msg);
     rscp_send(msg);
 
+}
+
+void rscp_request_usb(t_rscp_connection* msg, char* device, char* uri)
+{
+    rscp_request_line(msg, "USB", uri);
+    rscp_header_usb(msg, device);
+    rscp_eoh(msg);
+    rscp_send(msg);
 }

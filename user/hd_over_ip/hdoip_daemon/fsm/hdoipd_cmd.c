@@ -213,6 +213,12 @@ void hdoipd_get_version(t_hoic_getversion* cmd, int rsp)
     write(rsp, cmd, sizeof(t_hoic_getversion));
 }
 
+void hdoipd_get_usb(t_hoic_getusb* cmd, int rsp)
+{
+    hoi_drv_getusb(cmd);
+    write(rsp, cmd, sizeof(t_hoic_getusb));
+}
+
 void hdoipd_factory_default(t_hoic_cmd UNUSED *cmd)
 {
     char s[18];
@@ -255,6 +261,7 @@ void hdoipd_request(uint32_t* cmd, int rsp)
         hdoipdreq(HOIC_FACTORY_DEFAULT, hdoipd_factory_default);
         hdoipdreq(HOIC_DEBUG, hdoipd_debug);
         hdoipdreq_rsp(HOIC_GETVERSION, hdoipd_get_version);
+        hdoipdreq_rsp(HOIC_GETUSB, hdoipd_get_usb);
         hdoipdreq_rsp(HOIC_READ, hdoipd_read);
         hdoipdreq_rsp(HOIC_PARAM_GET, hdoipd_get_param);
         default: report("command not supported <%08x>", cmd[0]);

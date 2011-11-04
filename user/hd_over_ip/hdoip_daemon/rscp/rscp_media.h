@@ -115,6 +115,7 @@ int rmsq_hello(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_hdcp(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
+int rmsq_usb(t_rscp_media* media, t_rscp_req_usb* msg, t_rscp_connection* rsp);
 
 int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsr_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp);

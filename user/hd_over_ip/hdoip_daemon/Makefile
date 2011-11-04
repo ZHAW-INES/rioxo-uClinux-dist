@@ -75,6 +75,8 @@ CFLAGS += -Ialive
 OBJS   +=   alive/alive_check.o
 CFLAGS += -Ilog
 OBJS   +=   log/hdoip_log.o
+CFLAGS += -Iusb
+OBJS   +=   usb/usb.o
 
 # we need the ioctl defines from hdoip_types.h
 CFLAGS += -I../../../vendors/InES/eva/modules/hdoip_core/driver

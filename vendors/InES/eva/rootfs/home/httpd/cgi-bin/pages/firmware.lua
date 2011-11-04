@@ -35,7 +35,7 @@ function show(t)
 
     if(t.length ~= nil)then
         hdoip.post.readHeader(t)
-        hdoip.post.readData(t, firmware_image)
+        t.err = t.err .. hdoip.post.readData(t, firmware_image)
 
         -- checking image header
         local fd = io.open(firmware_image, "r")

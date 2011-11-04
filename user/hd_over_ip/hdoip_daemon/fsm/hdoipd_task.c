@@ -11,6 +11,7 @@
 #include "multicast.h"
 #include "rscp_listener.h"
 #include "hoi_cfg.h"
+#include "usb.h"
 
 #include "vrb_video.h"
 #include "vrb_audio.h"
@@ -33,6 +34,7 @@ enum {
     HOID_TSK_UPD_ALIVE          = 0x00000200,
     HOID_TSK_UPD_MULTICAST      = 0x00000400,
 	HOID_TSK_UPD_DHCP           = 0x00000800,
+	HOID_TSK_UPD_USB_MODE       = 0x00001000,
 	HOID_TSK_EXEC_GOTO_READY	= 0x01000000,
 	HOID_TSK_EXEC_START			= 0x02000000,
 	HOID_TSK_EXEC_RESTART		= 0x03000000,
@@ -291,7 +293,7 @@ void task_get_system_state(char** p)
 void task_get_system_update(char** p)
 {
 	int state;
-
+    char *s;
 	if(update_vector != 0) {
 
 		// -------------------------------------------------------------
@@ -313,6 +315,13 @@ void task_get_system_update(char** p)
 
 		// -------------------------------------------------------------
 		// Parameter specific commands
+
+        // USB mode (TODO: linux crashs if driver are loaded during stream is running)
+	//	if(update_vector & HOID_TSK_UPD_USB_MODE) {
+    //        report("Updating USB mode...");
+    //        s = reg_get("usb-mode");
+    //        usb_load_driver(s);
+    //    }
 
 		/* MAC address */
 		if(update_vector & HOID_TSK_UPD_SYS_MAC) {
@@ -643,6 +652,11 @@ void task_set_osd_time(char* p)
     }
 }
 
+void task_set_usb_mode(char* p)
+{
+    update_vector |= HOID_TSK_UPD_USB_MODE;
+}
+
 void task_set_network_delay(char* p)
 {
     update_vector |= HOID_TSK_EXEC_RESTART_VRB;
@@ -704,6 +718,7 @@ void hdoipd_register_task()
     set_listener("alive-check-port", task_set_alive_update);
     set_listener("led_instruction", task_set_led_instruction);
     set_listener("osd-time", task_set_osd_time);
+    set_listener("usb-mode", task_set_usb_mode);
 }
 
 

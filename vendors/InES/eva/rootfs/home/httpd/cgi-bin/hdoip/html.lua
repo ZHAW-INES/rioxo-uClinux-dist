@@ -92,7 +92,9 @@ function Link(dest, label)
 end
 
 function AddError(t, str)
-    t.err = t.err .. str .. "<br>\n"
+    if((str ~=nil) and (str ~= "")) then
+      t.err = t.err .. str .. "<br>\n"
+    end
 end
 
 function Error(str)
@@ -227,8 +229,8 @@ function FormBottom(t)
 end
 
 function Header(t, title, script_path, addon)
-    local menu_item_cnt = 6
-    local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_status; [3] = label.tab_firmware; [4] = label.tab_default; [5] = label.tab_settings;}
+    local menu_item_cnt = 7
+    local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_usb; [3] = label.tab_status; [4] = label.tab_firmware; [5] = label.tab_default; [6] = label.tab_settings;}
     local dev_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_HOST_NAME)
     local dev_caption = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DEV_CAPTION)
 

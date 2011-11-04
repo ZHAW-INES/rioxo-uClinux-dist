@@ -241,7 +241,7 @@ static void udev_event_run(struct udevd_uevent_msg *msg)
 	pid_t pid;
 	int retval;
 
-	pid = fork();
+	pid = vfork();
 	switch (pid) {
 	case 0:
 		/* child */
@@ -975,7 +975,7 @@ int main(int argc, char *argv[], char *envp[])
 	if (daemonize) {
 		pid_t pid;
 
-		pid = fork();
+		pid = vfork();
 		switch (pid) {
 		case 0:
 			dbg("daemonized fork running");

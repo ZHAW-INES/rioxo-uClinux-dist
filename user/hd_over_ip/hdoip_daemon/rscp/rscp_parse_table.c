@@ -109,6 +109,14 @@ const t_map_fnc tab_request_hello[] ={
         MAP_FNC_NULL
 };
 
+// USB attributes
+const t_map_fnc tab_request_usb[] ={
+        { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_usb, cseq) },
+        { "Device", rscp_parse_str, offsetof(t_rscp_req_usb, device) },
+        { "Session", rscp_parse_str, offsetof(t_rscp_req_usb, session) },
+        MAP_FNC_NULL
+};
+
 // the methodes
 const t_map_set srv_method[] = {
     { "SETUP", (void*)tab_request_setup, (void*)rmsq_setup },
@@ -116,6 +124,7 @@ const t_map_set srv_method[] = {
     { "PLAY", (void*)tab_request_play, (void*)rmsq_play },
     { "TEARDOWN", (void*)tab_request_teardown, (void*)rmsq_teardown },
     { "HELLO", (void*)tab_request_hello, (void*)rmsq_hello },
+    { "USB", (void*)tab_request_usb, (void*)rmsq_usb },
     { "UPDATE", (void*)tab_request_update, (void*)rmsq_update },
     MAP_SET_NULL
 };

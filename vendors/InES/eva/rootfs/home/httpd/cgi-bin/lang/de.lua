@@ -54,6 +54,7 @@ label = {
     page_ethernet = "System Konfiguration";
     page_firmware = "Firmware";
     page_status = "Status";
+    page_usb = "USB";
     page_default = "Fabrikeinstellungen wiederherstellen";
     page_settings = "Einstellungen";
     page_login = "Anmelden";
@@ -63,6 +64,7 @@ label = {
     tab_status = "Status";
     tab_default = "Zur&uuml;cksetzen";
     tab_settings = "Einstellungen";
+    tab_usb = "USB";
 
     -- Page default
     p_df_question = "Ger&auml;t auf Werkeinstellungen zur&uuml;cksetzen?";
@@ -84,6 +86,14 @@ label = {
 
     -- Page status
     p_stat_title = "Status";
+
+    -- Page USB
+    p_usb_mode = "Betriebsart";
+    p_usb_host = "Host";
+    p_usb_device = "Device";
+    p_usb_off = "Deaktiviert";
+    p_usb_label_device = "Angeschlossenes Ger&auml;t";
+    p_usb_reboot_note = "Note: Ein &Auml;ndern der Betriebsart wird erst nach einem Neustart &uuml;bernommen";
 
     -- Page firmware
     p_serial_number = "Seriennummer";

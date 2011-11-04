@@ -491,6 +491,13 @@ void rscp_client_force_close(t_node* list)
     }
 }
 
+int rscp_client_usb(t_rscp_client* client, char* device, char* uri)
+{
+    rscp_request_usb(&client->con, device, uri);
+
+    return RSCP_SUCCESS;
+}
+
 /** checks if the received message is a request or a response
  *  if its a request, write to pipe 2, else to pipe 1
  *
