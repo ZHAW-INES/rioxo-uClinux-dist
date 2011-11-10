@@ -230,7 +230,7 @@ int gs2971_get_video_timing(t_gs2971 *handle)
     handle->vid_st.interlaced = interlaced;  // 1 = interlaced timing detected
     handle->vid_st.vsync_pol  = 1;  // 1 = high active
     handle->vid_st.hsync_pol  = 1;  // 1 = high active
-    handle->vid_st.field_pol  = 0;  // 1 = high is odd field
+    handle->vid_st.field_pol  = 1;  // 1 = high is odd field
 
     // timing is only needed when interlaced
     if ((interlaced) == 0) {

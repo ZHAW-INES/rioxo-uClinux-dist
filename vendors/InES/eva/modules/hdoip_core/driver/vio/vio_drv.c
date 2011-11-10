@@ -971,12 +971,8 @@ void vio_config_tg(t_vio* handle, int config)
     switch (config) {
         case (VIO_TG_CONFIG_ENCODE):
 
-
             // Timing Generator outputs only if input trigger is active
             vio_set_cfg(handle->p_vio, VIO_CFG_TG_FREE_RUN);
-
-            // vio_set_cfg(handle->p_vio, VIO_CFG_TG_VSYNC_RESET);
-
 
             // Set noninverted polarity of timing generator output signals
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_FIELD);
@@ -985,29 +981,38 @@ void vio_config_tg(t_vio* handle, int config)
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_AVID);
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_TRIG);
 
+            // use external timing signals
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_FIELD);
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_HSYNC);
+            vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_AVID);
+
             if(handle->timing.interlaced == 0) {
                 // override timing with measured timing
                 vio_get_timing(handle->p_vio, &handle->timing);
-                // use external timing
-                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_FIELD);
+                // use external vsync
                 vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_VSYNC);
-                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_HSYNC);
-                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_AVID);
-            }
-            else {
+            } else {
+                // enable vsync output in timing generator
+                vio_clr_cfg(handle->p_vio, VIO_CFG_TG_VSYNC_RESET);
+                // use only vsync of timing generator
+                vio_set_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_VSYNC);
                 // measure input video frequency
                 vio_get_input_frequency(handle->p_vio, &handle->timing);
-                // use only vsync of timing generator
-                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_FIELD);
-                vio_set_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_VSYNC);
-                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_HSYNC);
-                vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_AVID);
-
-                vio_clr_cfg(handle->p_vio, VIO_CFG_TG_VSYNC_RESET);
 
                 // invert timing of vsync if necessary
-                if (handle->timing.vpolarity == 0)
+                if (handle->timing.vpolarity == 0) {
                     vio_set_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_VSYNC);
+                }
+
+                // invert timing of hsync if necessary
+                if (handle->timing.hpolarity == 0) {
+                    vio_set_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_HSYNC);
+                }
+
+                // invert timing of field if necessary
+                if (handle->timing.fpolarity == 0) {
+                    vio_set_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_FIELD);
+                }
             }
 
             // set timing generator registers
@@ -1026,6 +1031,7 @@ void vio_config_tg(t_vio* handle, int config)
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_HSYNC);
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TIMING_AVID);
             vio_clr_cfg(handle->p_vio, VIO_CFG_VIN_TM_POL_TRIG);
+
             vio_set_timing(handle->p_vio, &handle->timing, 0);
             break;
 
