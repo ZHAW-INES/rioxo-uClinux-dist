@@ -33,6 +33,8 @@ label = {
     button_logout = "Logout";
     button_login = "Login";
     button_restore = "Restore";
+    button_yes = "yes";
+    button_no = "no";
 
     -- Errors
     err_ip_not_valid = "IP is not valid";
@@ -54,7 +56,9 @@ label = {
     page_ethernet = "System configuration";
     page_firmware = "Firmware";
     page_status = "Status";
+    page_usb = "USB";
     page_default = "Factory defaults";
+    page_restart = "Reboot";
     page_settings = "Settings";
     page_login = "Login";
     tab_streaming = "Stream";
@@ -64,6 +68,7 @@ label = {
     tab_default = "Factory defaults";
     tab_settings = "Settings";
     tab_login = "Login";
+    tab_usb = "USB";
 
     -- Page default
     p_df_question = "Restore factory defaults?";
@@ -85,6 +90,13 @@ label = {
 
     -- Page status
     p_stat_title = "Status";
+
+    -- Page USB
+    p_usb_mode = "Mode";
+    p_usb_host = "Host";
+    p_usb_device = "Device";
+    p_usb_off = "Disabled";
+    p_usb_label_device = "Connected Device";
 
     -- Page firmware
     p_serial_number = "Serial number";
@@ -128,5 +140,8 @@ label = {
     p_st_unicast = "Unicast";
     p_st_multicast = "Multicast";
     p_osd_time = "OSD time";
+
+    -- Page reboot
+    p_rb_desc = "The new setting will take effect only after a restart of the device.<br>Should the device be restarted?<br>";
 }
 

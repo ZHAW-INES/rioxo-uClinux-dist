@@ -42,6 +42,8 @@
 #define HOIC_GETVERSION         (0x3100000d)
 #define HOIC_REPAIR             (0x3100000e)
 #define HOIC_FACTORY_DEFAULT    (0x3100000f)
+#define HOIC_GETUSB             (0x31000010)
+#define HOIC_GET_HDCP_STATE     (0x31000020)
 
 // Switches
 #define HOIC_OSD_ON             (0x32000005)
@@ -337,5 +339,20 @@ static inline void hoic_getversion(int fd, int fdr, t_hoic_version *ver)
     strcpy(ver->sw_tag, rsp.sw_tag);
 }
 
+//------------------------------------------------------------------------------
+// hdcp
+
+typedef struct {
+    uint32_t            msgid, msgsize;
+    char                hdcp_state[100];
+} PACK t_hoic_gethdcpstate ALIGN4;
+
+//------------------------------------------------------------------------------
+// usb
+
+typedef struct {
+    uint32_t            msgid, msgsize;
+    char                device[100];
+} PACK t_hoic_getusb ALIGN4;
 
 #endif /* HDOIPD_MSG_H_ */

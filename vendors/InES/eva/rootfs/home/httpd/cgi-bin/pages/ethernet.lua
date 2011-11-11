@@ -158,9 +158,14 @@ function show(t)
 
         if(hdoip.pipe.getParam(hdoip.pipe.REG_MODE_START) ~= t_sys_mode_conv[tonumber(t.sys_mode)]) then
             hdoip.pipe.setParam(hdoip.pipe.REG_MODE_START, t_sys_mode_conv[tonumber(t.sys_mode)])
+            pages.restart.show(t)
         end
 
         hdoip.pipe.getParam(hdoip.pipe.REG_SYS_UPDATE)
+    end
+
+    if(t.button_restart_yes ~= nil) then
+        hdoip.pipe.reboot()
     end
 
     if((new_ip == 0) or (err > 0))then

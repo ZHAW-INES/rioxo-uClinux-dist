@@ -238,8 +238,12 @@ void task_get_aso_status(char** p)
 
 void task_get_hdcp_status(char** p)
 {
-    // TODO: return actual value
-    sprintf(buf, "not encrypted");
+    if (reg_test("hdcp-force", "true") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (hdoipd.hdcp.enc_state != 0)) {
+        sprintf(buf, "encrypted");
+    } else {
+        sprintf(buf, "not encrypted");
+    }
+
     *p = buf;
 }
 

@@ -1,10 +1,12 @@
 #!/usr/bin/lua
 require("pages.status")
 require("pages.ethernet")
+require("pages.usb")
 require("pages.streaming")
 require("pages.firmware")
 require("pages.default")
 require("pages.debug")
+require("pages.restart")
 require("pages.settings")
 require("pages.login")
 require("hdoip.html")
@@ -18,10 +20,11 @@ img_path = "/img/"
 main_form = "mainform"
 PAGE_ID_ETH = 0
 PAGE_ID_STREAM = 1
-PAGE_ID_STATUS = 2
-PAGE_ID_FIRMWARE = 3
-PAGE_ID_DEFAULT = 4
-PAGE_ID_SETTING = 5
+PAGE_ID_USB = 2
+PAGE_ID_STATUS = 3
+PAGE_ID_FIRMWARE = 4
+PAGE_ID_DEFAULT = 5
+PAGE_ID_SETTING = 6
 PAGE_ID_LOGIN = 20
 PAGE_START = 0
 
@@ -145,15 +148,19 @@ if(query.page == 0) then
 elseif(query.page == 1) then
     pages.streaming.show(query)
 elseif(query.page == 2) then
-    pages.status.show(query)
+    pages.usb.show(query)
 elseif(query.page == 3) then 
-    pages.firmware.show(query)
+    pages.status.show(query)
 elseif(query.page == 4) then 
-    pages.default.show(query)
+    pages.firmware.show(query)
 elseif(query.page == 5) then 
+    pages.default.show(query)
+elseif(query.page == 6) then 
     pages.settings.show(query)
 elseif(query.page == 20) then
     pages.login.show(query)
+elseif(query.page == 40) then
+    pages.restart.show(query)
 else 
     pages.debug.show(query)
 end
