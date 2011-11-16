@@ -113,6 +113,7 @@ const t_map_fnc tab_request_hello[] ={
 const t_map_fnc tab_request_usb[] ={
         { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_usb, cseq) },
         { "Device", rscp_parse_str, offsetof(t_rscp_req_usb, device) },
+        { "Type", rscp_parse_str, offsetof(t_rscp_req_usb, type) },
         { "Session", rscp_parse_str, offsetof(t_rscp_req_usb, session) },
         MAP_FNC_NULL
 };

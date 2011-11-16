@@ -96,9 +96,9 @@ void rscp_header_hdcp(t_rscp_connection* msg, t_rscp_hdcp *hdcp)
     msgprintf(msg, "\r\n");
 }
 
-void rscp_header_usb(t_rscp_connection* msg, char* s)
+void rscp_header_usb(t_rscp_connection* msg, char* s, char* d)
 {
-    msgprintf(msg, "Device: %s\r\n", s);
+    msgprintf(msg, "Device: %s\r\nType: %s\r\n", s, d);
 }
 
 void rscp_header_timing(t_rscp_connection* msg, t_video_timing* timing)
@@ -244,10 +244,16 @@ void rscp_response_hdcp(t_rscp_connection* msg, char* session, char* id, char* c
 
 }
 
-void rscp_request_usb(t_rscp_connection* msg, char* device, char* uri)
+void rscp_request_usb(t_rscp_connection* msg, char* device, char* uri, int device_type)
 {
     rscp_request_line(msg, "USB", uri);
-    rscp_header_usb(msg, device);
+    switch (device_type) {
+        case USB_TYPE_MOUSE:        rscp_header_usb(msg, device, "mouse");
+                                    break;
+        case USB_TYPE_KEYBOARD:     rscp_header_usb(msg, device, "keyboard");
+                                    break;
+        default:                    rscp_header_usb(msg, device, " ");
+    }
     rscp_eoh(msg);
     rscp_send(msg);
 }

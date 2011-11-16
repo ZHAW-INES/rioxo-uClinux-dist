@@ -491,9 +491,9 @@ void rscp_client_force_close(t_node* list)
     }
 }
 
-int rscp_client_usb(t_rscp_client* client, char* device, char* uri)
+int rscp_client_usb(t_rscp_client* client, char* device, char* uri, int device_type)
 {
-    rscp_request_usb(&client->con, device, uri);
+    rscp_request_usb(&client->con, device, uri, device_type);
 
     return RSCP_SUCCESS;
 }

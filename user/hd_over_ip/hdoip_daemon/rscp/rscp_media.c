@@ -163,7 +163,7 @@ int rmsq_hello(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 int rmsq_usb(t_rscp_media* media, t_rscp_req_usb* msg, t_rscp_connection* rsp)
 {
     char *ip = reg_get("remote-uri");
-    attach_usb_dev(&hdoipd.usb_devices, (ip+7), msg->device);
+    attach_usb_dev(&hdoipd.usb_devices, (ip+7), msg->device, msg->type);
 
     return RSCP_SUCCESS;
 }

@@ -67,7 +67,7 @@ int rscp_client_teardown(t_rscp_client* client);
 int rscp_client_update(t_rscp_client* client, uint32_t event);
 int rscp_client_hello(t_rscp_client* client);
 int rscp_client_hdcp(t_rscp_client* client);
-int rscp_client_usb(t_rscp_client* client, char* device, char* uri);
+int rscp_client_usb(t_rscp_client* client, char* device, char* uri, int device_type);
 
 
 #endif /* RSCP_CLIENT_H_ */

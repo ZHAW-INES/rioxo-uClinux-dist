@@ -159,6 +159,7 @@ typedef struct {
 typedef struct {
     uint32_t            cseq;
     char				device[50];
+    char                type[50];
     char                session[50];
 } t_rscp_req_usb;
 

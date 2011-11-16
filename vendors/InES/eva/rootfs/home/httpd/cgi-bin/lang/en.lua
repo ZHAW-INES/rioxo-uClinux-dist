@@ -97,7 +97,6 @@ label = {
     p_usb_device = "Device";
     p_usb_off = "Disabled";
     p_usb_label_device = "Connected Device";
-    p_usb_reboot_note = "Note: Changes on \"Mode\" will take effect only after reboot";
 
     -- Page firmware
     p_serial_number = "Serial number";

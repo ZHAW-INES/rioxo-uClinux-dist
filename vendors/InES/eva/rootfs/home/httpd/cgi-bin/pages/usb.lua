@@ -37,8 +37,6 @@ function show(t)
   
         hdoip.html.Text(label.p_usb_mode);                                                          hdoip.html.TableInsElement(1);
         hdoip.html.FormRadio(REG_MODE_USB_LABEL, t_mode, 3, t.usb_mode);                            hdoip.html.TableInsElement(1);
-        hdoip.html.Text("");                                                                        hdoip.html.TableInsElement(1);
-        hdoip.html.Text(label.p_usb_reboot_note);                                                   hdoip.html.TableInsElement(1);
 
         if(t.usb_mode == 0) then
             hdoip.html.Text("<br>"..label.p_usb_label_device);                                      hdoip.html.TableInsElement(1);

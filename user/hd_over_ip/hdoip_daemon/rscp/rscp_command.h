@@ -23,10 +23,9 @@ void rscp_response_error(t_rscp_connection* msg, int code, char* reason);
 void rscp_request_line(t_rscp_connection* msg, char* method, char* uri);
 void rscp_request_cseq(t_rscp_connection* msg, int s);
 void rscp_header_session(t_rscp_connection* msg, char* s);
-void rscp_header_usb(t_rscp_connection* msg, char* s);
 void rscp_header_timing(t_rscp_connection* msg, t_video_timing* timing);
 void rscp_header_rtp_format(t_rscp_connection* msg, t_rscp_rtp_format* p);
-void rscp_header_usb(t_rscp_connection* msg, char* s);
+void rscp_header_usb(t_rscp_connection* msg, char* s, char* d);
 void rscp_eoh(t_rscp_connection* msg);
 
 void rscp_request_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, t_rscp_edid *edid, t_rscp_hdcp* hdcp);
@@ -41,6 +40,6 @@ void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, ch
 void rscp_response_play(t_rscp_connection* msg, char* session, t_rscp_rtp_format* fmt, t_video_timing* timing);
 void rscp_response_teardown(t_rscp_connection* msg, char* session);
 void rscp_response_hdcp(t_rscp_connection* msg, char* session, char* id, char* content);
-void rscp_request_usb(t_rscp_connection* msg, char* device, char* uri);
+void rscp_request_usb(t_rscp_connection* msg, char* device, char* uri, int device_type);
 
 #endif /* RSCP_COMMAND_H_ */

@@ -96,7 +96,6 @@ label = {
     p_usb_device = "Device";
     p_usb_off = "Deaktiviert";
     p_usb_label_device = "Angeschlossenes Ger&auml;t";
-    p_usb_reboot_note = "Note: Ein &Auml;ndern der Betriebsart wird erst nach einem Neustart &uuml;bernommen";
 
     -- Page firmware
     p_serial_number = "Seriennummer";
