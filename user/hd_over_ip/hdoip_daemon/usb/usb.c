@@ -28,49 +28,59 @@ void usb_get_dev(char* s)
     char vendor_id[5];
     char product_id[5];
     bool vendor_found = false;
-    bool no_device = false;
     int length;
+    char *mode;
 
-    strcpy(vendor, "unknown vendor");
-    strcpy(product, "unknown product");
-/*
-    // read Vendor ID
-    sprintf(tmp, "/sys/bus/usb/devices/%s/idVendor",s);
-    if (!(fd = fopen(tmp, "r"))) {
-        no_device = true;
-    }
-    if (getline(&line, &len, fd) != -1) {
-        memcpy(vendor_id, line, 4);
-        vendor_id[4] = '\0';
-    }
-    fclose(fd);
+    mode = reg_get("usb-mode");
 
-    // read Product ID
-    sprintf(tmp, "/sys/bus/usb/devices/%s/idProduct",s);
-    if (!(fd = fopen(tmp, "r"))) {
-        no_device = true;
-    }
-    if (getline(&line, &len, fd) != -1) {
-        memcpy(product_id, line, 4);
-        product_id[4] = '\0';
-    }
-    fclose(fd);
+    // device can be read only on host
+    if (!strcmp(mode, "host")) {
 
-    // Compare with ID-list
-    sprintf(tmp, "/usr/share/hwdata/usb.ids");
-    if (!(fd = fopen(tmp, "r"))) {
-        report(ERROR "Could not open %s", tmp);
-    }
+        strcpy(vendor, "unknown vendor");
+        strcpy(product, "unknown product");
 
-    if (no_device) {
-        strcpy(vendor, "no device");
-        strcpy(product, "no device");
-    } else {
+        // read Vendor ID
+        sprintf(tmp, "/sys/bus/usb/devices/%s/idVendor", s);
+        if (!(fd = fopen(tmp, "r"))) {
+            strcpy(vendor, "no device");
+            strcpy(product, "no device");
+            return;
+        }
+        if (getline(&line, &len, fd) != -1) {
+            memcpy(vendor_id, line, 4);
+            vendor_id[4] = '\0';
+        }
+        fclose(fd);
+
+        // read Product ID
+        sprintf(tmp, "/sys/bus/usb/devices/%s/idProduct", s);
+        if (!(fd = fopen(tmp, "r"))) {
+            strcpy(vendor, "no device");
+            strcpy(product, "no device");
+            return;
+        }
+        if (getline(&line, &len, fd) != -1) {
+            memcpy(product_id, line, 4);
+            product_id[4] = '\0';
+        }
+        fclose(fd);
+
+        // Compare with ID-list
+        sprintf(tmp, "/usr/share/hwdata/usb.ids");
+        if (!(fd = fopen(tmp, "r"))) {
+            report(ERROR "Could not open %s", tmp);
+        }
+
         while (getline(&line, &len, fd) != -1) {
             if (vendor_found){
-                if (line[0] != 0x09) break;     //0x09 = horizontal tab
+                if (line[0] != ASCII_HORIZONTAL_TAB) {
+                    //no product string found
+                    break;
+                }
+
                 tmp_line = strstr(line, product_id);
 
+                // product string found
                 if (tmp_line != NULL) {
                     length = strlen(line);
                     if (length > 57) break;
@@ -88,12 +98,11 @@ void usb_get_dev(char* s)
                 }
             }
         }
-    }
-    fclose(fd);
-*/
-    memcpy(s,      vendor,  strlen(vendor));
-    memcpy((s+50), product, strlen(product));
+        fclose(fd);
 
+        memcpy(s,      vendor,  strlen(vendor));
+        memcpy((s+50), product, strlen(product));
+    }
 }
 
 /** Bind an USB device to USBIP
@@ -325,6 +334,9 @@ int detect_device(char* node_param)
     return device_count;
 }
 
+/** Check if device on "node" is a mouse or a keyboard
+ *
+ */
 void mouse_or_keyboard(t_usb_devices* old_values, char* node, int device_count)
 {
     FILE *fd;
@@ -433,7 +445,6 @@ void usb_device_handler(t_usb_devices* old_values)
                     old_values->device_count = device_count;
                 }
             }
-
 
             if ((old_values->device_queue_mouse & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
                 //connect as mouse

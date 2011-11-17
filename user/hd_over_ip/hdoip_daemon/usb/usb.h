@@ -26,6 +26,8 @@ typedef struct {
 #define USB_QUEUE_ADD     0x00000001
 #define USB_QUEUE_TEST    0x00000002
 
+#define ASCII_HORIZONTAL_TAB    0x09
+
 void usb_get_dev(char* s);
 void bind_usb_dev(char* s, int device_type);
 void attach_usb_dev(t_usb_devices* old_values, char* ip, char* device, char* type);
