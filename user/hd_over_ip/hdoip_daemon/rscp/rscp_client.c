@@ -109,7 +109,7 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
         dest_addr.sin_port = port;
         dest_addr.sin_addr.s_addr = addr.s_addr;        // remote address
 
-        if (connect(fd, (struct sockaddr_in*)&dest_addr, sizeof(struct sockaddr_in)) == -1) {
+        if (connect(fd, (struct sockaddr*)&dest_addr, sizeof(struct sockaddr_in)) == -1) {
             close(fd);
             perrno(ERROR "RSCP Client [%d]: connection refused", client->nr);
             ret = RSCP_CLIENT_ERROR;
@@ -186,7 +186,8 @@ int rscp_client_close(t_rscp_client* client)
 
         unlock("rscp_client_close");
             pthread_join(client->th1, 0);
-            pthread_join(client->th2, 0);
+            // cancel thread because there is a blocking read in it (should a cleanup handler be called after this?)
+            pthread_cancel(client->th2);
         lock("rscp_client_close");
 
         close(client->con.fdr);
@@ -384,7 +385,6 @@ int rscp_client_set_teardown(t_rscp_client* client)
 int rscp_client_teardown(t_rscp_client* client)
 {
     u_rscp_header buf;
-    int nr = client->nr;
 
 #ifdef REPORT_RSCP
     report(" > RSCP Client [%d] TEARDOWN", client->nr);
@@ -475,11 +475,21 @@ void rscp_client_event(t_node* list, uint32_t event)
         if (client->task)  queue_put(&task_list, client);
     }
 
-    while(client = queue_get(&task_list)) {
-        if(client->task & E_RSCP_CLIENT_KILL) rscp_client_close(client);
-        else if(client->task & E_RSCP_CLIENT_TEARDOWN) rscp_client_teardown(client);
-        else if(client->task & E_RSCP_CLIENT_PLAY) rscp_media_play(client->media);
+    client = queue_get(&task_list);
+    while(client) {
+        if(client->task & E_RSCP_CLIENT_KILL) {
+            rscp_client_close(client);
+        } else { 
+            if(client->task & E_RSCP_CLIENT_TEARDOWN) {
+                rscp_client_teardown(client);
+            } else {
+                if (client->task & E_RSCP_CLIENT_PLAY) {
+                    rscp_media_play(client->media);
+                }
+            }
+        }
         client->task = 0;
+        client = queue_get(&task_list);
     }
 }
 
@@ -561,6 +571,10 @@ void* rscp_client_req_thread(void* _client)
     t_rscp_header_common common;
     const t_map_set* method;
     u_rscp_header buf;
+
+    pthread_setcancelstate (PTHREAD_CANCEL_DISABLE, NULL);
+    pthread_setcanceltype  (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
 
     //lock("rscp_client_req_thread-start");
 #ifdef REPORT_RSCP_CLIENT

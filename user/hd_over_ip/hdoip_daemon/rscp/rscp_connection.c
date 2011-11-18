@@ -107,7 +107,11 @@ int rscp_receive(t_rscp_connection* con, char** line, int timeout)
                 return RSCP_TIMEOUT;
             }
         }
+
+        // read is blocking -> so thread can be cancelled at this position
+        pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
         ret = read(con->fdr, eol, RSCP_MSG_MAX_LENGTH - 1 - s);
+        pthread_setcancelstate (PTHREAD_CANCEL_DISABLE, NULL);
 
         if (ret == 0) {
             return RSCP_CLOSE;

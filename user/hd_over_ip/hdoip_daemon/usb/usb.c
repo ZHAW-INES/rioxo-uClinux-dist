@@ -446,17 +446,18 @@ void usb_device_handler(t_usb_devices* old_values)
                 }
             }
 
-            if ((old_values->device_queue_mouse & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
-                //connect as mouse
-                system("hdoip_usbipd mouse /dev/input/event0 /dev/hidg1 &");
-            }
-            if ((old_values->device_queue_keyboard & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
-                //connect as keyboard
-                system("hdoip_usbipd keyboard /dev/input/event0 /dev/hidg0 &");
-            }
-            old_values->device_queue_mouse = old_values->device_queue_mouse << 1;
-            old_values->device_queue_keyboard = old_values->device_queue_keyboard << 1;
-
+            if (reg_test("usb-mode", "device")) {
+                if ((old_values->device_queue_mouse & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
+                    //connect as mouse
+                    system("hdoip_usbipd mouse /dev/input/event0 /dev/hidg1 &");
+                }
+                if ((old_values->device_queue_keyboard & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
+                    //connect as keyboard
+                    system("hdoip_usbipd keyboard /dev/input/event0 /dev/hidg0 &");
+                }
+                old_values->device_queue_mouse = old_values->device_queue_mouse << 1;
+                old_values->device_queue_keyboard = old_values->device_queue_keyboard << 1;
+            }   
         }
     }
 }
