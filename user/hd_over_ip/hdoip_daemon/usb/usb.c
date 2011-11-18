@@ -44,6 +44,8 @@ void usb_get_dev(char* s)
         if (!(fd = fopen(tmp, "r"))) {
             strcpy(vendor, "no device");
             strcpy(product, "no device");
+            memcpy(s,      vendor,  strlen(vendor));
+            memcpy((s+50), product, strlen(product));
             return;
         }
         if (getline(&line, &len, fd) != -1) {
@@ -57,6 +59,8 @@ void usb_get_dev(char* s)
         if (!(fd = fopen(tmp, "r"))) {
             strcpy(vendor, "no device");
             strcpy(product, "no device");
+            memcpy(s,      vendor,  strlen(vendor));
+            memcpy((s+50), product, strlen(product));
             return;
         }
         if (getline(&line, &len, fd) != -1) {
