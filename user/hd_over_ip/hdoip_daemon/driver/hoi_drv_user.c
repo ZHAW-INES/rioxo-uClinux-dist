@@ -302,7 +302,7 @@ int hoi_drv_show(bool compress, void* buffer, t_video_timing* timing, uint32_t a
 
     return ret;
 }
-
+/*
 const uint8_t edid_hp2710m[256]=
 {
 0x00,0xff,0xff,0xff,0xff,0xff,0xff,0x00,
@@ -446,16 +446,16 @@ const uint8_t edid_samsung_tv[256]=
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xed
 };
-
+*/
 int hoi_drv_debug(void)
 {
     int ret=0;
     t_hoi_msg_debug msg;
     uint8_t *ptr;
-    t_edid *edid1 = (t_edid *)edid_hp2710m;
-    t_edid *edid2 = (t_edid *)edid_sony_bravia;
-    t_edid *edid3 = (t_edid *)edid_dell_1908fp;
-    t_edid *edid4 = (t_edid *)edid_samsung_tv;
+    //t_edid *edid1 = (t_edid *)edid_hp2710m;
+    //t_edid *edid2 = (t_edid *)edid_sony_bravia;
+    //t_edid *edid3 = (t_edid *)edid_dell_1908fp;
+    //t_edid *edid4 = (t_edid *)edid_samsung_tv;
     t_edid edid;
 
     hoi_msg_debug_init(&msg);
