@@ -66,6 +66,8 @@ function show(t)
         t.daemon_state_label = "none"
     end
     
+    hdoip.pipe.getHDCP(t)
+
     hdoip.html.Header(t, label.page_name .. label.page_status, script_path)
     hdoip.html.Title(label.p_stat_title)
 
@@ -81,6 +83,11 @@ function show(t)
     if(vid_res ~= nil) then
         hdoip.html.Text("Resolution");                                          hdoip.html.TableInsElement(1);
         hdoip.html.Text(vid_res);                                               hdoip.html.TableInsElement(1);
+    end
+
+    if(t.hdcp_state ~= nil) then
+        hdoip.html.Text("HDCP");                                                hdoip.html.TableInsElement(1);
+        hdoip.html.Text(t.hdcp_state);                                          hdoip.html.TableInsElement(1);
     end
 
     hdoip.html.Text("");                                                        hdoip.html.TableInsElement(1);

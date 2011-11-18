@@ -64,6 +64,7 @@ local PIPE_CMD_GETVERSION       = "3100000D"
 local PIPE_CMD_FACTORY_DEFAULT  = "3100000E"
 local PIPE_CMD_REBOOT           = "31000009"
 local PIPE_CMD_GETUSB           = "31000010"
+local PIPE_CMD_GET_HDCP_STATE   = "31000020"
 
 local fd_cmd, fd_rsp = nil, nil
 
@@ -229,6 +230,32 @@ function getUSB(t)
         
         t.usb_vendor = string.format("%s",string.sub(ret,1,49))
         t.usb_product = string.format("%s",string.sub(ret,50,99))
+    end
+end
+
+function getHDCP(t)
+    if((fd_cmd ~= nil) and (fd_rsp ~= nil)) then
+        str = createCmdHeader(PIPE_CMD_GET_HDCP_STATE, 100)
+        
+        str = hdoip.convert.Str2HexFile(str) .. '                                                                                                    '
+
+        fd_cmd:write(str)
+        fd_cmd:flush()
+
+        -- Read command header
+        ret = nil
+        while(ret == nil) do
+            ret = fd_rsp:read(8)
+        end
+        
+        size = hdoip.convert.bin2dec(string.sub(ret,5,8),4)
+
+        ret = nil
+        while(ret == nil) do
+            ret = fd_rsp:read(size - 8)
+        end
+        
+        t.hdcp_state = string.format("%s",string.sub(ret,1,49))
     end
 end
 

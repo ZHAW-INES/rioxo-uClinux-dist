@@ -474,24 +474,14 @@ int adv7441a_get_video_timing(t_adv7441a* handle)
             handle->vid_st.f1_vs_pulse_width       = 0;
             handle->vid_st.f1_back_porch_width     = 0;
         }
-
     }
     else
     {
         return ERR_ADV7441A_VID_PARAM_NOT_VALID;
     }
 
-	// Change vsync pin to output field signal if interlaced timing is measured 
-    if (handle->vid_st.interlaced) {
-	    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_OUTPUT_SELECTION, 0x02 | ADV7441A_BIT_DE_OUT_SEL | ADV7441A_BIT_HS_OUT_SEL);
-        adv7441a_usr_map_write(handle, ADV7441A_REG_CP_HVF_CONTROL_1, ADV7441A_BIT_PIN_INV_HS | ADV7441A_BIT_PIN_INV_VS | ADV7441A_BIT_PIN_INV_F);
-
-    }
-    else {
-        adv7441a_usr_map_write(handle, ADV7441A_REG_CP_OUTPUT_SELECTION, 0x02 | ADV7441A_BIT_DE_OUT_SEL | ADV7441A_BIT_VS_OUT_SEL | ADV7441A_BIT_HS_OUT_SEL);
-        adv7441a_usr_map_write(handle, ADV7441A_REG_CP_HVF_CONTROL_1, ADV7441A_BIT_PIN_INV_HS | ADV7441A_BIT_PIN_INV_VS);
-
-    }
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_OUTPUT_SELECTION, 0x02 | ADV7441A_BIT_DE_OUT_SEL | ADV7441A_BIT_VS_OUT_SEL | ADV7441A_BIT_HS_OUT_SEL);
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_HVF_CONTROL_1, ADV7441A_BIT_PIN_INV_HS | ADV7441A_BIT_PIN_INV_VS);
 
 	return ERR_ADV7441A_SUCCESS;
 }
