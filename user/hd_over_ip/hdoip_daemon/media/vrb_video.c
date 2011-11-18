@@ -181,10 +181,8 @@ int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rsc
         leave_multicast_group(vrb.dst_ip);
     }
 
-    if (rsp) {
-        osd_permanent(true);
-        osd_printf("video remote off...\n");
-    }
+    osd_permanent(true);
+    osd_printf("vrb.video connection lost...\n");
 
     // disable HDCP on AD9889
     hoi_drv_hdcp_adv9889dis();

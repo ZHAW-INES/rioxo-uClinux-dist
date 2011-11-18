@@ -162,9 +162,7 @@ int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown UNUSED *m, t_rsc
         leave_multicast_group(vrb.dst_ip);
     }
 
-    if (rsp) {
-        osd_printf("audio remote off...\n");
-    }
+    osd_printf("vrb.audio connection lost...\n");
 
     vrb.alive_ping = 1;
     vrb.timeout = 0;
