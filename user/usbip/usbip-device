@@ -3,8 +3,6 @@
 HIDG_CLASS="/sys/class/hidg"
 
 echo "I: loading drivers..."
-/sbin/modprobe isp1763_base otg_role=1
-/sbin/modprobe isp1763_udc
 /sbin/modprobe vhci-hcd
 /sbin/modprobe g_hid
 

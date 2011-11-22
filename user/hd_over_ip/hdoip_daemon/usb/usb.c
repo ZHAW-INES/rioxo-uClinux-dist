@@ -179,14 +179,9 @@ void attach_usb_dev(t_usb_devices* old_values, char* ip, char* device, char* typ
     } else {
         if (!strcmp(mode, "device")) {
             report(INFO "Attach USB device: %s from %s", device, ip);
-            // detach if a device already was attached (only for one device)
-            sprintf(tmp, "usbip detach -p 0");
-            system(tmp);
             // attach device
             sprintf(tmp, "usbip attach -h %s -b %s", ip, device);
             system(tmp);
-
-
             if (!strcmp(type, "mouse")) {
                 report(INFO "connect mouse");
                 // start with delay (wait until device is attached to USBIP)
@@ -221,6 +216,7 @@ void usb_load_driver(char* mode)
     if (!strcmp(mode, "device")) {
         report(INFO "Load USB driver for device");
         system("/sbin/modprobe isp1763_udc");
+        system("/sbin/modprobe g_hid");
         system("/bin/usbip-device");
     }
 
@@ -376,11 +372,12 @@ void mouse_or_keyboard(t_usb_devices* old_values, char* node, int device_count)
  */
 void usb_device_handler(t_usb_devices* old_values)
 {
-    char tmp[100];
+    char tmp[255];
+    char device[100];
     int device_count;
     int i, j;
-    bool new_device[9] = {true, true, true, true ,true ,true , true, true, true, true};
-    char zerostring[9] = "         ";
+    bool new_device[] = {true, true, true, true ,true ,true , true, true, true, true};
+    char zerostring[] = "         ";
     char *s;
     bool active = false;
 
@@ -453,15 +450,83 @@ void usb_device_handler(t_usb_devices* old_values)
             if (reg_test("usb-mode", "device")) {
                 if ((old_values->device_queue_mouse & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
                     //connect as mouse
-                    system("hdoip_usbipd mouse /dev/input/event0 /dev/hidg1 &");
+                    search_event(old_values, "mouse", device);
+                    if (strcmp(device, "no device")) {
+                        sprintf(tmp, "hdoip_usbipd mouse %s /dev/hidg1 &", device);
+                        system(tmp);
+                    }
                 }
                 if ((old_values->device_queue_keyboard & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
                     //connect as keyboard
-                    system("hdoip_usbipd keyboard /dev/input/event0 /dev/hidg0 &");
+                    search_event(old_values, "keyboard", device);
+                    if (strcmp(device, "no device")) {
+                        sprintf(tmp, "hdoip_usbipd keyboard %s /dev/hidg0 &", device);
+                        system(tmp);
+                    }
                 }
-                old_values->device_queue_mouse = old_values->device_queue_mouse << 1;
-                old_values->device_queue_keyboard = old_values->device_queue_keyboard << 1;
+                old_values->device_queue_mouse = old_values->device_queue_mouse >> 1;
+                old_values->device_queue_keyboard = old_values->device_queue_keyboard >> 1;
             }   
+        }
+    }
+}
+
+/** search in dev/input/eventX for mouse or keyboard
+ *
+ * - returns path of input device in "event"
+ * - type of device (mouse or keyboard) must be set in "type"
+ *
+ */
+void search_event(t_usb_devices* handle, char* type, char* event) {
+
+    int fd = -1;
+    int active_event[] = {USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN};
+    int active_event_cnt = 0;
+    int i;
+	unsigned long bit[EV_MAX][NBITS(KEY_MAX)];
+    char path[100];
+
+    // search for connected devices to /dev/input/eventX
+    for (i=0; i<4; i++) {
+        sprintf(path, "/dev/input/event%i", i);
+        fd = open(path, O_RDONLY);
+        if (fd >= 0) {
+            if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(bit[EV_KEY])), bit[EV_KEY]) >= 0) {
+                    // Check for some common keyboard keys to be present
+                    if (test_bit(KEY_ESC, bit[EV_KEY]) ||
+                    test_bit(KEY_Q, bit[EV_KEY]) ||
+                    test_bit(KEY_W, bit[EV_KEY]) ||
+                    test_bit(KEY_E, bit[EV_KEY]) ||
+                    test_bit(KEY_R, bit[EV_KEY]) ||
+                    test_bit(KEY_T, bit[EV_KEY]) ||
+                    test_bit(KEY_ENTER, bit[EV_KEY])) {
+                    active_event[i] = USB_TYPE_KEYBOARD;
+                }
+            }
+            if (ioctl(fd, EVIOCGBIT(EV_REL, sizeof(bit[EV_REL])), bit[EV_REL]) >= 0) {
+                // Check for the X and Y mouse axes to be present
+                if (test_bit(REL_X, bit[EV_REL]) ||
+                    test_bit(REL_Y, bit[EV_REL])) {
+                    active_event[i] = USB_TYPE_MOUSE;
+                }
+            }
+            active_event_cnt ++;
+            close(fd);
+        }
+    }
+
+    // return node of connected device in variable "event"
+    sprintf(event, "no device");
+    for (i=0; i<4; i++) {
+        if (!strcmp(type, "mouse")) {
+            if (active_event[i] == USB_TYPE_MOUSE) {
+                sprintf(event, "/dev/input/event%i", i);
+            }
+        }
+        if (!strcmp(type, "keyboard")) {
+            if (active_event[i] == USB_TYPE_KEYBOARD) {
+                sprintf(event, "/dev/input/event%i", i);
+            }
         }
     }
 }
