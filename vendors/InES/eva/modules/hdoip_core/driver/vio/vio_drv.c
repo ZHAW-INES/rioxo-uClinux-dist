@@ -196,7 +196,7 @@ int vio_drv_reset(t_vio* handle, uint32_t device)
     memset(&handle->osd, 0, sizeof(t_osd));
     
     // set OSD border
-    handle->osd.x_border = 6;
+    handle->osd.x_border = 0;
     handle->osd.y_border = 0;
 
     // stop everything

@@ -929,7 +929,8 @@ bool hdoipd_init(int drv)
 
         // setup default output
         osd_permanent(true);
-        osd_printf("Welcome to rioxo\n\n");
+      //osd_printf("Welcome to rioxo\n\n");
+        osd_printf_testpattern_focus_1080p();
     }
     unlock("hdoipd_init");
 

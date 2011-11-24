@@ -14,16 +14,31 @@
 #define OSD_BUFFER_LENGTH   256
 
 void hdoipd_osd_deactivate();
-void hdoipd_osd_activate();
+void hdoipd_osd_activate(int res);
 void hdoipd_osd_timer_start();
 
 extern char osdtmp[OSD_BUFFER_LENGTH];
 
 #define osd_printf(...) \
 { \
-    hdoipd_osd_activate(); \
-    int n = snprintf(osdtmp, OSD_BUFFER_LENGTH, __VA_ARGS__); \
+    hdoipd_osd_activate(0); \
+    int n = snprintf(osdtmp, OSD_BUFFER_LENGTH, "      " __VA_ARGS__); \
     write(hdoipd.drv, osdtmp, n); \
+}
+
+#define osd_printf_testpattern_focus_1080p() \
+{ \
+    char *p; \
+    int i; \
+    hdoipd_osd_activate(1080); \
+    if((p = malloc(0x8000)) != NULL) { \
+        for (i=0; i<(0x8000); i+=2) { \
+            p[i]   = 128; \
+            p[i+1] = 129; \
+        } \
+        write(hdoipd.drv, p, (0x8000-27)); \
+        free(p); \
+    } \
 }
 
 static inline void osd_permanent(bool b)

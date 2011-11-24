@@ -25,19 +25,25 @@ void hdoipd_osd_deactivate()
     //}
 }
 
-void hdoipd_osd_activate()
+void hdoipd_osd_activate(int res)
 {
     t_video_timing* timing;
     int osd_timeout = reg_get_int("osd-time");
     int h_pixel, v_pixel, fps;
 
-    if (hdoipd.drivers & DRV_GS2972) {
-        h_pixel = 1280;
-        v_pixel = 720;
-        fps = 60;
+    if (res == 0) {
+        if (hdoipd.drivers & DRV_GS2972) {
+            h_pixel = 1280;
+            v_pixel = 720;
+            fps = 60;
+        } else {
+            h_pixel = 640;
+            v_pixel = 480;
+            fps = 60;
+        }
     } else {
-        h_pixel = 640;
-        v_pixel = 480;
+        h_pixel = 1920;
+        v_pixel = 1080;
         fps = 60;
     }
 
