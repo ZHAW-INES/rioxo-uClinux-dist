@@ -320,7 +320,7 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
 
     // setup vio
     if (msg->compress & DRV_CODEC) {
-        n = vio_drv_decodex(&handle->vio, &msg->timing, msg->advcnt);
+        n = vio_drv_decodex(&handle->vio, &msg->timing, msg->advcnt, bdt_return_device(&handle->bdt));
     } else {
         n = vio_drv_plainoutx(&handle->vio, &msg->timing);
     }
@@ -390,7 +390,7 @@ int hoi_drv_msg_vso_repaire(t_hoi* handle)
     vso_drv_stop(&handle->vso);
     vso_drv_flush_buf(&handle->vso);
 
-    vio_drv_decode(&handle->vio);
+    vio_drv_decode(&handle->vio, bdt_return_device(&handle->bdt));
 
     vso_drv_stop(&handle->vso);
 

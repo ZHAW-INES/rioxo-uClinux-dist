@@ -93,8 +93,8 @@ label = {
 
     -- Page USB
     p_usb_mode = "Mode";
-    p_usb_host = "Host";
-    p_usb_device = "Device";
+    p_usb_host = "Host (A device is connected to this Rioxo (USB-HUB, Mouse or Keyboard))";
+    p_usb_device = "Device (PC is connected to this Rioxo)";
     p_usb_off = "Disabled";
     p_usb_label_device = "Connected Device";
 

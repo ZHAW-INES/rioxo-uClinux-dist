@@ -56,7 +56,7 @@ static int vio_set_input_format(void* p, t_video_timing* p_vt, t_video_format f0
     void *tf = (void*)(coltf[vio_format_cs(f0)][vio_format_cs(f1)]);
 	uint32_t cfg =  smtf[vio_format_sm(f0)][vio_format_sm(f1)];
     
-	vio_set_transform(p, VIO_OFF_INPUT_PT, tf, cfg, p_vt->vpolarity, p_vt->hpolarity);
+	vio_set_transform(p, VIO_OFF_INPUT_PT, tf, cfg, p_vt->vpolarity, p_vt->hpolarity, false);
     
 	VIO_REPORT_TRANSFORM(p + VIO_OFF_INPUT_PT, "input");
 
@@ -71,12 +71,12 @@ static int vio_set_input_format(void* p, t_video_timing* p_vt, t_video_format f0
  * @param f1 output format
  * @return error code (0 on success)
  */
-static int vio_set_output_format(void* p, t_video_timing* p_vt, t_video_format f0, t_video_format f1)
+static int vio_set_output_format(void* p, t_video_timing* p_vt, t_video_format f0, t_video_format f1, bool invert_cb_cr)
 {
     void *tf = (void*)(coltf[vio_format_cs(f0)][vio_format_cs(f1)]);
 	uint32_t cfg =  smtf[vio_format_sm(f0)][vio_format_sm(f1)];
 
-	vio_set_transform(p, VIO_OFF_OUTPUT_PT, tf, cfg, p_vt->vpolarity, p_vt->hpolarity);
+	vio_set_transform(p, VIO_OFF_OUTPUT_PT, tf, cfg, p_vt->vpolarity, p_vt->hpolarity, invert_cb_cr);
 
 	VIO_REPORT_TRANSFORM(p + VIO_OFF_OUTPUT_PT, "output");
 
@@ -93,7 +93,7 @@ int vio_drv_set_black_output(t_vio* handle)
     void *tf = (void *) black_out;
     uint32_t cfg = S444TO444;
 
-    vio_set_transform(handle->p_vio, VIO_OFF_OUTPUT_PT, tf, cfg, handle->timing.vpolarity, handle->timing.hpolarity);
+    vio_set_transform(handle->p_vio, VIO_OFF_OUTPUT_PT, tf, cfg, handle->timing.vpolarity, handle->timing.hpolarity, false);
 
     return ERR_VIO_SUCCESS;
 }   
@@ -105,7 +105,7 @@ int vio_drv_set_black_output(t_vio* handle)
  */
 int vio_drv_clr_black_output(t_vio* handle)
 {
-    vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out);
+    vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out, false);
 
     return ERR_VIO_SUCCESS;
 }
@@ -248,7 +248,7 @@ int vio_drv_encode(t_vio* handle)
     
     // setup interface format
     handle->format_proc = advfmt[handle->adv.cnt-1];
-    vio_set_output_format(handle->p_vio, &handle->timing, advfmt[handle->adv.cnt-1], handle->format_out);
+    vio_set_output_format(handle->p_vio, &handle->timing, advfmt[handle->adv.cnt-1], handle->format_out, false);
     vio_set_input_format(handle->p_vio, &handle->timing, handle->format_in, advfmt[handle->adv.cnt-1]);
     
     // setup PLL
@@ -310,9 +310,10 @@ int vio_drv_encode(t_vio* handle)
  *
  * @param handle vio handle
  */
-int vio_drv_decode(t_vio* handle)
+int vio_drv_decode(t_vio* handle, uint32_t device)
 {
     int ret = ERR_VIO_SUCCESS;    
+    bool invert_cb_cr = false;
 
     REPORT(INFO, ">> VIO-Driver: adv212 decoding mode");
 
@@ -333,8 +334,12 @@ int vio_drv_decode(t_vio* handle)
     vio_config_tg(handle, VIO_TG_CONFIG_DECODE);
 
     // setup interface format
+
+    if (device == BDT_ID_SDI8_BOARD) {
+        invert_cb_cr = true;
+    }
     handle->format_proc = advfmt[handle->adv.cnt-1];
-    vio_set_output_format(handle->p_vio, &handle->timing, advfmt[handle->adv.cnt-1], handle->format_out);    
+    vio_set_output_format(handle->p_vio, &handle->timing, advfmt[handle->adv.cnt-1], handle->format_out, invert_cb_cr);    
 
     // setup PLL
     if (handle->config & VIO_CONFIG_VRP) {
@@ -445,7 +450,7 @@ int vio_drv_plainout(t_vio* handle)
     vio_set_timing(handle->p_vio, &handle->timing, 0);
 
     // setup interface format
-    vio_set_output_format(handle->p_vio, &handle->timing, vio_format(CS_RGB, SM_444), handle->format_out);
+    vio_set_output_format(handle->p_vio, &handle->timing, vio_format(CS_RGB, SM_444), handle->format_out, false);
 
     // setup PLL
     if (handle->config & VIO_CONFIG_VRP) {
@@ -523,7 +528,7 @@ int vio_drv_plainin(t_vio* handle)
     // ... TODO: testing range
 
     // setup interface format
-    vio_set_output_format(handle->p_vio, &handle->timing, vio_format(CS_RGB, SM_444), handle->format_out);
+    vio_set_output_format(handle->p_vio, &handle->timing, vio_format(CS_RGB, SM_444), handle->format_out, false);
     vio_set_input_format(handle->p_vio, &handle->timing, handle->format_in, vio_format(CS_RGB, SM_444));
 
     // setup PLL
@@ -595,7 +600,7 @@ int vio_drv_debug(t_vio* handle)
     vio_set_timing(handle->p_vio, &handle->timing, 0);
 
     // setup interface format
-    vio_set_output_format(handle->p_vio, &handle->timing, vio_format(CS_RGB, SM_444), handle->format_out);
+    vio_set_output_format(handle->p_vio, &handle->timing, vio_format(CS_RGB, SM_444), handle->format_out, false);
     
     // setup PLL
     vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_75MHZ, handle->timing.pfreq, 1, VIO_MUX_PLLC_FREE);    
@@ -652,7 +657,7 @@ int vio_drv_loop(t_vio* handle)
     // ... TODO: testing range
 
     // setup interface format
-    vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out);
+    vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out, false);
     vio_set_input_format(handle->p_vio, &handle->timing, handle->format_in, handle->format_proc);
 
     // setup PLL
@@ -742,12 +747,12 @@ int vio_drv_encodex(t_vio* handle, int bandwidth, int advcnt)
  * @param p_vt video timing struct
  * @param advcnt the numbers of adv212 used for encoding
  */
-int vio_drv_decodex(t_vio* handle, t_video_timing* p_vt, int advcnt)
+int vio_drv_decodex(t_vio* handle, t_video_timing* p_vt, int advcnt, uint32_t device)
 {
     PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv); PTR(p_vt);
     handle->adv.cnt = advcnt;
     memcpy(&handle->timing, p_vt, sizeof(t_video_timing));
-    return vio_drv_decode(handle);
+    return vio_drv_decode(handle, device);
 }
 
 /** Activates the VIO/ADV212 for output operation
@@ -791,7 +796,7 @@ int vio_drv_set_format_out(t_vio* handle, t_video_format f)
     handle->format_out = f;
     // TODO: update when already running?
     if (handle->active) {
-        vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out);
+        vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out, false);
     }
     return ERR_VIO_SUCCESS;
 }
@@ -803,7 +808,7 @@ int vio_drv_set_format_proc(t_vio* handle, t_video_format f)
     if (handle->active) {
         vio_set_input_format(handle->p_vio, &handle->timing, handle->format_in, handle->format_proc);
 
-        vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out);
+        vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out, false);
     }
     return ERR_VIO_SUCCESS;
 }

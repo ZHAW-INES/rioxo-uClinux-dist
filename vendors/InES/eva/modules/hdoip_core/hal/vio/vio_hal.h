@@ -68,7 +68,7 @@ static inline void vio_reset(void* p)
  */
 void vio_set_timing(void* p, t_video_timing* p_vt, int triggersource);
 void vio_set_control(void* p, t_video_timing* p_vt, int ppm, int sel);
-void vio_set_transform(void* p, uint32_t o, t_color_transform m, uint32_t cfg, bool vpol, bool hpol);
+void vio_set_transform(void* p, uint32_t o, t_color_transform m, uint32_t cfg, bool vpol, bool hpol, bool invert_cb_cr);
 
 void vio_get_timing(void* p, t_video_timing* p_vt);
 void vio_get_input_frequency(void* p, t_video_timing* p_vt);

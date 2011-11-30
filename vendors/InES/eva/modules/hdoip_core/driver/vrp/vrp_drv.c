@@ -83,7 +83,7 @@ int vrp_drv_show_jpeg2000(t_vrp* handle, void* buffer, t_video_timing* p_vt, int
 
     vrp_idle(handle->p_vrp);
     vio_drv_set_cfg(handle->vio, VIO_CONFIG_VRP);
-    if ((ret = vio_drv_decodex(handle->vio, p_vt, advcnt))) {
+    if ((ret = vio_drv_decodex(handle->vio, p_vt, advcnt, false))) {
         VIO_REPORT_ERROR(ret);
         return ret;
     }
