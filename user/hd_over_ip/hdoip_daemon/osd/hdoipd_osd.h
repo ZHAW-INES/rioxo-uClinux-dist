@@ -26,11 +26,47 @@ extern char osdtmp[OSD_BUFFER_LENGTH];
     write(hdoipd.drv, osdtmp, n); \
 }
 
-#define osd_printf_testpattern_focus_1080p() \
+#define osd_printf_testpattern_focus_1080p60() \
 { \
     char *p; \
     int i; \
-    hdoipd_osd_activate(1080); \
+    hdoipd_osd_deactivate(); \
+    hdoipd_clr_rsc(RSC_VIDEO_OUT); \
+    hdoipd_osd_activate(108060); \
+    if((p = malloc(0x8000)) != NULL) { \
+        for (i=0; i<(0x8000); i+=2) { \
+            p[i]   = 128; \
+            p[i+1] = 129; \
+        } \
+        write(hdoipd.drv, p, (0x8000-27)); \
+        free(p); \
+    } \
+}
+
+#define osd_printf_testpattern_focus_1080p24() \
+{ \
+    char *p; \
+    int i; \
+    hdoipd_osd_deactivate(); \
+    hdoipd_clr_rsc(RSC_VIDEO_OUT); \
+    hdoipd_osd_activate(108024); \
+    if((p = malloc(0x8000)) != NULL) { \
+        for (i=0; i<(0x8000); i+=2) { \
+            p[i]   = 128; \
+            p[i+1] = 129; \
+        } \
+        write(hdoipd.drv, p, (0x8000-27)); \
+        free(p); \
+    } \
+}
+
+#define osd_printf_testpattern_focus_720p60() \
+{ \
+    char *p; \
+    int i; \
+    hdoipd_osd_deactivate(); \
+    hdoipd_clr_rsc(RSC_VIDEO_OUT); \
+    hdoipd_osd_activate(72060); \
     if((p = malloc(0x8000)) != NULL) { \
         for (i=0; i<(0x8000); i+=2) { \
             p[i]   = 128; \

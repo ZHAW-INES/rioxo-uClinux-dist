@@ -31,20 +31,32 @@ void hdoipd_osd_activate(int res)
     int osd_timeout = reg_get_int("osd-time");
     int h_pixel, v_pixel, fps;
 
-    if (res == 0) {
-        if (hdoipd.drivers & DRV_GS2972) {
-            h_pixel = 1280;
-            v_pixel = 720;
-            fps = 60;
-        } else {
-            h_pixel = 640;
-            v_pixel = 480;
-            fps = 60;
-        }
-    } else {
-        h_pixel = 1920;
-        v_pixel = 1080;
-        fps = 24;
+    switch (res)  {
+
+        case 108060:    h_pixel = 1920;
+                        v_pixel = 1080;
+                        fps = 60;
+                        break;
+
+        case 108024:    h_pixel = 1920;
+                        v_pixel = 1080;
+                        fps = 24;
+                        break;
+
+        case 72060:     h_pixel = 1280;
+                        v_pixel = 720;
+                        fps = 60;
+                        break;
+
+        default:        if (hdoipd.drivers & DRV_GS2972) {
+                            h_pixel = 1280;
+                            v_pixel = 720;
+                            fps = 60;
+                        } else {
+                            h_pixel = 640;
+                            v_pixel = 480;
+                            fps = 60;
+                        }
     }
 
     if (!(hdoipd.rsc_state & RSC_OSD)) {

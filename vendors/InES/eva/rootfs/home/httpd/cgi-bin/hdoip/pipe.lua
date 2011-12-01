@@ -50,6 +50,7 @@ REG_MULTICAST_EN = "multicast_en"
 REG_MULTICAST_GROUP = "multicast_group"
 REG_SERIAL = "serial-number"
 REG_MODE_USB = "usb-mode"
+REG_MODE_TEST_IMAGE = "test-image"
 
 local PIPE_CMD = "/tmp/web.cmd"
 local PIPE_RSP = "/tmp/web.rsp"

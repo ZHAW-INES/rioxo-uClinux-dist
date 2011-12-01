@@ -35,6 +35,9 @@ label = {
     button_restore = "Restore";
     button_yes = "yes";
     button_no = "no";
+    button_focus_1080p60 = "focus 1080p60";
+    button_focus_1080p24 = "focus 1080p24";
+    button_focus_720p60  = "focus  720p60";
 
     -- Errors
     err_ip_not_valid = "IP is not valid";
@@ -57,6 +60,7 @@ label = {
     page_firmware = "Firmware";
     page_status = "Status";
     page_usb = "USB";
+    page_test = "Test";
     page_default = "Factory defaults";
     page_restart = "Reboot";
     page_settings = "Settings";
@@ -69,6 +73,7 @@ label = {
     tab_settings = "Settings";
     tab_login = "Login";
     tab_usb = "USB";
+    tab_test = "Test";
 
     -- Page default
     p_df_question = "Restore factory defaults?";
@@ -97,6 +102,9 @@ label = {
     p_usb_device = "Device (PC is connected to this Rioxo)";
     p_usb_off = "Disabled";
     p_usb_label_device = "Connected Device";
+
+    -- Page TEST
+    p_usb_image = "Test Images";
 
     -- Page firmware
     p_serial_number = "Serial number";

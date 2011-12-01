@@ -661,6 +661,24 @@ void task_set_usb_mode(char* p)
     update_vector |= HOID_TSK_UPD_USB_MODE;
 }
 
+void task_set_test_image(char* p)
+{
+    int a = atoi(p);
+    if reg_test("mode-start", "vrb") {
+        hdoipd_ready(0);
+        switch (a) {
+            case 1:     osd_printf_testpattern_focus_1080p60();
+                        break;
+            case 2:     osd_printf_testpattern_focus_1080p24();
+                        break;
+            case 3:     osd_printf_testpattern_focus_720p60();
+                        break;
+            default:    report(ERROR "test-image: no valid number");
+        }
+    }
+    reg_set("test-image", "0");
+}
+
 void task_set_network_delay(char* p)
 {
     update_vector |= HOID_TSK_EXEC_RESTART_VRB;
@@ -723,6 +741,7 @@ void hdoipd_register_task()
     set_listener("led_instruction", task_set_led_instruction);
     set_listener("osd-time", task_set_osd_time);
     set_listener("usb-mode", task_set_usb_mode);
+    set_listener("test-image", task_set_test_image);
 }
 
 

@@ -229,8 +229,8 @@ function FormBottom(t)
 end
 
 function Header(t, title, script_path, addon)
-    local menu_item_cnt = 7
-    local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_usb; [3] = label.tab_status; [4] = label.tab_firmware; [5] = label.tab_default; [6] = label.tab_settings;}
+    local menu_item_cnt = 8
+    local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_usb; [3] = label.tab_status; [4] = label.tab_firmware; [5] = label.tab_default; [6] = label.tab_settings; [7] = label.tab_test;}
     local dev_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_HOST_NAME)
     local dev_caption = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DEV_CAPTION)
 
@@ -289,7 +289,10 @@ function Header(t, title, script_path, addon)
         if(t.page == i) then
             menu_class = 'current'
         end
-        html_str = html_str .. '    <li id="'..menu_class..'"><a href="' .. script_path .. '?page=' .. i .. '"><span>' .. menu_items[i] .. '</span></a></li>\n'
+        -- show page test only on vrb
+        if((t.mode_vrb) or (i ~= 7)) then
+            html_str = html_str .. '    <li id="'..menu_class..'"><a href="' .. script_path .. '?page=' .. i .. '"><span>' .. menu_items[i] .. '</span></a></li>\n'
+        end
     end
 
 

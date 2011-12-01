@@ -2,6 +2,7 @@
 require("pages.status")
 require("pages.ethernet")
 require("pages.usb")
+require("pages.test")
 require("pages.streaming")
 require("pages.firmware")
 require("pages.default")
@@ -25,6 +26,7 @@ PAGE_ID_STATUS = 3
 PAGE_ID_FIRMWARE = 4
 PAGE_ID_DEFAULT = 5
 PAGE_ID_SETTING = 6
+PAGE_ID_TEST = 7
 PAGE_ID_LOGIN = 20
 PAGE_START = 0
 
@@ -157,6 +159,8 @@ elseif(query.page == 5) then
     pages.default.show(query)
 elseif(query.page == 6) then 
     pages.settings.show(query)
+elseif(query.page == 7) then 
+    pages.test.show(query)
 elseif(query.page == 20) then
     pages.login.show(query)
 elseif(query.page == 40) then
