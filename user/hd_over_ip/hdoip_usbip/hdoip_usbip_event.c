@@ -59,10 +59,10 @@ static const unsigned char scancode_mod_map[] = {
 	[0xE1] = 0x02,             // Shift left
 	[0xE2] = 0x04,             // Alt left
 	[0xE3] = 0x08,             // GUI left
-	[0xE4] = 0x01,             // CTRL right
-	[0xE5] = 0x02,             // Shift right
-	[0xE6] = 0x04,             // Alt right
-	[0xE7] = 0x08              // GUI right
+	[0xE4] = 0x10,             // CTRL right
+	[0xE5] = 0x20,             // Shift right
+	[0xE6] = 0x40,             // Alt right
+	[0xE7] = 0x80              // GUI right
 };
 
 
@@ -188,7 +188,18 @@ enum {
 	RET_CONTINUE,		/* contninue adding data to the report */
 };
 
-static int prepare_key_event(struct input_event *ev, char *report, const unsigned char *new)
+/* Report flasgs:
+Bit 0: New Report -> 1 if report was just sent and a new report started
+Bit 1: Report valid
+Bit 2: Reserved
+Bit 3: Reserved
+Bit 4: Reserved
+Bit 5: Reserved
+Bit 6: Reserved
+Bit 7: Reserved
+*/
+
+static int prepare_key_event(struct input_event *ev, char *report, const unsigned char *flags)
 {
 	unsigned char scancode;
 	unsigned char i;
@@ -236,13 +247,13 @@ static int prepare_key_event(struct input_event *ev, char *report, const unsigne
 	return RET_CONTINUE;
 }
 
-static int prepare_mouse_event(struct input_event *ev, char *report, const unsigned char *new)
+static int prepare_mouse_event(struct input_event *ev, char *report, const unsigned char *flags)
 {
 	unsigned char tag;
 
 	dbg("prepare_mouse_event\n");
 
-	if ( *new == 1 ) memset(&report[1], 0, sizeof(report)-1);
+	if ( (*flags & 0x01) != 0 ) memset(&report[1], 0, sizeof(report)-1);
 
 	if ( ev->type == EV_SYN ) return RET_SEND;
 
@@ -261,9 +272,13 @@ static int prepare_mouse_event(struct input_event *ev, char *report, const unsig
 	}
 
 	if ( ev->type == EV_MSC ) {
+		if ( ev->code != MSC_SCAN ) return RET_INVALID;
+		if ( (unsigned short)(ev->value>>8) != 0x0900 ) return RET_INVALID;
 		tag = (unsigned char)ev->value;
+		if ( tag > 3 ) return RET_INVALID;
 		if ( tag == 3 ) tag = 4;
 		report[0] ^= tag;
+		return RET_CONTINUE;
 	}
 
 	return RET_INVALID;
@@ -279,7 +294,7 @@ int hdoip_usbip_event_loop(int efd, int gfd, const char *type)
 	ssize_t report_size;
 	unsigned int idx;
 	int ret;
-	unsigned char new_report;
+	unsigned char report_flags;
 	int (*filter_event)(struct input_event *);
 	int (*prepare_event)(struct input_event *, char *, const unsigned char *);
 
@@ -300,7 +315,7 @@ int hdoip_usbip_event_loop(int efd, int gfd, const char *type)
 	}
 
 	memset(report, 0, sizeof(report));
-	new_report = 1;
+	report_flags = 0x01;
 
 	while (!hdoip_usbipd_exit) {
 		fd_set rfds;
@@ -346,18 +361,25 @@ int hdoip_usbip_event_loop(int efd, int gfd, const char *type)
 					ev[i].type, event_names[ev[i].type],
 					ev[i].code, ev[i].value);
 
-			ret = prepare_event( &ev[i], report, &new_report );
-			new_report = 0;
+			ret = prepare_event( &ev[i], report, &report_flags );
+			report_flags &= 0xFE; // Not a new report anymore
 
 			if ( ret == RET_SEND ) {
-				dbg( "Report: %X %X %X %X\n", report[0], report[1], report[2], report[3] );
-				if (!readonly) {
-					if (write(gfd, report, report_size) != report_size) {
-						err("failed to write report to gadget\n");
-						return -1;
+				if ( (report_flags & 0x02) != 0 ) {
+					dbg( "Report: %X %X %X %X\n", report[0], report[1], report[2], report[3] );
+					if (!readonly) {
+						if (write(gfd, report, report_size) != report_size) {
+							err("failed to write report to gadget\n");
+							return -1;
+						}
 					}
+				} else {
+					dbg( "Report not valid\n" );
 				}
-				new_report = 1;
+				report_flags |= 0x01; // New report
+				report_flags &= 0xFD; // New report not yet valid
+			} else if ( ret == RET_CONTINUE ) {
+				report_flags |= 0x02; // Report valid
 			}
 
 		}
