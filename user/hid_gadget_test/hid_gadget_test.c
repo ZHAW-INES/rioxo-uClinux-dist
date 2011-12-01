@@ -116,11 +116,20 @@ static struct options mmod[] = {
 	{.opt = NULL}
 };
 
+static struct options msmod[] = {
+	{.opt = "--su", .val = 0x01},
+	{.opt = "--sd", .val = 0xFF},
+	{.opt = NULL}
+};
+
 static int mouse_fill_report(char report[8], char buf[BUF_LEN], int *hold)
 {
 	char *tok = strtok(buf, " ");
 	int mvt = 0;
 	int i = 0;
+
+	report[3] = 0;
+
 	for (; tok != NULL; tok = strtok(NULL, " ")) {
 
 		if (strcmp(tok, "--quit") == 0)
@@ -139,6 +148,14 @@ static int mouse_fill_report(char report[8], char buf[BUF_LEN], int *hold)
 		if (mmod[i].opt != NULL)
 			continue;
 
+		for (i = 0; msmod[i].opt != NULL; i++)
+			if (strcmp(tok, msmod[i].opt) == 0) {
+				report[3] = msmod[i].val;
+				break;
+			}
+		if (msmod[i].opt != NULL)
+			continue;
+
 		if (!(tok[0] == '-' && tok[1] == '-') && mvt < 2) {
 			errno = 0;
 			report[1 + mvt++] = (char)strtol(tok, NULL, 0);
@@ -151,7 +168,8 @@ static int mouse_fill_report(char report[8], char buf[BUF_LEN], int *hold)
 
 		fprintf(stderr, "unknown option: %s\n", tok);
 	}
-	return 3;
+
+	return 4;
 }
 
 static struct options jmod[] = {
@@ -225,6 +243,8 @@ static void print_options(char c)
 		       "		--hold\n");
 		for (i = 0; mmod[i].opt != NULL; i++)
 			printf("\t\t%s\n", mmod[i].opt);
+		for (i = 0; msmod[i].opt != NULL; i++)
+			printf("\t\t%s\n", msmod[i].opt);
 		printf("\n	mouse values:\n"
 		       "		Two signed numbers\n"
 		       "--quit to close\n");

@@ -60,6 +60,9 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     // set lowest drive strength
     spi_write_reg_16(handle->p_spi, GS2971_IO_DRIVE_STRENGTH, IO_DRIVE_STRENGTH_4_MA);
 
+    // invert hsync and vsync timing (low active)
+    spi_write_reg_16(handle->p_spi, GS2971_TIM_861_CFG, TIM_861_CFG_HSYNC_INVERT | TIM_861_CFG_VSYNC_INVERT);
+
     // ------AUDIO-CONFIG------
 
     // output always I2S-audio 24bit (SD)
@@ -228,8 +231,8 @@ int gs2971_get_video_timing(t_gs2971 *handle)
     interlaced = (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_INT_PROG) >> RASTER_STRUC_4_INT_PROG_SHIFT;  // 1 = interlaced timing detected
 
     handle->vid_st.interlaced = interlaced;  // 1 = interlaced timing detected
-    handle->vid_st.vsync_pol  = 1;  // 1 = high active
-    handle->vid_st.hsync_pol  = 1;  // 1 = high active
+    handle->vid_st.vsync_pol  = 0;  // 1 = high active
+    handle->vid_st.hsync_pol  = 0;  // 1 = high active
     handle->vid_st.field_pol  = 1;  // 1 = high is odd field
 
     // timing is only needed when interlaced

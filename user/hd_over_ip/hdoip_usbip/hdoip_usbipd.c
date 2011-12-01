@@ -22,11 +22,13 @@
 
 int hdoip_usbipd_exit = 0;
 int debug = 0;
+int readonly = 0;
 
-#define OPTSTRING "dhV"
+#define OPTSTRING "drhV"
 
 static const struct option options[] = {
 	{ "debug", no_argument, NULL, 'd' },
+	{ "readonly", no_argument, NULL, 'r' },
 	{ "help", no_argument, NULL, 'h' },
 	{ "version", no_argument, NULL, 'V' },
 };
@@ -38,9 +40,10 @@ static void usage_and_exit(int rc)
 			"EVDEV is the input event device node (/dev/input/eventN)\n"
 			"GDEV is the HID gadget device node (/dev/hidgN)\n\n"
 			"options:\n"
-			" -d, --debug    enable debugging output\n"
-			" -h, --help     show this help and exit\n"
-			" -V, --version  show version and exit\n");
+			" -d, --debug     enable debugging output\n"
+			" -r, --readonly  only read input events, don't forward them\n"
+			" -h, --help      show this help and exit\n"
+			" -V, --version   show version and exit\n");
 	exit(rc);
 }
 
@@ -63,6 +66,9 @@ int main(int argc, char **argv)
 		switch (o) {
 		case 'd':
 			debug = 1;
+			break;
+		case 'r':
+			readonly = 1;
 			break;
 		case 'V':
 			fprintf(stdout, "%s\n", VERSION);

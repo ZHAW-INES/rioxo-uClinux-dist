@@ -44,7 +44,7 @@ void hdoipd_osd_activate(int res)
     } else {
         h_pixel = 1920;
         v_pixel = 1080;
-        fps = 60;
+        fps = 24;
     }
 
     if (!(hdoipd.rsc_state & RSC_OSD)) {
