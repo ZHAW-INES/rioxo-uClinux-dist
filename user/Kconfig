@@ -4567,6 +4567,9 @@ config USER_USBIP
 config USER_HID_GADGET_TEST
 	bool "HID gadget test"
 
+config USER_HDOIP_TEST
+	bool "HD over IP test"
+
 endmenu
 
 #############################################################################
