@@ -8,7 +8,8 @@
 extern const t_video_timing VFORMAT[];
 
 extern const t_color_transform xyz_one;
-extern const t_color_transform black_out;
+extern const t_color_transform black_out_rgb;
+extern const t_color_transform black_out_yuv;
 extern const t_color_transform rgb2yuv;
 extern const t_color_transform yuv2rgb;
 extern const t_color_transform rgb2y;

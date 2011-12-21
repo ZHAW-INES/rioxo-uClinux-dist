@@ -225,7 +225,6 @@ int hoi_drv_msg_ethstat(t_hoi* handle, t_hoi_msg_ethstat* msg)
     return SUCCESS;
 }
 
-
 int hoi_drv_msg_vsostat(t_hoi* handle, t_hoi_msg_vsostat* msg)
 {
     msg->vframe_skip = vso_get_vframe_lost(handle->p_vso);
@@ -294,7 +293,10 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
         vio_copy_adv7441_timing(&handle->vio.timing, &handle->adv7441a);
     }
     if (handle->drivers & DRV_GS2971) {
-        gs2971_get_video_timing(&handle->gs2971);
+        if (gs2971_get_interlaced(&handle->gs2971)) {
+            vio_get_timing(handle->p_vio, &msg->timing);
+        }
+        gs2971_get_video_timing(&handle->gs2971, &handle->vio.timing);
         vio_copy_gs2971_timing(&msg->timing, &handle->gs2971);
     }
 
@@ -496,6 +498,11 @@ int hoi_drv_msg_show(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
+    // if sdi, set output data rate
+    if (handle->drivers & DRV_GS2972) {
+        gs2972_driver_set_data_rate(&handle->gs2972, msg->timing.pfreq);
+    }
+
     if (msg->compress) {
         ret = vrp_drv_show_jpeg2000(&handle->vrp, msg->buffer, &msg->timing, msg->advcnt);
     } else {
@@ -668,7 +675,10 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
         vio_copy_adv7441_timing(&msg->timing, &handle->adv7441a);
     }
     if (handle->drivers & DRV_GS2971) {
-        gs2971_get_video_timing(&handle->gs2971);
+        if (gs2971_get_interlaced(&handle->gs2971)) {
+            vio_get_timing(handle->p_vio, &msg->timing);
+        }
+        gs2971_get_video_timing(&handle->gs2971, &msg->timing);
         vio_copy_gs2971_timing(&msg->timing, &handle->gs2971);
     }
 

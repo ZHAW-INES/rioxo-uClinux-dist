@@ -217,14 +217,15 @@ void gs2971_get_video_timing_info(t_gs2971 *handle)
 
 void gs2971_debug(t_gs2971 *handle)
 {
-    int format_code;
 
-    format_code = (spi_read_reg_16(handle->p_spi, GS2971_DATA_FORMAT_DS1) & DATA_FORMAT_DS1_VD_STD_MASK) >> DATA_FORMAT_DS1_VD_STD_SHIFT;
-    gs2971_report_incoming_video(handle, format_code);
-    gs2971_get_video_timing_info(handle);
 }
 
-int gs2971_get_video_timing(t_gs2971 *handle)
+bool gs2971_get_interlaced(t_gs2971 *handle)
+{
+    return (bool) ((spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_INT_PROG) >> RASTER_STRUC_4_INT_PROG_SHIFT); // true = interlaced
+}
+
+int gs2971_get_video_timing(t_gs2971 *handle, t_video_timing *measured_timing)
 {
     int i, height, total_height, width, total_width, interlaced;
 
@@ -241,17 +242,24 @@ int gs2971_get_video_timing(t_gs2971 *handle)
     }
 
     // get timing
-    width =         spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_1) & RASTER_STRUC_1_WORDS_PER_AVTLINE_MASK;
-    total_width =   spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_2) & RASTER_STRUC_2_WORDS_PER_LINE_MASK;
-    height =        spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_ACTLINE_PER_FIELD_MASK;
-    total_height =  spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_3) & RASTER_STRUC_3_LINES_PER_FRAME_MASK;
+    // internally measured timing is for 576i and 480i incorrect -> use timing of vio (measured_timing)
+    // width =         spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_1) & RASTER_STRUC_1_WORDS_PER_AVTLINE_MASK;
+    // total_width =   spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_2) & RASTER_STRUC_2_WORDS_PER_LINE_MASK;
+    // height =        spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_ACTLINE_PER_FIELD_MASK;
+    // total_height =  spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_3) & RASTER_STRUC_3_LINES_PER_FRAME_MASK;
+
+    width =         measured_timing->width;
+    total_width =   measured_timing->width + measured_timing->hfront + measured_timing->hpulse + measured_timing->hback;
+    height =        measured_timing->height;
+    total_height =  (measured_timing->height + measured_timing->vfront + measured_timing->vpulse + measured_timing->vback) * 2;
 
     // search timing in table
     for (i=0;i<INTERLACE_TIMING_TABLE_LENGTH;i++) {
         if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_WIDTH]) == width) {
             if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_TOTAL_WIDTH]) == total_width) {
                 if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_HEIGHT]) == height) {
-                    if ((((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_TOTAL_HEIGHT]) + (sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_TOTAL_HEIGHT]))/2) == total_height) {
+                    //if ((((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_TOTAL_HEIGHT]) + (sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_TOTAL_HEIGHT]))/2) == total_height) {
+                    if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_TOTAL_HEIGHT] == total_height) || (sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_TOTAL_HEIGHT] == total_height)) {
                         break;
                     }
                 }

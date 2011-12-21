@@ -199,6 +199,8 @@ typedef struct {
 
     t_hdoip_log         main_log;
     t_hdoip_log         rscp_log;
+
+    uint32_t*           img_buff;       // pointer to test-image buffer
 } t_hdoipd;
 
 extern t_hdoipd                 hdoipd;

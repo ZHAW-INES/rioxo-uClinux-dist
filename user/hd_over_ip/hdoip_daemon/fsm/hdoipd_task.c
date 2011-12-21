@@ -12,6 +12,7 @@
 #include "rscp_listener.h"
 #include "hoi_cfg.h"
 #include "usb.h"
+#include "testimage.h"
 
 #include "vrb_video.h"
 #include "vrb_audio.h"
@@ -665,13 +666,17 @@ void task_set_test_image(char* p)
 {
     int a = atoi(p);
     if reg_test("mode-start", "vrb") {
-        hdoipd_ready(0);
         switch (a) {
-            case 1:     osd_printf_testpattern_focus_1080p60();
+            case 1:     hdoipd_ready(0);
+                        osd_printf_testpattern_focus_1080p60();
                         break;
-            case 2:     osd_printf_testpattern_focus_1080p24();
+            case 2:     hdoipd_ready(0);
+                        osd_printf_testpattern_focus_1080p24();
                         break;
-            case 3:     osd_printf_testpattern_focus_720p60();
+            case 3:     hdoipd_ready(0);
+                        osd_printf_testpattern_focus_720p60();
+                        break;
+            case 4:     testimage_show();
                         break;
             default:    report(ERROR "test-image: no valid number");
         }

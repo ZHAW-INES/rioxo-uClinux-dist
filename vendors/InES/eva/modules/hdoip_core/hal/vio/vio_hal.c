@@ -292,9 +292,10 @@ void vio_set_transform(void* p, uint32_t o, t_color_transform m, uint32_t cfg, b
     cfg = cfg | (vpol ? VIO_PP_VPOL_P : VIO_PP_VPOL_N);
     cfg = cfg | (hpol ? VIO_PP_HPOL_P : VIO_PP_HPOL_N);
 
-    if (invert_cb_cr) {
-        cfg = cfg | VIO_PP_DFIRST;
-    }
+    // invert cb and cr of chroma channel
+    // if (invert_cb_cr) {
+    //     cfg = cfg | VIO_PP_DFIRST;
+    // }
 
     HOI_WR32(p, VIO_OFF_PP_CFG, cfg);
 }

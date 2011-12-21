@@ -806,9 +806,10 @@ void hdoipd_start()
 
 }
 
-#define VID_SIZE        (4*1024*1024)
-#define AUD_RX_SIZE     (1024*1024)
-#define AUD_TX_SIZE     (1024*1024)
+//#define VID_SIZE        ((3*1920*1080)+4)
+#define VID_SIZE        (3*1024*1024)
+#define AUD_RX_SIZE     (512*1024)
+#define AUD_TX_SIZE     (512*1024)
 
 bool hdoipd_init(int drv)
 {
@@ -916,6 +917,8 @@ bool hdoipd_init(int drv)
             unlock("hdoipd_init");
             return false;
         }
+
+        hdoipd.img_buff = vid;
 
         if (hoi_drv_buf(
                 aud_rx, AUD_RX_SIZE,

@@ -5,7 +5,7 @@ module (..., package.seeall)
 require("hdoip.html")
 
 local function optional (key, value)
-    if ((key ~= nil) and (name ~= nil)) then  
+    if ((key ~= nil) and (value ~= nil)) then  
         return string.format("; %s=%s", key, value)
     end
     return ""

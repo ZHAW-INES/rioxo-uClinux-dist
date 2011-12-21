@@ -90,7 +90,7 @@ static int vio_set_output_format(void* p, t_video_timing* p_vt, t_video_format f
  */
 int vio_drv_set_black_output(t_vio* handle) 
 {
-    void *tf = (void *) black_out;
+    void *tf = (void *) black_out_rgb; //_yuv;
     uint32_t cfg = S444TO444;
 
     vio_set_transform(handle->p_vio, VIO_OFF_OUTPUT_PT, tf, cfg, handle->timing.vpolarity, handle->timing.hpolarity, false);

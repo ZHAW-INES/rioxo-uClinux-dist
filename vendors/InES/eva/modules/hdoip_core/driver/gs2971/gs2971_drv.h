@@ -36,6 +36,7 @@ void gs2971_report_incoming_video(t_gs2971 *handle, int format_code);
 void gs2971_get_video_timing_info(t_gs2971 *handle);
 void gs2971_hd_3g_audio_handler(t_gs2971 *handle);
 void gs2971_debug(t_gs2971 *handle);
-int  gs2971_get_video_timing(t_gs2971 *handle);
+bool gs2971_get_interlaced(t_gs2971 *handle);
+int  gs2971_get_video_timing(t_gs2971 *handle, t_video_timing *measured_timing);
 int  gs2971_get_audio_config(t_gs2971 *handle);
 #endif /* GS2971_DRV_H_ */
