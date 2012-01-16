@@ -7,6 +7,7 @@
  */
 // Base Mux
 #define VIO_OFF_CONFIG              (0x0000)
+#define VIO_OFF_CONFIG_2            (0x006C)
 #define VIO_OFF_STATUS              (0x0004)
 #define VIO_OFF_MUX                 (0x0008)
 #define VIO_OFF_HSPLIT              (0x000c)
@@ -124,6 +125,9 @@
 #define VIO_CFG_VIN_TM_POL_AVID     (1<<29)
 #define VIO_CFG_VIN_TM_POL_TRIG     (1<<30)
 #define VIO_CFG_TG_FREE_RUN         (1<<31)
+
+// VIO_OFF_CONFIG_2
+#define VIO_CFG_TG_OUTPUT_ON        (1<<0)
 
 // VIO_OFF_STATUS
 #define VIO_STA_IN_CLOCK_EXT        (1<<0)

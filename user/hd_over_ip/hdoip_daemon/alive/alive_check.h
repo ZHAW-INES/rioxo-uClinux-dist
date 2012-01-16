@@ -28,6 +28,7 @@ typedef struct {
     int                 interval_cnt;
     int                 init_done;
     char                dest[80];
+    bool                edid_stored;
     struct sockaddr_in  addr_in;
 
 } t_alive_check;

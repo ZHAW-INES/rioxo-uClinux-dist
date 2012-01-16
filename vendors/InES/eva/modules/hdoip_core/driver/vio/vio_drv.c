@@ -374,21 +374,24 @@ int vio_drv_decode(t_vio* handle, uint32_t device)
     vio_pll_update(handle->p_vio, &handle->pll);
     vio_set_control(handle->p_vio, &handle->timing, handle->pll.ppm, handle->pll.mode);
 
-    // 2.) start the adv212
+    // 2.) start timing generator
+    vio_enable_output_timing(handle->p_vio);
+
+    // 3.) start the adv212
     if ((ret = adv212_drv_boot_dec(handle->p_adv, &handle->timing, &handle->adv))) {
         REPORT(ERROR, "adv212_drv_boot_dec failed: %s", adv212_str_err(ret));
         return ret;
     }
 
-    // 3.) start the i/o path
+    // 4.) start the i/o path
     vio_start(handle->p_vio);
 
-    // 4.) Activate OSD?
+    // 5.) Activate OSD?
     if (handle->config & VIO_CONFIG_OSD) {
     	vio_set_cfg(handle->p_vio, VIO_CFG_OVERLAY);
     }
 
-    // 5.) Report
+    // 6.) Report
     VIO_REPORT_FORMAT(advfmt[handle->adv.cnt-1], "Process");
     VIO_REPORT_FORMAT(handle->format_out, "Output");
     VIO_REPORT_TIMING(&handle->timing);

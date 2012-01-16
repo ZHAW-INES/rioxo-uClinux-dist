@@ -120,22 +120,22 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         				report(INFO "E-EDID loaded");
         				edid_merge((t_edid *)m->edid.edid, (t_edid *)m->edid.edid); // modify edid
         				edid_write_file((t_edid *)m->edid.edid, EDID_PATH_VIDEO_IN);
-        				hoi_drv_wredid((t_edid *)m->edid.edid);
-        				if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
-        					hdoipd_clr_rsc(RSC_VIDEO_IN);
-        					hdoipd_clr_rsc(RSC_AUDIO0_IN);
-        				}
+        	    		//hoi_drv_wredid((t_edid *)m->edid.edid);
+        				//if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
+        				//	hdoipd_clr_rsc(RSC_VIDEO_IN);
+        				//	hdoipd_clr_rsc(RSC_AUDIO0_IN);
+        				//}
         			} else { // Merge E-EDIDs
         				memcpy(&edid2, &edid1, 256 * sizeof(uint8_t));
         				edid_merge(&edid1, (t_edid *)m->edid.edid);
         				if(memcmp(&edid1, &edid2, 256 * sizeof(uint8_t)) != 0) { // if video in E-EDID changed
         					report(INFO "loaded E-EDID after merging");
         					edid_write_file(&edid1, EDID_PATH_VIDEO_IN);
-        					hoi_drv_wredid(&edid1);
-        					if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
-        						hdoipd_clr_rsc(RSC_VIDEO_IN);
-        						hdoipd_clr_rsc(RSC_AUDIO0_IN);
-        					}
+        					//hoi_drv_wredid(&edid1);
+        					//if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
+        					//	hdoipd_clr_rsc(RSC_VIDEO_IN);
+        					//	hdoipd_clr_rsc(RSC_AUDIO0_IN);
+        					//}
         				} else {
         					report(INFO "Output E-EDID didn't changed");
         				}

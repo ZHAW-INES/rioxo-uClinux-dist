@@ -86,6 +86,10 @@ void gs2972_driver_set_data_rate(t_gs2972 *handle, uint32_t pfreq)
 
 void gs2972_debug(t_gs2972 *handle)
 {
-
+    uint16_t struc_1  = spi_read_reg_16(handle->p_spi, 0x12);
+    uint16_t struc_2  = spi_read_reg_16(handle->p_spi, 0x13);
+    uint16_t struc_3  = spi_read_reg_16(handle->p_spi, 0x14);
+    uint16_t struc_4  = spi_read_reg_16(handle->p_spi, 0x15);
+    printk("\nlines per frame: %i\nwords per line: %i\n a f: %i\n a f: %i \n", struc_1, struc_2, struc_3, struc_4);
 }
 

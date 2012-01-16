@@ -21,6 +21,8 @@
  */
 #define vio_set_cfg(p, m)       HOI_REG_SET((p), VIO_OFF_CONFIG, (m))
 #define vio_clr_cfg(p, m)       HOI_REG_CLR((p), VIO_OFF_CONFIG, (m))
+#define vio_set_cfg_2(p, m)     HOI_REG_SET((p), VIO_OFF_CONFIG_2, (m))
+#define vio_clr_cfg_2(p, m)     HOI_REG_CLR((p), VIO_OFF_CONFIG_2, (m))
 #define vio_get_cfg(p, m)       HOI_REG_RD((p), VIO_OFF_CONFIG, (m))
 #define vio_get_sta(p, m)       HOI_REG_RD((p), VIO_OFF_STATUS, (m))
 #define vio_set_mux(p, m, v)    HOI_REG_LD((p), VIO_OFF_MUX, (m), (v))
@@ -66,6 +68,7 @@ static inline void vio_reset(void* p)
 
 /** VIO prototype
  */
+void vio_enable_output_timing(void* p);
 void vio_set_timing(void* p, t_video_timing* p_vt, int triggersource);
 void vio_set_control(void* p, t_video_timing* p_vt, int ppm, int sel);
 void vio_set_transform(void* p, uint32_t o, t_color_transform m, uint32_t cfg, bool vpol, bool hpol, bool invert_cb_cr);

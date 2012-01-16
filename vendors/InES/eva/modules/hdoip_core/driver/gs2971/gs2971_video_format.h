@@ -63,7 +63,7 @@ const uint32_t sdi_video_format_code[42][7] = {
 };
 
 
-#define INTERLACE_TIMING_TABLE_LENGTH   (16)
+#define INTERLACE_TIMING_TABLE_LENGTH   (17)
 
 #define VIDEO_FORMAT_H_TOTAL_WIDTH      (0)
 #define VIDEO_FORMAT_H_WIDTH            (1)
@@ -92,6 +92,7 @@ const uint32_t sdi_video_interlaced_timing[INTERLACE_TIMING_TABLE_LENGTH][15] = 
     { 2200,         1920,      88,       44,       148,     1124,             540,        2,         5,         15,       1126,             540,        2,         5,         15        },   // 1920x1080i @ 59.94/60Hz (Format 5)
     { 858,          720,       19,       62,       57,      524,              240,        4,         3,         15,       526,              240,        4,         3,         15        },   // 1440x480i @ 59.94/60Hz (Format 6) /2
     { 1716,         1440,      38,       124,      114,     524,              240,        4,         3,         15,       526,              240,        4,         3,         15        },   // 1440x480i @ 59.94/60Hz (Format 7)
+    { 858,          720,       12,       63,       63,      524,              243,        2,         3,         14,       526,              243,        2,         3,         14        },   // 480i SDI @ 59.94Hz
     { 2640,         1920,      528,      44,       148,     1124,             540,        2,         5,         15,       1126,             540,        2,         5,         15        },   // 1920x1080i @ 50Hz (Format 20)
     { 864,          720,       12,       63,       69,      624,              288,        2,         3,         19,       626,              288,        2,         3,         19        },   // 1440x576i @ 50Hz (Format 21) /2
     { 1728,         1440,      24,       126,      138,     624,              288,        2,         3,         19,       626,              288,        2,         3,         19        },   // 1440x576i @ 50Hz (Format 22)
@@ -105,6 +106,7 @@ const uint32_t sdi_video_interlaced_timing[INTERLACE_TIMING_TABLE_LENGTH][15] = 
     { 493,          411,       7,        36,       39,      624,              288,        2,         3,         19,       626,              288,        2,         3,         19        },   // 2880x576i @ 50Hz (Formats 25 & 26) /7
     { 691,          576,       10,       50 ,      55,      624,              288,        2,         3,         19,       626,              288,        2,         3,         19        },   // 2880x576i @ 50Hz (Formats 25 & 26) /5
     { 864,          720,       12,       63,       69,      624,              288,        2,         3,         19,       626,              288,        2,         3,         19        }    // 2880x576i @ 50Hz (Formats 25 & 26) /4
+
 };
 
 

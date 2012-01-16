@@ -103,14 +103,14 @@ void gs2971_hd_3g_audio_handler(t_gs2971 *handle)
 
 void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
 {
-    bool pll_locked, smpte, format_err, video_status;
+    bool pll_locked, smpte, std_lock, video_status;
     uint16_t video_format = (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_RATE_SEL_READBACK_MASK) >> RASTER_STRUC_4_RATE_SEL_READBACK_SHIFT;
 
     pll_locked = (bool) read_io_exp_rx_pin(handle->p_i2c, RX_STAT_3);
     smpte = (bool) read_io_exp_rx_pin(handle->p_i2c, RX_SMPTE_BYPASS);
-    format_err = (bool) (spi_read_reg_16(handle->p_spi, GS2971_TIM_861_FORMAT) & TIM_861_FORMAT_ERR);
+    std_lock = (bool) (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_STD_LOCK);
 
-    video_status = pll_locked & smpte & (~format_err);
+    video_status = pll_locked & smpte & std_lock;
 
     if (video_status != handle->video_status) {
         if (video_status) {
@@ -258,7 +258,6 @@ int gs2971_get_video_timing(t_gs2971 *handle, t_video_timing *measured_timing)
         if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_WIDTH]) == width) {
             if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_TOTAL_WIDTH]) == total_width) {
                 if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_HEIGHT]) == height) {
-                    //if ((((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_TOTAL_HEIGHT]) + (sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_TOTAL_HEIGHT]))/2) == total_height) {
                     if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_TOTAL_HEIGHT] == total_height) || (sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_TOTAL_HEIGHT] == total_height)) {
                         break;
                     }

@@ -24,6 +24,7 @@ int alive_check_client_open(t_alive_check *handle, bool enable, int interval, ch
     handle->enable                          = enable;
     handle->interval_cnt                    = 0;
     handle->addr_in.sin_family              = AF_INET;
+    handle->edid_stored                     = false;
 
     if (load_new_config == true) {
         handle->interval                    = interval;
@@ -277,14 +278,16 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
         if (!alive_check_server_handler(handle, hello_msg, (msg_length+(edid_length*2)))) {
             if (!alive_check_test_msg_vrb_alive(hello_msg, client_ip, edid_table)) {
 
-                // write edid only when stream is not acive
-                if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) {
+                // write edid only when multicast is disabled or while first connection
+                set_multicast_enable(reg_test("multicast_en", "true"));
+                if((!get_multicast_enable()) || (handle->edid_stored == false)) {
                     hoi_drv_get_device_id(&dev_id);
                     if (dev_id == BDT_ID_HDMI_BOARD) {
-                    	report("\nalive check write edid");
                         hoi_drv_wredid((t_edid *)edid_table);
+                        handle->edid_stored = true;
                     }
                 }
+
 
                 // response only when not already unicast is streaming
                 if ((!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) || get_multicast_enable()) {

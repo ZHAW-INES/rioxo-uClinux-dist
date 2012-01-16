@@ -1,6 +1,17 @@
 #include "vio_hal.h"
 #include "vid_const.h"
 
+/** Enable Timing Generator
+ * 
+ * @param p pointer to i/o base
+ */
+void vio_enable_output_timing(void* p)
+{
+    vio_clr_cfg_2(p, VIO_CFG_TG_OUTPUT_ON);
+    vio_set_cfg_2(p, VIO_CFG_TG_OUTPUT_ON);
+    vio_clr_cfg_2(p, VIO_CFG_TG_OUTPUT_ON);
+}
+
 /** Setup Video Timing Generator
  * 
  * @param p pointer to i/o base
