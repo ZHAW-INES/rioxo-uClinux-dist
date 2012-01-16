@@ -276,12 +276,18 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
     	memset(hello_msg, 0, (msg_length+(edid_length*2)));
         if (!alive_check_server_handler(handle, hello_msg, (msg_length+(edid_length*2)))) {
             if (!alive_check_test_msg_vrb_alive(hello_msg, client_ip, edid_table)) {
-                // response only when not already unicast is streaming
-                if ((!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) || get_multicast_enable()) {
+
+                // write edid only when stream is not acive
+                if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) {
                     hoi_drv_get_device_id(&dev_id);
                     if (dev_id == BDT_ID_HDMI_BOARD) {
+                    	report("\nalive check write edid");
                         hoi_drv_wredid((t_edid *)edid_table);
                     }
+                }
+
+                // response only when not already unicast is streaming
+                if ((!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) || get_multicast_enable()) {
                     if (hdoipd_rsc(RSC_VIDEO_IN)) {
                         alive_check_response_vrb_alive(client_ip);
                     }
