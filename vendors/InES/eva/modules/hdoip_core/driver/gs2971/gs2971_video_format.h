@@ -63,7 +63,7 @@ const uint32_t sdi_video_format_code[42][7] = {
 };
 
 
-#define INTERLACE_TIMING_TABLE_LENGTH   (17)
+#define INTERLACE_TIMING_TABLE_LENGTH   (18)
 
 #define VIDEO_FORMAT_H_TOTAL_WIDTH      (0)
 #define VIDEO_FORMAT_H_WIDTH            (1)
@@ -105,7 +105,8 @@ const uint32_t sdi_video_interlaced_timing[INTERLACE_TIMING_TABLE_LENGTH][15] = 
     { 432,          360,       6,        31,       35,      624,              288,        2,         3,         19,       626,              288,        2,         3,         19        },   // 2880x576i @ 50Hz (Formats 25 & 26) /8
     { 493,          411,       7,        36,       39,      624,              288,        2,         3,         19,       626,              288,        2,         3,         19        },   // 2880x576i @ 50Hz (Formats 25 & 26) /7
     { 691,          576,       10,       50 ,      55,      624,              288,        2,         3,         19,       626,              288,        2,         3,         19        },   // 2880x576i @ 50Hz (Formats 25 & 26) /5
-    { 864,          720,       12,       63,       69,      624,              288,        2,         3,         19,       626,              288,        2,         3,         19        }    // 2880x576i @ 50Hz (Formats 25 & 26) /4
+    { 864,          720,       12,       63,       69,      624,              288,        2,         3,         19,       626,              288,        2,         3,         19        },   // 2880x576i @ 50Hz (Formats 25 & 26) /4
+    { 2750,         1920,      638,      44,       148,     1124,             540,        2,         5,         15,       1126,             540,        2,         5,         15        }    // 1080x1080s24
 
 };
 
