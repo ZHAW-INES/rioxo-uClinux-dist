@@ -257,7 +257,7 @@ int gs2971_get_video_timing(t_gs2971 *handle, t_video_timing *measured_timing)
     for (i=0;i<INTERLACE_TIMING_TABLE_LENGTH;i++) {
         if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_WIDTH]) == width) {
             if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_H_TOTAL_WIDTH]) == total_width) {
-                if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_HEIGHT]) == height) {
+                if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_HEIGHT] == height) || (sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_HEIGHT] == (height - 1))) {
                     if ((sdi_video_interlaced_timing[i][VIDEO_FORMAT_F0_TOTAL_HEIGHT] == total_height) || (sdi_video_interlaced_timing[i][VIDEO_FORMAT_F1_TOTAL_HEIGHT] == total_height)) {
                         break;
                     }

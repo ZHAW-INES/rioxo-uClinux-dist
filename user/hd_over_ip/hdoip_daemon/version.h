@@ -2,10 +2,10 @@
 #define VERSION_H_
 
 /* [31 .. 16] = decimal number; [15 .. 0] = after comma number */
-#define VERSION_SOFTWARE        0x00010005
+#define VERSION_SOFTWARE        0x00010006
 
 // version tag (max. 50 letters)
-#define VERSION_TAG             "USB"
+#define VERSION_TAG             "Official Release"
 
 
 #endif /* VERSION_H_ */
