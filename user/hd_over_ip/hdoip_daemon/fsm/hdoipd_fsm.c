@@ -290,8 +290,8 @@ void hdoipd_goto_vrb()
                 //if(hdoipd.auto_stream) {
                 //    hdoipd_set_task_start_vrb();
                 //}
-                hdoipd.alive_check.init_done = 0;
-                alive_check_start_vrb_alive();
+                //hdoipd.alive_check.init_done = 0;
+                //alive_check_start_vrb_alive();
             }
         } else {
             report(ERROR "already in state vrb");
@@ -425,6 +425,8 @@ int hdoipd_start_vrb(void *d)
 
 void hdoipd_set_task_start_vrb(void)
 {
+    // stop sending alive packets
+    alive_check_stop_vrb_alive();
     hdoipd.task_commands |= TASK_START_VRB;
     hdoipd.task_timeout = 1;
     hdoipd.task_repeat = 2;
@@ -701,6 +703,8 @@ void hdoipd_event(uint32_t event)
         case E_VSI_FIFO2_FULL:
         break;
         case E_VSI_CDFIFO_FULL:
+            // WORKAROUND: TODO: Check why is code fifo full at reboot of vtb
+            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
         break;
         case E_VSO_PAYLOAD_EMPTY:
         break;

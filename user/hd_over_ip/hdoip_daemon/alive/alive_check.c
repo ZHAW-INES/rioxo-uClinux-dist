@@ -206,7 +206,13 @@ int alive_check_init_msg_vrb_alive()
 
     if (!(hdoipd.alive_check.init_done)) {
 
-        if reg_test("mode-start", "vrb") {
+        if reg_test("mode-start", "vtb") {
+            hdoipd.alive_check.vtb = true;
+        } else {
+            hdoipd.alive_check.vtb = false;
+        }
+
+        if (!hdoipd.alive_check.vtb) {
             // register remote for "hello"
             if (box_sys_set_remote(reg_get("hello-uri")) == -1) {
                 return ALIVE_CHECK_ERROR;
@@ -225,11 +231,12 @@ int alive_check_init_msg_vrb_alive()
             }
         }
 
-        if reg_test("mode-start", "vtb") {
+        if (hdoipd.alive_check.vtb) {
             if (alive_check_server_open(&hdoipd.alive_check, true, reg_get_int("alive-check-port"), true)) {
                 perrno("[ALIVE] alive_check_server_open() failed");
             }
         }
+
     }
     hdoipd.alive_check.init_done = 1;
 
@@ -249,7 +256,7 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
     t_rscp_edid edid;
     uint32_t dev_id;
 
-    if reg_test("mode-start", "vrb") {
+    if (!hdoipd.alive_check.vtb) {
         if (hdoipd.alive_check.init_done) {
             memset(hello_msg, 0, (msg_length+(edid_length*2)));
             memset(edid_string, 0, (edid_length*2));
@@ -273,7 +280,7 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
         }
     }
 
-    if reg_test("mode-start", "vtb") {
+    if (hdoipd.alive_check.vtb) {
     	memset(hello_msg, 0, (msg_length+(edid_length*2)));
         if (!alive_check_server_handler(handle, hello_msg, (msg_length+(edid_length*2)))) {
             if (!alive_check_test_msg_vrb_alive(hello_msg, client_ip, edid_table)) {

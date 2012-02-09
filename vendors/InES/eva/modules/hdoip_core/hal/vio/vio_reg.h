@@ -8,6 +8,7 @@
 // Base Mux
 #define VIO_OFF_CONFIG              (0x0000)
 #define VIO_OFF_CONFIG_2            (0x006C)
+#define VIO_OFF_FRAME_OFFSET        (0x0070)
 #define VIO_OFF_STATUS              (0x0004)
 #define VIO_OFF_MUX                 (0x0008)
 #define VIO_OFF_HSPLIT              (0x000c)

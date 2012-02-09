@@ -107,10 +107,8 @@ void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
     uint16_t video_format = (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_RATE_SEL_READBACK_MASK) >> RASTER_STRUC_4_RATE_SEL_READBACK_SHIFT;
 
     pll_locked = (bool) read_io_exp_rx_pin(handle->p_i2c, RX_STAT_3);
-    smpte = (bool) read_io_exp_rx_pin(handle->p_i2c, RX_SMPTE_BYPASS);
-    std_lock = (bool) (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_STD_LOCK);
 
-    video_status = pll_locked & smpte & std_lock;
+    video_status = pll_locked;
 
     if (video_status != handle->video_status) {
         if (video_status) {

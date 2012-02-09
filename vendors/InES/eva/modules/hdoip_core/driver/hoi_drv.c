@@ -95,6 +95,8 @@ void hoi_drv_reset(t_hoi* handle, uint32_t rv)
     if (rv & (DRV_RST_VID_OUT | DRV_RST_VID_IN)) {
         REPORT(INFO, "reset vio");
         vio_drv_reset(&handle->vio, bdt_return_device(&handle->bdt));
+        // Stop vio clock control
+        vio_clock_control_reset(&handle->vio);
     }
 
     // Deactivate VRP
@@ -209,6 +211,7 @@ void hoi_drv_handler(t_hoi* handle)
     eti_drv_handler(&handle->eti, handle->event);
     led_drv_handler(&handle->led);
     stream_sync(&handle->sync);
+    vio_clock_control(&handle->vio);
     wdg_reset(handle->p_wdg); //reset watchdog
     if (handle->drivers & DRV_ADV9889) {
         adv9889_drv_handler(&handle->adv9889, handle->event);

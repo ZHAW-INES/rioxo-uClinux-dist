@@ -13,6 +13,11 @@
  */
 void stream_sync_start(t_sync_means* sm) {
     sm->running = 1;
+
+    // clear timestamp fifo
+    while (sta_has_more(sm->ptr_act)){
+        sta_get_delay(sm->ptr_act);
+    }
 }
 
 

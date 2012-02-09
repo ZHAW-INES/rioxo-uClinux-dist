@@ -5,6 +5,17 @@ require("hdoip.pipe")
 
 REG_MODE_USB_LABEL = "usb_mode"
 
+function reboot(t)
+    hdoip.html.Header(t, label.page_name .. "Rebooting", script_path)
+    hdoip.html.Title("Reboot")
+    hdoip.html.Text("Please wait until Rioxo is rebooted.")
+    hdoip.html.Text("<br>")
+    hdoip.html.Loadbar(0, 30)
+    hdoip.html.Bottom(t)
+    hdoip.pipe.reboot()
+    os.exit(0)
+end
+
 -- ------------------------------------------------------------------
 -- USB page
 -- ------------------------------------------------------------------
@@ -25,7 +36,7 @@ function show(t)
     end
 
     if(t.button_restart_yes ~= nil) then
-        hdoip.pipe.reboot()
+        reboot(t)
     end
 
     hdoip.pipe.getUSB(t)

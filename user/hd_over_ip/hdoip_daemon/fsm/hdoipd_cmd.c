@@ -146,15 +146,11 @@ void hdoipd_ready(t_hoic_cmd UNUSED *cmd)
 
 void hdoipd_reboot(t_hoic_cmd UNUSED *cmd)
 {
-    int ret;
-    if (hdoipd_goto_ready()) {
-        ret = altremote_get_fpga_config_addr(0, 6);
-        ret |= altremote_trigger_reconfig();
-        if (ret) {
-            report(" ? reboot failed");
-        }
-        report("should have rebooted by now.");
+    sleep(2);
+    if (altremote_trigger_reconfig()) {
+        report(" ? reboot failed");
     }
+    report("should have rebooted by now.");
 }
 
 void hdoipd_repair(t_hoic_cmd UNUSED *cmd)

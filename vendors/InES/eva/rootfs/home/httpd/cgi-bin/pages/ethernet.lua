@@ -23,6 +23,17 @@ function redirect(url)
     hdoip.html.Bottom("") 
 end
 
+function reboot(t)
+    hdoip.html.Header(t, label.page_name .. "Rebooting", script_path)
+    hdoip.html.Title("Reboot")
+    hdoip.html.Text("Please wait until Rioxo is rebooted.")
+    hdoip.html.Text("<br>")
+    hdoip.html.Loadbar(0, 30)
+    hdoip.html.Bottom(t)
+    hdoip.pipe.reboot()
+    os.exit(0)
+end
+
 local function get_network(t) 
     local str
     
@@ -165,7 +176,7 @@ function show(t)
     end
 
     if(t.button_restart_yes ~= nil) then
-        hdoip.pipe.reboot()
+        reboot(t)
     end
 
     if((new_ip == 0) or (err > 0))then

@@ -373,6 +373,7 @@ int vio_drv_decode(t_vio* handle, uint32_t device)
     // 1.) start pll
     vio_pll_update(handle->p_vio, &handle->pll);
     vio_set_control(handle->p_vio, &handle->timing, handle->pll.ppm, handle->pll.mode);
+    vio_clock_control_start(handle);
 
     // 2.) start timing generator
     vio_enable_output_timing(handle->p_vio);
@@ -1043,5 +1044,67 @@ void vio_config_tg(t_vio* handle, int config)
             vio_set_timing(handle->p_vio, &handle->timing, 0);
             break;
 
+    }
+}
+
+void vio_clock_control_reset(t_vio* handle)
+{
+    handle->mean_1 = 0;
+    handle->mean_2 = 0;
+    handle->mean_cnt = 0;
+    handle->clock_control_active = false;
+    // Set output frequency to original value
+    HOI_WR32((handle->p_vio), VIO_OFF_PLL_PCS, 100000);
+}
+
+void vio_clock_control_start(t_vio* handle)
+{
+    handle->clock_control_active = true;
+}
+
+void vio_clock_control(t_vio* handle)
+{
+    uint32_t phase_offset;  // small value = big frequency change (y=f(1/x))
+    uint32_t direction;     // 1 = faster / 0 = slower
+    uint32_t image_offset;
+
+    if (handle->clock_control_active) {
+
+        image_offset = HOI_RD32((handle->p_vio), VIO_OFF_TG_CAPTURE);
+        // convert 24bit signed number into sign flag and value
+        if (image_offset & 0x00800000) {
+            direction = 1;
+            image_offset = 0x01000000 - image_offset;
+        } else {
+            direction = 0;
+        }
+        // low pass filter
+        handle->mean_1 = (handle->mean_1 * 4/5) + (((uint64_t)image_offset<<32) * 1/5);  //32.32 fractional
+        handle->mean_2 = (handle->mean_2 * 49/50) + (handle->mean_1 * 1/50);
+
+        // prevent division through 0
+        if (handle->mean_1 == 0) {
+            handle->mean_1 = (uint64_t)1<<32;
+        }
+
+        if (handle->mean_2 == 0) {
+            handle->mean_2 = (uint64_t)1<<32;
+        }
+
+        // switch between two filters
+        if (handle->mean_cnt < 33) { // after 1s
+            phase_offset = 1000000/((uint32_t)(handle->mean_1>>32));
+            handle->mean_cnt++;
+        } else {
+            phase_offset = 1000000/((uint32_t)(handle->mean_2>>32));
+        }
+        // write control value to gateware
+        HOI_WR32((handle->p_vio), VIO_OFF_PLL_PCS, ((direction << 31) | (phase_offset & 0x7FFFFFFF)));
+
+   //     if (direction == 1) {
+   //         printk("\ni: -%06i, m1: %06i, m2: %06i, p: %06i, c: %06i", image_offset, (uint32_t)(handle->mean_1>>32), (uint32_t)(handle->mean_2>>32), phase_offset, (uint32_t)handle->mean_cnt);
+   //     } else {
+   //        printk("\ni:  %06i, m1: %06i, m2: %06i, p: %06i, c: %06i", image_offset, (uint32_t)(handle->mean_1>>32), (uint32_t)(handle->mean_2>>32), phase_offset, (uint32_t)handle->mean_cnt);
+   //     }
     }
 }

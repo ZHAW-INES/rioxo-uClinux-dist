@@ -12,20 +12,25 @@
  */
 typedef struct {
     bool            active;
-    uint32_t		config;			//!< config mode
+    uint32_t		config;			        //!< config mode
     
-    void*           p_vio;          //!< pointer to vio hardware registers
-    void*           p_adv;          //!< pointer to adv212 direct registers
+    void*           p_vio;                  //!< pointer to vio hardware registers
+    void*           p_adv;                  //!< pointer to adv212 direct registers
     
-    t_adv212        adv;            //!< ADV212 configuration
-    t_vio_pll       pll;            //!< PLL configuration
-    t_video_timing  timing;         //!< Video timing
-    t_video_format  format_in;      //!< Video format input
-    t_video_format  format_proc;    //!< Video format internal processing
-    t_video_format  format_out;     //!< Video format output
-    t_osd			osd;			//!< OSD
+    t_adv212        adv;                    //!< ADV212 configuration
+    t_vio_pll       pll;                    //!< PLL configuration
+    t_video_timing  timing;                 //!< Video timing
+    t_video_format  format_in;              //!< Video format input
+    t_video_format  format_proc;            //!< Video format internal processing
+    t_video_format  format_out;                 //!< Video format output
+    t_osd			osd;			        //!< OSD
     
-    uint32_t        bandwidth;      //!< when encoding this target bandwidth is used
+    uint64_t        mean_1;                 //!< Mean of image offset (used for clock control) (32.32 fractional)
+    uint64_t        mean_2;                 //!< "
+    uint32_t        mean_cnt;               //!< count of captured values to calculate mean
+    bool            clock_control_active;   //!< true indicates if clock control is active
+
+    uint32_t        bandwidth;              //!< when encoding this target bandwidth is used
 
     uint32_t        hw_cfg_old;
 } t_vio;
@@ -110,4 +115,8 @@ void vio_drv_get_advcnt(t_vio* handle, uint32_t* advcnt);
 void vio_copy_adv7441_timing(t_video_timing* timing, void* handle);
 void vio_copy_gs2971_timing(t_video_timing* timing, void* handle);
 void vio_config_tg(t_vio* handle, int config);
+
+void vio_clock_control_reset(t_vio* handle);
+void vio_clock_control_start(t_vio* handle);
+void vio_clock_control(t_vio* handle);
 #endif /*VIO_DRV_H_*/

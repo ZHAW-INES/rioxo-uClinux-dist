@@ -30,7 +30,7 @@ typedef struct {
     char                dest[80];
     bool                edid_stored;
     struct sockaddr_in  addr_in;
-
+    bool                vtb;
 } t_alive_check;
 
 int  alive_check_client_open(t_alive_check *handle, bool enable, int interval, char *dest, uint16_t port, int broadcast, bool load_new_config);

@@ -23,9 +23,6 @@ int box_sys_hello(t_rscp_media UNUSED *media, intptr_t UNUSED m, t_rscp_connecti
     if ((rsp->address == box.address) && box.address) {
         report(INFO "hello received from remote device");
 
-        // stop sending alive packets
-        alive_check_stop_vrb_alive();
-
         // new connection = new hdcp-key exchange
         hdoipd.hdcp.ske_executed = 0;
 

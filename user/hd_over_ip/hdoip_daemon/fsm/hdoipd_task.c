@@ -612,7 +612,7 @@ void task_set_hello(char* p)
 
 void task_set_mode_start(char* p)
 {
-	update_vector |= HOID_TSK_UPD_MODE_START | HOID_TSK_EXEC_RESTART;
+	update_vector |= HOID_TSK_UPD_MODE_START; //    | HOID_TSK_EXEC_RESTART;  restart not necessary because device must be rebooted after this change
 }
 
 void task_set_mode_media(char* p)

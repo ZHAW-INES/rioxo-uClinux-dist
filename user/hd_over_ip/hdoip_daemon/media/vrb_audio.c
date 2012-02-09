@@ -115,7 +115,7 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 
     // set slave timer when not already synced
     if (!hdoipd_rsc(RSC_SYNC)) {
-        hoi_drv_set_stime(m->format.rtptime+PROCESSING_DELAY_CORRECTION);
+        hoi_drv_set_stime(m->format.rtptime+PROCESSING_DELAY_CORRECTION-21000); //TODO: set slave timer correctly
     }
 
     if (reg_test("mode-sync", "streamsync")) {
