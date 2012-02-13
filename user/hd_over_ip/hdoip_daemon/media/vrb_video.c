@@ -67,7 +67,6 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
         osd_permanent(true);
         osd_printf("encrypted video output on SDI is not allowed\n");
         rscp_client_set_teardown(client);
-        hdoipd_set_task_start_vrb();
         return RSCP_REQUEST_ERROR;
     }
 
@@ -220,7 +219,10 @@ int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
                         break;
             case 408:   media->result = RSCP_RESULT_SERVER_HDCP_ERROR;
                         rscp_client_set_teardown(client);
-                        hdoipd_set_task_start_vrb();
+			    		// start sending alive packets
+                        if(hdoipd.auto_stream) {
+                            alive_check_start_vrb_alive();
+                        }
                         break;
             case 400:
             default:    media->result = RSCP_RESULT_SERVER_ERROR;

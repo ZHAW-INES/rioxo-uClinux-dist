@@ -418,7 +418,10 @@ void task_get_system_update(char** p)
 				case HOID_VTB : hdoipd_goto_vtb();
 								break;
 				case HOID_VRB : hdoipd_goto_vrb();
-				                hdoipd_set_task_start_vrb();
+			    				// start sending alive packets
+                                if(hdoipd.auto_stream) {
+                                    alive_check_start_vrb_alive();
+                                }
 								break;
 				default 	  :
 								break;
@@ -608,7 +611,7 @@ void task_set_remote(char* p)
 
 void task_set_hello(char* p)
 {
-	update_vector |= HOID_TSK_UPD_HELLO_URI | HOID_TSK_EXEC_HELLO;
+	update_vector |= HOID_TSK_UPD_HELLO_URI | HOID_TSK_EXEC_HELLO | HOID_TSK_UPD_ALIVE;
 }
 
 void task_set_mode_start(char* p)

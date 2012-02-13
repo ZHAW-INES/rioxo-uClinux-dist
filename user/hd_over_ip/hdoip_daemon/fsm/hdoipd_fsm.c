@@ -475,9 +475,6 @@ void hdoipd_fsm_vrb(uint32_t event)
         case E_ADV9889_CABLE_ON:
             // plug in the cable is a start point for the VRB to
             // work when video or embedded audio is desired ...
-            //if(hdoipd.auto_stream) {
-            //    hdoipd_set_task_start_vrb();
-            //}
             if(hdoipd.auto_stream) {
                 alive_check_start_vrb_alive();
             }
