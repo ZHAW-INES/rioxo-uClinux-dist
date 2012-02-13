@@ -50,6 +50,8 @@
 #define ETI_CPU_PACKET_CNT_REG      144
 #define ETI_INV_PACKET_CNT_REG      148
 
+#define ETI_FRAME_PERIOD            156
+#define ETI_FRAME_GAP               160
 /** bit indexes 
  *
  */

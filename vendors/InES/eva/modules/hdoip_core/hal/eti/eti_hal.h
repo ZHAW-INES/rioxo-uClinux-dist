@@ -120,6 +120,8 @@
 #define eti_get_status_aud_frame(p)		    HOI_REG_TST(p, ETI_STATUS_REG, ETI_STATUS_AUDIO_FRAME)
 #define eti_get_status_mac_err(p)		    HOI_REG_TST(p, ETI_STATUS_REG, ETI_STATUS_MAC_ERROR)
 
+#define eti_get_frame_period(p)             HOI_RD32((p), ETI_FRAME_PERIOD)
+#define eti_get_frame_gap(p)                HOI_RD32((p), ETI_FRAME_GAP)
 
 #endif /* ETI_HAL_H_ */
 

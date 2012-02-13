@@ -302,7 +302,9 @@ int vtb_audio_event(t_rscp_media *media, uint32_t event)
             } else {
                 cookie->alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
-                rscp_server_update(media, EVENT_TICK);
+                if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
+                    rscp_server_update(media, EVENT_TICK);
+                }
             }
 
             if (cookie->timeout <= TICK_TIMEOUT) {

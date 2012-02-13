@@ -311,7 +311,9 @@ int vrb_audio_event(t_rscp_media *media, uint32_t event)
             } else {
                 vrb.alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
-                rscp_client_update(client, EVENT_TICK);
+                if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
+                    rscp_client_update(client, EVENT_TICK);
+                }
             }
             if (vrb.timeout <= TICK_TIMEOUT) {
                 vrb.timeout++;

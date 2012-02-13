@@ -234,6 +234,7 @@ int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
     return RSCP_SUCCESS;
 }
 
+
 void vrb_video_pause(t_rscp_media *media)
 {
 	report(INFO "vrb_video_pause");
@@ -367,7 +368,9 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
             } else {
                 vrb.alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
-                rscp_client_update(client, EVENT_TICK);
+                if (hdoipd_tstate(VTB_VIDEO)) { // only if video stream = active
+                    rscp_client_update(client, EVENT_TICK);
+                }
             }
             if (vrb.timeout <= TICK_TIMEOUT) {
                 vrb.timeout++;
