@@ -9,8 +9,10 @@
 #include <stdbool.h>
 #include "multicast.h"
 #include "client_list.h"
+#include "rscp_parse_header.h"
 #include "rscp_net.h"
 #include "hdoipd.h"
+#include "hdoipd_fsm.h"
 
 
 static struct {
@@ -19,6 +21,10 @@ static struct {
     bool                                enable;
     t_client_list                       client_list_audio;
     t_client_list                       client_list_video;
+    t_client_list                       client_list_start;
+    t_client_list                       client_list_edid;
+    int                                 start_timer;
+    int                                 number_of_clients;
 } multicast;
 
 
@@ -104,12 +110,12 @@ void add_client_to_vtb(int audio_video, uint32_t client_ip)
 {
     if (audio_video == MEDIA_IS_AUDIO) {
         if(!search_client_in_list(client_ip, &multicast.client_list_audio)) {
-            add_client_to_list(client_ip, &multicast.client_list_audio);
+            add_client_to_list(client_ip, &multicast.client_list_audio, NULL);
         }
     }
     if (audio_video == MEDIA_IS_VIDEO) {
         if(!search_client_in_list(client_ip, &multicast.client_list_video)) {
-            add_client_to_list(client_ip, &multicast.client_list_video);
+            add_client_to_list(client_ip, &multicast.client_list_video, NULL);
         }
     }
 }
@@ -164,3 +170,110 @@ bool get_multicast_enable()
 {
     return multicast.enable;
 }
+
+void add_client_to_start_list(char* client_ip_string)
+{
+    uint32_t    client_ip;
+    char        client_ip_string_copy[30];
+
+    if (strlen(client_ip_string) < 30) {
+        strcpy(client_ip_string_copy, client_ip_string);
+        report(INFO "\nMulticast put %s into start-list", client_ip_string_copy);
+
+        // convert string into integer
+        rscp_parse_ip(client_ip_string_copy, &client_ip);
+
+        // put client into start list if its not already there
+        if(!search_client_in_list(client_ip, &multicast.client_list_start)) {
+            add_client_to_list(client_ip, &multicast.client_list_start, NULL);
+            if (count_client_list(&multicast.client_list_start) == 1) {      // first connection = wait time "alive-check-interval" to capture other clients until start first connection
+                if (multicast.start_timer < reg_get_int("alive-check-interval")) {
+                    multicast.start_timer = reg_get_int("alive-check-interval");
+                }
+            }
+        }
+    } else {
+        report(ERROR "Cant put %s into start-list", client_ip_string_copy);
+    }
+}
+
+void multicast_handler()
+{
+    uint32_t    client_ip;
+    char        client_ip_string[30];
+
+    if (multicast.start_timer > 0) {
+        multicast.start_timer --;
+    } else {
+        if (count_client_list(&multicast.client_list_start) > 0) {
+
+            if (hdoipd.hdcp.enc_state == 0) {
+                multicast.start_timer = 3;
+            } else {
+                multicast.start_timer = 7;
+            }
+
+            // get first client in list, delete it from list and start connection
+            client_ip = get_first_client_and_remove_it_from_list(&multicast.client_list_start);
+
+            // convert integer to string
+            sprintf(client_ip_string, "%i.%i.%i.%i", ((client_ip >> 0) & 0xFF), ((client_ip >> 8) & 0xFF), ((client_ip >> 16) & 0xFF), ((client_ip >> 24) & 0xFF));
+
+            // response to client
+            if (hdoipd_rsc(RSC_VIDEO_IN)) {
+                alive_check_response_vrb_alive(client_ip_string);
+            }
+        }
+
+        // check if client is lost -> edid must be merged new
+        if (multicast.number_of_clients != count_client_list(&multicast.client_list_video)) {
+            //TODO: write new edid
+        }
+        multicast.number_of_clients = count_client_list(&multicast.client_list_video);
+    }
+}
+
+void multicast_add_edid(t_edid* new_edid, char* ip_string)
+{ 
+    t_edid *edid;
+    uint32_t ip;
+    char ip_string_copy[30];
+
+    if (strlen(ip_string) < 30) {
+        strcpy(ip_string_copy, ip_string);
+
+        // convert string into integer
+        rscp_parse_ip(ip_string_copy, &ip);
+
+        // add edid to list if its not already there
+        if(!search_client_in_list(ip, &multicast.client_list_edid)) {        
+            if ((edid = (t_edid*) malloc(sizeof(t_edid))) == NULL) {
+                report(ERROR "Cant allocate memory for EDID of %s", ip_string);
+            } else {
+                report(INFO "Add edid from %s to list", ip_string);
+                memcpy(edid, new_edid, sizeof(t_edid));
+                add_client_to_list(ip, &multicast.client_list_edid, edid);
+            }
+        }
+    } else {
+        report(ERROR "Cant add edid from %s into start-list", ip_string);
+    }
+}
+
+void multicast_merge_edid(t_edid* edid)
+{
+    merge_edid_list(&multicast.client_list_edid, edid);
+}
+
+bool multicast_compare_edid(t_edid* edid1, t_edid* edid2)
+{
+    int i;
+
+    for (i=0;i<256;i++) {
+        if (((uint8_t*)edid1)[i] != ((uint8_t*)edid2)[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+

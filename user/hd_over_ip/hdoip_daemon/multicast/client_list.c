@@ -14,7 +14,7 @@
 
 
 
-int add_client_to_list(uint32_t client_ip, t_client_list* first_client)
+int add_client_to_list(uint32_t client_ip, t_client_list* first_client, t_edid* edid)
 {
     t_client_list*   tmp = first_client;
     t_client_list*   new_client;
@@ -28,6 +28,7 @@ int add_client_to_list(uint32_t client_ip, t_client_list* first_client)
         return MULTICAST_ERROR;
 
     new_client->ip = client_ip;
+    new_client->edid = edid;
     new_client->next = NULL;
     tmp->next = new_client;
     return MULTICAST_SUCCESS;
@@ -101,3 +102,28 @@ int count_client_list(t_client_list* first_client)
     }
     return client_count;
 }
+
+uint32_t get_first_client_and_remove_it_from_list(t_client_list* first_client)
+{
+    t_client_list*  client = first_client;
+    uint32_t ip = 0;
+
+    if (client->next) {
+        client = client->next;
+        ip = client->ip;
+        remove_client_from_list(ip, first_client);
+    }
+
+    return ip;
+}
+
+void merge_edid_list(t_client_list* first_client, t_edid* edid)
+{
+    t_client_list*  client = first_client;
+
+    while (client->next) {
+        client = client->next;
+        edid_merge(edid, client->edid);
+    }
+}
+

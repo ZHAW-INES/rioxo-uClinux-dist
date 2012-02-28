@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "alive_check.h"
+#include "multicast.h"
 #include "rscp_net.h"
 #include "hdoipd.h"
 #include "rscp_string.h"
@@ -285,21 +286,28 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
         if (!alive_check_server_handler(handle, hello_msg, (msg_length+(edid_length*2)))) {
             if (!alive_check_test_msg_vrb_alive(hello_msg, client_ip, edid_table)) {
 
-                // write edid only when multicast is disabled or while first connection
-                set_multicast_enable(reg_test("multicast_en", "true"));
-                if((!get_multicast_enable()) || (handle->edid_stored == false)) {
+                report(INFO "\nHELLO received from: %s", client_ip);
+
+                // write edid only on first connection
+                if (handle->edid_stored == false) {
                     hoi_drv_get_device_id(&dev_id);
                     if (dev_id == BDT_ID_HDMI_BOARD) {
                         hoi_drv_wredid((t_edid *)edid_table);
-                        handle->edid_stored = true;
                     }
+                    handle->edid_stored = true;
                 }
 
-
-                // response only when not already unicast is streaming
-                if ((!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) || get_multicast_enable()) {
-                    if (hdoipd_rsc(RSC_VIDEO_IN)) {
-                        alive_check_response_vrb_alive(client_ip);
+                set_multicast_enable(reg_test("multicast_en", "true"));
+                if (get_multicast_enable()) {
+                    // write client_ip to start list so that transmitter is able to start one connection after each other
+                    add_client_to_start_list(client_ip);
+                    multicast_add_edid((t_edid *)edid_table, client_ip);
+                } else {
+                    // response only when not already unicast is streaming
+                    if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) {
+                        if (hdoipd_rsc(RSC_VIDEO_IN)) {
+                            alive_check_response_vrb_alive(client_ip);
+                        }
                     }
                 }
             }
@@ -336,9 +344,8 @@ int alive_check_response_vrb_alive(char *client_ip)
     t_rscp_client *client;
     char uri[40];
 
-    sprintf(uri, "%s://%s","rscp", client_ip);
-
     if (client_ip) {
+        sprintf(uri, "%s://%s","rscp", client_ip);
         client = rscp_client_open(hdoipd.client, 0, uri);
         if (client) {
 #ifdef REPORT_ALIVE_HELLO

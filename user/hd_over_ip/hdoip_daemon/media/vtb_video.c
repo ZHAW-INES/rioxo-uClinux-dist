@@ -60,7 +60,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         rscp_err_no_vtb(rsp);
         return RSCP_REQUEST_ERROR;
     }
-
+/*
     // test if resource is available (only on first connection)
     if((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         if (hdoipd_tstate(VTB_VID_MASK)) {
@@ -70,7 +70,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
             return RSCP_REQUEST_ERROR;
         }
     }
-
+*/
     // get own MAC address
     if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
         report(" ? net_get_local_hwaddr failed");

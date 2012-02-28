@@ -21,11 +21,7 @@
 #define MEDIA_IS_AUDIO              0
 #define MEDIA_IS_VIDEO              1
 
-
-typedef struct {
-    uint32_t    ip;
-    void*       next;
-} __attribute__((packed)) t_client_list;
+#include "edid.h"
 
 
 void convert_ip_to_multicast_mac(uint32_t ip, char* mac);
@@ -38,5 +34,11 @@ int  check_client_availability(int audio_video);
 void report_available_clients();
 bool set_multicast_enable(bool enable);
 bool get_multicast_enable();
+
+void add_client_to_start_list(char* client_ip_string);
+void multicast_handler();
+void multicast_add_edid(t_edid* new_edid, char* ip_string);
+void multicast_merge_edid(t_edid* edid);
+bool multicast_compare_edid(t_edid* edid1, t_edid* edid2);
 
 #endif /* MULTICAST_H_ */

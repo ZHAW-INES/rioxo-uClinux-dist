@@ -5,7 +5,7 @@
 #define VERSION_SOFTWARE        0x00010006
 
 // version tag (max. 50 letters)
-#define VERSION_TAG             "Official Release"
+#define VERSION_TAG             "Multicast"
 
 
 #endif /* VERSION_H_ */

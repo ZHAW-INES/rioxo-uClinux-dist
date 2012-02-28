@@ -106,6 +106,11 @@ void* hdoipd_osd_timer(void UNUSED *d)
         // USB handler
         usb_device_handler(&hdoipd.usb_devices);
 
+        // Multicast Handler
+        if (get_multicast_enable()) {
+            multicast_handler();
+        }
+
         hdoipd.tick++;
 #ifdef USE_SYS_TICK
         rscp_client_event(hdoipd.client, EVENT_TICK);

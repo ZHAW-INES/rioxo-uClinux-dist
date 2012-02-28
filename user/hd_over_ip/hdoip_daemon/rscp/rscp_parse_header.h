@@ -22,6 +22,7 @@ typedef struct {
     size_t      content_length;
 } t_rscp_header_common;
 
+int rscp_parse_ip(char* str, uint32_t* p);
 int rscp_parse_timing(char* line, t_video_timing* timing);
 int rscp_parse_rtp_format(char* line, t_rscp_rtp_format* p);
 int rscp_parse_uint32(char* line, uint32_t* p);
