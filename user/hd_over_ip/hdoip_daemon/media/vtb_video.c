@@ -44,9 +44,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     int n, ret;
 
     t_multicast_cookie* cookie = media->cookie;
-    t_edid edid1, edid2;
-    bool merge = false;
-    char buf[255];
+    t_edid edid, edid_old;
 
     report(VTB_METHOD "vtb_video_setup");
 
@@ -92,61 +90,45 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         return RSCP_REQUEST_ERROR;
     }
 
-    // E-EDID handling
-    sprintf(buf, "%s%08x",EDID_PREAMBLE, rsp->address);
-    ret = edid_read_file(&edid1, buf);
-    if(ret != -1) {
-        merge = false;
-        if(ret == -2) { // No E-EDID exist from host
-            edid_write_file((t_edid *)m->edid.edid, buf);
-            report(INFO "no E-EDID stored, save remote E-EDID");
-            merge = true;
-        } else {
-            edid_read_file(&edid1, buf);
-            if(memcmp(&edid1, (void*)m->edid.edid, 256 * sizeof(uint8_t)) != 0) {
-                edid_write_file((t_edid *)m->edid.edid, buf);
-                report(INFO "remote E-EDID changed, save remote E-EDID");
-                merge = true;
+
+    if(!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
+
+        if (get_multicast_enable()) {
+
+            ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
+            if (ret != -1) {
+
+                multicast_merge_edid(&edid);
+
+                if (ret == -2) {        // No previous E-EDID exists
+                    edid_write_file(&edid, EDID_PATH_VIDEO_IN);
+                    hoi_drv_wredid(&edid);
+                    if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
+                        hdoipd_clr_rsc(RSC_VIDEO_IN);
+                        hdoipd_clr_rsc(RSC_AUDIO0_IN);
+                    }
+                } else {
+                    if (multicast_compare_edid(&edid, &edid_old)) {
+                        report(INFO "EDID changed");
+                        edid_write_file(&edid, EDID_PATH_VIDEO_IN);
+                        hoi_drv_wredid(&edid);
+                    } else {
+                        report(INFO "EDID didnt changed");
+                    }
+                }
             } else {
-                report(INFO "remote E-EDID didn't changed");
+                report(ERROR "Failed to read file: %s", EDID_PATH_VIDEO_IN);
+            }
+        } else {
+            //TODO: dont write edid if it has not changed
+            edid_merge((t_edid *)m->edid.edid, (t_edid *)m->edid.edid); // modify edid
+            edid_write_file((t_edid *)m->edid.edid, EDID_PATH_VIDEO_IN);
+            hoi_drv_wredid((t_edid *)m->edid.edid);
+            if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
+                hdoipd_clr_rsc(RSC_VIDEO_IN);
+                hdoipd_clr_rsc(RSC_AUDIO0_IN);
             }
         }
-
-        if(!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
-        	if(merge) { // new or changed E-EDID from remote received
-        		ret = edid_read_file(&edid1, EDID_PATH_VIDEO_IN);
-        		if(ret != -1) {
-        			if((ret == -2) || !get_multicast_enable()) { // No E-EDID for video exists or unicast -> write edid without merge
-        				report(INFO "E-EDID loaded");
-        				edid_merge((t_edid *)m->edid.edid, (t_edid *)m->edid.edid); // modify edid
-        				edid_write_file((t_edid *)m->edid.edid, EDID_PATH_VIDEO_IN);
-        	    		//hoi_drv_wredid((t_edid *)m->edid.edid);
-        				//if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
-        				//	hdoipd_clr_rsc(RSC_VIDEO_IN);
-        				//	hdoipd_clr_rsc(RSC_AUDIO0_IN);
-        				//}
-        			} else { // Merge E-EDIDs
-        				memcpy(&edid2, &edid1, 256 * sizeof(uint8_t));
-        				edid_merge(&edid1, (t_edid *)m->edid.edid);
-        				if(memcmp(&edid1, &edid2, 256 * sizeof(uint8_t)) != 0) { // if video in E-EDID changed
-        					report(INFO "loaded E-EDID after merging");
-        					edid_write_file(&edid1, EDID_PATH_VIDEO_IN);
-        					//hoi_drv_wredid(&edid1);
-        					//if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
-        					//	hdoipd_clr_rsc(RSC_VIDEO_IN);
-        					//	hdoipd_clr_rsc(RSC_AUDIO0_IN);
-        					//}
-        				} else {
-        					report(INFO "Output E-EDID didn't changed");
-        				}
-        			}
-        		} else {
-        			perrno("vtb_video_setup() failed");
-        		}
-        	}
-        }
-    } else {
-        perrno("vtb_video_setup() failed");
     }
 
     if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {

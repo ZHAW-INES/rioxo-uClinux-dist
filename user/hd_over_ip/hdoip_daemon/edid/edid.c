@@ -28,6 +28,7 @@ int edid_read_file(t_edid* edid, char *file)
     if(fd != -1) {
         ret = read(fd, (void *) edid, sizeof(uint8_t) * 256);
         if(ret == -1) {
+        	close(fd);
             return ret;
         }
     } else {
@@ -49,6 +50,7 @@ int edid_write_file(t_edid *edid, char *file)
         ret = write(fd, &(buf[0]), sizeof(uint8_t) * 256);
 
         if(ret == -1) {
+        	close(fd);
             return -1;
         }
     } else {
@@ -57,11 +59,11 @@ int edid_write_file(t_edid *edid, char *file)
     close(fd);
 
 #ifdef EDID_WRITE_HEX_FILE
-    char *file_str;
-    strcpy(file_str, file);
-    strcat(file_str,"_hex");
+    char file_str[100];
+    strcpy(&file_str, file);
+    strcat(&file_str,"_hex");
 
-    int fd_hex = fopen(file_str, "w");
+    int fd_hex = fopen(&file_str, "w");
 
     if(fd_hex != NULL) {
         for(int i=0 ; i<256 ; i+=8) {

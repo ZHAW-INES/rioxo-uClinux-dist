@@ -120,6 +120,12 @@ uint32_t get_first_client_and_remove_it_from_list(t_client_list* first_client)
 void merge_edid_list(t_client_list* first_client, t_edid* edid)
 {
     t_client_list*  client = first_client;
+    t_client_list*  client_tmp = first_client;
+
+    if (client->next) {
+        client_tmp = client->next;
+        memcpy(edid, client_tmp->edid, sizeof(t_edid));
+    }
 
     while (client->next) {
         client = client->next;

@@ -159,6 +159,10 @@ void edid_merge(t_edid *edid1, t_edid *edid2)
     int offset;
     uint8_t *ptr1, *ptr2, *ptr3;
     t_edid edid;
+    char *tmp;
+    char year[5];
+    char week[3];
+    char sn[9];
 
     //***************************************************************************
     // Init new EDID
@@ -178,6 +182,25 @@ void edid_merge(t_edid *edid1, t_edid *edid2)
 
     // Clear extension block
     memset(&edid.extension_block, 0x00, 128 * sizeof(uint8_t));
+
+    //***************************************************************************
+    // Bytes : 0x08 - 0x11
+    // Manufacturer, Serial number and date of manufacture
+
+    // extract manufacturing date out of serial number 
+    tmp = reg_get("serial-number");
+    strncpy(year, &(tmp[0]), 4);
+    year[4] = '\0';
+    strncpy(week, &(tmp[4]), 2);
+    week[2] = '\0';
+    strncpy(sn,   &(tmp[6]), 8);
+    sn[8] = '\0';
+
+    edid.id_manufacturer    = 0x0F4B; // RXO
+    edid.id_product_code    = 10;
+    edid.id_serial_number   = atoi(sn);
+    edid.year               = (uint8_t)(atoi(year) - 1990);
+    edid.week               = (uint8_t)atoi(week);
 
     //***************************************************************************
     // Bytes : 0x14 - 0x18
