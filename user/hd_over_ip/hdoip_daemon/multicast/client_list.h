@@ -21,6 +21,6 @@ int search_client_in_list(uint32_t client_ip, t_client_list* first_client);
 int report_client_list(t_client_list* first_client);
 int count_client_list(t_client_list* first_client);
 uint32_t get_first_client_and_remove_it_from_list(t_client_list* first_client);
-void merge_edid_list(t_client_list* first_client, t_edid* edid);
+int merge_edid_list(t_client_list* first_client, t_edid* edid);
 
 #endif /* CLIENT_LIST_H_ */

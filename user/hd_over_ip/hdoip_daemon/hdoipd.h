@@ -28,6 +28,9 @@
 #define POLL_THREAD_INTERVAL_SEC    (0)
 #define POLL_THREAD_INTERVAL_NSEC   (20000000)
 
+#define EDID_PATH_VIDEO_IN          "/tmp/edid_vid_in"
+#define EDID_PREAMBLE               "/tmp/edid_"
+
 typedef void (f_task)(void* value);
 
 // state of box

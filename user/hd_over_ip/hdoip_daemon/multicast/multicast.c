@@ -199,8 +199,11 @@ void add_client_to_start_list(char* client_ip_string)
 
 void multicast_handler()
 {
+    int         ret;
     uint32_t    client_ip;
     char        client_ip_string[30];
+    t_edid      edid, edid_old;
+    uint32_t    number_of_clients;
 
     if (multicast.start_timer > 0) {
         multicast.start_timer --;
@@ -226,10 +229,34 @@ void multicast_handler()
         }
 
         // check if client is lost -> edid must be merged new
-        if (multicast.number_of_clients != count_client_list(&multicast.client_list_video)) {
-            //TODO: write new edid
+        number_of_clients = count_client_list(&multicast.client_list_edid);
+
+        if (multicast.number_of_clients > number_of_clients) {
+            ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
+            if (ret != -1) {
+                if (!multicast_merge_edid(&edid)) {
+                    if (multicast_compare_edid(&edid, &edid_old)) {
+
+                        // teardown all connections so that connection with new resolution can be started
+                        rscp_listener_teardown_all(&hdoipd.listener);
+
+                        report(INFO "Client Lost -> EDID changed");
+                        edid_write_file(&edid, EDID_PATH_VIDEO_IN);
+                        if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
+                            hdoipd_clr_rsc(RSC_VIDEO_IN);
+                            hdoipd_clr_rsc(RSC_AUDIO0_IN);
+                        }
+                        hoi_drv_wredid(&edid);
+                    } else {
+                        report(INFO "Client Lost -> EDID not changed");
+                    }
+                }
+            } else {
+                report(ERROR "Failed to read file: %s", EDID_PATH_VIDEO_IN);
+            }
         }
-        multicast.number_of_clients = count_client_list(&multicast.client_list_video);
+
+        multicast.number_of_clients = number_of_clients;
     }
 }
 
@@ -260,9 +287,14 @@ void multicast_add_edid(t_edid* new_edid, char* ip_string)
     }
 }
 
-void multicast_merge_edid(t_edid* edid)
+void multicast_remove_edid(uint32_t client_ip)
 {
-    merge_edid_list(&multicast.client_list_edid, edid);
+    remove_client_from_list(client_ip, &multicast.client_list_edid);
+}
+
+int multicast_merge_edid(t_edid* edid)
+{
+    return merge_edid_list(&multicast.client_list_edid, edid);
 }
 
 bool multicast_compare_edid(t_edid* edid1, t_edid* edid2)
@@ -275,5 +307,10 @@ bool multicast_compare_edid(t_edid* edid1, t_edid* edid2)
         }
     }
     return false;
+}
+
+void report_edid_list()
+{
+    report_client_list(&multicast.client_list_edid);
 }
 

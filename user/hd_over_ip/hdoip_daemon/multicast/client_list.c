@@ -16,21 +16,36 @@
 
 int add_client_to_list(uint32_t client_ip, t_client_list* first_client, t_edid* edid)
 {
-    t_client_list*   tmp = first_client;
+    t_client_list*   next_client = first_client;
+    t_client_list*   last_client;
     t_client_list*   new_client;
-
-    // search last client
-    while (tmp->next) {
-        tmp = tmp->next;
-    }
 
     if ((new_client = (t_client_list*) malloc(sizeof(t_client_list))) == NULL)
         return MULTICAST_ERROR;
 
+    // search client to sort (little ip first)
+    while (next_client->next) {
+        last_client = next_client;
+        next_client = next_client->next;
+
+        if (next_client->ip > client_ip) {
+
+            // add client between two other clients or at beginn of list
+            last_client->next = new_client;
+            new_client->next = next_client;
+            new_client->ip = client_ip;
+            new_client->edid = edid;
+
+            return MULTICAST_SUCCESS;
+        }
+    }
+           
+    // add client at end of list
+    next_client->next = new_client;
+    new_client->next = NULL;
     new_client->ip = client_ip;
     new_client->edid = edid;
-    new_client->next = NULL;
-    tmp->next = new_client;
+
     return MULTICAST_SUCCESS;
 }
 
@@ -58,6 +73,7 @@ int remove_client_from_list(uint32_t client_ip, t_client_list* first_client)
             }
             client = client->next;
         }
+        free(found_client->edid);
         free(found_client);
         return MULTICAST_SUCCESS;
     }
@@ -117,7 +133,7 @@ uint32_t get_first_client_and_remove_it_from_list(t_client_list* first_client)
     return ip;
 }
 
-void merge_edid_list(t_client_list* first_client, t_edid* edid)
+int merge_edid_list(t_client_list* first_client, t_edid* edid)
 {
     t_client_list*  client = first_client;
     t_client_list*  client_tmp = first_client;
@@ -125,11 +141,16 @@ void merge_edid_list(t_client_list* first_client, t_edid* edid)
     if (client->next) {
         client_tmp = client->next;
         memcpy(edid, client_tmp->edid, sizeof(t_edid));
+    } else {
+        return MULTICAST_ERROR;
     }
 
     while (client->next) {
         client = client->next;
         edid_merge(edid, client->edid);
     }
+
+    return MULTICAST_SUCCESS;
 }
+
 

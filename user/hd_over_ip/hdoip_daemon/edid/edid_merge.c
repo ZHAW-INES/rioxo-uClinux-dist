@@ -12,7 +12,7 @@
 #include "edid_merge.h"
 #include "cea_861.h"
 
-void edid_merge_display_dsc(uint8_t *edid, uint8_t *dscs1, uint8_t *dscs2)
+void edid_merge_display_dsc(uint8_t *edid, uint8_t *dscs1, uint8_t *dscs2, bool force_write_timing)
 {
     int offset = 0, i, j;
     int mask_drl=0, mask_est=0, mask_cvt=0, mask_nam=0;
@@ -21,6 +21,9 @@ void edid_merge_display_dsc(uint8_t *edid, uint8_t *dscs1, uint8_t *dscs2)
     uint8_t *ptr_drl1, *ptr_drl2;
     uint8_t *ptr_est1, *ptr_est2;
     uint8_t *ptr_cvt1, *ptr_cvt2;
+
+    uint32_t size1_h, size2_h;
+    uint32_t size1_v, size2_v;
 
     for(i=0 ; i<4 ; i++) {
         ptr1 = dscs1 + (i * 18);
@@ -60,6 +63,39 @@ void edid_merge_display_dsc(uint8_t *edid, uint8_t *dscs1, uint8_t *dscs2)
             }
         }
     }
+
+    // if no detailed timing blocks match, write at least one timing block (that with the smaller resolution)
+    if ((offset == 0) && force_write_timing) {
+
+        for(i=0 ; i<4 ; i++) {
+            ptr1 = dscs1 + (i * 18);
+            if(!EDID_IS_DSC(ptr1)) {
+                for(j=0 ; j<4 ; j++) {
+                    ptr2 = dscs2 + (j * 18);
+                    if(!EDID_IS_DSC(ptr2)) {
+
+                        size1_h = ((ptr1[4] & 0xF0) << 4) | ptr1[2];
+                        size1_v = ((ptr1[7] & 0xF0) << 4) | ptr1[5];
+
+                        size2_h = ((ptr2[4] & 0xF0) << 4) | ptr2[2];
+                        size2_v = ((ptr2[7] & 0xF0) << 4) | ptr2[5];
+    
+                        ptr3 = edid + offset * 18;
+                        if ((size1_h*size1_v) < (size2_h*size2_v)) {
+                            memcpy(ptr3, ptr1, 18);
+                        } else {
+                            memcpy(ptr3, ptr2, 18);
+                        }
+                        offset++;
+
+                        goto descriptor_found;
+                    }
+                }
+            }
+        }
+    }
+
+    descriptor_found:
 
     // display range limits & CVT
     ptr3 = edid + offset * 18;;
@@ -215,7 +251,7 @@ void edid_merge(t_edid *edid1, t_edid *edid2)
     ptr1 = (uint8_t *)edid1->detailed_timing[0].tmp;
     ptr2 = (uint8_t *)edid2->detailed_timing[0].tmp;
     ptr3 = (uint8_t *)&edid.detailed_timing[0].tmp;
-    edid_merge_display_dsc(ptr3, ptr1, ptr2);
+    edid_merge_display_dsc(ptr3, ptr1, ptr2, true);
 
     //***************************************************************************
     // Bytes : 0x26 - 0x35
@@ -269,7 +305,7 @@ void edid_merge(t_edid *edid1, t_edid *edid2)
     ptr1 = (uint8_t *)(&edid1->extension_block.tag) + edid1->extension_block.offset;
     ptr2 = (uint8_t *)(&edid2->extension_block.tag) + edid2->extension_block.offset;
     ptr3 = (uint8_t *)(&edid.extension_block.tag) + edid.extension_block.offset;
-    edid_merge_display_dsc(ptr3, ptr1, ptr2);
+    edid_merge_display_dsc(ptr3, ptr1, ptr2, false);
 
     //***************************************************************************
     // Generate checksum

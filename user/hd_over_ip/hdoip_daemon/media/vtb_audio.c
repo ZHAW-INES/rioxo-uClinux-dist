@@ -13,7 +13,8 @@
 #include "hdcp.h"
 #include "multicast.h"
 
-#define TICK_TIMEOUT                    (hdoipd.eth_timeout)
+#define TICK_TIMEOUT_MULTICAST          (hdoipd.eth_timeout * 2)
+#define TICK_TIMEOUT_UNICAST            (hdoipd.eth_timeout)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
 int vtb_audio_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
@@ -281,6 +282,7 @@ int vtb_audio_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_co
 int vtb_audio_event(t_rscp_media *media, uint32_t event)
 {
     t_multicast_cookie* cookie = media->cookie;
+    uint32_t timeout;
 
     switch (event) {
         case EVENT_AUDIO_IN0_ON:
@@ -309,7 +311,13 @@ int vtb_audio_event(t_rscp_media *media, uint32_t event)
                 }
             }
 
-            if (cookie->timeout <= TICK_TIMEOUT) {
+            if (get_multicast_enable()) {
+                timeout = TICK_TIMEOUT_MULTICAST;
+            } else {
+                timeout = TICK_TIMEOUT_UNICAST;
+            }
+
+            if (cookie->timeout <= timeout) {
                 cookie->timeout++;
             } else {
                 report(INFO "vtb_audio_event: timeout");

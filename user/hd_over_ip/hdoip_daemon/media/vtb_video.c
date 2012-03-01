@@ -19,11 +19,8 @@
 #include <fcntl.h>
 #include <stdio.h>
 
-
-#define EDID_PATH_VIDEO_IN              "/tmp/edid_vid_in"
-#define EDID_PREAMBLE                   "/tmp/edid_"
-
-#define TICK_TIMEOUT                    (hdoipd.eth_timeout)
+#define TICK_TIMEOUT_MULTICAST          (hdoipd.eth_timeout * 2)
+#define TICK_TIMEOUT_UNICAST            (hdoipd.eth_timeout)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
 int vtb_video_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
@@ -98,22 +95,31 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
             ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
             if (ret != -1) {
 
-                multicast_merge_edid(&edid);
+                if (!multicast_merge_edid(&edid)) {
 
-                if (ret == -2) {        // No previous E-EDID exists
-                    edid_write_file(&edid, EDID_PATH_VIDEO_IN);
-                    hoi_drv_wredid(&edid);
-                    if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
-                        hdoipd_clr_rsc(RSC_VIDEO_IN);
-                        hdoipd_clr_rsc(RSC_AUDIO0_IN);
-                    }
-                } else {
-                    if (multicast_compare_edid(&edid, &edid_old)) {
-                        report(INFO "EDID changed");
+                    if (ret == -2) {        // No previous E-EDID exists
                         edid_write_file(&edid, EDID_PATH_VIDEO_IN);
+                        report(INFO "New client -> write first EDID");
+                        if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
+                            hdoipd_clr_rsc(RSC_VIDEO_IN);
+                            hdoipd_clr_rsc(RSC_AUDIO0_IN);
+                        }
                         hoi_drv_wredid(&edid);
                     } else {
-                        report(INFO "EDID didnt changed");
+                        if (multicast_compare_edid(&edid, &edid_old)) {
+                            // teardown all connections so that connection with new resolution can be started
+                            rscp_listener_teardown_all(&hdoipd.listener);
+
+                            report(INFO "New client -> EDID changed");
+                            edid_write_file(&edid, EDID_PATH_VIDEO_IN);
+                            if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
+                                hdoipd_clr_rsc(RSC_VIDEO_IN);
+                                hdoipd_clr_rsc(RSC_AUDIO0_IN);
+                            }
+                            hoi_drv_wredid(&edid);
+                        } else {
+                            report(INFO "New client -> EDID not changed");
+                        }
                     }
                 }
             } else {
@@ -123,11 +129,11 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
             //TODO: dont write edid if it has not changed
             edid_merge((t_edid *)m->edid.edid, (t_edid *)m->edid.edid); // modify edid
             edid_write_file((t_edid *)m->edid.edid, EDID_PATH_VIDEO_IN);
-            hoi_drv_wredid((t_edid *)m->edid.edid);
             if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
                 hdoipd_clr_rsc(RSC_VIDEO_IN);
                 hdoipd_clr_rsc(RSC_AUDIO0_IN);
             }
+            hoi_drv_wredid((t_edid *)m->edid.edid);
         }
     }
 
@@ -292,6 +298,7 @@ int vtb_video_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t_rsc
     cookie->timeout = 0;
     cookie->alive_ping = 1;
 
+    multicast_remove_edid(cookie->remote.address);
     remove_client_from_vtb(MEDIA_IS_VIDEO, cookie->remote.address);
 
     return RSCP_SUCCESS;
@@ -334,6 +341,7 @@ int vtb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
 int vtb_video_event(t_rscp_media *media, uint32_t event)
 {
     t_multicast_cookie* cookie = media->cookie;
+    uint32_t timeout;
 
     switch (event) {
         case EVENT_VIDEO_IN_ON:
@@ -364,7 +372,13 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
                 }
             }
 
-            if (cookie->timeout <= TICK_TIMEOUT) {
+            if (get_multicast_enable()) {
+                timeout = TICK_TIMEOUT_MULTICAST;
+            } else {
+                timeout = TICK_TIMEOUT_UNICAST;
+            }
+
+            if (cookie->timeout <= timeout) {
                 cookie->timeout++;
 
             } else {

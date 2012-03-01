@@ -38,7 +38,9 @@ bool get_multicast_enable();
 void add_client_to_start_list(char* client_ip_string);
 void multicast_handler();
 void multicast_add_edid(t_edid* new_edid, char* ip_string);
-void multicast_merge_edid(t_edid* edid);
+void multicast_remove_edid(uint32_t client_ip);
+int multicast_merge_edid(t_edid* edid);
 bool multicast_compare_edid(t_edid* edid1, t_edid* edid2);
+void report_edid_list();
 
 #endif /* MULTICAST_H_ */
