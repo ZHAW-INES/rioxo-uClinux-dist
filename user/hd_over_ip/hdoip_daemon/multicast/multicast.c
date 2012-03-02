@@ -157,6 +157,8 @@ void report_available_clients()
     report_client_list(&multicast.client_list_video);
     report("\n --- client-count-audio: %i ---", count_client_list(&multicast.client_list_audio));
     report_client_list(&multicast.client_list_audio);
+    report("\n --- client-count-edid:  %i ---", count_client_list(&multicast.client_list_edid));
+    report_client_list(&multicast.client_list_edid);
 }
 
 bool set_multicast_enable(bool enable)

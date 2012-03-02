@@ -130,6 +130,7 @@ int adv7441a_enable_portA(t_adv7441a* handle)
     adv7441a_ksv_map_write(handle, ADV7441A_REG_CTRL_BITS, ADV7441A_BIT_EDID_A_ENABLE); // EDID enabled
     adv7441a_hdmi_map_write(handle, ADV7441A_REG_REGISTER_01H, tmp & ~(ADV7441A_BIT_CLOCK_TERM_PORT_A));
 
+    vio_drv_set_hpd((handle->p_vio), true);
     vio_hdp_reset(handle->p_vio->p_vio);
 
     return ERR_ADV7441A_SUCCESS;
