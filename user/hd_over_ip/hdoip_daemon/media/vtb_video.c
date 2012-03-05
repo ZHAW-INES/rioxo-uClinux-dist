@@ -87,56 +87,6 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         return RSCP_REQUEST_ERROR;
     }
 
-
-    if(!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
-
-        if (get_multicast_enable()) {
-
-            ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
-            if (ret != -1) {
-
-                if (!multicast_merge_edid(&edid)) {
-
-                    if (ret == -2) {        // No previous E-EDID exists
-                        edid_write_file(&edid, EDID_PATH_VIDEO_IN);
-                        report(INFO "New client -> write first EDID");
-                        if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
-                            hdoipd_clr_rsc(RSC_VIDEO_IN);
-                            hdoipd_clr_rsc(RSC_AUDIO0_IN);
-                        }
-                        hoi_drv_wredid(&edid);
-                    } else {
-                        if (multicast_compare_edid(&edid, &edid_old)) {
-                            // teardown all connections so that connection with new resolution can be started
-                            rscp_listener_teardown_all(&hdoipd.listener);
-
-                            report(INFO "New client -> EDID changed");
-                            edid_write_file(&edid, EDID_PATH_VIDEO_IN);
-                            if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
-                                hdoipd_clr_rsc(RSC_VIDEO_IN);
-                                hdoipd_clr_rsc(RSC_AUDIO0_IN);
-                            }
-                            hoi_drv_wredid(&edid);
-                        } else {
-                            report(INFO "New client -> EDID not changed");
-                        }
-                    }
-                }
-            } else {
-                report(ERROR "Failed to read file: %s", EDID_PATH_VIDEO_IN);
-            }
-        } else {
-            //TODO: dont write edid if it has not changed
-            edid_merge((t_edid *)m->edid.edid, (t_edid *)m->edid.edid); // modify edid
-            edid_write_file((t_edid *)m->edid.edid, EDID_PATH_VIDEO_IN);
-            if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
-                hdoipd_clr_rsc(RSC_VIDEO_IN);
-                hdoipd_clr_rsc(RSC_AUDIO0_IN);
-            }
-            hoi_drv_wredid((t_edid *)m->edid.edid);
-        }
-    }
-
     if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // reserve resource
         hdoipd_set_vtb_state(VTB_VID_IDLE);

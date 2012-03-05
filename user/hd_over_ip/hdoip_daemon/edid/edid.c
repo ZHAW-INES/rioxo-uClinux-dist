@@ -13,11 +13,23 @@
 #include <string.h>
 #include <errno.h>
 #include "hdoipd.h"
+#include "hdoipd_fsm.h"
 #include "edid.h"
 #include "edid_report.h"
 #include "cea_861.h"
 
 static uint8_t edid_header[8] = {0,0xff,0xff,0xff,0xff,0xff,0xff,0};
+
+void edid_write_function(t_edid* edid, char* string)
+{
+    report(INFO "write edid: %s", string);
+    edid_write_file(edid, EDID_PATH_VIDEO_IN);
+    if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
+        hdoipd_clr_rsc(RSC_VIDEO_IN);
+        hdoipd_clr_rsc(RSC_AUDIO0_IN);
+    }
+    hoi_drv_wredid(edid);
+}
 
 int edid_read_file(t_edid* edid, char *file)
 {

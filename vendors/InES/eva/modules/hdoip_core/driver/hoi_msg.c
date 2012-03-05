@@ -286,19 +286,27 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
     // setup vsi
     vsi_drv_go(&handle->vsi, &msg->eth);
 
+    // get video timing
     if (handle->drivers & DRV_ADV7441) {
         if (adv7441a_get_video_timing(&handle->adv7441a)) {
             REPORT(ERROR, "adv7441a_get_video_timing results not valid");
         }
-        vio_copy_adv7441_timing(&handle->vio.timing, &handle->adv7441a);
+        vio_copy_adv7441_timing(&msg->timing, &handle->adv7441a);
     }
     if (handle->drivers & DRV_GS2971) {
         if (gs2971_get_interlaced(&handle->gs2971)) {
             vio_get_timing(handle->p_vio, &msg->timing);
         }
-        gs2971_get_video_timing(&handle->gs2971, &handle->vio.timing);
+        gs2971_get_video_timing(&handle->gs2971, &msg->timing); // interlaced only
         vio_copy_gs2971_timing(&msg->timing, &handle->gs2971);
     }
+
+    vio_get_input_frequency(handle->p_vio, &msg->timing);
+    if (!msg->timing.interlaced) {
+        vio_get_timing(handle->p_vio, &msg->timing);
+    }
+
+    memcpy(&handle->vio.timing, &msg->timing, sizeof(t_video_timing));
 
     // setup vio
     if (msg->compress) {
@@ -308,7 +316,6 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
     }
 
     vio_drv_get_advcnt(&handle->vio, &msg->advcnt);
-    vio_drv_get_timing(&handle->vio, &msg->timing);
 
     return SUCCESS;
 }
@@ -678,7 +685,7 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
         if (gs2971_get_interlaced(&handle->gs2971)) {
             vio_get_timing(handle->p_vio, &msg->timing);
         }
-        gs2971_get_video_timing(&handle->gs2971, &msg->timing);
+        gs2971_get_video_timing(&handle->gs2971, &msg->timing); // interlaced only
         vio_copy_gs2971_timing(&msg->timing, &handle->gs2971);
     }
 

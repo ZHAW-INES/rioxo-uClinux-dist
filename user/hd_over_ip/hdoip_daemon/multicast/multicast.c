@@ -212,20 +212,54 @@ void multicast_handler()
     } else {
         if (count_client_list(&multicast.client_list_start) > 0) {
 
-            if (hdoipd.hdcp.enc_state == 0) {
-                multicast.start_timer = 3;
-            } else {
-                multicast.start_timer = 7;
+            // EDID handling
+            if(!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
+                ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
+                if (ret != -1) {
+
+                    if (!multicast_merge_edid(&edid)) {
+
+                        if (ret == -2) {        // No previous E-EDID exists
+                            edid_write_function(&edid, "multicast first edid");
+                        } else if (multicast_compare_edid(&edid, &edid_old)) {
+                            // teardown all connections so that connection with new resolution can be started
+                            rscp_listener_teardown_all(&hdoipd.listener);
+
+                            // clear start list
+                            while (count_client_list(&multicast.client_list_start)) {
+                                get_first_client_and_remove_it_from_list(&multicast.client_list_start);
+                            }
+                            // clear edid list
+                            while (count_client_list(&multicast.client_list_edid)) {
+                                get_first_client_and_remove_it_from_list(&multicast.client_list_edid);
+                            }
+
+                            edid_write_function(&edid, "multicast edid changed");
+                        }
+                    }
+                } else {
+                    report(ERROR "Failed to read file: %s", EDID_PATH_VIDEO_IN);
+                }
             }
+        }
 
-            // get first client in list, delete it from list and start connection
-            client_ip = get_first_client_and_remove_it_from_list(&multicast.client_list_start);
-
-            // convert integer to string
-            sprintf(client_ip_string, "%i.%i.%i.%i", ((client_ip >> 0) & 0xFF), ((client_ip >> 8) & 0xFF), ((client_ip >> 16) & 0xFF), ((client_ip >> 24) & 0xFF));
-
-            // response to client
+        // start connection
+        if (count_client_list(&multicast.client_list_start) > 0) {
             if (hdoipd_rsc(RSC_VIDEO_IN)) {
+
+                if (hdoipd.hdcp.enc_state == 0) {
+                    multicast.start_timer = 3;
+                } else {
+                    multicast.start_timer = 7;
+                }
+
+                // get first client in list, delete it from list and start connection
+                client_ip = get_first_client_and_remove_it_from_list(&multicast.client_list_start);
+
+                // convert integer to string
+                sprintf(client_ip_string, "%i.%i.%i.%i", ((client_ip >> 0) & 0xFF), ((client_ip >> 8) & 0xFF), ((client_ip >> 16) & 0xFF), ((client_ip >> 24) & 0xFF));
+
+                // response to client
                 alive_check_response_vrb_alive(client_ip_string);
             }
         }
@@ -233,31 +267,20 @@ void multicast_handler()
         // check if client is lost -> edid must be merged new
         number_of_clients = count_client_list(&multicast.client_list_edid);
 
-        if (multicast.number_of_clients > number_of_clients) {
+        if ((multicast.number_of_clients > number_of_clients) && (number_of_clients > 0)) {
             ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
             if (ret != -1) {
                 if (!multicast_merge_edid(&edid)) {
                     if (multicast_compare_edid(&edid, &edid_old)) {
-
                         // teardown all connections so that connection with new resolution can be started
                         rscp_listener_teardown_all(&hdoipd.listener);
-
-                        report(INFO "Client Lost -> EDID changed");
-                        edid_write_file(&edid, EDID_PATH_VIDEO_IN);
-                        if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
-                            hdoipd_clr_rsc(RSC_VIDEO_IN);
-                            hdoipd_clr_rsc(RSC_AUDIO0_IN);
-                        }
-                        hoi_drv_wredid(&edid);
-                    } else {
-                        report(INFO "Client Lost -> EDID not changed");
+                        edid_write_function(&edid, "multicast client lost");
                     }
                 }
             } else {
                 report(ERROR "Failed to read file: %s", EDID_PATH_VIDEO_IN);
             }
         }
-
         multicast.number_of_clients = number_of_clients;
     }
 }
@@ -279,7 +302,6 @@ void multicast_add_edid(t_edid* new_edid, char* ip_string)
             if ((edid = (t_edid*) malloc(sizeof(t_edid))) == NULL) {
                 report(ERROR "Cant allocate memory for EDID of %s", ip_string);
             } else {
-                report(INFO "Add edid from %s to list", ip_string);
                 memcpy(edid, new_edid, sizeof(t_edid));
                 add_client_to_list(ip, &multicast.client_list_edid, edid);
             }

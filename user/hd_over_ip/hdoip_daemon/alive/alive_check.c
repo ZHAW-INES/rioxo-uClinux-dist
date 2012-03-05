@@ -256,6 +256,9 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
     int i;
     t_rscp_edid edid;
     uint32_t dev_id;
+	int ret;
+    t_edid edid_old;
+    char remote_uri[40];
 
     if (!hdoipd.alive_check.vtb) {
         if (hdoipd.alive_check.init_done) {
@@ -288,25 +291,41 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
 
                 report(INFO "\nHELLO received from: %s", client_ip);
 
-                // write edid only on first connection
-                if (handle->edid_stored == false) {
-                    hoi_drv_get_device_id(&dev_id);
-                    if (dev_id == BDT_ID_HDMI_BOARD) {
-                        hoi_drv_wredid((t_edid *)edid_table);
-                    }
-                    handle->edid_stored = true;
-                }
-
                 set_multicast_enable(reg_test("multicast_en", "true"));
-                if (get_multicast_enable()) {
+                if (get_multicast_enable()) { // multicast
                     // write client_ip to start list so that transmitter is able to start one connection after each other
                     add_client_to_start_list(client_ip);
                     multicast_add_edid((t_edid *)edid_table, client_ip);
-                } else {
-                    // response only when not already unicast is streaming
-                    if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) {
-                        if (hdoipd_rsc(RSC_VIDEO_IN)) {
-                            alive_check_response_vrb_alive(client_ip);
+                } else { // unicast
+
+                    // only handle hello from remote uri
+                    sprintf(remote_uri, "%s", reg_get("remote-uri"));
+                    if (strcmp(&(remote_uri[7]), client_ip) == 0) {
+
+                        if(!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
+                            // read old edid
+                            ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
+                            if (ret != -1) {
+                                // write edid only when it has changed
+                                if (ret == -2) { // No previous E-EDID exists
+                                    edid_merge((t_edid *)edid_table, (t_edid *)edid_table); // modify edid
+                                    edid_write_function((t_edid *)edid_table, "unicast first edid");
+                                } else { // A previous E-EDID exists
+                                    edid_merge((t_edid *)edid_table, (t_edid *)edid_table); // modify edid
+                                    if (multicast_compare_edid(&edid_old, edid_table)) { // edid has changed
+                                        edid_write_function((t_edid *)edid_table, "unicast edid changed");
+                                    }
+                                }
+                            } else {
+                                report(ERROR "Failed to read file: %s", EDID_PATH_VIDEO_IN);
+                            }
+                        }
+
+                        // response only when not already unicast is streaming
+                        if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) {
+                            if (hdoipd_rsc(RSC_VIDEO_IN)) {
+                                alive_check_response_vrb_alive(client_ip);
+                            }
                         }
                     }
                 }

@@ -248,6 +248,7 @@ typedef struct {
 #define EDID_EXT_TAG_MANUFACT       0xFF
 
 
+void edid_write_function(t_edid* edid, char* string);
 int edid_verify(t_edid* edid);
 int edid_checksum_gen(t_edid* edid);
 void edid_report(t_edid* edid);
