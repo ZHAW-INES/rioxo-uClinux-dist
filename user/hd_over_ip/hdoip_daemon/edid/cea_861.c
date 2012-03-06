@@ -140,14 +140,16 @@ void cea_861_merge(t_ext_cea_861 *cea, t_ext_cea_861 *cea1, t_ext_cea_861 *cea2)
                                             l = 0;
                                             for (k=0 ; k<16 ; k++) {
                                                 if ((SAD1[k][0] != 0) && (SAD2[k][0] != 0)) { //search same audio format code
-                                                    l++;
-                                                    if ((SAD1[k][0] & 0x07) > (SAD2[k][0] & 0x07)) {
-                                                        ptr3[1+((l-1)*3)] = SAD2[k][0];
-                                                    } else {
-                                                        ptr3[1+((l-1)*3)] = SAD1[k][0];
+                                                    if (((SAD1[k][0] & 0x78)>>3) == 1) { // We support only LPCM
+                                                        l++;
+                                                        if ((SAD1[k][0] & 0x07) > (SAD2[k][0] & 0x07)) {
+                                                            ptr3[1+((l-1)*3)] = SAD2[k][0];
+                                                        } else {
+                                                            ptr3[1+((l-1)*3)] = SAD1[k][0];
+                                                        }
+                                                        ptr3[2+((l-1)*3)] = SAD1[k][1] & SAD2[k][1];
+                                                        ptr3[3+((l-1)*3)] = SAD1[k][2] & SAD2[k][2];
                                                     }
-                                                    ptr3[2+((l-1)*3)] = SAD1[k][1] & SAD2[k][1];
-                                                    ptr3[3+((l-1)*3)] = SAD1[k][2] & SAD2[k][2];
                                                 }
                                             }
 

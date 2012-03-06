@@ -16,6 +16,7 @@
 #include "box_sys.h"
 #include "hdoipd_fsm.h"
 #include "edid.h"
+#include "factory_edid.h"
 
 int alive_check_client_open(t_alive_check *handle, bool enable, int interval, char *dest, uint16_t port, int broadcast, bool load_new_config)
 {
@@ -290,6 +291,11 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
             if (!alive_check_test_msg_vrb_alive(hello_msg, client_ip, edid_table)) {
 
                 report(INFO "\nHELLO received from: %s", client_ip);
+
+                // use default edid if requested
+                if (reg_test("edid-mode", "default")) {
+                    memcpy(edid_table, factory_edid, edid_length);
+                }
 
                 set_multicast_enable(reg_test("multicast_en", "true"));
                 if (get_multicast_enable()) { // multicast

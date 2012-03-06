@@ -61,6 +61,7 @@ label = {
     page_status = "Status";
     page_usb = "USB";
     page_test = "Test";
+    page_edid = "EDID - Extended display identification data";
     page_default = "Fabrikeinstellungen wiederherstellen";
     page_restart = "Neustart";
     page_settings = "Einstellungen";
@@ -73,6 +74,7 @@ label = {
     tab_settings = "Einstellungen";
     tab_usb = "USB";
     tab_test = "Test";
+    tab_edid = "EDID";
 
     -- Page default
     p_df_question = "Ger&auml;t auf Werkeinstellungen zur&uuml;cksetzen?";
@@ -97,13 +99,18 @@ label = {
 
     -- Page USB
     p_usb_mode = "Betriebsart";
-    p_usb_host = "Host (ein USB Gerät (USB-HUB, Maus oder Tastatur) ist mit diesem Rioxo verbunden)";
+    p_usb_host = "Host (ein USB Ger&auml;t (USB-HUB, Maus oder Tastatur) ist mit diesem Rioxo verbunden)";
     p_usb_device = "Device (dieses Rioxo ist mit einem PC verbunden)";
     p_usb_off = "Deaktiviert";
     p_usb_label_device = "Angeschlossenes Ger&auml;t";
 
     -- Page TEST
     p_usb_image = "Testbilder";
+
+    -- Page EDID
+    p_edid_mode_receiver = "Benutze EDID vom Empf&auml;nger";
+    p_edid_mode_default = "Benutze Standard EDID";
+    p_edid_transmitter_only = "Nur beim Sender verf&uuml;gbar";
 
     -- Page firmware
     p_serial_number = "Seriennummer";

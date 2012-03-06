@@ -61,6 +61,7 @@ label = {
     page_status = "Status";
     page_usb = "USB";
     page_test = "Test";
+    page_edid = "EDID - Extended display identification data";
     page_default = "Factory defaults";
     page_restart = "Reboot";
     page_settings = "Settings";
@@ -74,6 +75,7 @@ label = {
     tab_login = "Login";
     tab_usb = "USB";
     tab_test = "Test";
+    tab_edid = "EDID";
 
     -- Page default
     p_df_question = "Restore factory defaults?";
@@ -105,6 +107,12 @@ label = {
 
     -- Page TEST
     p_usb_image = "Test Images";
+
+    -- Page EDID
+    p_edid_mode = "EDID - Extended display identification data";
+    p_edid_mode_receiver = "Use EDID of receiver";
+    p_edid_mode_default = "Use default EDID";
+    p_edid_transmitter_only = "only available on transmitter";
 
     -- Page firmware
     p_serial_number = "Serial number";

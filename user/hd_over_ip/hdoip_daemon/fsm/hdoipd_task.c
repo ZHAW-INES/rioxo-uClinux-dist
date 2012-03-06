@@ -698,6 +698,11 @@ void task_set_dhcp(char *p)
     update_vector |= HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX | HOID_TSK_UPD_DHCP;
 }
 
+void task_set_edid_mode(char *p)
+{
+    rscp_listener_teardown_all(&hdoipd.listener);
+}
+
 void hdoipd_register_task()
 {
     get_listener("system-state", task_get_system_state);
@@ -751,6 +756,7 @@ void hdoipd_register_task()
     set_listener("osd-time", task_set_osd_time);
     set_listener("usb-mode", task_set_usb_mode);
     set_listener("test-image", task_set_test_image);
+    set_listener("edid-mode", task_set_edid_mode);
 }
 
 

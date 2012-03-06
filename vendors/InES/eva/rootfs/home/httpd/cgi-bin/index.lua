@@ -3,6 +3,7 @@ require("pages.status")
 require("pages.ethernet")
 require("pages.usb")
 require("pages.test")
+require("pages.edid")
 require("pages.streaming")
 require("pages.firmware")
 require("pages.default")
@@ -22,11 +23,13 @@ main_form = "mainform"
 PAGE_ID_ETH = 0
 PAGE_ID_STREAM = 1
 PAGE_ID_USB = 2
-PAGE_ID_STATUS = 3
-PAGE_ID_FIRMWARE = 4
-PAGE_ID_DEFAULT = 5
-PAGE_ID_SETTING = 6
-PAGE_ID_TEST = 7
+PAGE_ID_EDID = 3
+PAGE_ID_STATUS = 4
+PAGE_ID_FIRMWARE = 5
+PAGE_ID_DEFAULT = 6
+PAGE_ID_SETTING = 7
+PAGE_ID_TEST = 8
+
 PAGE_ID_LOGIN = 20
 PAGE_START = 0
 
@@ -152,15 +155,18 @@ elseif(query.page == 1) then
 elseif(query.page == 2) then
     pages.usb.show(query)
 elseif(query.page == 3) then 
-    pages.status.show(query)
+    pages.edid.show(query)
 elseif(query.page == 4) then 
-    pages.firmware.show(query)
+    pages.status.show(query)
 elseif(query.page == 5) then 
-    pages.default.show(query)
+    pages.firmware.show(query)
 elseif(query.page == 6) then 
-    pages.settings.show(query)
+    pages.default.show(query)
 elseif(query.page == 7) then 
+    pages.settings.show(query)
+elseif(query.page == 8) then 
     pages.test.show(query)
+
 elseif(query.page == 20) then
     pages.login.show(query)
 elseif(query.page == 40) then
