@@ -96,6 +96,7 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 {
     uint32_t compress = 0;
     report(VRB_METHOD "vrb_audio_play");
+    char stream_type[20];
 
     //Test if HDCP parameters were set correctly
 	if (hdoipd.hdcp.enc_state && !(get_hdcp_status() & HDCP_ETI_AUDIO_EN)){
@@ -134,8 +135,15 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     hdoipd_set_vtb_state(VTB_AUDIO);
     hdoipd_set_rsc(RSC_AUDIO_OUT);
 
+
+    if (vrb.multicast_en) {
+        snprintf(stream_type, 20, " Multicast ");
+    } else {
+        snprintf(stream_type, 20, " ");
+    }
+
     struct in_addr a1; a1.s_addr = vrb.remote.address;
-    osd_printf("Streaming Audio %ikHz %i channel from %s\n", m->format.value, m->format.value2, inet_ntoa(a1));
+    osd_printf("Streaming%sAudio %ikHz %i channel from %s\n", stream_type, m->format.value, m->format.value2, inet_ntoa(a1));
 
     hoi_drv_set_led_status(SDI_OUT_WITH_AUDIO);
 

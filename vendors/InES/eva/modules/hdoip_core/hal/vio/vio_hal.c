@@ -85,28 +85,19 @@ void vio_get_input_frequency(void* p, t_video_timing* p_vt)
  */
 void vio_get_timing(void* p, t_video_timing* p_vt)
 {
-    int h,v,hp,vp,ha,va,hb,vb;
     unsigned long time;            
-    
+ 
     if (!p_vt) return;
 
-    // wait until measured timings are valid (max 50ms)
-    time = jiffies + (HZ/20); // 50ms
+    time = jiffies + (HZ/20); // wait max 50ms
+    HOI_WR32(p, VIO_OFF_TM_READY, 2);   // reset timing measurement flags
     HOI_WR32(p, VIO_OFF_TM_READY, 0);
-    while(HOI_RD32(p, VIO_OFF_TM_READY) < 2) {
+    while(HOI_RD32(p, VIO_OFF_TM_READY) != 1) {  // wait until timing is valid
         if (time_after(jiffies, time)) {
+            REPORT(ERROR, "Timeout: vio_get_timing()");
             break;
         }
     }
-
-    v = HOI_RD16(p, VIO_OFF_TM_V);
-    h = HOI_RD16(p, VIO_OFF_TM_H);
-    vp = HOI_RD16(p, VIO_OFF_TM_VP);
-    hp = HOI_RD16(p, VIO_OFF_TM_HP);
-    vb = HOI_RD16(p, VIO_OFF_TM_VB);
-    hb = HOI_RD16(p, VIO_OFF_TM_HB);
-    va = HOI_RD16(p, VIO_OFF_TM_VA);
-    ha = HOI_RD16(p, VIO_OFF_TM_HA);
 
     p_vt->interlaced = 0;
     p_vt->vpulse_1   = 0;
@@ -114,38 +105,16 @@ void vio_get_timing(void* p, t_video_timing* p_vt)
     p_vt->vback_1    = 0;
     p_vt->height_1   = 0;
 
-    p_vt->pfreq = vio_get_fin(p);
-        
-    p_vt->hpolarity = (hp < (h >> 1)); 
-    p_vt->vpolarity = (vp < (v >> 1)); 
+    p_vt->pfreq     = vio_get_fin(p);
     
-    if (p_vt->hpolarity) {
-        // Positive
-        p_vt->width = ha;
-        p_vt->hfront = hb - hp;
-        p_vt->hpulse = hp;
-        p_vt->hback = h - ha - hb;        
-    } else {
-        // Negative
-        p_vt->width = ha;
-        p_vt->hfront = hb;
-        p_vt->hpulse = h - hp;
-        p_vt->hback = hp - ha - hb;        
-    }
-    
-    if (p_vt->vpolarity) {
-        // Positive
-        p_vt->height = va;
-        p_vt->vfront = v - va - vb;
-        p_vt->vpulse = vp;
-        p_vt->vback = vb - vp;        
-    } else {
-        // Negative
-        p_vt->height = va;
-        p_vt->vfront = vp - vb - va;
-        p_vt->vpulse = v - vp;
-        p_vt->vback = vb;        
-    }
+    p_vt->width     = HOI_RD16(p, VIO_OFF_TM_HA);
+    p_vt->hfront    = HOI_RD16(p, VIO_OFF_TM_H);
+    p_vt->hpulse    = HOI_RD16(p, VIO_OFF_TM_HP);
+    p_vt->hback     = HOI_RD16(p, VIO_OFF_TM_HB); 
+    p_vt->height    = HOI_RD16(p, VIO_OFF_TM_VA);
+    p_vt->vfront    = HOI_RD16(p, VIO_OFF_TM_V);
+    p_vt->vpulse    = HOI_RD16(p, VIO_OFF_TM_VP);
+    p_vt->vback     = HOI_RD16(p, VIO_OFF_TM_VB);
 }
 
 /** Activates the pll control logic

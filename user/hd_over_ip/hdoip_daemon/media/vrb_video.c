@@ -100,7 +100,7 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 {
     uint32_t compress = 0;
     report(VRB_METHOD "vrb_video_play");
-
+    char stream_type[20];
     
 	if (hdoipd.hdcp.enc_state) {
         //Test if HDCP parameters were set correctly
@@ -154,8 +154,14 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     hdoipd_set_vtb_state(VTB_VIDEO);
     hdoipd_set_rsc(RSC_VIDEO_OUT);
 
+    if (vrb.multicast_en) {
+        snprintf(stream_type, 20, " Multicast ");
+    } else {
+        snprintf(stream_type, 20, " ");
+    }
+
     struct in_addr a1; a1.s_addr = vrb.remote.address;
-    osd_printf("Streaming Video %d x %d from %s\n", m->timing.width, m->timing.height, inet_ntoa(a1));
+    osd_printf("Streaming%sVideo %d x %d from %s\n", stream_type, m->timing.width, m->timing.height, inet_ntoa(a1));
 
     hoi_drv_set_led_status(SDI_OUT_NO_AUDIO);
 
