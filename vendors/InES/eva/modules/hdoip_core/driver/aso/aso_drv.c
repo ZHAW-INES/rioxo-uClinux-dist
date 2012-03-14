@@ -23,8 +23,8 @@ int aso_drv_init(t_aso* handle, void* p_aso)
     aso_set_dma_fifo_almost_full(handle->p_aso, ASO_DRV_DMA_FIFO_ALMOST_FULL);
 
     /* disable miss filter => no dummy data */
-    aso_set_fifo_low_th(handle->p_aso, ASO_DRV_DISABLE_FIFO_LOW_TH);
-    aso_set_min_frames_buffered(handle->p_aso, ASO_DRV_DISABLE_FRAMES_BUFFERED);
+    aso_set_fifo_low_th(handle->p_aso, 10); // value: 0 - 255
+    aso_set_min_frames_buffered(handle->p_aso, ASO_DRV_DISABLE_FRAMES_BUFFERED); // value: 0 - 1023
 
     return ERR_ASO_SUCCESS;
 }
