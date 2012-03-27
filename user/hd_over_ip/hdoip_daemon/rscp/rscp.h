@@ -91,6 +91,8 @@ typedef struct {
     uint32_t            port;                       //!< low 16 Bit: port range start; high 16 Bit: port range stop
     uint32_t            client_port;
     uint32_t            server_port;
+    uint32_t            usb_host_ip;
+    uint32_t            usb_host_port;
     uint32_t            ssrc;
     uint32_t            mode;
 } t_rscp_transport;
@@ -119,6 +121,14 @@ typedef struct {
     uint32_t            hdcp_on; //on=1, off=0
 } t_rscp_hdcp;
 
+typedef struct {
+    uint32_t            cseq;
+    char                session[50];
+    char                keyboard[20];
+    char                mouse[20];
+    char                storage[20];
+} t_rscp_usb;
+
 //------------------------------------------------------------------------------
 // Requests
 
@@ -130,7 +140,8 @@ typedef struct {
     uint32_t            cseq;
     t_rscp_transport    transport;
     t_rscp_edid         edid;
-    t_rscp_hdcp			hdcp;
+    t_rscp_hdcp         hdcp;
+    t_rscp_usb          usb;
 } t_rscp_req_setup;
 
 typedef struct {
@@ -144,11 +155,13 @@ typedef struct {
     uint32_t            cseq;
     char                session[50];
     t_rscp_rtp_format   format;
+    t_rscp_usb          usb;
 } t_rscp_req_play;
 
 typedef struct {
     uint32_t            cseq;
     char                session[50];
+    t_rscp_usb          usb;
 } t_rscp_req_teardown;
 
 typedef struct {
@@ -167,6 +180,7 @@ typedef struct {
     uint32_t            cseq;
     char                session[50];
     uint32_t            event;
+    t_rscp_rtp_format   format;
 } t_rscp_req_update;
 
 typedef struct {
@@ -208,6 +222,10 @@ typedef struct {
     char                session[50];
 } t_rscp_rsp_teardown;
 
+typedef struct {
+    uint32_t            cseq;
+    char                session[50];
+} t_rscp_rsp_pause;
 
 typedef union {
     t_rscp_req_option   req_option;
@@ -222,6 +240,7 @@ typedef union {
     t_rscp_rsp_option   rsp_option;
     t_rscp_rsp_setup    rsp_setup;
     t_rscp_rsp_play     rsp_play;
+    t_rscp_rsp_pause    rsp_pause;
     t_rscp_rsp_teardown rsp_teardown;
 } u_rscp_header;
 

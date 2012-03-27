@@ -8,8 +8,49 @@
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 #include "usb.h"
+#include "usb_media.h"
 
 #include <linux/input.h>
+
+/** Load USB driver
+ *
+ *  Load used drivers due to function of host or device.
+ *
+ */
+void usb_load_driver(char* mode)
+{
+    if (!strcmp(mode, "host")) {
+        report(INFO "Load USB driver for host");
+        system("/sbin/modprobe isp1763");
+        system("/bin/usbip-host");
+    }
+
+    if (!strcmp(mode, "device")) {
+        report(INFO "Load USB driver for device");
+        system("/sbin/modprobe isp1763_udc");
+        system("/sbin/modprobe g_hid");
+        system("/bin/usbip-device");
+    }
+
+    if (!strcmp(mode, "off")) {
+        report(INFO "Load no USB driver");
+    }
+}
+
+/** Bind an USB device to USBIP
+ *
+ *  Device is been attached to USBIP and a message is sent via RSCP that an USB device is connected to host. 
+ *
+ */
+void bind_usb_dev(char* s)
+{
+    char tmp[256];
+    
+    // bind device to usbip
+    sprintf(tmp, "usbip bind -b %s", s);
+    report(INFO "%s", tmp);
+    system(tmp);
+}
 
 /** Get vendor and device name
  *
@@ -109,169 +150,92 @@ void usb_get_dev(char* s)
     }
 }
 
-/** Bind an USB device to USBIP
+/** search in dev/input/eventX for mouse or keyboard
  *
- *  Device is been attached to USBIP and a message is sent via RSCP that a USB device is connected to host. 
- *
- */
-void bind_usb_dev(char* s, int device_type)
-{
-    char tmp[256];
-    t_rscp_client *client;
-    char uri[40];
-    
-    // bind device to usbip
-    report(INFO "Bind USB device: %s", s);
-    sprintf(tmp, "usbip bind -b %s", s);
-    system(tmp);
-
-    // send message to remote uri
-    if (hdoipd_rsc(RSC_ETH_LINK)) {
-        sprintf(uri, "%s", reg_get("remote-uri"));
-        client = rscp_client_open(hdoipd.client, 0, uri);
-        if (client) {
-            rscp_client_usb(client, s, uri, device_type);
-            rscp_client_close(client);
-        }
-    }
-}
-
-/** Attach an USB device to USBIP 
- *
- *  Is used on device part of USBIP to connect with host
- *  On host part it is used to report connected devices is device part is restarted
+ * - returns path of input device in "event"
+ * - type of device (mouse or keyboard) must be set in "type"
  *
  */
-void attach_usb_dev(t_usb_devices* old_values, char* ip, char* device, char* type)
-{
-    t_rscp_client *client;
-    char tmp[256];
-    char uri[40];
-    char *mode;
+void search_event(t_usb_devices* handle, char* type, char* event) {
+
+    int fd = -1;
+    int active_event[] = {USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN};
+    int active_event_cnt = 0;
     int i;
+	unsigned long bit[EV_MAX][NBITS(KEY_MAX)];
+    char path[100];
 
-    mode = reg_get("usb-mode");
-
-    // received message is request to report connected devices
-    if (!strcmp(device, "request")) {
-
-        // if host, send responds with connected devices
-        if (!strcmp(mode, "host")) {
-            sprintf(uri, "%s", reg_get("remote-uri"));
-            for (i=0; i<old_values->device_count; i++) {
-
-                // bind devices new to usbip
-                sprintf(tmp, "usbip unbind -b %s", (old_values->device_list+(i*10)));
-                system(tmp);
-                sprintf(tmp, "usbip bind -b %s", (old_values->device_list+(i*10)));
-                system(tmp);
-
-                if (hdoipd_rsc(RSC_ETH_LINK)) {
-                    client = rscp_client_open(hdoipd.client, 0, uri);
-                    if (client) {
-                        rscp_client_usb(client, (old_values->device_list+(i*10)), uri, (old_values->device_type[i]));
-                        rscp_client_close(client);
-                    }
+    // search for connected devices to /dev/input/eventX
+    for (i=0; i<4; i++) {
+        sprintf(path, "/dev/input/event%i", i);
+        fd = open(path, O_RDONLY);
+        if (fd >= 0) {
+            if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(bit[EV_KEY])), bit[EV_KEY]) >= 0) {
+                    // Check for some common keyboard keys to be present
+                    if (test_bit(KEY_ESC, bit[EV_KEY]) ||
+                    test_bit(KEY_Q, bit[EV_KEY]) ||
+                    test_bit(KEY_W, bit[EV_KEY]) ||
+                    test_bit(KEY_E, bit[EV_KEY]) ||
+                    test_bit(KEY_R, bit[EV_KEY]) ||
+                    test_bit(KEY_T, bit[EV_KEY]) ||
+                    test_bit(KEY_ENTER, bit[EV_KEY])) {
+                    active_event[i] = USB_TYPE_KEYBOARD;
                 }
+            }
+            if (ioctl(fd, EVIOCGBIT(EV_REL, sizeof(bit[EV_REL])), bit[EV_REL]) >= 0) {
+                // Check for the X and Y mouse axes to be present
+                if (test_bit(REL_X, bit[EV_REL]) ||
+                    test_bit(REL_Y, bit[EV_REL])) {
+                    active_event[i] = USB_TYPE_MOUSE;
+                }
+            }
+            active_event_cnt ++;
+            close(fd);
+        }
+    }
+
+    // return node of connected device in variable "event"
+    sprintf(event, "no device");
+    for (i=0; i<4; i++) {
+        if (!strcmp(type, "mouse")) {
+            if (active_event[i] == USB_TYPE_MOUSE) {
+                sprintf(event, "/dev/input/event%i", i);
             }
         }
-    // received message is connected device
-    } else {
-        if (!strcmp(mode, "device")) {
-            report(INFO "Attach USB device: %s from %s", device, ip);
-            // attach device
-            sprintf(tmp, "usbip attach -h %s -b %s", ip, device);
-            system(tmp);
-            if (!strcmp(type, "mouse")) {
-                report(INFO "connect mouse");
-                // start with delay (wait until device is attached to USBIP)
-                old_values->device_queue_mouse = USB_QUEUE_ADD;
-            } else {
-                if (!strcmp(type, "keyboard")) {
-                    report(INFO "connect keyboard");
-                    // start with delay (wait until device is attached to USBIP)
-                    old_values->device_queue_keyboard = USB_QUEUE_ADD;
-                } else {
-                    report(INFO "connect unknown device");
-                }
+        if (!strcmp(type, "keyboard")) {
+            if (active_event[i] == USB_TYPE_KEYBOARD) {
+                sprintf(event, "/dev/input/event%i", i);
             }
-            
         }
     }
 }
 
-/** Load USB driver
- *
- *  Load used drivers due to function of host or device.
+/** Check if device on "node" is a mouse or a keyboard
  *
  */
-void usb_load_driver(char* mode)
+void mouse_or_keyboard(t_usb_devices* old_values, char* node, int device_count)
 {
-    if (!strcmp(mode, "host")) {
-        report(INFO "Load USB driver for host");
-        system("/sbin/modprobe isp1763");
-        system("/bin/usbip-host");
-    }
+    FILE *fd;
+    char tmp[50];
+    char *line = 0;
+    char path[100];
+    size_t len = 0;
 
-    if (!strcmp(mode, "device")) {
-        report(INFO "Load USB driver for device");
-        system("/sbin/modprobe isp1763_udc");
-        system("/sbin/modprobe g_hid");
-        system("/bin/usbip-device");
-    }
+    sprintf(path, "/sys/bus/usb/devices/%s", node);
+    sprintf(tmp, "%s%s%s", path, ":1.0", "/bInterfaceProtocol");
 
-    if (!strcmp(mode, "off")) {
-        report(INFO "Load no USB driver");
-    }
-}
+    old_values->device_type[device_count] = USB_TYPE_UNKNOWN;
 
-/** Connect USB on Ethernet connect event
- *
- *  Connect devices to USBIP if an ethernet connect event occurs
- *
- */
-void usb_ethernet_connect(t_usb_devices* old_values)
-{
-    t_rscp_client *client;
-    char tmp[256];
-    char uri[40];
-    char *msg = "request";
-    char *mode;
-    int i;
-
-    mode = reg_get("usb-mode");
-
-    // if device, check if remote is host and if there are devices connected
-    if (!strcmp(mode, "device")) {
-        // send message to remote uri
-        if (hdoipd_rsc(RSC_ETH_LINK)) {
-            sprintf(uri, "%s", reg_get("remote-uri"));
-            client = rscp_client_open(hdoipd.client, 0, uri);
-            if (client) {
-                rscp_client_usb(client, msg, uri, USB_TYPE_UNKNOWN);
-                rscp_client_close(client);
+    if ((fd = fopen(tmp, "r"))) {
+        if (getline(&line, &len, fd) != -1) {
+            if (!strncmp(line, "02", 2)) {
+                old_values->device_type[device_count] = USB_TYPE_MOUSE;
+            }
+            if (!strncmp(line, "01", 2)) {
+                old_values->device_type[device_count] = USB_TYPE_KEYBOARD;
             }
         }
-    }
-
-    if (!strcmp(mode, "host")) {
-        sprintf(uri, "%s", reg_get("remote-uri"));
-        for (i=0; i<old_values->device_count; i++) {
-
-            // bind devices new to usbip
-            sprintf(tmp, "usbip unbind -b %s", (old_values->device_list+(i*10)));
-            system(tmp);
-            sprintf(tmp, "usbip bind -b %s", (old_values->device_list+(i*10)));
-            system(tmp);
-
-            if (hdoipd_rsc(RSC_ETH_LINK)) {
-                client = rscp_client_open(hdoipd.client, 0, uri);
-                if (client) {
-                    rscp_client_usb(client, (old_values->device_list+(i*10)), uri, (old_values->device_type[i]));
-                    rscp_client_close(client);
-                }
-            }
-        }
+        fclose(fd);
     }
 }
 
@@ -334,34 +298,165 @@ int detect_device(char* node_param)
     return device_count;
 }
 
-/** Check if device on "node" is a mouse or a keyboard
+/** Send an RSCP Message that a new usb device has connected
  *
  */
-void mouse_or_keyboard(t_usb_devices* old_values, char* node, int device_count)
+int usb_connect_device(t_rscp_usb* usb)
 {
-    FILE *fd;
-    char tmp[50];
-    char *line = 0;
-    char path[100];
-    size_t len = 0;
+    int ret;
+    t_rscp_media* media;
+    t_rscp_usb* usb_clone;
 
-    sprintf(path, "/sys/bus/usb/devices/%s", node);
-    sprintf(tmp, "%s%s%s", path, ":1.0", "/bInterfaceProtocol");
+    media = &usb_media;
 
-    if ((fd = fopen(tmp, "r"))) {
-        if (getline(&line, &len, fd) != -1) {
-            old_values->device_type[device_count] = USB_TYPE_UNKNOWN;
-            if (!strncmp(line, "02", 2)) {
-                old_values->device_type[device_count] = USB_TYPE_MOUSE;
-                report("mouse detected");
-            }
-            if (!strncmp(line, "01", 2)) {
-                old_values->device_type[device_count] = USB_TYPE_KEYBOARD;
-                report("keyboard detected");
+    usb_clone = (t_rscp_usb*) malloc(sizeof(t_rscp_usb));
+    memcpy(usb_clone, usb, sizeof(t_rscp_usb));
+
+    // start connection for usb if it doesnt exists
+    if (!media->creator) {
+        hdoipd_start_vrb_cb(media, 0);
+    }
+
+    ret = RSCP_SUCCESS;
+
+    // do usb setup
+    if (media->state == RSCP_INIT) {
+        if (media->dosetup) {
+            ret = media->dosetup(media, 0, 0);
+        }
+    }
+
+    // do usb play
+    if (ret == RSCP_SUCCESS) {
+        if (media->doplay) {
+            ret = media->doplay(media, usb_clone, 0);
+        }
+    }
+
+    free(usb_clone);
+
+    return ret;
+}
+
+/** Send an RSCP Message if there are connected devices
+ *
+ */
+void usb_try_to_connect_device(t_usb_devices* old_values)
+{
+    t_rscp_media* media;
+    t_rscp_usb* usb_clone;
+    int i, ret;
+
+    if (old_values->device_count > 0) {
+
+        media = &usb_media;
+        usb_clone = (t_rscp_usb*) malloc(sizeof(t_rscp_usb));
+
+        sprintf(usb_clone->mouse,      "");
+        sprintf(usb_clone->keyboard,   "");
+        sprintf(usb_clone->storage,    "");
+
+        // bind available devices to USBIP
+        for (i=0; i<old_values->device_count; i++) {
+            switch (old_values->device_type[i]) {
+                case USB_TYPE_MOUSE:        report(INFO "connect USB mouse (%s)",old_values->device_list+(i*10));
+                                            bind_usb_dev(old_values->device_list+(i*10));
+                                            sprintf(usb_clone->mouse, "%s", old_values->device_list+(i*10));
+                                            break;
+                case USB_TYPE_KEYBOARD:     report(INFO "connect USB keyboard (%s)",old_values->device_list+(i*10));
+                                            bind_usb_dev(old_values->device_list+(i*10));
+                                            sprintf(usb_clone->keyboard, "%s", old_values->device_list+(i*10));
+                                            break;
+                default:                    report(INFO "dont connect unknown USB device (%s)",old_values->device_list+(i*10));
             }
         }
-        fclose(fd);
+
+        // connect only if usb device is mouse, keyboard or storage
+        if (strcmp(usb_clone->mouse, "") || strcmp(usb_clone->keyboard, "") || strcmp(usb_clone->storage, "")) {
+            // start connection for usb if it doesnt exists
+            if (!media->creator) {
+                hdoipd_start_vrb_cb(media, 0);
+            }
+
+            ret = RSCP_SUCCESS;
+
+            // do usb setup
+            if (media->state == RSCP_INIT) {
+                if (media->dosetup) {
+                    ret = media->dosetup(media, 0, 0);
+                }
+            }
+
+            // do usb play
+            if (ret == RSCP_SUCCESS) {
+                if (media->doplay) {
+                    ret = media->doplay(media, usb_clone, 0);
+                }
+            }
+        }
+
+        free(usb_clone);
     }
+}
+
+
+/** Send an RSCP Message that an usb device is lost
+ *
+ */
+int usb_teardown_device(void)
+{
+    int ret = RSCP_NULL_POINTER;
+    t_rscp_media* media;
+
+    media = &usb_media;
+
+    if (media->doteardown) {
+        ret = media->doteardown(media, 0, 0);
+    }
+
+    return ret;
+}
+
+/** Attach an usb device to usbip
+ *
+ */
+void usb_attach_device(t_usb_devices* old_values, char* ip, char* device, char* type)
+{
+    char tmp[256];
+    char *mode;
+    mode = reg_get("usb-mode");
+
+    if (!strcmp(mode, "device")) {
+        // attach device
+        sprintf(tmp, "usbip attach -h %s -b %s", ip, device);
+        report(INFO "%s", tmp);
+        system(tmp);
+        if (!strcmp(type, "mouse")) {
+            report(INFO "connect mouse");
+            // start with delay (wait until device is attached to USBIP)
+            old_values->device_queue_mouse = USB_QUEUE_ADD;
+        } else {
+            if (!strcmp(type, "keyboard")) {
+                report(INFO "connect keyboard");
+                // start with delay (wait until device is attached to USBIP)
+                old_values->device_queue_keyboard = USB_QUEUE_ADD;
+            } else {
+                report(INFO "connect unknown device");
+            }
+        }        
+    }
+}
+
+
+/** Detach an usb device from usbip
+ *
+ */
+void usb_detach_device(t_usb_devices* old_values, int vhci_port)
+{
+    char tmp[256];
+    sprintf(tmp, "usbip detach -p %d", vhci_port);
+    report(INFO "%s", tmp);
+    system(tmp);
 }
 
 /** usb handler
@@ -377,9 +472,11 @@ void usb_device_handler(t_usb_devices* old_values)
     int device_count;
     int i, j;
     bool new_device[] = {true, true, true, true ,true ,true , true, true, true, true};
+    bool old_device[] = {true, true, true, true ,true ,true , true, true, true, true};
     char zerostring[] = "         ";
     char *s;
     bool active = false;
+    t_rscp_usb usb;
 
     // load drivers and start usbip on first call
     // if usbip-device is started to early, there are some problems with vhci driver
@@ -408,8 +505,12 @@ void usb_device_handler(t_usb_devices* old_values)
                 // check connected devices
                 device_count = detect_device(tmp);
 
-                // if some changes occured
-                if (old_values->device_count != device_count) {
+                // if new device
+                if (old_values->device_count < device_count) {
+
+                    sprintf(usb.mouse,      "");
+                    sprintf(usb.keyboard,   "");
+                    sprintf(usb.storage,    "");
 
                     // check if devices are already in list
                     for (i=0; i<device_count; i++) {
@@ -426,13 +527,60 @@ void usb_device_handler(t_usb_devices* old_values)
                         if (new_device[i] == true) {
                             mouse_or_keyboard(old_values, tmp+(i*10), i);
                             switch (old_values->device_type[i]) {
-                                case USB_TYPE_MOUSE:        report(INFO "new USB mouse detected on %s",tmp+(i*10));
-                                                            bind_usb_dev(tmp+(i*10), USB_TYPE_MOUSE);
+                                case USB_TYPE_MOUSE:        report(INFO "new USB mouse (%s) detected",tmp+(i*10));
+                                                            bind_usb_dev(tmp+(i*10));
+                                                            sprintf(usb.mouse, "%s", tmp+(i*10));
                                                             break;
-                                case USB_TYPE_KEYBOARD:     report(INFO "new USB keyboard detected on %s",tmp+(i*10));
-                                                            bind_usb_dev(tmp+(i*10), USB_TYPE_KEYBOARD);
+                                case USB_TYPE_KEYBOARD:     report(INFO "new USB keyboard (%s) detected",tmp+(i*10));
+                                                            bind_usb_dev(tmp+(i*10));
+                                                            sprintf(usb.keyboard, "%s", tmp+(i*10));
                                                             break;
-                                default:                    report(INFO "new USB device detected on %s",tmp+(i*10));
+                                default:                    report(INFO "new USB device (%s) detected",tmp+(i*10));
+                            }
+                        }
+                    }
+
+                    // update device list
+                    memcpy(old_values->device_list, tmp, 100);
+                    for (i=device_count; i<10; i++) {
+                        memcpy(old_values->device_list+(i*10), zerostring, 10);
+                    }
+
+                    // connect only if usb device is mouse, keyboard or storage
+                    if (strcmp(usb.mouse, "") || strcmp(usb.keyboard, "") || strcmp(usb.storage, "")) {
+                        usb_connect_device(&usb);
+                    }
+
+                    old_values->device_count = device_count;
+                }
+
+                // if device is lost
+                if (old_values->device_count > device_count) {
+
+                    sprintf(usb.mouse,      "");
+                    sprintf(usb.keyboard,   "");
+                    sprintf(usb.storage,    "");
+
+                   // check if devices is missing in list
+                    for (i=0; i<device_count; i++) {
+                        for (j=0; j<old_values->device_count; j++) {
+                            // if device is already in list
+                            if (strncmp((tmp+(i*10)), (old_values->device_list+(j*10)), 10) == 0) {
+                                old_device[j] = false;
+                            }
+                        }
+                    }
+
+                    for (j=0; j<old_values->device_count; j++) {
+                        if (old_device[j]) {
+                            switch (old_values->device_type[j]) {
+                                case USB_TYPE_MOUSE:        report(INFO "USB mouse (%s) is lost", old_values->device_list+(j*10));
+                                                            sprintf(usb.mouse, "%s", old_values->device_list+(j*10));
+                                                            break;
+                                case USB_TYPE_KEYBOARD:     report(INFO "USB keyboard (%s) is lost", old_values->device_list+(j*10));
+                                                            sprintf(usb.keyboard, "%s", old_values->device_list+(j*10));
+                                                            break;
+                                default:                    report(INFO "unknown USB device (%s) is lost", old_values->device_list+(j*10));
                             }
                         }
                     }
@@ -444,8 +592,19 @@ void usb_device_handler(t_usb_devices* old_values)
                     }
 
                     old_values->device_count = device_count;
-                }
+
+                    // check if no device is available
+                    for (i=0; i<old_values->device_count; i++) {
+                        mouse_or_keyboard(old_values, tmp+(i*10), i);
+                        if (((old_values->device_type[i]) == USB_TYPE_MOUSE) || ((old_values->device_type[i]) == USB_TYPE_KEYBOARD)) {
+                            return;
+                        }
+                    }
+
+                    usb_teardown_device();
+                }  
             }
+
 
             if (reg_test("usb-mode", "device")) {
                 if ((old_values->device_queue_mouse & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
@@ -453,6 +612,7 @@ void usb_device_handler(t_usb_devices* old_values)
                     search_event(old_values, "mouse", device);
                     if (strcmp(device, "no device")) {
                         sprintf(tmp, "hdoip_usbipd mouse %s /dev/hidg1 &", device);
+                        report(INFO "%s", tmp);
                         system(tmp);
                     }
                 }
@@ -461,6 +621,7 @@ void usb_device_handler(t_usb_devices* old_values)
                     search_event(old_values, "keyboard", device);
                     if (strcmp(device, "no device")) {
                         sprintf(tmp, "hdoip_usbipd keyboard %s /dev/hidg0 &", device);
+                        report(INFO "%s", tmp);
                         system(tmp);
                     }
                 }
@@ -471,65 +632,6 @@ void usb_device_handler(t_usb_devices* old_values)
     }
 }
 
-/** search in dev/input/eventX for mouse or keyboard
- *
- * - returns path of input device in "event"
- * - type of device (mouse or keyboard) must be set in "type"
- *
- */
-void search_event(t_usb_devices* handle, char* type, char* event) {
-
-    int fd = -1;
-    int active_event[] = {USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN};
-    int active_event_cnt = 0;
-    int i;
-	unsigned long bit[EV_MAX][NBITS(KEY_MAX)];
-    char path[100];
-
-    // search for connected devices to /dev/input/eventX
-    for (i=0; i<4; i++) {
-        sprintf(path, "/dev/input/event%i", i);
-        fd = open(path, O_RDONLY);
-        if (fd >= 0) {
-            if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(bit[EV_KEY])), bit[EV_KEY]) >= 0) {
-                    // Check for some common keyboard keys to be present
-                    if (test_bit(KEY_ESC, bit[EV_KEY]) ||
-                    test_bit(KEY_Q, bit[EV_KEY]) ||
-                    test_bit(KEY_W, bit[EV_KEY]) ||
-                    test_bit(KEY_E, bit[EV_KEY]) ||
-                    test_bit(KEY_R, bit[EV_KEY]) ||
-                    test_bit(KEY_T, bit[EV_KEY]) ||
-                    test_bit(KEY_ENTER, bit[EV_KEY])) {
-                    active_event[i] = USB_TYPE_KEYBOARD;
-                }
-            }
-            if (ioctl(fd, EVIOCGBIT(EV_REL, sizeof(bit[EV_REL])), bit[EV_REL]) >= 0) {
-                // Check for the X and Y mouse axes to be present
-                if (test_bit(REL_X, bit[EV_REL]) ||
-                    test_bit(REL_Y, bit[EV_REL])) {
-                    active_event[i] = USB_TYPE_MOUSE;
-                }
-            }
-            active_event_cnt ++;
-            close(fd);
-        }
-    }
-
-    // return node of connected device in variable "event"
-    sprintf(event, "no device");
-    for (i=0; i<4; i++) {
-        if (!strcmp(type, "mouse")) {
-            if (active_event[i] == USB_TYPE_MOUSE) {
-                sprintf(event, "/dev/input/event%i", i);
-            }
-        }
-        if (!strcmp(type, "keyboard")) {
-            if (active_event[i] == USB_TYPE_KEYBOARD) {
-                sprintf(event, "/dev/input/event%i", i);
-            }
-        }
-    }
-}
 
 /** Initialisation routine
  *

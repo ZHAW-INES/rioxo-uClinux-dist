@@ -235,6 +235,12 @@ void vrb_audio_pause(t_rscp_media *media)
     hoi_drv_set_led_status(SDI_OUT_OFF);
 }
 
+int vrb_audio_ext_pause(t_rscp_media* media, void* UNUSED m, t_rscp_connection* rsp)
+{
+    vrb_audio_pause(media);
+
+    return RSCP_SUCCESS;
+}
 
 int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
@@ -268,10 +274,10 @@ int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
 
 int vrb_audio_ready(t_rscp_media UNUSED *media)
 {
-    if (hdoipd_tstate(VTB_AUD_MASK)) {
-        // not ready ->
-        return RSCP_ERRORNO;
-    }
+    //if (hdoipd_tstate(VTB_AUD_MASK)) {
+    //    // not ready ->
+    //    return RSCP_ERRORNO;
+    //}
     if (!hdoipd_rsc(RSC_VIDEO_SINK)) {
         // no hdmi sink
         return RSCP_ERRORNO;
@@ -279,7 +285,7 @@ int vrb_audio_ready(t_rscp_media UNUSED *media)
     return RSCP_SUCCESS;
 }
 
-int vrb_audio_dosetup(t_rscp_media *media)
+int vrb_audio_dosetup(t_rscp_media *media, void* UNUSED m, void* UNUSED rsp)
 {
     int port;
     t_rscp_transport transport;
@@ -299,7 +305,7 @@ int vrb_audio_dosetup(t_rscp_media *media)
     return rscp_client_setup(client, &transport, 0, &hdcp);
 }
 
-int vrb_audio_doplay(t_rscp_media *media)
+int vrb_audio_doplay(t_rscp_media *media, void* UNUSED m, void* UNUSED rsp)
 {
     t_rscp_client *client = media->creator;
 
@@ -321,9 +327,9 @@ int vrb_audio_event(t_rscp_media *media, uint32_t event)
             } else {
                 vrb.alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
-                if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
-                    rscp_client_update(client, EVENT_TICK);
-                }
+         //       if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
+                rscp_client_update(client, EVENT_TICK);
+         //       }
             }
             if (vrb.timeout <= TICK_TIMEOUT) {
                 vrb.timeout++;
@@ -352,13 +358,14 @@ t_rscp_media vrb_audio = {
     .cookie = 0,
     .setup = (frscpm*)vrb_audio_setup,
     .play = (frscpm*)vrb_audio_play,
+    .pause = (frscpm*)vrb_audio_ext_pause,
     .teardown = (frscpm*)vrb_audio_teardown,
     .error = (frscpm*)vrb_audio_error,
     .update = (frscpm*)vrb_audio_update,
 
     .ready = (frscpl*)vrb_audio_ready,
-    .dosetup = (frscpl*)vrb_audio_dosetup,
-    .doplay = (frscpl*)vrb_audio_doplay,
+    .dosetup = (frscpm*)vrb_audio_dosetup,
+    .doplay = (frscpm*)vrb_audio_doplay,
     .event = (frscpe*)vrb_audio_event
 };
 

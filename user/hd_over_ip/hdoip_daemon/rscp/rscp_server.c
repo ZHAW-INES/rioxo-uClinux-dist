@@ -154,22 +154,39 @@ void rscp_server_close(t_rscp_media* media)
 void rscp_server_update(t_rscp_media* media, uint32_t event)
 {
     t_rscp_server* server = media->creator;
+    t_rscp_rtp_format fmt;
+    char *s;
+
+    if (!server) {report(ERROR "rscp_server_update: no server") return;}
+
     char *uri = "rscp://255.255.255.255:65536/";
     struct in_addr a1; a1.s_addr = server->con.address;
     sprintf(uri, "rscp://%s/", inet_ntoa(a1));
+
+    s = reg_get("compress");
+    if (strcmp(s, "jp2k") == 0) {
+        fmt.compress = FORMAT_JPEG2000;
+    } else {
+        fmt.compress = FORMAT_PLAIN;
+    }
+    hoi_drv_get_mtime(&fmt.rtptime);
+    fmt.value = reg_get_int("advcnt-min");
 
 #ifdef REPORT_RSCP_UPDATE
     report(" > RSCP Server [%d] UPDATE", server->nr);
 #endif
 
     if (server) {
-        rscp_request_update(&server->con, uri, media->sessionid, event);
+        rscp_request_update(&server->con, uri, media->sessionid, event, &fmt);
     }
 }
 
 void rscp_server_pause(t_rscp_media* media)
 {
     t_rscp_server* server = media->creator;
+
+    if (!server) {report("rscp server pause: no server"); return;}
+
     char *uri = "rscp://255.255.255.255:65536/";
     struct in_addr a1; a1.s_addr = server->con.address;
     sprintf(uri, "rscp://%s/", inet_ntoa(a1));

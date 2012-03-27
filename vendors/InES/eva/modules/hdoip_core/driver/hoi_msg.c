@@ -748,21 +748,18 @@ int hoi_drv_msg_pfmt(t_hoi* handle, t_hoi_msg_param* msg)
 int hoi_drv_msg_get_mtime(t_hoi* handle, t_hoi_msg_param* msg)
 {
     msg->value = tmr_get_master(handle->p_tmr);
-    REPORT(INFO, "Get Master-Timer: %u", msg->value);
     return SUCCESS;
 }
 
 int hoi_drv_msg_set_mtime(t_hoi* handle, t_hoi_msg_param* msg)
 {
     tmr_set_master(handle->p_tmr, msg->value);
-    REPORT(INFO, "Set Master-Timer: %u", msg->value);
     return SUCCESS;
 }
 
 int hoi_drv_msg_get_stime(t_hoi* handle, t_hoi_msg_param* msg)
 {
     msg->value = tmr_get_slave(handle->p_tmr);
-    REPORT(INFO, "Get Slave-Timer: %u", msg->value);
     return SUCCESS;
 }
 

@@ -264,6 +264,13 @@ void vtb_audio_pause(t_rscp_media *media)
     remove_client_from_vtb(MEDIA_IS_AUDIO, cookie->remote.address);
 }
 
+int vtb_audio_ext_pause(t_rscp_media* media, void* UNUSED m, t_rscp_connection* rsp)
+{
+    vtb_audio_pause(media);
+    rscp_response_pause(rsp, media->sessionid);
+
+    return RSCP_SUCCESS;
+}
 
 int vtb_audio_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
@@ -306,9 +313,9 @@ int vtb_audio_event(t_rscp_media *media, uint32_t event)
             } else {
                 cookie->alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
-                if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
-                    rscp_server_update(media, EVENT_TICK);
-                }
+       //         if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
+                rscp_server_update(media, EVENT_TICK);
+       //         }
             }
 
             if (get_multicast_enable()) {
@@ -342,6 +349,7 @@ t_rscp_media vtb_audio = {
     .cookie_size = sizeof(t_multicast_cookie),
     .setup = (frscpm*)vtb_audio_setup,
     .play = (frscpm*)vtb_audio_play,
+    .pause = (frscpm*)vtb_audio_ext_pause,
     .teardown = (frscpm*)vtb_audio_teardown,
     .update = (frscpm*)vtb_audio_update,
     .event = (frscpe*)vtb_audio_event

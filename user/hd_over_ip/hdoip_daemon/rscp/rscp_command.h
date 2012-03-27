@@ -25,21 +25,27 @@ void rscp_request_cseq(t_rscp_connection* msg, int s);
 void rscp_header_session(t_rscp_connection* msg, char* s);
 void rscp_header_timing(t_rscp_connection* msg, t_video_timing* timing);
 void rscp_header_rtp_format(t_rscp_connection* msg, t_rscp_rtp_format* p);
-void rscp_header_usb(t_rscp_connection* msg, char* s, char* d);
+void rscp_header_usb(t_rscp_connection* msg, char* mouse, char* keyboard, char* storage);
 void rscp_eoh(t_rscp_connection* msg);
 
 void rscp_request_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, t_rscp_edid *edid, t_rscp_hdcp* hdcp);
 void rscp_request_play(t_rscp_connection* msg, char* uri, char* session, t_rscp_rtp_format* fmt);
 void rscp_request_teardown(t_rscp_connection* msg, char* uri, char* session);
-void rscp_request_update(t_rscp_connection* msg, char* uri, char* session, uint32_t event);
+void rscp_request_update(t_rscp_connection* msg, char* uri, char* session, uint32_t event, t_rscp_rtp_format* fmt);
+
 void rscp_request_pause(t_rscp_connection* msg, char* uri, char* session);
 void rscp_request_hello(t_rscp_connection* msg, char* uri);
 void rscp_request_hdcp(t_rscp_connection* msg, char* session, char* uri, char* id, char* content);
+void rscp_request_usb_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, char* session);
+void rscp_request_usb_play(t_rscp_connection* msg, char* uri, char* session, char* mouse_msg, char* keyboard_msg, char* storage_msg);
+void rscp_request_usb_teardown(t_rscp_connection* msg, char* uri, char* session);
 
 void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session, t_rscp_hdcp* hdcp);
 void rscp_response_play(t_rscp_connection* msg, char* session, t_rscp_rtp_format* fmt, t_video_timing* timing);
 void rscp_response_teardown(t_rscp_connection* msg, char* session);
 void rscp_response_hdcp(t_rscp_connection* msg, char* session, char* id, char* content);
-void rscp_request_usb(t_rscp_connection* msg, char* device, char* uri, int device_type);
+void rscp_response_usb_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session);
+void rscp_response_usb_play(t_rscp_connection* msg, char* session);
+void rscp_response_usb_teardown(t_rscp_connection* msg, char* session);
 
 #endif /* RSCP_COMMAND_H_ */

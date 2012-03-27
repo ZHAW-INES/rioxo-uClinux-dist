@@ -32,6 +32,7 @@
 #include "vrb_audio.h"
 #include "vtb_audio.h"
 #include "box_sys.h"
+#include "usb_media.h"
 
 const char* statestr(int state)
 {
@@ -254,6 +255,7 @@ void hdoipd_goto_vtb()
                 rscp_listener_add_media(&hdoipd.listener, &vtb_audio);
                 rscp_listener_add_media(&hdoipd.listener, &vtb_video);
                 rscp_listener_add_media(&hdoipd.listener, &box_sys);
+                rscp_listener_add_media(&hdoipd.listener, &usb_media);
                 hdoipd_set_state(HOID_VTB);
             }
         } else {
@@ -281,6 +283,7 @@ void hdoipd_goto_vrb()
                 hoi_drv_timer(DRV_TMR_OUT);
 
                 rscp_listener_add_media(&hdoipd.listener, &box_sys);
+                rscp_listener_add_media(&hdoipd.listener, &usb_media);
 
                 hdoipd_set_state(HOID_VRB);
                 // register remote for "hello"
@@ -328,18 +331,21 @@ int hdoipd_vrb_setup(t_rscp_media* media, void UNUSED *d)
     sprintf(tmp, "%s/%s", reg_get("remote-uri"), media->name);
     client = rscp_client_open(hdoipd.client, media, tmp);
 
-    if (client) {
-        // try to setup a connection
-        ret = rscp_media_setup(media);
-        if (ret == RSCP_SUCCESS) {
-            rscp_media_play(media);
+    // try to start only when not usb
+    if (strcmp(media->name, "usb")) {
+        if (client){
+            // try to setup a connection
+            ret = rscp_media_setup(media);
+            if (ret == RSCP_SUCCESS) {
+                rscp_media_play(media);
+            } else {
+                report(ERROR "hdoipd_vrb_setup() rscp_media_setup failed");
+                rscp_client_close(client);
+            }
         } else {
-            report(ERROR "hdoipd_vrb_setup() rscp_media_setup failed");
-            rscp_client_close(client);
+            report(ERROR "hdoipd_vrb_setup() rscp_client_open failed");
+            osd_printf("VTB(%s) not found. Waiting for %s\n", media->name, tmp);
         }
-    } else {
-        report(ERROR "hdoipd_vrb_setup() rscp_client_open failed");
-        osd_printf("VTB(%s) not found. Waiting for %s\n", media->name, tmp);
     }
 
     return 0;
@@ -388,6 +394,12 @@ int hdoipd_start_vrb_cb(t_rscp_media* media, void* d)
     int ret = 0;
     uint32_t dev_id;
 
+    // USB
+    if (!strcmp(media->name, "usb")) {
+    	hdoipd_vrb_setup(media, d);
+        return 0;
+    }
+
     // detect connected video card
     hoi_drv_get_device_id(&dev_id);
 
@@ -419,6 +431,7 @@ int hdoipd_start_vrb(void *d)
     } else {
         report(ERROR "attempt to start vrb when not in state vrb");
     }
+    usb_try_to_connect_device(&hdoipd.usb_devices);
     if (failed) report(ERROR "attempt to start vrb failed");
     return failed;
 }
@@ -542,7 +555,6 @@ void hdoipd_event(uint32_t event)
         case E_ETO_LINK_UP:
             hoi_drv_set_led_status(ETHERNET_ACTIVE);
             hdoipd_set_rsc(RSC_ETH_LINK);
-            usb_ethernet_connect(&hdoipd.usb_devices);
             if (hdoipd_state(HOID_READY)) {
                 hdoipd_start();
             }

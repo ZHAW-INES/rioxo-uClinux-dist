@@ -426,11 +426,22 @@ int rscp_client_kill(t_rscp_client* client)
 
 int rscp_client_update(t_rscp_client* client, uint32_t event)
 {
+    t_rscp_rtp_format fmt;
+    char* s;
+    s = reg_get("compress");
+    if (strcmp(s, "jp2k") == 0) {
+        fmt.compress = FORMAT_JPEG2000;
+    } else {
+        fmt.compress = FORMAT_PLAIN;
+    }
+    hoi_drv_get_mtime(&fmt.rtptime);
+    fmt.value = reg_get_int("advcnt-min");
+
 #ifdef REPORT_RSCP_UPDATE
     report(" > RSCP Client [%d] UPDATE", client->nr);
 #endif
 
-    rscp_request_update(&client->con, client->uri, client->media->sessionid, event);
+    rscp_request_update(&client->con, client->uri, client->media->sessionid, event, &fmt);
 
     return RSCP_SUCCESS;
 }
@@ -499,13 +510,6 @@ void rscp_client_force_close(t_node* list)
     while ((client = list_peek(list))) {
         rscp_client_close(client);
     }
-}
-
-int rscp_client_usb(t_rscp_client* client, char* device, char* uri, int device_type)
-{
-    rscp_request_usb(&client->con, device, uri, device_type);
-
-    return RSCP_SUCCESS;
 }
 
 /** checks if the received message is a request or a response
@@ -597,7 +601,7 @@ void* rscp_client_req_thread(void* _client)
             // process request (function responses for itself)
             n = ((frscpm*)method->fnc)(client->media, (void*)&buf, &client->con);
             if (n != RSCP_SUCCESS) {
-                report(" ? execute method \"%s\" error (%d)", common.rq.method, n);
+                report(" ? execute method \"%s\" error (%d) media (%s)", common.rq.method, n, client->media->name);
                 unlock("rscp_client_req_thread");
                 break;
             }
@@ -615,3 +619,9 @@ void* rscp_client_req_thread(void* _client)
     return 0;
 }
 
+int rscp_client_pause(t_rscp_client* client)
+{
+    rscp_request_pause(&client->con, client->uri, client->media->sessionid);
+
+    return 0;
+}

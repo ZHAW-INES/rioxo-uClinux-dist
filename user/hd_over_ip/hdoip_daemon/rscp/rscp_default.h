@@ -14,6 +14,7 @@ void rscp_default_transport(t_rscp_transport* t);
 
 void rscp_default_response_setup(t_rscp_rsp_setup* p);
 void rscp_default_response_play(t_rscp_rsp_play* p);
+void rscp_default_response_pause(t_rscp_rsp_pause* p);
 void rscp_default_response_teardown(t_rscp_rsp_teardown* p);
 void rscp_default_response_hdcp(t_rscp_rsp_hdcp* p);
 

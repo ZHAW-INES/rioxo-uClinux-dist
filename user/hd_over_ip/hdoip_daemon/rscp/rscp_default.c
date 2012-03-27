@@ -46,6 +46,12 @@ void rscp_default_response_play(t_rscp_rsp_play* p)
     p->session[0] = 0;
 }
 
+void rscp_default_response_pause(t_rscp_rsp_pause* p)
+{
+    p->cseq = 0;
+    p->session[0] = 0;
+}
+
 void rscp_default_response_teardown(t_rscp_rsp_teardown* p)
 {
     p->cseq = 0;

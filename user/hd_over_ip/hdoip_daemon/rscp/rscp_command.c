@@ -81,6 +81,14 @@ void rscp_header_transport(t_rscp_connection* msg, t_rscp_transport* t)
     msgprintf(msg, "mode=\"PLAY\"\r\n");
 }
 
+void rscp_header_transport_usb(t_rscp_connection* msg, t_rscp_transport* t)
+{
+    msgprintf(msg, "Transport: TCP;%s;", rscp_str_multicast(t->multicast));
+    msgprintf(msg, "usb-host-ip=%i.%i.%i.%i;", ((t->usb_host_ip & 0x000000FF) >> 0), ((t->usb_host_ip & 0x0000FF00) >> 8), ((t->usb_host_ip & 0x00FF0000) >> 16),((t->usb_host_ip & 0xFF000000) >> 24));
+    msgprintf(msg, "usb-host-port=%d;",  ntohs(t->usb_host_port));
+    msgprintf(msg, "mode=\"PLAY\"\r\n");
+}
+
 void rscp_header_edid(t_rscp_connection* msg, t_rscp_edid *edid)
 {
     msgprintf(msg, "EDID-Segment: %02x", edid->segment);
@@ -96,9 +104,25 @@ void rscp_header_hdcp(t_rscp_connection* msg, t_rscp_hdcp *hdcp)
     msgprintf(msg, "\r\n");
 }
 
-void rscp_header_usb(t_rscp_connection* msg, char* s, char* d)
+void rscp_header_usb(t_rscp_connection* msg, char* mouse, char* keyboard, char* storage)
 {
-    msgprintf(msg, "Device: %s\r\nType: %s\r\n", s, d);
+    msgprintf(msg, "USB: ");
+    if (strcmp(mouse, "")) {
+        msgprintf(msg, "device-mouse=%s", mouse);      
+        if ((strcmp(keyboard, "")) || (strcmp(storage, ""))) {
+            msgprintf(msg, ";");
+        }
+    }
+    if (strcmp(keyboard, "")) {
+        msgprintf(msg, "device-keyboard=%s", keyboard);
+        if (strcmp(storage, "")) {
+            msgprintf(msg, ";");
+        }
+    }
+    if (strcmp(storage, "")) {
+        msgprintf(msg, "device-storage=%s", storage);
+    }
+    msgprintf(msg, "\r\n");
 }
 
 void rscp_header_timing(t_rscp_connection* msg, t_video_timing* timing)
@@ -188,11 +212,12 @@ void rscp_request_teardown(t_rscp_connection* msg, char* uri, char* session)
     rscp_send(msg);
 }
 
-void rscp_request_update(t_rscp_connection* msg, char* uri, char* session, uint32_t event)
+void rscp_request_update(t_rscp_connection* msg, char* uri, char* session, uint32_t event, t_rscp_rtp_format* fmt)
 {
     rscp_request_line(msg, "UPDATE", uri);
     rscp_header_session(msg, session);
     rscp_event(msg, event);
+    rscp_header_rtp_format(msg, fmt);
     rscp_eoh(msg);
     rscp_send(msg);
 }
@@ -200,6 +225,14 @@ void rscp_request_update(t_rscp_connection* msg, char* uri, char* session, uint3
 void rscp_request_pause(t_rscp_connection* msg, char* uri, char* session)
 {
     rscp_request_line(msg, "PAUSE", uri);
+    rscp_header_session(msg, session);
+    rscp_eoh(msg);
+    rscp_send(msg);
+}
+
+void rscp_response_pause(t_rscp_connection* msg, char* session)
+{
+    rscp_response_line(msg, RSCP_SC_OK, "OK");
     rscp_header_session(msg, session);
     rscp_eoh(msg);
     rscp_send(msg);
@@ -244,16 +277,52 @@ void rscp_response_hdcp(t_rscp_connection* msg, char* session, char* id, char* c
 
 }
 
-void rscp_request_usb(t_rscp_connection* msg, char* device, char* uri, int device_type)
+void rscp_request_usb_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, char* session)
 {
-    rscp_request_line(msg, "USB", uri);
-    switch (device_type) {
-        case USB_TYPE_MOUSE:        rscp_header_usb(msg, device, "mouse");
-                                    break;
-        case USB_TYPE_KEYBOARD:     rscp_header_usb(msg, device, "keyboard");
-                                    break;
-        default:                    rscp_header_usb(msg, device, " ");
-    }
+    rscp_request_line(msg, "SETUP", uri);
+    rscp_header_transport_usb(msg, transport);
+    rscp_eoh(msg);
+    rscp_send(msg);
+}
+
+void rscp_request_usb_play(t_rscp_connection* msg, char* uri, char* session, char* mouse_msg, char* keyboard_msg, char* storage_msg)
+{
+    rscp_request_line(msg, "PLAY", uri);
+    rscp_header_session(msg, session);
+    rscp_header_usb(msg, mouse_msg, keyboard_msg, storage_msg);
+    rscp_eoh(msg);
+    rscp_send(msg);
+}
+
+void rscp_request_usb_teardown(t_rscp_connection* msg, char* uri, char* session)
+{
+    rscp_request_line(msg, "TEARDOWN", uri);
+    rscp_header_session(msg, session);
+    rscp_eoh(msg);
+    rscp_send(msg);
+}
+
+void rscp_response_usb_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session)
+{
+    rscp_response_line(msg, RSCP_SC_OK, "OK");
+    rscp_header_session(msg, session);
+    rscp_header_transport_usb(msg, transport);
+    rscp_eoh(msg);
+    rscp_send(msg);
+}
+
+void rscp_response_usb_play(t_rscp_connection* msg, char* session)
+{
+    rscp_response_line(msg, RSCP_SC_OK, "OK");
+    rscp_header_session(msg, session);
+    rscp_eoh(msg);
+    rscp_send(msg);
+}
+
+void rscp_response_usb_teardown(t_rscp_connection* msg, char* session)
+{
+    rscp_response_line(msg, RSCP_SC_OK, "OK");
+    rscp_header_session(msg, session);
     rscp_eoh(msg);
     rscp_send(msg);
 }

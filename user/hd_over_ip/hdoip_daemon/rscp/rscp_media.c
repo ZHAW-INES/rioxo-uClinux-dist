@@ -135,7 +135,10 @@ int rmsq_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
  */
 int rmsq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 {
-    int ret = RSCP_SERVER_ERROR;
+    int ret;
+
+    ret = RSCP_SERVER_ERROR;
+
     t_rscp_server *server = (t_rscp_server*)media->creator;
 
     // needs to be a session
@@ -158,14 +161,6 @@ int rmsq_hello(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
     int ret = RSCP_SUCCESS;
     if (media->hello) ret = media->hello(media, msg, rsp);
     return ret;
-}
-
-int rmsq_usb(t_rscp_media* media, t_rscp_req_usb* msg, t_rscp_connection* rsp)
-{
-    char *ip = reg_get("remote-uri");
-    attach_usb_dev(&hdoipd.usb_devices, (ip+7), msg->device, msg->type);
-
-    return RSCP_SUCCESS;
 }
 
 // call hdcp function
@@ -365,7 +360,7 @@ int rscp_media_setup(t_rscp_media* media)
     int ret = RSCP_NULL_POINTER;
     if (media && media->creator) {
         if (media->state != RSCP_PLAYING) {
-            if (media->dosetup) ret = media->dosetup(media);
+            if (media->dosetup) ret = media->dosetup(media, 0, 0);
         } else {
             ret = RSCP_WRONG_STATE;
         }
@@ -380,7 +375,7 @@ int rscp_media_play(t_rscp_media* media)
 
     if (media && media->creator) {
         if (media->state == RSCP_READY) {
-            if (media->doplay) ret = media->doplay(media);
+            if (media->doplay) ret = media->doplay(media, 0, 0);
             //check if kill / teardown is set because of HDCP error
             if(client->task & E_RSCP_CLIENT_KILL) {
             	report(INFO "KILL CLIENT");

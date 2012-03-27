@@ -23,6 +23,7 @@
 #define eti_set_config_audio_enc_dis(p)		HOI_WR32(p, ETI_CONFIG_CLR_REG, ETI_CONFIG_AUDIO_ENC_EN)
 #define eti_set_config_video_enc_dis(p)		HOI_WR32(p, ETI_CONFIG_CLR_REG, ETI_CONFIG_VIDEO_ENC_EN)
 #define eti_set_config_aud_pkt_drop(p)		HOI_WR32(p, ETI_CONFIG_SET_REG, ETI_CONFIG_AUD_PKT_DROP)
+#define eti_set_config_vid_pkt_drop(p)		HOI_WR32(p, ETI_CONFIG_SET_REG, ETI_CONFIG_VID_PKT_DROP)
 #define eti_get_irq1(p)                     HOI_REG_RD(p, ETI_STATUS_REG, ETI_STATUS_IRQ1)
 #define eti_clr_irq1(p)                     HOI_REG_CLR(p, ETI_STATUS_REG, ETI_STATUS_IRQ1)
 #define eti_set_config_start(p)			    HOI_WR32(p, ETI_CONFIG_SET_REG, ETI_CONFIG_FSM_EN)

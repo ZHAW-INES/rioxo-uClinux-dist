@@ -124,6 +124,24 @@ int hdoip_cli_vrb_play(int fd, int fdr, char** argv, int argc)
     return 0;
 }
 
+int hdoip_cli_vrb_pause(int fd, int fdr, char** argv, int argc)
+{
+    //printf("hdoip_cli_vrb_pause\n");
+
+    hoic_vrb_pause(fd);
+
+    return 0;
+}
+
+int hdoip_cli_vrb_pause_play(int fd, int fdr, char** argv, int argc)
+{
+    //printf("hdoip_cli_vrb_pause_play\n");
+
+    hoic_vrb_pause_play(fd);
+
+    return 0;
+}
+
 int hdoip_cli_ready(int fd, int fdr, char** argv, int argc)
 {
     //printf("hdoip_cli_vrb_play\n");
@@ -253,6 +271,8 @@ const t_hdoip_cli_cmd_arr cmd_arr[] = {
         { "vtb",            0, hdoip_cli_vtb,           ""},
         { "vrb",            1, hdoip_cli_vrb_setup,     "uri"},
         { "play",           0, hdoip_cli_vrb_play,      ""},
+        { "pause",          0, hdoip_cli_vrb_pause,     ""},
+        { "pause-play",     0, hdoip_cli_vrb_pause_play,""},
         { "set",            2, hdoip_cli_set,           "name value"},
         { "get",            1, hdoip_cli_get,           "name"},
         { "ready",          0, hdoip_cli_ready,         ""},

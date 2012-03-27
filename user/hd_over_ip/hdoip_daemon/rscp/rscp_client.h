@@ -45,6 +45,7 @@ extern const t_map_set client_method[];
 extern const t_map_fnc tab_response_hdcp[];
 extern const t_map_fnc tab_response_setup[];
 extern const t_map_fnc tab_response_play[];
+extern const t_map_fnc tab_response_pause[];
 extern const t_map_fnc tab_response_teardown[];
 extern const t_map_fnc tab_request_update[];
 
@@ -67,7 +68,6 @@ int rscp_client_teardown(t_rscp_client* client);
 int rscp_client_update(t_rscp_client* client, uint32_t event);
 int rscp_client_hello(t_rscp_client* client);
 int rscp_client_hdcp(t_rscp_client* client);
-int rscp_client_usb(t_rscp_client* client, char* device, char* uri, int device_type);
-
+int rscp_client_pause(t_rscp_client* client);
 
 #endif /* RSCP_CLIENT_H_ */

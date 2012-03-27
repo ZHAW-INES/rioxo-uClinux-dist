@@ -20,6 +20,7 @@
 #include "vrb_video.h"
 #include "update.h"
 #include "edid.h"
+#include "vrb_audio.h"
 
 void hdoipd_cmd_canvas(t_hoic_canvas* cmd)
 {
@@ -133,6 +134,47 @@ void hdoipd_cmd_play(t_hoic_cmd UNUSED *cmd)
     alive_check_start_vrb_alive();
 }
 
+void hdoipd_cmd_pause(t_hoic_cmd UNUSED *cmd)
+{
+    t_rscp_media* media = &vrb_audio;           // audio only for debug purposes
+    t_rscp_client *client = media->creator;
+    u_rscp_header buf;
+    int ret;
+
+    if (!client)                        { report(ERROR "no client");      return; }
+    if (media->state != RSCP_PLAYING)   { report(ERROR "wrong state");    return; }
+
+    rscp_client_pause(client);
+
+    // response
+    rscp_default_response_setup((void*)&buf);
+    ret = rscp_parse_response(&client->con, tab_response_pause, (void*)&buf, 0, CFG_RSP_TIMEOUT);
+    if (ret == RSCP_SUCCESS) {
+        rmsr_pause(media, 0, 0);
+    }
+}
+
+void hdoipd_cmd_pause_play(t_hoic_cmd UNUSED *cmd)
+{
+    t_rscp_media* media = &vrb_audio;           // audio only for debug purposes
+    t_rscp_client *client = media->creator;
+    t_rscp_rtp_format fmt;
+    char *s;
+
+    if (!client)                        { report(ERROR "no client");      return; }
+    if (media->state != RSCP_READY)     { report(ERROR "wrong state");    return; }
+
+    s = reg_get("compress");
+    if (strcmp(s, "jp2k") == 0) {
+        fmt.compress = FORMAT_JPEG2000;
+    } else {
+        fmt.compress = FORMAT_PLAIN;
+    }
+    fmt.rtptime = 0;
+    fmt.value = reg_get_int("advcnt-min");
+
+    rscp_client_play(client, &fmt);
+}
 
 void hdoipd_ready(t_hoic_cmd UNUSED *cmd)
 {
@@ -245,34 +287,36 @@ void hdoipd_debug(t_hoic_cmd UNUSED *cmd)
 void hdoipd_request(uint32_t* cmd, int rsp)
 {
     switch (cmd[0]) {
-        hdoipdreq(HOIC_CANVAS, hdoipd_cmd_canvas);
-        hdoipdreq(HOIC_LOAD, hdoipd_load);
-        hdoipdreq(HOIC_CAPTURE, hdoipd_capture);
-        hdoipdreq(HOIC_LOOP, hdoipd_loop);
-        hdoipdreq(HOIC_OSD_ON, hdoipd_osd_on);
-        hdoipdreq(HOIC_OSD_OFF, hdoipd_osd_off);
-        hdoipdreq(HOIC_HPD_ON, hdoipd_hpd_on);
-        hdoipdreq(HOIC_HPD_OFF, hdoipd_hpd_off);
-        hdoipdreq(HOIC_FMT_IN, hdoipd_fmt_in);
-        hdoipdreq(HOIC_FMT_OUT, hdoipd_fmt_out);
-        hdoipdreq(HOIC_FMT_PROC, hdoipd_fmt_proc);
-        hdoipdreq(HOIC_VTB, hdoipd_vtb);
-        hdoipdreq(HOIC_VRB_SETUP, hdoipd_cmd_vrb_setup);
-        hdoipdreq(HOIC_VRB_PLAY, hdoipd_cmd_play);
-        hdoipdreq(HOIC_READY, hdoipd_ready);
-        hdoipdreq(HOIC_REBOOT, hdoipd_reboot);
-        hdoipdreq(HOIC_REPAIR, hdoipd_repair);
-        hdoipdreq(HOIC_STORE_CFG, hdoipd_store_cfg);
-        hdoipdreq(HOIC_PARAM_SET, hdoipd_set_param);
-        hdoipdreq(HOIC_REMOTE_UPDATE, hdoipd_remote_update);
-        hdoipdreq(HOIC_GET_EDID, hdoipd_get_edid);
-        hdoipdreq(HOIC_FACTORY_DEFAULT, hdoipd_factory_default);
-        hdoipdreq(HOIC_DEBUG, hdoipd_debug);
-        hdoipdreq_rsp(HOIC_GETVERSION, hdoipd_get_version);
-        hdoipdreq_rsp(HOIC_GETUSB, hdoipd_get_usb);
-        hdoipdreq_rsp(HOIC_READ, hdoipd_read);
-        hdoipdreq_rsp(HOIC_PARAM_GET, hdoipd_get_param);
-        hdoipdreq_rsp(HOIC_GET_HDCP_STATE, hdoipd_get_hdcp_state);
+        hdoipdreq(HOIC_CANVAS               , hdoipd_cmd_canvas);
+        hdoipdreq(HOIC_LOAD                 , hdoipd_load);
+        hdoipdreq(HOIC_CAPTURE              , hdoipd_capture);
+        hdoipdreq(HOIC_LOOP                 , hdoipd_loop);
+        hdoipdreq(HOIC_OSD_ON               , hdoipd_osd_on);
+        hdoipdreq(HOIC_OSD_OFF              , hdoipd_osd_off);
+        hdoipdreq(HOIC_HPD_ON               , hdoipd_hpd_on);
+        hdoipdreq(HOIC_HPD_OFF              , hdoipd_hpd_off);
+        hdoipdreq(HOIC_FMT_IN               , hdoipd_fmt_in);
+        hdoipdreq(HOIC_FMT_OUT              , hdoipd_fmt_out);
+        hdoipdreq(HOIC_FMT_PROC             , hdoipd_fmt_proc);
+        hdoipdreq(HOIC_VTB                  , hdoipd_vtb);
+        hdoipdreq(HOIC_VRB_SETUP            , hdoipd_cmd_vrb_setup);
+        hdoipdreq(HOIC_VRB_PLAY             , hdoipd_cmd_play);
+        hdoipdreq(HOIC_VRB_PAUSE            , hdoipd_cmd_pause);
+        hdoipdreq(HOIC_VRB_PAUSE_PLAY       , hdoipd_cmd_pause_play);
+        hdoipdreq(HOIC_READY                , hdoipd_ready);
+        hdoipdreq(HOIC_REBOOT               , hdoipd_reboot);
+        hdoipdreq(HOIC_REPAIR               , hdoipd_repair);
+        hdoipdreq(HOIC_STORE_CFG            , hdoipd_store_cfg);
+        hdoipdreq(HOIC_PARAM_SET            , hdoipd_set_param);
+        hdoipdreq(HOIC_REMOTE_UPDATE        , hdoipd_remote_update);
+        hdoipdreq(HOIC_GET_EDID             , hdoipd_get_edid);
+        hdoipdreq(HOIC_FACTORY_DEFAULT      , hdoipd_factory_default);
+        hdoipdreq(HOIC_DEBUG                , hdoipd_debug);
+        hdoipdreq_rsp(HOIC_GETVERSION       , hdoipd_get_version);
+        hdoipdreq_rsp(HOIC_GETUSB           , hdoipd_get_usb);
+        hdoipdreq_rsp(HOIC_READ             , hdoipd_read);
+        hdoipdreq_rsp(HOIC_PARAM_GET        , hdoipd_get_param);
+        hdoipdreq_rsp(HOIC_GET_HDCP_STATE   , hdoipd_get_hdcp_state);
         default: report("command not supported <%08x>", cmd[0]);
     }
 }

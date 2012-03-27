@@ -62,6 +62,7 @@ CFLAGS += -Iosd
 OBJS   +=   osd/hdoipd_osd.o
 CFLAGS += -Imedia
 OBJS   +=   media/box_sys.o
+OBJS   +=   media/usb_media.o
 OBJS   +=   media/vrb_video.o
 OBJS   +=   media/vtb_video.o
 OBJS   +=   media/vrb_audio.o

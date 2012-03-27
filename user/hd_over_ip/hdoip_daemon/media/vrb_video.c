@@ -269,6 +269,13 @@ void vrb_video_pause(t_rscp_media *media)
     hoi_drv_set_led_status(SDI_OUT_OFF);
 }
 
+int vrb_video_ext_pause(t_rscp_media* media, void* UNUSED m, t_rscp_connection* rsp)
+{
+    vrb_video_pause(media);
+
+    return RSCP_SUCCESS;
+}
+
 int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
 	t_rscp_client *client = media->creator;
@@ -304,10 +311,10 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
 
 int vrb_video_ready(t_rscp_media UNUSED *media)
 {
-    if (hdoipd_tstate(VTB_VID_MASK)) {
-        // not ready ->
-        return RSCP_ERRORNO;
-    }
+    //if (hdoipd_tstate(VTB_VID_MASK)) {
+    //    // not ready ->
+    //    return RSCP_ERRORNO;
+    //}
     if (!hdoipd_rsc(RSC_VIDEO_SINK)) {
         // no video sink
         return RSCP_ERRORNO;
@@ -315,7 +322,7 @@ int vrb_video_ready(t_rscp_media UNUSED *media)
     return RSCP_SUCCESS;
 }
 
-int vrb_video_dosetup(t_rscp_media *media)
+int vrb_video_dosetup(t_rscp_media *media, void* UNUSED m, void* UNUSED rsp)
 {
     int port;
     t_rscp_transport transport;
@@ -342,7 +349,7 @@ int vrb_video_dosetup(t_rscp_media *media)
     return rscp_client_setup(client, &transport, &edid, &hdcp);
 }
 
-int vrb_video_doplay(t_rscp_media *media)
+int vrb_video_doplay(t_rscp_media *media, void* UNUSED m, void* UNUSED rsp)
 {
     char *s;
     t_rscp_rtp_format fmt;
@@ -376,9 +383,9 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
             } else {
                 vrb.alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
-                if (hdoipd_tstate(VTB_VIDEO)) { // only if video stream = active
-                    rscp_client_update(client, EVENT_TICK);
-                }
+           //     if (hdoipd_tstate(VTB_VIDEO)) { // only if video stream = active
+                rscp_client_update(client, EVENT_TICK);
+           //     }
             }
             if (vrb.timeout <= TICK_TIMEOUT) {
                 vrb.timeout++;
@@ -408,13 +415,13 @@ t_rscp_media vrb_video = {
     .cookie = 0,
     .setup = (frscpm*)vrb_video_setup,
     .play = (frscpm*)vrb_video_play,
+    .pause = (frscpm*)vrb_video_ext_pause,
     .teardown = (frscpm*)vrb_video_teardown,
     .error = (frscpm*)vrb_video_error,
     .update = (frscpm*)vrb_video_update,
-
     .ready = (frscpl*)vrb_video_ready,
-    .dosetup = (frscpl*)vrb_video_dosetup,
-    .doplay = (frscpl*)vrb_video_doplay,
+    .dosetup = (frscpm*)vrb_video_dosetup,
+    .doplay = (frscpm*)vrb_video_doplay,
     .event = (frscpe*)vrb_video_event
 };
 

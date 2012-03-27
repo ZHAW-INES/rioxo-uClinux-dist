@@ -274,6 +274,14 @@ void vtb_video_pause(t_rscp_media *media)
     remove_client_from_vtb(MEDIA_IS_VIDEO, cookie->remote.address);
 }
 
+int vtb_video_ext_pause(t_rscp_media* media, void* UNUSED m, t_rscp_connection* rsp)
+{
+    vtb_video_pause(media);
+    rscp_response_pause(rsp, media->sessionid);
+
+    return RSCP_SUCCESS;
+}
+
 int vtb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection *rsp)
 {
     t_multicast_cookie* cookie = media->cookie;
@@ -317,9 +325,9 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
             } else {
                 cookie->alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
-                if (hdoipd_tstate(VTB_VIDEO)) { // only if video stream = active
-                    rscp_server_update(media, EVENT_TICK);
-                }
+          //      if (hdoipd_tstate(VTB_VIDEO)) { // only if video stream = active
+                rscp_server_update(media, EVENT_TICK);
+          //      }
             }
 
             if (get_multicast_enable()) {
@@ -353,6 +361,7 @@ t_rscp_media vtb_video = {
     .cookie_size = sizeof(t_multicast_cookie),
     .setup = (frscpm*)vtb_video_setup,
     .play = (frscpm*)vtb_video_play,
+    .pause = (frscpm*)vtb_video_ext_pause,
     .teardown = (frscpm*)vtb_video_teardown,
     .update = (frscpm*)vtb_video_update,
     .event = (frscpe*)vtb_video_event

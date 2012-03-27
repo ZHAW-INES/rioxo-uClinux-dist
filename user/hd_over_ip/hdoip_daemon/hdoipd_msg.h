@@ -44,6 +44,8 @@
 #define HOIC_FACTORY_DEFAULT    (0x3100000f)
 #define HOIC_GETUSB             (0x31000010)
 #define HOIC_GET_HDCP_STATE     (0x31000020)
+#define HOIC_VRB_PAUSE          (0x31000011)
+#define HOIC_VRB_PAUSE_PLAY     (0x31000012)
 
 // Switches
 #define HOIC_OSD_ON             (0x32000005)
@@ -129,6 +131,8 @@ static inline void hoic_sw(int fd, uint32_t id)
 #define hoic_store_cfg(fd) hoic_sw(fd, HOIC_STORE_CFG)
 #define hoic_vtb(fd) hoic_sw(fd, HOIC_VTB)
 #define hoic_vrb_play(fd) hoic_sw(fd, HOIC_VRB_PLAY)
+#define hoic_vrb_pause(fd) hoic_sw(fd, HOIC_VRB_PAUSE)
+#define hoic_vrb_pause_play(fd) hoic_sw(fd, HOIC_VRB_PAUSE_PLAY)
 #define hoic_ready(fd) hoic_sw(fd, HOIC_READY)
 #define hoic_reboot(fd) hoic_sw(fd, HOIC_REBOOT)
 #define hoic_repair(fd) hoic_sw(fd, HOIC_REPAIR)

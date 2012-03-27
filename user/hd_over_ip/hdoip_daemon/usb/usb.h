@@ -35,14 +35,10 @@ typedef struct {
 #define test_bit(bit, arr)      ((arr[LONG(bit)] >> OFF(bit)) & 1)
 
 void usb_get_dev(char* s);
-void bind_usb_dev(char* s, int device_type);
-void attach_usb_dev(t_usb_devices* old_values, char* ip, char* device, char* type);
-void usb_load_driver(char* mode);
-int  detect_device(char* node_param);
+void usb_attach_device(t_usb_devices* old_values, char* ip, char* device, char* type);
+void usb_detach_device(t_usb_devices* old_values, int vhci_port);
+void usb_try_to_connect_device(t_usb_devices* old_values);
 void usb_device_handler(t_usb_devices* old_values);
 void usb_handler_init(t_usb_devices* handle);
-void usb_ethernet_connect(t_usb_devices* old_values);
-void mouse_or_keyboard(t_usb_devices* old_values, char* node, int device_count);
-void search_event(t_usb_devices* handle, char* type, char* event);
 
 #endif /* USB_H_ */

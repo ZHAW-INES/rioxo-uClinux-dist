@@ -200,6 +200,8 @@ int rscp_parse_transport(char* line, t_rscp_transport* p)
         else if (str_starts_with(&token, "client_port=")) rscp_parse_port(token, &p->client_port);
         else if (str_starts_with(&token, "server_port=")) rscp_parse_port(token, &p->server_port);
         else if (str_starts_with(&token, "multicast_group=")) rscp_parse_ip(token, &p->multicast_group);
+        else if (str_starts_with(&token, "usb-host-ip=")) rscp_parse_ip(token, &p->usb_host_ip);
+        else if (str_starts_with(&token, "usb-host-port=")) rscp_parse_port(token, &p->usb_host_port);
     }
 
     return RSCP_SUCCESS;
@@ -242,6 +244,24 @@ int rscp_parse_hdcp(char* line, t_rscp_hdcp *hdcp)
 	next(token, line);
 	a = str_hdcp(token);
 	hdcp->hdcp_on = a;
+
+    return RSCP_SUCCESS;
+}
+
+int rscp_parse_usb(char* line, t_rscp_usb *usb)
+{
+    char* token;
+
+    strcpy(usb->mouse, "");
+    strcpy(usb->keyboard, "");
+    strcpy(usb->storage, "");
+
+    while (*(token = str_next_token(&line, ";%0"))) {
+
+        if      (str_starts_with(&token, "device-mouse="))      strcpy(usb->mouse,    token);
+        else if (str_starts_with(&token, "device-keyboard="))   strcpy(usb->keyboard, token);
+        else if (str_starts_with(&token, "device-storage="))    strcpy(usb->storage,  token);
+    }
 
     return RSCP_SUCCESS;
 }

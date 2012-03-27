@@ -32,6 +32,15 @@ const t_map_fnc tab_request_setup[] ={
         { "HDCP", rscp_parse_hdcp,  offsetof(t_rscp_req_setup, hdcp) },
         MAP_FNC_NULL
 };
+
+const t_map_fnc tab_response_setup[] ={
+        { "CSeq", rscp_parse_ui32, offsetof(t_rscp_rsp_setup, cseq) },
+        { "Session", rscp_parse_str, offsetof(t_rscp_rsp_setup, session) },
+        { "Transport", rscp_parse_transport, offsetof(t_rscp_rsp_setup, transport) },
+        { "HDCP", rscp_parse_hdcp,  offsetof(t_rscp_rsp_setup, hdcp) },
+        MAP_FNC_NULL
+};
+
 // HDCP attributes
 const t_map_fnc tab_request_hdcp[] ={
         { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_hdcp, cseq) },
@@ -46,6 +55,15 @@ const t_map_fnc tab_request_play[] ={
         { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_play, cseq) },
         { "Session", rscp_parse_str, offsetof(t_rscp_req_play, session) },
         { "RTP-Format", rscp_parse_rtp_format, offsetof(t_rscp_req_play, format) },
+        { "USB", rscp_parse_usb,  offsetof(t_rscp_req_play, usb) },
+        MAP_FNC_NULL
+};
+
+const t_map_fnc tab_response_play[] ={
+        { "CSeq", rscp_parse_ui32, offsetof(t_rscp_rsp_play, cseq) },
+        { "Session", rscp_parse_str, offsetof(t_rscp_rsp_play, session) },
+        { "Timing", rscp_parse_timing, offsetof(t_rscp_rsp_play, timing) },
+        { "RTP-Format", rscp_parse_rtp_format, offsetof(t_rscp_rsp_play, format) },
         MAP_FNC_NULL
 };
 
@@ -53,6 +71,12 @@ const t_map_fnc tab_request_play[] ={
 const t_map_fnc tab_request_teardown[] ={
         { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_teardown, cseq) },
         { "Session", rscp_parse_str, offsetof(t_rscp_req_teardown, session) },
+        MAP_FNC_NULL
+};
+
+const t_map_fnc tab_response_teardown[] ={
+        { "CSeq", rscp_parse_ui32, offsetof(t_rscp_rsp_teardown, cseq) },
+        { "Session", rscp_parse_str, offsetof(t_rscp_rsp_teardown, session) },
         MAP_FNC_NULL
 };
 
@@ -65,33 +89,13 @@ const t_map_fnc tab_response_hdcp[] ={
         MAP_FNC_NULL
 };
 
-const t_map_fnc tab_response_setup[] ={
-        { "CSeq", rscp_parse_ui32, offsetof(t_rscp_rsp_setup, cseq) },
-        { "Session", rscp_parse_str, offsetof(t_rscp_rsp_setup, session) },
-        { "Transport", rscp_parse_transport, offsetof(t_rscp_rsp_setup, transport) },
-        { "HDCP", rscp_parse_hdcp,  offsetof(t_rscp_rsp_setup, hdcp) },
-        MAP_FNC_NULL
-};
-
-const t_map_fnc tab_response_play[] ={
-        { "CSeq", rscp_parse_ui32, offsetof(t_rscp_rsp_play, cseq) },
-        { "Session", rscp_parse_str, offsetof(t_rscp_rsp_play, session) },
-        { "Timing", rscp_parse_timing, offsetof(t_rscp_rsp_play, timing) },
-        { "RTP-Format", rscp_parse_rtp_format, offsetof(t_rscp_rsp_play, format) },
-        MAP_FNC_NULL
-};
-
-const t_map_fnc tab_response_teardown[] ={
-        { "CSeq", rscp_parse_ui32, offsetof(t_rscp_rsp_teardown, cseq) },
-        { "Session", rscp_parse_str, offsetof(t_rscp_rsp_teardown, session) },
-        MAP_FNC_NULL
-};
 
 // UPDATE attributes
 const t_map_fnc tab_request_update[] ={
         { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_update, cseq) },
         { "Session", rscp_parse_str, offsetof(t_rscp_req_update, session) },
         { "Event", rscp_parse_uint32, offsetof(t_rscp_req_update, event) },
+        { "RTP-Format", rscp_parse_rtp_format, offsetof(t_rscp_req_update, format) },
         MAP_FNC_NULL
 };
 
@@ -102,19 +106,16 @@ const t_map_fnc tab_request_pause[] ={
         MAP_FNC_NULL
 };
 
+const t_map_fnc tab_response_pause[] ={
+        { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_pause, cseq) },
+        { "Session", rscp_parse_str, offsetof(t_rscp_req_pause, session) },
+        MAP_FNC_NULL
+};
+
 // HELLO attributes
 const t_map_fnc tab_request_hello[] ={
         { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_update, cseq) },
         { "Session", rscp_parse_str, offsetof(t_rscp_req_update, session) },
-        MAP_FNC_NULL
-};
-
-// USB attributes
-const t_map_fnc tab_request_usb[] ={
-        { "CSeq", rscp_parse_ui32, offsetof(t_rscp_req_usb, cseq) },
-        { "Device", rscp_parse_str, offsetof(t_rscp_req_usb, device) },
-        { "Type", rscp_parse_str, offsetof(t_rscp_req_usb, type) },
-        { "Session", rscp_parse_str, offsetof(t_rscp_req_usb, session) },
         MAP_FNC_NULL
 };
 
@@ -123,9 +124,9 @@ const t_map_set srv_method[] = {
     { "SETUP", (void*)tab_request_setup, (void*)rmsq_setup },
     { "HDCP", (void*)tab_request_hdcp, (void*)rmsq_hdcp },
     { "PLAY", (void*)tab_request_play, (void*)rmsq_play },
+    { "PAUSE", (void*)tab_request_pause, (void*)rmsq_pause },
     { "TEARDOWN", (void*)tab_request_teardown, (void*)rmsq_teardown },
     { "HELLO", (void*)tab_request_hello, (void*)rmsq_hello },
-    { "USB", (void*)tab_request_usb, (void*)rmsq_usb },
     { "UPDATE", (void*)tab_request_update, (void*)rmsq_update },
     MAP_SET_NULL
 };
