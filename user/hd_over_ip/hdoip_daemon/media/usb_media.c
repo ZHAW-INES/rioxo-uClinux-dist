@@ -35,6 +35,8 @@ int usb_setup(t_rscp_media UNUSED *media, t_rscp_req_setup* m, t_rscp_connection
 
     rscp_response_usb_setup(rsp, &m->transport, media->sessionid);
 
+    media->result = RSCP_RESULT_READY;
+
     return RSCP_SUCCESS;
 }
 
@@ -59,6 +61,8 @@ int usb_play(t_rscp_media UNUSED *media, t_rscp_req_play* m, t_rscp_connection* 
 
     rscp_response_usb_play(rsp, media->sessionid);
 
+    media->result = RSCP_RESULT_PLAYING;
+
     return RSCP_SUCCESS;
 }
 
@@ -72,6 +76,8 @@ int usb_teardown(t_rscp_media UNUSED *media, t_rscp_req_teardown* m, t_rscp_conn
     if (rsp) {
         rscp_response_usb_teardown(rsp, media->sessionid);
     }
+
+    media->result = RSCP_RESULT_TEARDOWN;
 
     return RSCP_SUCCESS;
 }
@@ -121,6 +127,8 @@ int usb_dosetup(t_rscp_media *media, t_rscp_usb* UNUSED m, void* UNUSED rsp)
         report(ERROR "USB Setup Response ERROR");
     }
 
+    media->result = RSCP_RESULT_READY;
+
     return ret;
 }
 
@@ -158,6 +166,8 @@ int usb_doplay(t_rscp_media *media, t_rscp_usb* m, void* UNUSED rsp)
         break;
     }
 
+    media->result = RSCP_RESULT_PLAYING;
+
     return ret;
 }
 
@@ -190,6 +200,8 @@ int usb_doteardown(t_rscp_media *media, t_rscp_usb* UNUSED m, void* UNUSED rsp)
     // TODO: correct handling of mouse and keyboard and storage teardown separate
     // also in rmsq teardown for device side
     media->state = RSCP_INIT;
+
+    media->result = RSCP_RESULT_TEARDOWN;
 
     return ret;
 }
