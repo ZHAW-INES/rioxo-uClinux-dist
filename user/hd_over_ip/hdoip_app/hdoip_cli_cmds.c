@@ -258,6 +258,12 @@ int hdoip_cli_debug(int fd, int fdr, char** argv, int argc)
     return 0;
 }
 
+int hdoip_cli_read_ram(int fd, int fdr, char** argv, int argc)
+{
+    hoic_read_ram(fd, argv[0]);
+    return 0;
+}
+
 /* Command definitions */
 const t_hdoip_cli_cmd_arr cmd_arr[] = {
         { "help",           0, hdoip_cli_help,          ""},
@@ -284,5 +290,7 @@ const t_hdoip_cli_cmd_arr cmd_arr[] = {
         { "factory-default",0, hdoip_cli_default,       ""},
         { "debug"          ,0, hdoip_cli_debug,         ""},
         { "get-edid"       ,1, hdoip_cli_get_edid,      "file"},
+        { "read-ram"       ,1, hdoip_cli_read_ram,      "address"},
+
     };
 const int cmd_cnt = sizeof(cmd_arr)/sizeof(t_hdoip_cli_cmd_arr);

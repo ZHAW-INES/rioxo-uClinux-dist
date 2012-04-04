@@ -97,6 +97,8 @@
 #define HOI_MSG_GET_DEV_ID          (0x7000010F)
 #define HOI_MSG_GET_RESET_TO_DEFAULT (0x70000110)
 #define HOI_MSG_GET_ENCRYPTED_STATUS (0x70000111)
+#define HOI_MSG_DEBUG_READ_RAM      (0x70000112)
+
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)

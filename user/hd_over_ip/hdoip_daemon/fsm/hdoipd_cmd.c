@@ -282,6 +282,11 @@ void hdoipd_debug(t_hoic_cmd UNUSED *cmd)
     hoi_drv_debug();
 }
 
+void hdoipd_read_ram(t_hoic_kvparam* cmd, int rsp)
+{
+	hoi_drv_read_ram(atoi(cmd->str));
+}
+
 #define hdoipdreq(x, y) case x: y((void*)cmd); break
 #define hdoipdreq_rsp(x, y) case x: y((void*)cmd, rsp); break
 void hdoipd_request(uint32_t* cmd, int rsp)
@@ -312,6 +317,7 @@ void hdoipd_request(uint32_t* cmd, int rsp)
         hdoipdreq(HOIC_GET_EDID             , hdoipd_get_edid);
         hdoipdreq(HOIC_FACTORY_DEFAULT      , hdoipd_factory_default);
         hdoipdreq(HOIC_DEBUG                , hdoipd_debug);
+        hdoipdreq_rsp(HOIC_READ_RAM         , hdoipd_read_ram);
         hdoipdreq_rsp(HOIC_GETVERSION       , hdoipd_get_version);
         hdoipdreq_rsp(HOIC_GETUSB           , hdoipd_get_usb);
         hdoipdreq_rsp(HOIC_READ             , hdoipd_read);

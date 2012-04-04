@@ -884,6 +884,19 @@ int hoi_drv_msg_wdg_init(t_hoi* handle, t_hoi_msg_wdg* msg)
     return SUCCESS;
 }
 
+int hoi_drv_msg_read_ram(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    int i;
+
+    for (i=0;i<200;i++) {
+        if (i%4 == 0) printk("\n 0x%03x | ", i*4);
+        printk("%08x ", HOI_RD32(msg->value, i*4));
+    }
+
+    return SUCCESS;
+}
+
+
 //------------------------------------------------------------------------------
 // message
 
@@ -978,6 +991,8 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         callsw(HOI_MSG_HDCP_DISAD9889, hoi_drv_msg_hdcp_ADV9889_dis);
 
         callsw(HOI_MSG_POLL,    hoi_drv_msg_poll);
+
+        call(HOI_MSG_DEBUG_READ_RAM,      hoi_drv_msg_read_ram);
 
         default: ret = ERR_HOI_CMD_NOT_SUPPORTED; break;
     }

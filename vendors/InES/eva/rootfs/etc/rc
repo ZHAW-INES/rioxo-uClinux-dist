@@ -11,8 +11,8 @@ mkdir -p /dev/pts
 mount -t devpts devpts /dev/pts -o noexec,nosuid
 
 # For debugging: make kernel messages appear at the console
-echo 0 > /proc/sys/kernel/printk
-#echo 8 > /proc/sys/kernel/printk
+# echo 0 > /proc/sys/kernel/printk
+echo 8 > /proc/sys/kernel/printk
 
 # the default calculated values for these kernel controls are too small for
 # an embedded nommu system, so override them.  For more info check out

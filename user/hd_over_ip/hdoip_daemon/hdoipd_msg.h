@@ -69,6 +69,7 @@
 
 // Debug
 #define HOIC_DEBUG              (0x39000001)
+#define HOIC_READ_RAM           (0x39000002)
 
 //------------------------------------------------------------------------------
 //
@@ -243,6 +244,15 @@ static inline void hoic_set_param(int fd, char* name, char* value)
     hoic_write(t_hoic_kvparam);
     write(fd, name, length1);
     write(fd, value, length2);
+}
+
+static inline void hoic_read_ram(int fd, char* name)
+{
+    size_t length = strlen(name) + 1;
+    hoic_setupx(t_hoic_kvparam, HOIC_READ_RAM, length);
+    tmp.offset = length;
+    hoic_write(t_hoic_kvparam);
+    write(fd, name, length);
 }
 
 static inline char* hoic_get_param(int fd, int fdr, char* name)
