@@ -735,6 +735,7 @@ void hdoipd_register_task()
     set_listener("system-gateway", task_set_gateway);
     set_listener("system-mac", task_set_mac);
     set_listener("system-dhcp", task_set_dhcp);
+    set_listener("system-hostname", task_set_dhcp);
     set_listener("system-dns1", task_set_system_dns1);
     set_listener("system-dns2", task_set_system_dns2);
     set_listener("network-delay", task_set_network_delay);

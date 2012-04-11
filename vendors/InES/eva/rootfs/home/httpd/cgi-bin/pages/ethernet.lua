@@ -66,6 +66,7 @@ end
 function show(t)
     local new_ip = 0
     local err = 0
+    local reboot_flag = 0
     local tmp0,tmp1,tmp2,tmp3
     local t_sys_mode =      {[0] = (label.p_eth_none); [1] = (label.p_eth_vrb); [2] = (label.p_eth_vtb);}
     local t_sys_mode_conv = {[0] = "none"; [1] = "vrb";               [2] = "vtb";}
@@ -169,10 +170,14 @@ function show(t)
 
         if(hdoip.pipe.getParam(hdoip.pipe.REG_MODE_START) ~= t_sys_mode_conv[tonumber(t.sys_mode)]) then
             hdoip.pipe.setParam(hdoip.pipe.REG_MODE_START, t_sys_mode_conv[tonumber(t.sys_mode)])
-            pages.restart.show(t)
+            reboot_flag = 1
         end
 
         hdoip.pipe.getParam(hdoip.pipe.REG_SYS_UPDATE)
+    end
+
+    if(reboot_flag == 1) then
+        pages.restart.show(t)
     end
 
     if(t.button_restart_yes ~= nil) then
