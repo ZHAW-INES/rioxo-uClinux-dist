@@ -6,7 +6,6 @@
 /* VSO configuration */
 
 #define VSO_DRV_FIFO_SIZE			    (1024)
-#define VSO_DRV_REODERING_RAM_SIZE      (4096)
 #define VSO_DRV_MTIMEOUT_MARGIN		    (0.6e-3) /* in seconds */
 #define VSO_DRV_TIMESTAMP_TOLERANCE     (10) /* in percent */
 #define VSO_DRV_CLEAR_TIME              (41)  /* in us */

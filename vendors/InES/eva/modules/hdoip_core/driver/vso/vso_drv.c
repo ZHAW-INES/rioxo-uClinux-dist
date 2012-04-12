@@ -194,14 +194,14 @@ int vso_drv_update(t_vso* handle, t_video_timing* vid_timing, uint32_t vs_delay_
 static int vso_drv_put_event(t_vso* handle, t_queue* event_queue, uint32_t status, uint32_t mask, uint32_t statusbit, uint32_t event_true, uint32_t event_false)
 {
 	if((status & mask) != 0) { /* true */ 
-		if((handle->status & statusbit) == 0) {
+		if(!(handle->status & statusbit)) {
 			if(event_true != 0) {
 				queue_put(event_queue, event_true);
 			}
 			handle->status = handle->status | statusbit;
 		}
 	} else { /* false */
-		if((handle->status & statusbit) == 1) {
+		if(handle->status & statusbit) {
 			if(event_false != 0) {
 				queue_put(event_queue, event_false);
 			}
@@ -225,6 +225,12 @@ int vso_drv_handler(t_vso* handle, t_queue* event_queue)
     PTR(handle);    PTR(handle->p_vso);    PTR(event_queue);
 
 	status = vso_get_status(handle->p_vso, VSO_ST_MSK);
+
+    // clear error flags because stream is restarted in daemon if one these bits is set
+    if ((status & VSO_ST_TIMESTAMP_ERROR) || (status & VSO_ST_CHOKED)) {
+        vso_clr_status(handle->p_vso, VSO_ST_TIMESTAMP_ERROR);
+        vso_clr_status(handle->p_vso, VSO_ST_CHOKED);
+    }
 
     /* Error: choked */
 	vso_drv_put_event(handle, event_queue, status, VSO_ST_CHOKED, VSO_DRV_STATUS_CHOKED, E_VSO_CHOKED, 0);
