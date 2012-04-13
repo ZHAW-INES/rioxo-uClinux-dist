@@ -176,26 +176,27 @@ bool get_multicast_enable()
 void add_client_to_start_list(char* client_ip_string)
 {
     uint32_t    client_ip;
-    char        client_ip_string_copy[30];
+    struct      hostent* host;
 
-    if (strlen(client_ip_string) < 30) {
-        strcpy(client_ip_string_copy, client_ip_string);
-        report(INFO "\nMulticast put %s into start-list", client_ip_string_copy);
+    // get ip address
+    host = gethostbyname(client_ip_string);
+    if (!host) {
+        report(ERROR "Cant put %s into start-list", client_ip_string);
+        return;
+    }
 
-        // convert string into integer
-        rscp_parse_ip(client_ip_string_copy, &client_ip);
+    report(INFO "\nMulticast put %s into start-list", client_ip_string);
 
-        // put client into start list if its not already there
-        if(!search_client_in_list(client_ip, &multicast.client_list_start)) {
-            add_client_to_list(client_ip, &multicast.client_list_start, NULL);
-            if (count_client_list(&multicast.client_list_start) == 1) {      // first connection = wait time "alive-check-interval" to capture other clients until start first connection
-                if (multicast.start_timer < reg_get_int("alive-check-interval")) {
-                    multicast.start_timer = reg_get_int("alive-check-interval");
-                }
+    client_ip = *((uint32_t*)host->h_addr_list[0]);
+
+    // put client into start list if its not already there
+    if(!search_client_in_list(client_ip, &multicast.client_list_start)) {
+        add_client_to_list(client_ip, &multicast.client_list_start, NULL);
+        if (count_client_list(&multicast.client_list_start) == 1) {      // first connection = wait time "alive-check-interval" to capture other clients until start first connection
+            if (multicast.start_timer < reg_get_int("alive-check-interval")) {
+                multicast.start_timer = reg_get_int("alive-check-interval");
             }
         }
-    } else {
-        report(ERROR "Cant put %s into start-list", client_ip_string_copy);
     }
 }
 
@@ -287,27 +288,27 @@ void multicast_handler()
 
 void multicast_add_edid(t_edid* new_edid, char* ip_string)
 { 
-    t_edid *edid;
-    uint32_t ip;
-    char ip_string_copy[30];
+    t_edid*     edid;
+    uint32_t    ip;
+    struct      hostent* host;
 
-    if (strlen(ip_string) < 30) {
-        strcpy(ip_string_copy, ip_string);
-
-        // convert string into integer
-        rscp_parse_ip(ip_string_copy, &ip);
-
-        // add edid to list if its not already there
-        if(!search_client_in_list(ip, &multicast.client_list_edid)) {        
-            if ((edid = (t_edid*) malloc(sizeof(t_edid))) == NULL) {
-                report(ERROR "Cant allocate memory for EDID of %s", ip_string);
-            } else {
-                memcpy(edid, new_edid, sizeof(t_edid));
-                add_client_to_list(ip, &multicast.client_list_edid, edid);
-            }
-        }
-    } else {
+    // get ip address
+    host = gethostbyname(ip_string);
+    if (!host) {
         report(ERROR "Cant add edid from %s into start-list", ip_string);
+        return;
+    }
+
+    ip = *((uint32_t*)host->h_addr_list[0]);
+
+    // add edid to list if its not already there
+    if(!search_client_in_list(ip, &multicast.client_list_edid)) {        
+        if ((edid = (t_edid*) malloc(sizeof(t_edid))) == NULL) {
+            report(ERROR "Cant allocate memory for EDID of %s", ip_string);
+        } else {
+            memcpy(edid, new_edid, sizeof(t_edid));
+            add_client_to_list(ip, &multicast.client_list_edid, edid);
+        }
     }
 }
 

@@ -91,7 +91,7 @@ typedef struct {
     uint32_t            port;                       //!< low 16 Bit: port range start; high 16 Bit: port range stop
     uint32_t            client_port;
     uint32_t            server_port;
-    uint32_t            usb_host_ip;
+    char                usb_host_ip[50];
     uint32_t            usb_host_port;
     uint32_t            ssrc;
     uint32_t            mode;

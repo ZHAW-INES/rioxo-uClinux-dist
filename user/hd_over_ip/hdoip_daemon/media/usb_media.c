@@ -18,7 +18,7 @@
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
 //TODO: do not use global variables
-uint32_t    usb_host_ip;
+char        usb_host_ip[50];
 uint32_t    usb_host_port;
 int         timer;
 int         alive_ping;
@@ -26,8 +26,8 @@ int         alive_ping;
 int usb_setup(t_rscp_media UNUSED *media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
     report(VRB_METHOD "usb_setup");
-
-    usb_host_ip   = m->transport.usb_host_ip;
+    
+    strncpy(usb_host_ip, m->transport.usb_host_ip, 49);
     usb_host_port = m->transport.usb_host_port;
 
     //TODO: set port in usbip
@@ -42,21 +42,18 @@ int usb_setup(t_rscp_media UNUSED *media, t_rscp_req_setup* m, t_rscp_connection
 
 int usb_play(t_rscp_media UNUSED *media, t_rscp_req_play* m, t_rscp_connection* rsp)
 {
-    char ip[50];
     int i;
 
     report(VRB_METHOD "usb_play");
 
-    sprintf(ip, "%d.%d.%d.%d", ((usb_host_ip & 0x000000FF) >> 0), ((usb_host_ip & 0x0000FF00) >> 8), ((usb_host_ip & 0x00FF0000) >> 16), ((usb_host_ip & 0xFF000000) >> 24));
-
     if (strcmp(m->usb.mouse,    "")) {
-        usb_attach_device(&hdoipd.usb_devices, ip, m->usb.mouse, "mouse");
+        usb_attach_device(&hdoipd.usb_devices, usb_host_ip, m->usb.mouse, "mouse");
     }
     if (strcmp(m->usb.keyboard, "")) {
-        usb_attach_device(&hdoipd.usb_devices, ip, m->usb.keyboard, "keyboard");
+        usb_attach_device(&hdoipd.usb_devices, usb_host_ip, m->usb.keyboard, "keyboard");
     }
     if (strcmp(m->usb.storage,  "")) {
-        usb_attach_device(&hdoipd.usb_devices, ip, m->usb.storage, "storage");
+        usb_attach_device(&hdoipd.usb_devices, usb_host_ip, m->usb.storage, "storage");
     }
 
     rscp_response_usb_play(rsp, media->sessionid);
@@ -88,7 +85,6 @@ int usb_dosetup(t_rscp_media *media, t_rscp_usb* UNUSED m, void* UNUSED rsp)
     t_rscp_transport transport;
     t_rscp_header_common common;
     u_rscp_header buf;
-    char system_ip_copy[50];
     int ret;
 
     report(VTB_METHOD "usb_dosetup");
@@ -100,8 +96,11 @@ int usb_dosetup(t_rscp_media *media, t_rscp_usb* UNUSED m, void* UNUSED rsp)
     transport.multicast = false;
     transport.usb_host_port = htons(3242);
  
-    sprintf(system_ip_copy, "%s", reg_get("system-ip")); 
-    rscp_parse_ip(system_ip_copy, &transport.usb_host_ip);
+    if (reg_test("system-dhcp", "true")) {
+        strncpy(transport.usb_host_ip, reg_get("system-hostname"), 49);
+    } else {
+        strncpy(transport.usb_host_ip, reg_get("system-ip"), 49);
+    }
 
     // send USB SETUP
     rscp_request_usb_setup(&client->con, client->uri, &transport, client->media->sessionid);

@@ -200,7 +200,7 @@ int rscp_parse_transport(char* line, t_rscp_transport* p)
         else if (str_starts_with(&token, "client_port=")) rscp_parse_port(token, &p->client_port);
         else if (str_starts_with(&token, "server_port=")) rscp_parse_port(token, &p->server_port);
         else if (str_starts_with(&token, "multicast_group=")) rscp_parse_ip(token, &p->multicast_group);
-        else if (str_starts_with(&token, "usb-host-ip=")) rscp_parse_ip(token, &p->usb_host_ip);
+        else if (str_starts_with(&token, "usb-host-ip="))  strncpy(p->usb_host_ip, token, 49);
         else if (str_starts_with(&token, "usb-host-port=")) rscp_parse_port(token, &p->usb_host_port);
     }
 

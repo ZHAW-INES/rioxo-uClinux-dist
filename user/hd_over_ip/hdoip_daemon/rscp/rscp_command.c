@@ -84,7 +84,7 @@ void rscp_header_transport(t_rscp_connection* msg, t_rscp_transport* t)
 void rscp_header_transport_usb(t_rscp_connection* msg, t_rscp_transport* t)
 {
     msgprintf(msg, "Transport: TCP;%s;", rscp_str_multicast(t->multicast));
-    msgprintf(msg, "usb-host-ip=%i.%i.%i.%i;", ((t->usb_host_ip & 0x000000FF) >> 0), ((t->usb_host_ip & 0x0000FF00) >> 8), ((t->usb_host_ip & 0x00FF0000) >> 16),((t->usb_host_ip & 0xFF000000) >> 24));
+    msgprintf(msg, "usb-host-ip=%s;", t->usb_host_ip);
     msgprintf(msg, "usb-host-port=%d;",  ntohs(t->usb_host_port));
     msgprintf(msg, "mode=\"PLAY\"\r\n");
 }
