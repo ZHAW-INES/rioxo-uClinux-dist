@@ -103,7 +103,7 @@ void gs2971_hd_3g_audio_handler(t_gs2971 *handle)
 
 void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
 {
-    bool pll_locked, smpte, std_lock, video_status;
+    bool pll_locked, video_status;
     uint16_t video_format = (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_RATE_SEL_READBACK_MASK) >> RASTER_STRUC_4_RATE_SEL_READBACK_SHIFT;
 
     pll_locked = (bool) read_io_exp_rx_pin(handle->p_i2c, RX_STAT_3);

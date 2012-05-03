@@ -244,7 +244,6 @@ int vrb_audio_ext_pause(t_rscp_media* media, void* UNUSED m, t_rscp_connection* 
 
 int vrb_audio_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
-	t_rscp_client *client = media->creator;
     switch (m->event) {
 
         case EVENT_TICK:

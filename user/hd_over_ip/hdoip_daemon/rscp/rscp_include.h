@@ -15,5 +15,6 @@
 #include "rscp_listener.h"
 #include "rscp_client.h"
 #include "rscp_command.h"
+#include "rscp_parse_header.h"
 
 #endif /* RSCP_INCLUDE_H_ */

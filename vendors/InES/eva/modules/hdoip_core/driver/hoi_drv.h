@@ -35,7 +35,7 @@
 #include "stream_sync.h"
 #include "bdt_drv.h"
 #include "spi_drv.h"
-
+#include "si598.h"
 
 #define HANDLER_TIMER_INTERVAL      (HZ/20)
 
@@ -64,11 +64,13 @@ typedef struct {
     void                *p_video_mux;
     void                *p_spi_tx;
     void                *p_spi_rx;
+    void                *p_si598;
 
     t_i2c               i2c_tx;
     t_i2c               i2c_rx;
     t_i2c               i2c_tag_aud;
     t_i2c               i2c_tag_vid;
+    t_i2c               i2c_si598;
 
     uint32_t            drivers;
     t_led               led;
@@ -89,6 +91,7 @@ typedef struct {
     t_gs2972            gs2972;
     t_sync_means        sync;
     t_bdt               bdt;
+    t_si598             si598;
 
     t_queue             *event;
     wait_queue_head_t   eq;

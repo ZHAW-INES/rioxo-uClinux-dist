@@ -176,7 +176,7 @@ void hoi_cfg_system()
 int hoi_cfg_set_dns_server(char* dns1, char* dns2)
 {
     char *line = 0;
-    int  len=0, ret = 0;
+    int ret = 0;
     int fd;
 
     system("/bin/rm /etc/resolv.conf");

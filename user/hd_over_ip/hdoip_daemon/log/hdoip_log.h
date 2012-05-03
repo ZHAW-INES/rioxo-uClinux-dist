@@ -15,7 +15,7 @@
 
 typedef struct {
     bool                log_limit_flag;
-    uint32_t            log_max_size;   // in bytes
+    int                 log_max_size;   // in bytes
     uint32_t            log_activ;
     uint32_t            log_cnt;
     char                log_paths[2][50];

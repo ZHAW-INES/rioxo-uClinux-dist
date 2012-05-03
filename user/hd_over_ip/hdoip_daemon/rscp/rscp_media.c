@@ -206,7 +206,7 @@ int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
  * Sessions are removed by the caller
  *
  */
-int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* UNUSED rsp)
+int rmsr_teardown(t_rscp_media* media, void* msg)
 {
     int ret = RSCP_SUCCESS;
 
@@ -225,7 +225,7 @@ int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* UNUSED rsp)
     return ret;
 }
 
-int rmsr_pause(t_rscp_media* media, void* msg, t_rscp_connection* UNUSED rsp)
+int rmsr_pause(t_rscp_media* media, void* msg)
 {
     int ret = RSCP_SUCCESS;
     if (media->state == RSCP_PLAYING) {
@@ -277,7 +277,7 @@ int rmcq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
 ///////////////////////////////////////////////////////////////////////////////
 // received a response as a client (can not answer -> rsp = 0)
 
-int rmcr_pause(t_rscp_media* media, void* msg, t_rscp_connection* UNUSED rsp)
+int rmcr_pause(t_rscp_media* media, void* msg)
 {
     int ret = RSCP_SUCCESS;
     if (media->state == RSCP_PLAYING) {
@@ -287,7 +287,7 @@ int rmcr_pause(t_rscp_media* media, void* msg, t_rscp_connection* UNUSED rsp)
     return ret;
 }
 
-int rmcr_setup(t_rscp_media* media, void* msg, t_rscp_connection* UNUSED rsp)
+int rmcr_setup(t_rscp_media* media, void* msg)
 {
     int ret = RSCP_SUCCESS;
 
@@ -334,7 +334,7 @@ int rmcr_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp)
     return ret;
 }
 
-int rmcr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* UNUSED rsp)
+int rmcr_teardown(t_rscp_media* media, void* msg)
 {
     int ret = RSCP_SUCCESS;
 

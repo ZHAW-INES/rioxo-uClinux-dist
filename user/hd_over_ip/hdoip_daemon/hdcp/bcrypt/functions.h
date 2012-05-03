@@ -24,8 +24,7 @@ void mutateKey(char **key, char **key2);
 int getremain(unsigned long sz, int dv);
 unsigned long padInput(char **input, unsigned long sz);
 unsigned long attachKey(char **input, char *key, unsigned long sz);
-unsigned long readfile(char *infile, char **input, int type, char *key,
-	struct stat statbuf);
+unsigned long readfile(char *infile, char **input, struct stat statbuf);
 unsigned long writefile(char *outfile, char *output, unsigned long sz, 
 	BCoptions options, struct stat statbuf);
 int deletefile(char *file, BCoptions options, char *key, struct stat statbuf);

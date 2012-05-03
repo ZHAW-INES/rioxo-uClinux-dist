@@ -13,7 +13,7 @@
 #include "hoi_drv_user.h"
 
 char * getkey(int type){
-  char *key, *key2, overflow[2], *ch;
+  char *key, *key2, *ch;
   char key_str[33]="";
   char temp[9];
   int i;

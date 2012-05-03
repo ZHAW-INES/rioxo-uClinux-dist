@@ -278,7 +278,6 @@ int vrb_video_ext_pause(t_rscp_media* media, void* UNUSED m, t_rscp_connection* 
 
 int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
 {
-	t_rscp_client *client = media->creator;
 	//report(INFO "EVENT NR: %08x", m->event);
     switch (m->event) {
 

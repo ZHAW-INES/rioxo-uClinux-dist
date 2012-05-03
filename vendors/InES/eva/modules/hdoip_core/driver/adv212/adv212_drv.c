@@ -371,7 +371,7 @@ void adv212_drv_init(void* p)
  * @param p_adv adv212 configuration struct
  * @return size per adv
  */
-int adv212_size_per_chip(t_adv212* p_adv, int interlaced)
+int adv212_size_per_chip(t_adv212* p_adv)
 {
     return p_adv->size / p_adv->cnt;
 }
@@ -381,10 +381,10 @@ int adv212_size_per_chip(t_adv212* p_adv, int interlaced)
  * @param size size in byte
  * @param p_adv
  */
-void adv212_drv_rc_size(void* p, uint32_t size, t_adv212* p_adv, int interlaced)
+void adv212_drv_rc_size(void* p, uint32_t size, t_adv212* p_adv)
 {
     p_adv->size = size;
-    size = adv212_size_per_chip(p_adv, interlaced);
+    size = adv212_size_per_chip(p_adv);
 
     switch (p_adv->cnt) {
         case 1: adv212_set_rc_size(ADV212_0_BASE(p), size); 
@@ -476,7 +476,7 @@ int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv)
 
     REPORT(INFO, "<adv212_drv_boot_enc()>");
          
-    size = adv212_size_per_chip(p_adv, p_vt->interlaced);
+    size = adv212_size_per_chip(p_adv);
     
     // Initialize all ADV212 because of shared bus (HDATA)
     adv212_drv_init(p);

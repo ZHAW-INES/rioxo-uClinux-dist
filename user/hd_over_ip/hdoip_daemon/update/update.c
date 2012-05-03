@@ -13,7 +13,7 @@
 #include "altremote.h"
 #include "flash.h"
 #include "update.h"
-
+#include "hoi_drv_user.h"
 
 #define BLOCK_SIZE          (4096)
 #define FLASH_DEV_NAME      "/dev/mtd0"

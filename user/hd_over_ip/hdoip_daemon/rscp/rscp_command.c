@@ -277,7 +277,7 @@ void rscp_response_hdcp(t_rscp_connection* msg, char* session, char* id, char* c
 
 }
 
-void rscp_request_usb_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, char* session)
+void rscp_request_usb_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport)
 {
     rscp_request_line(msg, "SETUP", uri);
     rscp_header_transport_usb(msg, transport);

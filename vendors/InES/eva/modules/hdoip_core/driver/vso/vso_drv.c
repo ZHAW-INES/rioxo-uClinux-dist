@@ -225,13 +225,13 @@ int vso_drv_handler(t_vso* handle, t_queue* event_queue)
     PTR(handle);    PTR(handle->p_vso);    PTR(event_queue);
 
 	status = vso_get_status(handle->p_vso, VSO_ST_MSK);
-
+/*
     // clear error flags because stream is restarted in daemon if one these bits is set
     if ((status & VSO_ST_TIMESTAMP_ERROR) || (status & VSO_ST_CHOKED)) {
         vso_clr_status(handle->p_vso, VSO_ST_TIMESTAMP_ERROR);
         vso_clr_status(handle->p_vso, VSO_ST_CHOKED);
     }
-
+*/
     /* Error: choked */
 	vso_drv_put_event(handle, event_queue, status, VSO_ST_CHOKED, VSO_DRV_STATUS_CHOKED, E_VSO_CHOKED, 0);
 

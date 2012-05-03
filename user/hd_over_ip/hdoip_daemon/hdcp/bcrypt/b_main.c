@@ -175,7 +175,7 @@ int bcrypt_main(unsigned long *number, char **input_ret) {
       mutateKey(&key, &key2);
     }
 
-    sz = readfile(infile, &input, options.type, key, statbuf);
+    sz = readfile(infile, &input, statbuf);
     if ((options.type == DECRYPT) && (testEndian(input))) 
       swapCompressed(&input, sz);
 

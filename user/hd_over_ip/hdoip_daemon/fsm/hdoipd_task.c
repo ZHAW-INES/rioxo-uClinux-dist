@@ -298,7 +298,6 @@ void task_get_system_state(char** p)
 void task_get_system_update(char** p)
 {
 	int state;
-    char *s;
 	if(update_vector != 0) {
 
 		// -------------------------------------------------------------
@@ -671,13 +670,13 @@ void task_set_test_image(char* p)
     int a = atoi(p);
     if reg_test("mode-start", "vrb") {
         switch (a) {
-            case 1:     hdoipd_ready(0);
+            case 1:     hdoipd_goto_ready();
                         osd_printf_testpattern_focus_1080p60();
                         break;
-            case 2:     hdoipd_ready(0);
+            case 2:     hdoipd_goto_ready();
                         osd_printf_testpattern_focus_1080p24();
                         break;
-            case 3:     hdoipd_ready(0);
+            case 3:     hdoipd_goto_ready();
                         osd_printf_testpattern_focus_720p60();
                         break;
             case 4:     testimage_show();

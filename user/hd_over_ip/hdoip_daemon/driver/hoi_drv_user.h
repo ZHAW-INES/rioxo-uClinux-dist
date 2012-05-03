@@ -44,6 +44,7 @@ int hoi_drv_info_all(t_hoi_msg_info** nfo);
 int hoi_drv_ethstat(t_hoi_msg_ethstat** stat);
 int hoi_drv_vsostat(t_hoi_msg_vsostat** stat);
 int hoi_drv_viostat(t_hoi_msg_viostat** stat);
+int hoi_drv_asoreg(t_hoi_msg_asoreg** stat);
 
 int hoi_drv_ifmt(t_video_format fmt);
 int hoi_drv_ofmt(t_video_format fmt);
@@ -55,7 +56,7 @@ int hoi_drv_wredid(void* buffer);
 int hoi_drv_rdvidtag(void* buffer, bool* available);
 int hoi_drv_wrvidtag(void* buffer);
 int hoi_drv_rdaudtag(void* buffer, bool* available);
-int hoi_drv_wraudtag(void* buffer);
+int hoi_drv_wraudtag();
 int hoi_drv_getevent(uint32_t* event);
 int hoi_drv_set_mtime(uint32_t p);
 int hoi_drv_get_mtime(uint32_t* p);
@@ -69,6 +70,8 @@ int hoi_drv_hpdon();
 int hoi_drv_hpdoff();
 int hoi_drv_loop();
 int hoi_drv_repair();
+int hoi_drv_wdg_enable();
+int hoi_drv_wdg_disable();
 int hoi_drv_hdcp_viden_eti();
 int hoi_drv_hdcp_viden_eto();
 int hoi_drv_hdcp_auden_eti();
@@ -79,10 +82,14 @@ int hoi_drv_hdcp_auddis_eti();
 int hoi_drv_hdcp_auddis_eto();
 int hoi_drv_hdcp_adv9889dis();
 int hoi_drv_hdcp_adv9889en();
+int hoi_drv_hdcp_get_key(uint32_t key[4]);
 
 int hoi_drv_poll();
 int hoi_drv_getversion(t_hoic_getversion* cmd);
 int hoi_drv_getusb(t_hoic_getusb* cmd);
+int hoi_drv_get_reset_to_default(uint32_t *p);
+
+int hoi_drv_wdg_init(uint32_t service_time);
 
 int hoi_drv_reset(uint32_t rv);
 

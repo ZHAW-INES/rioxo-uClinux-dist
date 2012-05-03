@@ -310,9 +310,9 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 
     // setup vio
     if (msg->compress) {
-        vio_drv_encodex(&handle->vio, msg->bandwidth, msg->advcnt);
+        vio_drv_encodex(&handle->vio, msg->bandwidth, msg->advcnt, bdt_return_device(&handle->bdt));
     } else {
-        vio_drv_plainin(&handle->vio);
+        vio_drv_plainin(&handle->vio, bdt_return_device(&handle->bdt));
     }
 
     vio_drv_get_advcnt(&handle->vio, &msg->advcnt);
@@ -331,7 +331,7 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     if (msg->compress & DRV_CODEC) {
         n = vio_drv_decodex(&handle->vio, &msg->timing, msg->advcnt, bdt_return_device(&handle->bdt));
     } else {
-        n = vio_drv_plainoutx(&handle->vio, &msg->timing);
+        n = vio_drv_plainoutx(&handle->vio, &msg->timing, bdt_return_device(&handle->bdt));
     }
 
     if (n) {
@@ -490,9 +490,9 @@ int hoi_drv_msg_capture(t_hoi* handle, t_hoi_msg_image* msg)
     // TODO: proper bandwidth/size
 
     if (msg->compress) {
-        ret = vrp_drv_capture_jpeg2000(&handle->vrp, msg->buffer, msg->size, msg->size * 3 / 4);
+        ret = vrp_drv_capture_jpeg2000(&handle->vrp, msg->buffer, msg->size, (msg->size * 3 / 4), bdt_return_device(&handle->bdt));
     } else {
-        ret = vrp_drv_capture_image(&handle->vrp, msg->buffer, msg->size);
+        ret = vrp_drv_capture_image(&handle->vrp, msg->buffer, msg->size, bdt_return_device(&handle->bdt));
     }
 
     vio_drv_get_timing(&handle->vio, &msg->timing);
@@ -511,9 +511,9 @@ int hoi_drv_msg_show(t_hoi* handle, t_hoi_msg_image* msg)
     }
 
     if (msg->compress) {
-        ret = vrp_drv_show_jpeg2000(&handle->vrp, msg->buffer, &msg->timing, msg->advcnt);
+        ret = vrp_drv_show_jpeg2000(&handle->vrp, msg->buffer, &msg->timing, msg->advcnt, bdt_return_device(&handle->bdt));
     } else {
-        ret = vrp_drv_show_image(&handle->vrp, msg->buffer, &msg->timing);
+        ret = vrp_drv_show_image(&handle->vrp, msg->buffer, &msg->timing, bdt_return_device(&handle->bdt));
     }
 
     return ret;
@@ -530,7 +530,7 @@ int hoi_drv_msg_set_timing(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
-    vio_drv_debugx(&handle->vio, &msg->timing);
+    vio_drv_debugx(&handle->vio, &msg->timing, bdt_return_device(&handle->bdt));
 
     // if sdi, set output data rate
     if (handle->drivers & DRV_GS2972) {
@@ -572,7 +572,7 @@ int hoi_drv_msg_new_audio(t_hoi* handle, t_hoi_msg_param* msg)
 
 int hoi_drv_msg_loop(t_hoi* handle)
 {
-    vio_drv_loop(&handle->vio);
+    vio_drv_loop(&handle->vio, bdt_return_device(&handle->bdt));
     return SUCCESS;
 }
 

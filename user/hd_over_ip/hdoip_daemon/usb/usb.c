@@ -5,6 +5,7 @@
  *      Author: buan
  */
 
+#include <stdio.h>
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 #include "usb.h"
@@ -156,7 +157,7 @@ void usb_get_dev(char* s)
  * - type of device (mouse or keyboard) must be set in "type"
  *
  */
-void search_event(t_usb_devices* handle, char* type, char* event) {
+void usb_search_event(char* type, char* event) {
 
     int fd = -1;
     int active_event[] = {USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN};
@@ -261,7 +262,8 @@ int detect_device(char* node_param)
 
     //search for connected device
     sprintf(path, "/sys/bus/usb/devices/%s", node);
-    if (fd1 = fopen(path, "r")) {
+    fd1 = fopen(path, "r");
+    if (fd1) {
         memcpy(node_param, node, strlen(node)+1);
         device_count ++;
         //search for connected device on hub
@@ -269,7 +271,8 @@ int detect_device(char* node_param)
             sprintf(hub, ".%i",i);
             sprintf(path, "/sys/bus/usb/devices/%s%s", node, hub);
 
-            if (fd2 = fopen(path, "r")) {
+            fd2 = fopen(path, "r");
+            if (fd2) {
                 sprintf(tmp, "%s%s", node, hub);
                 memcpy(node_param+(device_count*10), tmp, strlen(tmp)+1);
                 device_count ++;
@@ -278,7 +281,8 @@ int detect_device(char* node_param)
                     sprintf(hubhub, ".%i",j);
                     sprintf(path, "/sys/bus/usb/devices/%s%s%s", node, hub, hubhub);
 
-                    if (fd3 = fopen(path, "r")) {
+                    fd3 = fopen(path, "r");
+                    if (fd3) {
                         sprintf(tmp, "%s%s%s", node, hub, hubhub);
                         memcpy(node_param+(device_count*10), tmp, strlen(tmp)+1);
                         device_count ++;
@@ -451,7 +455,7 @@ void usb_attach_device(t_usb_devices* old_values, char* ip, char* device, char* 
 /** Detach an usb device from usbip
  *
  */
-void usb_detach_device(t_usb_devices* old_values, int vhci_port)
+void usb_detach_device(int vhci_port)
 {
     char tmp[256];
     sprintf(tmp, "usbip detach -p %d", vhci_port);
@@ -609,7 +613,7 @@ void usb_device_handler(t_usb_devices* old_values)
             if (reg_test("usb-mode", "device")) {
                 if ((old_values->device_queue_mouse & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
                     //connect as mouse
-                    search_event(old_values, "mouse", device);
+                    usb_search_event("mouse", device);
                     if (strcmp(device, "no device")) {
                         sprintf(tmp, "hdoip_usbipd mouse %s /dev/hidg1 &", device);
                         report(INFO "%s", tmp);
@@ -618,7 +622,7 @@ void usb_device_handler(t_usb_devices* old_values)
                 }
                 if ((old_values->device_queue_keyboard & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
                     //connect as keyboard
-                    search_event(old_values, "keyboard", device);
+                    usb_search_event("keyboard", device);
                     if (strcmp(device, "no device")) {
                         sprintf(tmp, "hdoip_usbipd keyboard %s /dev/hidg0 &", device);
                         report(INFO "%s", tmp);

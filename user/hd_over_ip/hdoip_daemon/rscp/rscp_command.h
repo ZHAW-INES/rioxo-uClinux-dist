@@ -36,10 +36,11 @@ void rscp_request_update(t_rscp_connection* msg, char* uri, char* session, uint3
 void rscp_request_pause(t_rscp_connection* msg, char* uri, char* session);
 void rscp_request_hello(t_rscp_connection* msg, char* uri);
 void rscp_request_hdcp(t_rscp_connection* msg, char* session, char* uri, char* id, char* content);
-void rscp_request_usb_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport, char* session);
+void rscp_request_usb_setup(t_rscp_connection* msg, char* uri, t_rscp_transport* transport);
 void rscp_request_usb_play(t_rscp_connection* msg, char* uri, char* session, char* mouse_msg, char* keyboard_msg, char* storage_msg);
 void rscp_request_usb_teardown(t_rscp_connection* msg, char* uri, char* session);
 
+void rscp_response_pause(t_rscp_connection* msg, char* session);
 void rscp_response_setup(t_rscp_connection* msg, t_rscp_transport* transport, char* session, t_rscp_hdcp* hdcp);
 void rscp_response_play(t_rscp_connection* msg, char* session, t_rscp_rtp_format* fmt, t_video_timing* timing);
 void rscp_response_teardown(t_rscp_connection* msg, char* session);

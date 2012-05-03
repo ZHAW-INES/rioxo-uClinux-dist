@@ -11,7 +11,7 @@
 #include "hdoipd.h"
 #include "multicast.h"
 #include "client_list.h"
-
+#include "edid_merge.h"
 
 
 int add_client_to_list(uint32_t client_ip, t_client_list* first_client, t_edid* edid)

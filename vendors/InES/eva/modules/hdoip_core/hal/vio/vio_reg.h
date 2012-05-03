@@ -129,6 +129,9 @@
 
 // VIO_OFF_CONFIG_2
 #define VIO_CFG_TG_OUTPUT_ON        (1<<0)
+#define VIO_CFG_INPUT_MUX_0         (1<<1)
+#define VIO_CFG_INPUT_MUX_1         (1<<2)
+#define VIO_CFG_INPUT_MUX_2         (1<<3)
 
 // VIO_OFF_STATUS
 #define VIO_STA_IN_CLOCK_EXT        (1<<0)

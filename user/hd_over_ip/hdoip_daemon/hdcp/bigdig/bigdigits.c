@@ -1750,7 +1750,9 @@ size_t mpConvFromDecimal(DIGIT_T a[], size_t ndigits, const char *s)
 	for (i = 0; s[i]; i++)
 	{
 		t = s[i] - '0';
-		if (t > 9 || t < 0) continue;
+        if (s[i] < '0') continue;
+		if (t > 9) continue;
+
 		for (j = newlen; j > 0; j--)
 		{
 			t += (unsigned long)newdigits[j-1] * base;
@@ -2380,7 +2382,7 @@ static DIGIT_T rand_between(DIGIT_T lower, DIGIT_T upper)
 {
 	DIGIT_T d, range;
 	unsigned char *bp;
-	int i, nbits;
+	unsigned int i, nbits;
 	DIGIT_T mask;
 
 	if (upper <= lower) return lower;

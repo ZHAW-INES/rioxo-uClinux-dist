@@ -98,7 +98,7 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
     struct hostent* gw;
     struct ifreq ifreq;
     struct sockaddr_in sin;
-    int ret;
+    int ret = RSCP_ERRORNO;
     uint32_t subnet, dev_ip;
 
     memset(&ifreq, 0, sizeof(ifreq));

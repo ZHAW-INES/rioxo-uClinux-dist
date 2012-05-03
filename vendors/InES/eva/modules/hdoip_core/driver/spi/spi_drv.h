@@ -23,6 +23,6 @@
 
 uint16_t spi_read_reg_16(void *ptr_spi, uint16_t offset);
 void spi_write_reg_16(void *ptr_spi, uint16_t offset, uint16_t value);
-uint16_t spi_command(uint32_t p_spi, uint16_t write_data);
+uint16_t spi_command(void* p_spi, uint16_t write_data);
 
 #endif /* SPI_DRV_H_ */

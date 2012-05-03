@@ -19,7 +19,6 @@ void cea_861_report(t_ext_cea_861* ext)
     uint8_t *p = (uint8_t *) ext;
     uint8_t *block;
     uint8_t block_size = 0;
-    char *str;
 
     report(CONT "CEA 861 tag      : 0x%02x", ext->tag);
     report(CONT "CEA 861 revision : %d", ext->revision);

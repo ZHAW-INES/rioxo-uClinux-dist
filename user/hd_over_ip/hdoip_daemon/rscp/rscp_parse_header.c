@@ -64,7 +64,7 @@ int rscp_parse_ip(char* str, uint32_t* p)
     int i;    
 
     for (i=0;i<3;i++) {
-        if (s = str_next_token(&str, "."))
+        if ((s = str_next_token(&str, ".")))
             ip |= (uint32_t)(atoi(s) << (8*i));
     }
     ip |= (uint32_t)(atoi(str) << (8*3));
@@ -360,7 +360,7 @@ int rscp_parse_response(t_rscp_connection* con, const t_map_fnc attr[], void* ba
         return RSCP_VERSION_ERROR;
     }
 
-    if(n = rscp_parse_header(con, attr, base, common, timeout)) {
+    if((n = rscp_parse_header(con, attr, base, common, timeout))) {
         report("rscp response receive header fields failed");
     }
 

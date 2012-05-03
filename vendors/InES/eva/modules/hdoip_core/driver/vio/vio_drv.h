@@ -7,6 +7,7 @@
 #include "vio_drv_osd.h"
 #include "adv212_drv.h"
 #include "vio_str.h"
+#include "si598.h"
 
 /** Handle
  */
@@ -16,7 +17,8 @@ typedef struct {
     
     void*           p_vio;                  //!< pointer to vio hardware registers
     void*           p_adv;                  //!< pointer to adv212 direct registers
-    
+    t_si598*        si598;                  //!< pointer to si598 struct
+
     t_adv212        adv;                    //!< ADV212 configuration
     t_vio_pll       pll;                    //!< PLL configuration
     t_video_timing  timing;                 //!< Video timing
@@ -82,23 +84,23 @@ static inline void vio_drv_clr_cfg(t_vio* handle, uint32_t cfg)
  */
 void vio_drv_handler(t_vio* handle, t_queue* event);
 void vio_drv_irq_adv212(t_vio* handle, int nr, t_queue* event);
-int vio_drv_init(t_vio* handle, void* p_vio, void* p_adv);
+int vio_drv_init(t_vio* handle, void* p_vio, void* p_adv, t_si598 *si598);
 int vio_drv_setup_osd(t_vio* handle, t_osd_font* font, uint32_t device);
 int vio_drv_set_black_output(t_vio* handle);
 int vio_drv_clr_black_output(t_vio* handle);
 int vio_drv_reset(t_vio* handle, uint32_t device);
-int vio_drv_encode(t_vio* handle);
+int vio_drv_encode(t_vio* handle, uint32_t device);
 int vio_drv_decode(t_vio* handle, uint32_t device);
 int vio_drv_decode_sync(t_vio* handle);
-int vio_drv_plainout(t_vio* handle);
-int vio_drv_plainin(t_vio* handle);
-int vio_drv_debug(t_vio* handle);
-int vio_drv_loop(t_vio* handle);
+int vio_drv_plainout(t_vio* handle, uint32_t device);
+int vio_drv_plainin(t_vio* handle, uint32_t device);
+int vio_drv_debug(t_vio* handle, uint32_t device);
+int vio_drv_loop(t_vio* handle, uint32_t device);
 
-int vio_drv_encodex(t_vio* handle, int bandwidth, int advcnt);
+int vio_drv_encodex(t_vio* handle, int bandwidth, int advcnt, uint32_t device);
 int vio_drv_decodex(t_vio* handle, t_video_timing* p_vt, int advcnt, uint32_t device);
-int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt);
-int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt);
+int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt, uint32_t device);
+int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, uint32_t device);
 
 int vio_drv_set_bandwidth(t_vio* handle, int bandwidth);
 int vio_drv_set_format_in(t_vio* handle, t_video_format f);

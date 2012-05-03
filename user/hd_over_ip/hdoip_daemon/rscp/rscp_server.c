@@ -11,6 +11,7 @@
 #include "rscp_string.h"
 #include "rscp_parse_header.h"
 #include "hdoipd.h"
+#include "hoi_drv_user.h"
 
 t_rscp_server* rscp_server_create(int fd, uint32_t addr)
 {
@@ -195,6 +196,6 @@ void rscp_server_pause(t_rscp_media* media)
         rscp_request_pause(&server->con, uri, media->sessionid);
     }
 
-    rmsr_pause(media, 0, 0);
+    rmsr_pause(media, 0);
 }
 

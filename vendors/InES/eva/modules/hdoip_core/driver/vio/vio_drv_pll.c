@@ -1,4 +1,6 @@
 #include "vio_drv.h"
+#include "vio_drv_pll.h"
+#include "hoi_msg.h"
 
 /*
 // Constants
@@ -10,7 +12,7 @@ static const int vio_phase[2][4] = {
     };
 */
 
-int vio_drv_pll_setup(void* p, t_vio_pll* pll, int in, int out, int rel, int mode)
+int vio_drv_pll_setup(void* p, t_vio_pll* pll, t_si598* si598, int in, int out, int rel, int mode, uint32_t device, int advcnt)
 {
     const uint64_t fmin = 600000000;
     const uint64_t fmax = 1100000000;     // should be 1300000000 (see manual), but if its bigger than 1,1GHz, output frequency is not right
@@ -24,22 +26,71 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, int in, int out, int rel, int mod
     int64_t kn, km, kc, ki;
     int64_t kfvco, tfvco, kferr;
     
-    // input frequency
-    pll->insel      = in;
-    pll->fin[0]     = BFREQ;
-    pll->fin[1]     = vio_get_fin(p);
-    fin = pll->fin[in]; 
-    
-    // output frequency
-    if (out==0) {
-        fout = fin;
+
+    // output frequency 
+    fout = fin;
+    if (device == BDT_ID_HDMI_BOARD) {
+        if (out != 0) {
+            fout = out;
+        }
     } else {
-        fout = out;
+
+        if ((out > 147000000) && (out < 150000000)) {
+            fout = 148500000;
+        }
+
+        if ((out > 73000000) && (out < 76000000)) {
+            fout = 74250000;
+        }
+
+        if ((out > 12000000) && (out < 15000000)) {
+            fout = 13500000;
+        }
     }
+
     pll->fout[0] = fout;
     pll->fout[1] = fout * rel / 2;
     pll->fout[2] = fout * rel / 2;
     pll->fout[3] = fout;
+
+
+    // input frequency for HDMI
+    if (device == BDT_ID_HDMI_BOARD) {
+        pll->insel      = in;
+        pll->fin[0]     = BFREQ;
+        pll->fin[1]     = vio_get_fin(p);
+        fin = pll->fin[in]; 
+        vio_set_input_clockmux(p, advcnt, true);
+
+    // input frequency for SDI
+    } else {
+        pll->insel      = in;
+        pll->fin[1]     = vio_get_fin(p);
+
+        // fin = fout / set SI598 output frequency
+        if (fout == 148500000) {
+            set_si598_output_frequency (si598, 148);
+            pll->fin[0]     = 148500000;
+            vio_set_input_clockmux(p, advcnt, false);
+        }
+        if (fout == 74250000) {
+
+            if (advcnt == 4) {
+                set_si598_output_frequency (si598, 148);
+            } else {
+                set_si598_output_frequency (si598, 74);
+            }
+
+            pll->fin[0]     = 74250000;
+            vio_set_input_clockmux(p, advcnt, false);
+        }
+        if (fout == 13500000) {
+            set_si598_output_frequency (si598, 27);
+            pll->fin[0]     = 13500000;
+            vio_set_input_clockmux(p, advcnt, false);
+        }
+        fin = pll->fin[in];
+    } 
     
     // VCO is between 600 and 1100 MHz
     cmin = fmin / fout + 1;

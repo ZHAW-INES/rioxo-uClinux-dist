@@ -17,6 +17,7 @@
 #include "edid.h"
 #include "edid_report.h"
 #include "cea_861.h"
+#include "hoi_drv_user.h"
 
 static uint8_t edid_header[8] = {0,0xff,0xff,0xff,0xff,0xff,0xff,0};
 
@@ -72,12 +73,14 @@ int edid_write_file(t_edid *edid, char *file)
 
 #ifdef EDID_WRITE_HEX_FILE
     char file_str[100];
-    strcpy(&file_str, file);
-    strcat(&file_str,"_hex");
+    strcpy(file_str, file);
+    strcat(file_str,"_hex");
 
-    int fd_hex = fopen(&file_str, "w");
+    FILE *fd_hex;
 
-    if(fd_hex != NULL) {
+    fd_hex = fopen(file_str, "w");
+
+    if(fd_hex != 0) {
         for(int i=0 ; i<256 ; i+=8) {
             fprintf(fd_hex, "%02x %02x %02x %02x %02x %02x %02x %02x\n", buf[i],buf[i+1],buf[i+2],buf[i+3],buf[i+4],buf[i+5],buf[i+6],buf[i+7]);
         }
@@ -119,7 +122,7 @@ int edid_verify(t_edid* edid)
     return 0;
 }
 
-int edid_checksum_gen(t_edid* edid)
+void edid_checksum_gen(t_edid* edid)
 {
     int i;
     uint8_t sum;
@@ -220,11 +223,6 @@ void edid_report(t_edid* edid)
     }
 }
 
-void edid_hoi_limit(t_edid* edid)
-{
-
-}
-
 void edid_report_vid_timing(t_edid *edid)
 {
     int i=0, flag=0;
@@ -277,7 +275,7 @@ void edid_report_vid_timing(t_edid *edid)
     report("  established timing III");
     flag = 0;
     for (i=0;i<4; i++) {
-        if(EDID_DSC_TAG(&edid->detailed_timing[i].tmp) == EDID_TAG_EST3) {
+        if(EDID_DSC_TAG(edid->detailed_timing[i].tmp) == EDID_TAG_EST3) {
             flag = 1;
             break;
         }

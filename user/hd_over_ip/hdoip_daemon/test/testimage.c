@@ -9,6 +9,8 @@
 #include "testimage.h"
 #include "hdoipd_fsm.h"
 #include "hoi_drv_user.h"
+#include "hoi_res.h"
+#include "hdoipd_osd.h"
 
 #define pattern_width   18
 #define pattern_height  16

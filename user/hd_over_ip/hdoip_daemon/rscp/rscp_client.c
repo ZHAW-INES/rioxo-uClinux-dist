@@ -23,6 +23,11 @@
 #include "rscp_parse_header.h"
 #include "hdoipd.h"
 #include "hdcp.h"
+#include "hoi_drv_user.h"
+
+#include "../hdcp/rsaes-oaep/rsaes.h"
+#include "../hdcp/protocol/protocol.h"
+
 
 void* rscp_client_thread(void* _client);
 void* rscp_client_req_thread(void* _client);
@@ -177,7 +182,7 @@ int rscp_client_close(t_rscp_client* client)
 #ifdef REPORT_RSCP_CLIENT
         report(" i RSCP Client [%d] detach media %s", client->nr, client->media->name);
 #endif
-        rmcr_teardown(client->media, 0, 0);
+        rmcr_teardown(client->media, 0);
         client->media->creator = 0;
         client->media = 0;
 #ifdef REPORT_RSCP_CLIENT
@@ -224,7 +229,7 @@ int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp
     if (n == RSCP_SUCCESS) {
         // TODO:
         strcpy(client->media->sessionid, common.session);
-        rmcr_setup(client->media, (void*)&buf, &client->con);
+        rmcr_setup(client->media, (void*)&buf);
     } else if (n == RSCP_RESPONSE_ERROR) {
         if (client->media->error) client->media->error(client->media, (void*)n, &client->con);
     } else {
@@ -397,7 +402,7 @@ int rscp_client_teardown(t_rscp_client* client)
 
     // response
     rscp_parse_response(&client->con, tab_response_teardown, (void*)&buf, 0, CFG_RSP_TIMEOUT);
-    rmcr_teardown(client->media, (void*)&buf, &client->con);
+    rmcr_teardown(client->media, (void*)&buf);
 
     rscp_client_close(client);
 
@@ -417,7 +422,7 @@ int rscp_client_kill(t_rscp_client* client)
     report(" > RSCP Client [%d] kill", client->nr);
 #endif
     // response
-    rmcr_teardown(client->media, 0, &client->con);
+    rmcr_teardown(client->media, 0);
 
     rscp_client_close(client);
 

@@ -90,7 +90,7 @@ function show(t)
         hdoip.html.Text(label.p_fw_hw_ver);                                          hdoip.html.TableInsElement(1)
         hdoip.html.Text(HW_VERSION_TAG);                                             hdoip.html.TableInsElement(1)
         hdoip.html.Text(label.p_fw_software_ver);                                    hdoip.html.TableInsElement(1)        
-        hdoip.html.Text(t.sw_version_str);                                           hdoip.html.TableInsElement(1)
+        hdoip.html.Text(t.sw_version_str.."a");                                      hdoip.html.TableInsElement(1)
         hdoip.html.Text(label.p_fw_software_tag);                                    hdoip.html.TableInsElement(1)
         hdoip.html.Text(t.sw_tag);                                                   hdoip.html.TableInsElement(1)
 

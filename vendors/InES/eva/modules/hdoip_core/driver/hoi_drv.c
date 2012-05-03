@@ -9,7 +9,7 @@
 #include "ext_irq_pio.h"
 #include "hoi_msg.h"
 #include "wdg_hal.h"
-
+#include "si598.h"
 
 
 /* base driver initialization
@@ -42,6 +42,8 @@ void hoi_drv_init(t_hoi* handle)
     handle->p_video_mux     = ioremap(BASE_VIDEO_MUX,   0xffffffff);
     handle->p_spi_tx        = ioremap(BASE_SPI_TX,      0xffffffff);
     handle->p_spi_rx        = ioremap(BASE_SPI_RX,      0xffffffff);
+    handle->p_si598         = ioremap(BASE_SI598,       0xffffffff);
+
 
     // init
     handle->event = queue_init(100);
@@ -60,26 +62,33 @@ void hoi_drv_init(t_hoi* handle)
     // set video card multiplexer
     bdt_drv_set_video_mux(&handle->bdt, handle->p_video_mux);
 
+    // init hdmi i2c with 400kHz/100kHz
     if (bdt_return_device(&handle->bdt) == BDT_ID_HDMI_BOARD) {
-        // init hdmi i2c with 400kHz/100kHz
         i2c_drv_init(&handle->i2c_tx, handle->p_tx, 100000);
         i2c_drv_init(&handle->i2c_rx, handle->p_rx, 400000);
+    }
+
+    // init sdi clock generator with 400kHz
+    if (bdt_return_device(&handle->bdt) == BDT_ID_SDI8_BOARD) {
+        i2c_drv_init(&handle->i2c_si598, handle->p_si598, 400000);
     }
 
     // init
     led_drv_init(&handle->led, &handle->i2c_tag_vid, &handle->i2c_tag_aud, handle->p_led, &handle->bdt);
     eti_drv_set_ptr(&handle->eti, handle->p_esi);
     eto_drv_set_ptr(&handle->eto, handle->p_eso);
-    vio_drv_init(&handle->vio, handle->p_vio, handle->p_adv212);
+    vio_drv_init(&handle->vio, handle->p_vio, handle->p_adv212, &handle->si598);
     vsi_drv_init(&handle->vsi, handle->p_vsi);
     vso_drv_init(&handle->vso, handle->p_vso);
     asi_drv_init(&handle->asi, handle->p_asi);
     aso_drv_init(&handle->aso, handle->p_aso);
     vio_drv_setup_osd(&handle->vio, (t_osd_font*)&vid_font_8x13, bdt_return_device(&handle->bdt));
     vrp_drv_init(&handle->vrp, &handle->vio, handle->p_vrp);
-    stream_sync_init(&handle->sync, SIZE_MEANS, SIZE_RISES,
-            handle->p_aso, handle->p_vso, handle->p_tmr,
-            DEAD_TIME, P_GAIN, I_GAIN, INC_PPM);
+    stream_sync_init(&handle->sync, SIZE_MEANS, SIZE_RISES, handle->p_aso, handle->p_vso, handle->p_tmr, DEAD_TIME, P_GAIN, I_GAIN, INC_PPM);
+
+    if (bdt_return_device(&handle->bdt) == BDT_ID_SDI8_BOARD) {
+        si598_clock_control_init(&handle->si598, &handle->i2c_si598, handle->p_vio);
+    }
 
     hoi_drv_stop(handle);
 }
@@ -95,8 +104,15 @@ void hoi_drv_reset(t_hoi* handle, uint32_t rv)
     if (rv & (DRV_RST_VID_OUT | DRV_RST_VID_IN)) {
         REPORT(INFO, "reset vio");
         vio_drv_reset(&handle->vio, bdt_return_device(&handle->bdt));
-        // Stop vio clock control
+
+        // Stop vio clock control (also need on SDI)
         vio_clock_control_reset(&handle->vio);
+
+        // Stop SI598 clock control
+        if (bdt_return_device(&handle->bdt) == BDT_ID_SDI8_BOARD) {
+            si598_clock_control_deactivate(&handle->si598);
+        }
+
     }
 
     // Deactivate VRP
@@ -211,8 +227,15 @@ void hoi_drv_handler(t_hoi* handle)
     eti_drv_handler(&handle->eti, handle->event);
     led_drv_handler(&handle->led);
     stream_sync(&handle->sync);
-    vio_clock_control(&handle->vio);
+    
     wdg_reset(handle->p_wdg); //reset watchdog
+
+    if (bdt_return_device(&handle->bdt) == BDT_ID_SDI8_BOARD) {
+        si598_clock_control_handler(&handle->si598);
+    }
+    if (bdt_return_device(&handle->bdt) == BDT_ID_HDMI_BOARD) {
+        vio_clock_control(&handle->vio);
+    }
     if (handle->drivers & DRV_ADV9889) {
         adv9889_drv_handler(&handle->adv9889, handle->event);
     }

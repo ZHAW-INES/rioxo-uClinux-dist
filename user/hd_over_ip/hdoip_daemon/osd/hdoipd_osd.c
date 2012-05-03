@@ -13,6 +13,7 @@
 #include "hoi_res.h"
 #include "rscp_string.h"
 #include "hdoip_log.h"
+#include "multicast.h"
 
 char osdtmp[OSD_BUFFER_LENGTH];
 

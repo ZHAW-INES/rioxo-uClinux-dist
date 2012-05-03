@@ -102,7 +102,7 @@ typedef struct {
 
 // Media cookie
 typedef struct {
-    int                 timeout;
+    uint32_t            timeout;
     int                 alive_ping;
     t_hdoip_ethernet    remote;
 } t_multicast_cookie;
@@ -117,8 +117,8 @@ int rmsq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmsq_hdcp(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 
-int rmsr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
-int rmsr_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
+int rmsr_teardown(t_rscp_media* media, void* msg);
+int rmsr_pause(t_rscp_media* media, void* msg);
 
 
 
@@ -127,9 +127,9 @@ int rmcq_update(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmcq_pause(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 int rmcq_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
 
-int rmcr_setup(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
+int rmcr_setup(t_rscp_media* media, void* msg);
 int rmcr_play(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
-int rmcr_teardown(t_rscp_media* media, void* msg, t_rscp_connection* rsp);
+int rmcr_teardown(t_rscp_media* media, void* msg);
 
 // rscp media state manipulation (local)
 int rscp_media_ready(t_rscp_media* media);

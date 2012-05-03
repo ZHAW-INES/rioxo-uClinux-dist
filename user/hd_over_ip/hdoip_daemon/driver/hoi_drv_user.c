@@ -453,7 +453,6 @@ int hoi_drv_debug(void)
 {
     int ret=0;
     t_hoi_msg_debug msg;
-    uint8_t *ptr;
 
     //t_edid *edid1 = (t_edid *)edid_hp2710m;
     //t_edid *edid2 = (t_edid *)edid_sony_bravia;
@@ -596,7 +595,7 @@ int hoi_drv_rdaudtag(void* buffer, bool* available)
     return ret;
 }
 
-int hoi_drv_wraudtag(void* buffer)
+int hoi_drv_wraudtag()
 {
     int ret;
     t_hoi_msg_tag msg;

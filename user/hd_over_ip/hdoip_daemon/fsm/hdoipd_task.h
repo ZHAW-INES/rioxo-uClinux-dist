@@ -10,4 +10,6 @@
 
 void hdoipd_register_task();
 
+void task_get_hdcp_status(char** p);
+
 #endif /* HDOIPD_TASK_H_ */

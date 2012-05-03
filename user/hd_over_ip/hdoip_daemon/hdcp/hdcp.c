@@ -30,7 +30,6 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
 	int message = atoi(m->id);
 	char null[] ="";
 	char *id[16] = {"00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15"};
-	char ks[33];
 	char HL[65];
 	char Edkey_ks[49];
 	char temp[17];
@@ -268,12 +267,10 @@ int hdcp_check_certificate(char* certificate, uint32_t* repeater, char* km, char
  */
 int hdcp_ske_enc_ks(char* rn, char* km, char* rrx, char* rtx, char* ks, char* Edkey_ks){
 
-	int i;
 	char plaintext3[33]="";
 	char key2[33];
 	char dkey2[33];
 	char xor_val[65];
-	char temp[17];
 
 	/* Generate random number for session key */
 	/*for (i=0;i<2;i++){
@@ -389,8 +386,8 @@ int hdcp_ske_dec_ks(char* rn, char* ks, char* Edkey_ks, char* rtx, char* rrx, ch
  * */
 int hdcp_decrypt_flash_keys(){
 
-	int i;
-	int sz;
+	unsigned long i;
+	unsigned long sz;
 	char *input;
 	char *str;
 	char *certrx;

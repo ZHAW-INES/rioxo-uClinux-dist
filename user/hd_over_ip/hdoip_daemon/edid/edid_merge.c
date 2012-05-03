@@ -17,10 +17,15 @@ void edid_merge_display_dsc(uint8_t *edid, uint8_t *dscs1, uint8_t *dscs2, bool 
     int offset = 0, i, j;
     int mask_drl=0, mask_est=0, mask_cvt=0, mask_nam=0;
     uint32_t tmp1, tmp2;
-    uint8_t *ptr1, *ptr2, *ptr3;
-    uint8_t *ptr_drl1, *ptr_drl2;
-    uint8_t *ptr_est1, *ptr_est2;
-    uint8_t *ptr_cvt1, *ptr_cvt2;
+    uint8_t *ptr1 = dscs1;
+    uint8_t *ptr2 = dscs1;
+    uint8_t *ptr3 = dscs1;
+    uint8_t *ptr_drl1 = dscs1;
+    uint8_t *ptr_drl2 = dscs1;
+    uint8_t *ptr_est1 = dscs1;
+    uint8_t *ptr_est2 = dscs1;
+    uint8_t *ptr_cvt1 = dscs1;
+    uint8_t *ptr_cvt2 = dscs1;
 
     uint32_t size1_h, size2_h;
     uint32_t size1_v, size2_v;

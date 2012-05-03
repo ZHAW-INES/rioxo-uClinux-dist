@@ -272,7 +272,7 @@ void hdoipd_goto_vtb()
  *
  * !!! Info: <hdoipd> must be locked to prevent state inconsistency !!!
  */
-void hdoipd_goto_vrb()
+int hdoipd_goto_vrb()
 {
     if (hdoipd_rsc(RSC_ETH_LINK)) {
         if (!hdoipd_state(HOID_VRB)) {
@@ -298,10 +298,13 @@ void hdoipd_goto_vrb()
             }
         } else {
             report(ERROR "already in state vrb");
+            return -1;
         }
     } else {
         report(ERROR "ethernet down");
+        return -1;
     }
+    return 0;
 }
 
 /* Activate Media
@@ -390,7 +393,6 @@ void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps)
  */
 int hdoipd_start_vrb_cb(t_rscp_media* media, void* d)
 {
-    int os = media->state;
     int ret = 0;
     uint32_t dev_id;
 
@@ -676,7 +678,7 @@ void hdoipd_event(uint32_t event)
         break;
         case E_HDCP_STREAMING_ERROR:   // restart VTB if Kernel detects HDCP streaming error
         	report(INFO "*********** HDCP streaming error ***********");
-            if ((hdoipd_state(HOID_VTB)) && (hdoipd_rsc(RSC_VIDEO_IN)) || (hdoipd_state(HOID_VRB)) && (hdoipd_rsc(RSC_VIDEO_SINK))) {
+            if (((hdoipd_state(HOID_VTB)) && (hdoipd_rsc(RSC_VIDEO_IN))) || ((hdoipd_state(HOID_VRB)) && (hdoipd_rsc(RSC_VIDEO_SINK)))) {
                 hdoipd_force_ready();
                 report(INFO "HDCP ERROR, restarting system");
                 hdoipd_start();
@@ -723,7 +725,7 @@ void hdoipd_event(uint32_t event)
         case E_VSO_CHOKED:
         case E_VSO_TIMESTAMP_ERROR:
             // try to repair
-            hoi_drv_repair();
+            //hoi_drv_repair();
         break;
 
         case E_ASI_RBF_ERROR:

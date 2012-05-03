@@ -13,6 +13,8 @@
 #include "rscp_string.h"
 #include "vrb_video.h"
 #include "rscp_parse_header.h"
+#include "rscp_client.h"
+#include "rscp_server.h"
 
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout * 2)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
@@ -42,8 +44,6 @@ int usb_setup(t_rscp_media UNUSED *media, t_rscp_req_setup* m, t_rscp_connection
 
 int usb_play(t_rscp_media UNUSED *media, t_rscp_req_play* m, t_rscp_connection* rsp)
 {
-    int i;
-
     report(VRB_METHOD "usb_play");
 
     if (strcmp(m->usb.mouse,    "")) {
@@ -67,8 +67,8 @@ int usb_teardown(t_rscp_media UNUSED *media, t_rscp_req_teardown* m, t_rscp_conn
 {
     report(VRB_METHOD "usb_teardown");
 
-    usb_detach_device(&hdoipd.usb_devices, 0);
-    usb_detach_device(&hdoipd.usb_devices, 1);
+    usb_detach_device(0);
+    usb_detach_device(1);
     
     if (rsp) {
         rscp_response_usb_teardown(rsp, media->sessionid);
@@ -103,7 +103,7 @@ int usb_dosetup(t_rscp_media *media, t_rscp_usb* UNUSED m, void* UNUSED rsp)
     }
 
     // send USB SETUP
-    rscp_request_usb_setup(&client->con, client->uri, &transport, client->media->sessionid);
+    rscp_request_usb_setup(&client->con, client->uri, &transport);
 
     // response
     rscp_default_response_setup((void*)&buf);

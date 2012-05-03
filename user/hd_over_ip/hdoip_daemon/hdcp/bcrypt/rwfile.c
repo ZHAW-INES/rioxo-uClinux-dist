@@ -22,7 +22,7 @@ int getremain(unsigned long sz, int dv) {
 }
 
 unsigned long padInput(char **input, unsigned long sz) {
-  int r, j;
+  unsigned int r, j;
 
   j = sizeof(uInt32) * 2;
 
@@ -54,8 +54,7 @@ unsigned long attachKey(char **input, char *key, unsigned long sz) {
   return(sz);
 }
 
-unsigned long readfile(char *infile, char **input, int type, char *key, 
-	struct stat statbuf) {
+unsigned long readfile(char *infile, char **input, struct stat statbuf) {
   FILE *fd;
   int readsize;
   unsigned long sz = 0;

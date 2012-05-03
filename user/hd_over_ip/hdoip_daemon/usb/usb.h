@@ -36,7 +36,7 @@ typedef struct {
 
 void usb_get_dev(char* s);
 void usb_attach_device(t_usb_devices* old_values, char* ip, char* device, char* type);
-void usb_detach_device(t_usb_devices* old_values, int vhci_port);
+void usb_detach_device(int vhci_port);
 void usb_try_to_connect_device(t_usb_devices* old_values);
 void usb_device_handler(t_usb_devices* old_values);
 void usb_handler_init(t_usb_devices* handle);

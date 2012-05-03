@@ -213,7 +213,7 @@ void led_drv_control_set(t_led* handle, uint32_t led, uint32_t status)
  * @param instruction   instruction code
  * @return nothing
  */
-int led_drv_set_status(t_led* handle, uint32_t instruction)
+void led_drv_set_status(t_led* handle, uint32_t instruction)
 {
     switch (instruction){
 

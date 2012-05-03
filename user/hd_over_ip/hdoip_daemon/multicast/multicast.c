@@ -24,7 +24,7 @@ static struct {
     t_client_list                       client_list_start;
     t_client_list                       client_list_edid;
     int                                 start_timer;
-    int                                 number_of_clients;
+    uint32_t                            number_of_clients;
 } multicast;
 
 

@@ -16,6 +16,7 @@ void edid_report_detailed_timing(uint8_t *p);
 void edid_report_dcm(uint8_t *p);
 void edid_report_drl(uint8_t* p);
 void edid_report_color_point(uint8_t* p);
+void edid_report_est(t_edid *edid);
 void edid_report_est3(uint8_t *p);
 void edid_report_std_timing(uint16_t p);
 void edid_report_cvt_dsc(uint8_t *p);

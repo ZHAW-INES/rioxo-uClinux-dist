@@ -4,6 +4,7 @@
 #include "adv7441a_drv.h"
 #include "gs2971_drv.h"
 #include "hoi_msg.h"
+#include "si598.h"
 
 /** Sampling conversion
  */
@@ -119,14 +120,15 @@ int vio_drv_clr_black_output(t_vio* handle)
  * @param p_vio the vio hardware pointer
  * @param p_adv the adv212-hdata hardware pointer 
  */
-int vio_drv_init(t_vio* handle, void* p_vio, void* p_adv)
+int vio_drv_init(t_vio* handle, void* p_vio, void* p_adv, t_si598 *si598)
 {
     PTR(handle); PTR(p_vio); PTR(p_adv);
     REPORT(INFO, ">> VIO-Driver: initialized");
 
     handle->p_vio = p_vio;
     handle->p_adv = p_adv;
-    
+    handle->si598 = si598;
+
     vio_drv_reset(handle, BDT_ID_HDMI_BOARD);
     
     VIO_REPORT_BASE(handle);
@@ -218,7 +220,7 @@ int vio_drv_reset(t_vio* handle, uint32_t device)
  * 
  * @param handle vio handle 
  */
-int vio_drv_encode(t_vio* handle)
+int vio_drv_encode(t_vio* handle, uint32_t device)
 {
     int ret = ERR_VIO_SUCCESS;    
 
@@ -252,7 +254,7 @@ int vio_drv_encode(t_vio* handle)
     vio_set_input_format(handle->p_vio, &handle->timing, handle->format_in, advfmt[handle->adv.cnt-1]);
     
     // setup PLL
-    vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_INPUT, 0, jrel[handle->adv.cnt-1], VIO_MUX_PLLC_FREE);    
+    vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_INPUT, 0, jrel[handle->adv.cnt-1], VIO_MUX_PLLC_FREE, device, handle->adv.cnt);    
     
     // setup osd 
     vio_osd_clear_screen(handle->p_vio);
@@ -344,11 +346,10 @@ int vio_drv_decode(t_vio* handle, uint32_t device)
     // setup PLL
     if (handle->config & VIO_CONFIG_VRP) {
     	// stream source is VRP
-    	vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_75MHZ, handle->timing.pfreq, jrel[handle->adv.cnt-1], VIO_MUX_PLLC_FREE);
+    	vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_75MHZ, handle->timing.pfreq, jrel[handle->adv.cnt-1], VIO_MUX_PLLC_FREE, device, handle->adv.cnt);
     } else {
     	// stream source is VSO
-
-    	vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_75MHZ, handle->timing.pfreq, jrel[handle->adv.cnt-1], VIO_MUX_PLLC_TG);
+    	vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_75MHZ, handle->timing.pfreq, jrel[handle->adv.cnt-1], VIO_MUX_PLLC_TG, device, handle->adv.cnt);
     }
 
     // setup osd
@@ -373,26 +374,33 @@ int vio_drv_decode(t_vio* handle, uint32_t device)
     // 1.) start pll
     vio_pll_update(handle->p_vio, &handle->pll);
     vio_set_control(handle->p_vio, &handle->timing, handle->pll.ppm, handle->pll.mode);
-    vio_clock_control_start(handle);
 
-    // 2.) start timing generator
+    // 2.) start clock control
+    if (device == BDT_ID_HDMI_BOARD) {
+        vio_clock_control_start(handle);
+    }
+    if (device == BDT_ID_SDI8_BOARD) {
+        si598_clock_control_activate(handle->si598);
+    }
+
+    // 3.) start timing generator
     vio_enable_output_timing(handle->p_vio);
 
-    // 3.) start the adv212
+    // 4.) start the adv212
     if ((ret = adv212_drv_boot_dec(handle->p_adv, &handle->timing, &handle->adv))) {
         REPORT(ERROR, "adv212_drv_boot_dec failed: %s", adv212_str_err(ret));
         return ret;
     }
 
-    // 4.) start the i/o path
+    // 5.) start the i/o path
     vio_start(handle->p_vio);
 
-    // 5.) Activate OSD?
+    // 6.) Activate OSD?
     if (handle->config & VIO_CONFIG_OSD) {
     	vio_set_cfg(handle->p_vio, VIO_CFG_OVERLAY);
     }
 
-    // 6.) Report
+    // 7.) Report
     VIO_REPORT_FORMAT(advfmt[handle->adv.cnt-1], "Process");
     VIO_REPORT_FORMAT(handle->format_out, "Output");
     VIO_REPORT_TIMING(&handle->timing);
@@ -437,7 +445,7 @@ int vio_drv_decode_sync(t_vio* handle)
  *
  * @param handle vio handle
  */
-int vio_drv_plainout(t_vio* handle)
+int vio_drv_plainout(t_vio* handle, uint32_t device)
 {
     int ret = ERR_VIO_SUCCESS;
 
@@ -459,10 +467,10 @@ int vio_drv_plainout(t_vio* handle)
     // setup PLL
     if (handle->config & VIO_CONFIG_VRP) {
         // stream source is VRP
-        vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_75MHZ, handle->timing.pfreq, 1, VIO_MUX_PLLC_FREE);
+        vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_75MHZ, handle->timing.pfreq, 1, VIO_MUX_PLLC_FREE, device, 2);
     } else {
         // stream source is VSO
-        vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_75MHZ, handle->timing.pfreq, 1, VIO_MUX_PLLC_TG);
+        vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_75MHZ, handle->timing.pfreq, 1, VIO_MUX_PLLC_TG, device, 2);
     }
 
     // setup osd
@@ -515,7 +523,7 @@ int vio_drv_plainout(t_vio* handle)
  *
  * @param handle vio handle
  */
-int vio_drv_plainin(t_vio* handle)
+int vio_drv_plainin(t_vio* handle, uint32_t device)
 {
     int ret = ERR_VIO_SUCCESS;
 
@@ -536,7 +544,7 @@ int vio_drv_plainin(t_vio* handle)
     vio_set_input_format(handle->p_vio, &handle->timing, handle->format_in, vio_format(CS_RGB, SM_444));
 
     // setup PLL
-    vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_INPUT, 0, 1, VIO_MUX_PLLC_FREE);
+    vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_INPUT, 0, 1, VIO_MUX_PLLC_FREE, device, 2);
 
     // setup osd
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
@@ -589,7 +597,7 @@ int vio_drv_plainin(t_vio* handle)
  *
  * @param handle vio handle
  */
-int vio_drv_debug(t_vio* handle)
+int vio_drv_debug(t_vio* handle, uint32_t device)
 {
     int ret = ERR_VIO_SUCCESS;    
 
@@ -607,7 +615,7 @@ int vio_drv_debug(t_vio* handle)
     vio_set_output_format(handle->p_vio, &handle->timing, vio_format(CS_RGB, SM_444), handle->format_out, false);
     
     // setup PLL
-    vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_75MHZ, handle->timing.pfreq, 1, VIO_MUX_PLLC_FREE);    
+    vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_75MHZ, handle->timing.pfreq, 1, VIO_MUX_PLLC_FREE, device, 2);    
     
     // setup osd
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
@@ -644,7 +652,7 @@ int vio_drv_debug(t_vio* handle)
  *
  * @param handle vio handle
  */
-int vio_drv_loop(t_vio* handle)
+int vio_drv_loop(t_vio* handle, uint32_t device)
 {
     int ret = ERR_VIO_SUCCESS;
 
@@ -665,7 +673,7 @@ int vio_drv_loop(t_vio* handle)
     vio_set_input_format(handle->p_vio, &handle->timing, handle->format_in, handle->format_proc);
 
     // setup PLL
-    vio_drv_pll_setup(handle->p_vio, &handle->pll, VIO_SEL_INPUT, 0, 1, VIO_MUX_PLLC_FREE);
+    vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_INPUT, 0, 1, VIO_MUX_PLLC_FREE, device, 2);
 
     // setup osd
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
@@ -717,7 +725,7 @@ int vio_drv_set_bandwidth(t_vio* handle, int bandwidth)
 {
     handle->bandwidth = bandwidth;
     if (handle->active && ((handle->config & VIO_CONFIG_MODE) == VIO_CONFIG_ENCODE)) {
-        adv212_drv_rc_size(handle->p_adv, vio_bandwidth_to_size(handle->bandwidth, &handle->timing), &handle->adv, &handle->timing.interlaced);
+        adv212_drv_rc_size(handle->p_adv, vio_bandwidth_to_size(handle->bandwidth, &handle->timing), &handle->adv);
     }
     return ERR_VIO_SUCCESS;
 }
@@ -733,12 +741,12 @@ int vio_drv_set_bandwidth(t_vio* handle, int bandwidth)
  * @param bandwidth the initial bandwidth in [bytes/s]
  * @param advcnt numbers of adv212 to be used for encoding(0: autodetect)
  */
-int vio_drv_encodex(t_vio* handle, int bandwidth, int advcnt)
+int vio_drv_encodex(t_vio* handle, int bandwidth, int advcnt, uint32_t device)
 {
     PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv);
     handle->bandwidth = bandwidth;
     handle->adv.cnt = advcnt;
-    return vio_drv_encode(handle);
+    return vio_drv_encode(handle, device);
 }
 
 
@@ -765,11 +773,11 @@ int vio_drv_decodex(t_vio* handle, t_video_timing* p_vt, int advcnt, uint32_t de
  *
  * @param handle vio handle
  */
-int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt)
+int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt, uint32_t device)
 {
     PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv); PTR(p_vt);
     memcpy(&handle->timing, p_vt, sizeof(t_video_timing));
-    return vio_drv_plainout(handle);
+    return vio_drv_plainout(handle, device);
 }
 
 
@@ -778,11 +786,11 @@ int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt)
  * @param handle vio handle
  * @param p_vt video timing struct
  */
-int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt)
+int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, uint32_t device)
 {
     PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv); PTR(p_vt);
     memcpy(&handle->timing, p_vt, sizeof(t_video_timing));
-    return vio_drv_debug(handle);
+    return vio_drv_debug(handle, device);
 }
 
 int vio_drv_set_format_in(t_vio* handle, t_video_format f)

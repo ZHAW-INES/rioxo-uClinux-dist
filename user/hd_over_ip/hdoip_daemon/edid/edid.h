@@ -250,9 +250,8 @@ typedef struct {
 
 void edid_write_function(t_edid* edid, char* string);
 int edid_verify(t_edid* edid);
-int edid_checksum_gen(t_edid* edid);
+void edid_checksum_gen(t_edid* edid);
 void edid_report(t_edid* edid);
-void edid_hoi_limit(t_edid* edid);
 int edid_write_file(t_edid *edid, char *file);
 int edid_read_file(t_edid* edid, char *file);
 int edid_compare(t_edid* edid1, t_edid* edid2);

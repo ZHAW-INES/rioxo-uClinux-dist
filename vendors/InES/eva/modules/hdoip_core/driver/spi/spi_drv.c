@@ -28,7 +28,6 @@ uint16_t spi_read_reg_16(void *ptr_spi, uint16_t offset)
 
 void spi_write_reg_16(void *ptr_spi, uint16_t offset, uint16_t value)
 {
-    uint16_t read_data = 0x0000;
     uint16_t write_data = value;
     uint16_t command_word = SPI_COMMAND_RW_WRITE | (offset & 0x0FFF);
     uint32_t tmp = read_spi_control(ptr_spi);
@@ -43,7 +42,7 @@ void spi_write_reg_16(void *ptr_spi, uint16_t offset, uint16_t value)
     write_spi_control(ptr_spi, tmp);
 }
 
-uint16_t spi_command(uint32_t ptr_spi, uint16_t write_data)
+uint16_t spi_command(void* ptr_spi, uint16_t write_data)
 {
     //wait until gateware is ready to transmit
     while ((read_spi_status(ptr_spi) & SPI_STATUS_TRDY_MSK) == 0); 

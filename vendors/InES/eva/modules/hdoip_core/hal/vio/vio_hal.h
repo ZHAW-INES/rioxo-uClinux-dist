@@ -79,5 +79,6 @@ uint32_t vio_get_fin(void* p);
 uint32_t vio_get_fout(void* p);
 int32_t vio_get_tg_error(void* p);
 int32_t vio_get_pll_error(void* p);
+void vio_set_input_clockmux(void* p, int advcnt, bool hdmi_active);
 
 #endif /*VIO_MUX_H_*/

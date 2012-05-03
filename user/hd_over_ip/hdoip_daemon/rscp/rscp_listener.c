@@ -58,7 +58,7 @@ void* rscp_listener_run_server(t_rscp_server* server)
 
 			if(server->media) {
 				bstmap_removep(&listener->sessions, server->media->sessionid);
-				rmsr_teardown(server->media, 0, 0);
+				rmsr_teardown(server->media, 0);
 			}
 
 			free(server);
@@ -119,6 +119,9 @@ void* rscp_listener_thread(t_rscp_listener* handle)
     struct sockaddr_in this_addr;
     struct sockaddr_in remote_addr;
     int fd;
+    socklen_t length;
+
+    length = sizeof(struct sockaddr_in);
 
     report(" + RSCP Listener [%d] thread", handle->nr);
 
@@ -128,12 +131,12 @@ void* rscp_listener_thread(t_rscp_listener* handle)
     }
 
     // setup own address
-    memset(&this_addr, 0, sizeof(struct sockaddr_in));
+    memset(&this_addr, 0, length);
     this_addr.sin_family = AF_INET;
     this_addr.sin_port = htons(handle->port);
     this_addr.sin_addr.s_addr = INADDR_ANY;
 
-    if (bind(handle->sockfd, (struct sockaddr_in*)&this_addr, sizeof(struct sockaddr_in)) == -1) {
+    if (bind(handle->sockfd, (struct sockaddr*)&this_addr, length) == -1) {
         report(ERROR "rscp listener bind error: %s", strerror(errno));
         return (void*)RSCP_ERRORNO;
     }
@@ -146,9 +149,9 @@ void* rscp_listener_thread(t_rscp_listener* handle)
     // run... and make new thread for every incoming connection
     while (handle->run) {
 
-        memset(&remote_addr, 0, sizeof(struct sockaddr_in));
+        memset(&remote_addr, 0, length);
 
-        if ((fd = accept(handle->sockfd, (struct sockaddr*)&remote_addr, sizeof(struct sockaddr_in))) != -1) {
+        if ((fd = accept(handle->sockfd, (struct sockaddr*)&remote_addr, &length)) != -1) {
             rscp_listener_start_server(handle, fd, &remote_addr);            
         } else if (fd == -1) {
             report(ERROR "rscp listener accept error: %s", strerror(errno));

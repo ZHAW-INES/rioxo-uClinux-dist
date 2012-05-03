@@ -280,3 +280,33 @@ void vio_set_transform(void* p, uint32_t o, t_color_transform m, uint32_t cfg, b
     HOI_WR32(p, VIO_OFF_PP_CFG, cfg);
 }
 
+/** Set the Video Clock input multiplexer
+ * 
+ * @param p pointer to i/o base
+ * @param advcnt number of used ADV212
+ * @param hdmi_active HDMI or SDI (HDMI = true)
+ */
+void vio_set_input_clockmux(void* p, int advcnt, bool hdmi_active)
+{
+    uint32_t temp;
+
+    temp = HOI_RD32(p, VIO_OFF_CONFIG_2) & ~(VIO_CFG_INPUT_MUX_0 | VIO_CFG_INPUT_MUX_1 | VIO_CFG_INPUT_MUX_2);
+
+    if (hdmi_active) {
+        temp |= VIO_CFG_INPUT_MUX_0 + VIO_CFG_INPUT_MUX_1 + VIO_CFG_INPUT_MUX_2;    // advclk = inclk     | vidclk = inclk      | Source = PLL
+    } else {
+        switch (advcnt) {
+            case 1:     temp |= VIO_CFG_INPUT_MUX_1;                                // advclk = inclk     | vidclk = inclk / 2  | Source = SI598
+                        break;
+            case 2:
+            case 3:     temp |= VIO_CFG_INPUT_MUX_0 + VIO_CFG_INPUT_MUX_1;          // advclk = inclk     | vidclk = inclk      | Source = SI598
+                        break;
+            case 4:     temp |= VIO_CFG_INPUT_MUX_0;                                // advclk = inclk / 2 | vidclk = inclk      | Source = SI598
+                        break;
+            default:    break;
+        }
+    }
+
+    HOI_WR32(p, VIO_OFF_CONFIG_2, temp);
+}
+

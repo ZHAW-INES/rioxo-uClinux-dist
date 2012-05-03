@@ -20,9 +20,9 @@ typedef struct {
 
 void vrp_drv_init(t_vrp* handle, t_vio* vio, void* p_vrp);
 int vrp_drv_off(t_vrp* handle);
-int vrp_drv_capture_image(t_vrp* handle, void* buffer, size_t size);
-int vrp_drv_show_image(t_vrp* handle, void* buffer, t_video_timing* p_vt);
-int vrp_drv_capture_jpeg2000(t_vrp* handle, void* buffer, size_t size, size_t bandwidth);
-int vrp_drv_show_jpeg2000(t_vrp* handle, void* buffer, t_video_timing* p_vt, int advcnt);
+int vrp_drv_capture_image(t_vrp* handle, void* buffer, size_t size, uint32_t device);
+int vrp_drv_show_image(t_vrp* handle, void* buffer, t_video_timing* p_vt, uint32_t device);
+int vrp_drv_capture_jpeg2000(t_vrp* handle, void* buffer, size_t size, size_t bandwidth, uint32_t device);
+int vrp_drv_show_jpeg2000(t_vrp* handle, void* buffer, t_video_timing* p_vt, int advcnt, uint32_t device);
 
 #endif /* VRP_DRV_H_ */

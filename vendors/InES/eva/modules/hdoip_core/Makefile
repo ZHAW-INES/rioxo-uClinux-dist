@@ -101,6 +101,7 @@ INCLUDE += driver/gs2971
   FILES += driver/gs2971/gs2971_drv.o
 INCLUDE += driver/gs2972
   FILES += driver/gs2972/gs2972_drv.o
+  FILES += driver/gs2972/si598.o
 INCLUDE += driver/bdt
   FILES += driver/bdt/bdt_drv.o
 INCLUDE += driver/spi

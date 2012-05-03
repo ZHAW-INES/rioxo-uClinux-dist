@@ -17,6 +17,8 @@
 #include "hdoipd_fsm.h"
 #include "edid.h"
 #include "factory_edid.h"
+#include "edid_merge.h"
+#include "hoi_drv_user.h"
 
 int alive_check_client_open(t_alive_check *handle, bool enable, int interval, char *dest, uint16_t port, int broadcast, bool load_new_config)
 {
@@ -256,7 +258,6 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
     uint8_t edid_table[edid_length];
     int i;
     t_rscp_edid edid;
-    uint32_t dev_id;
 	int ret;
     t_edid edid_old;
     char remote_uri[100];
@@ -317,7 +318,7 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
                                     edid_write_function((t_edid *)edid_table, "unicast first edid");
                                 } else { // A previous E-EDID exists
                                     edid_merge((t_edid *)edid_table, (t_edid *)edid_table); // modify edid
-                                    if (multicast_compare_edid(&edid_old, edid_table)) { // edid has changed
+                                    if (multicast_compare_edid(&edid_old, (t_edid *)edid_table)) { // edid has changed
                                         edid_write_function((t_edid *)edid_table, "unicast edid changed");
                                     }
                                 }

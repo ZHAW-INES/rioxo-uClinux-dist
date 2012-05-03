@@ -21,7 +21,7 @@ int vrp_drv_off(t_vrp* handle)
 }
 
 
-int vrp_drv_capture_image(t_vrp* handle, void* buffer, size_t size)
+int vrp_drv_capture_image(t_vrp* handle, void* buffer, size_t size, uint32_t device)
 {
     uint32_t jiffies_out;
 
@@ -31,7 +31,7 @@ int vrp_drv_capture_image(t_vrp* handle, void* buffer, size_t size)
     vrp_set_buffer(handle->p_vrp, buffer, size-4);
     vrp_do_record(handle->p_vrp, 1);
     vio_drv_set_cfg(handle->vio, VIO_CONFIG_VRP);
-    vio_drv_plainin(handle->vio);
+    vio_drv_plainin(handle->vio, device);
     jiffies_out = jiffies + HZ;
     while(!vrp_get_idle(handle->p_vrp) && !TIMEOUT(jiffies_out)) {
         msleep(50);
@@ -42,19 +42,19 @@ int vrp_drv_capture_image(t_vrp* handle, void* buffer, size_t size)
     return SUCCESS;
 }
 
-int vrp_drv_show_image(t_vrp* handle, void* buffer, t_video_timing* p_vt)
+int vrp_drv_show_image(t_vrp* handle, void* buffer, t_video_timing* p_vt, uint32_t device)
 {
     PTR(handle); PTR(handle->p_vrp); PTR(buffer); PTR(p_vt);
     vrp_idle(handle->p_vrp);
     vio_drv_set_cfg(handle->vio, VIO_CONFIG_VRP);
-    vio_drv_plainoutx(handle->vio, p_vt);
+    vio_drv_plainoutx(handle->vio, p_vt, device);
     vrp_set_buffer(handle->p_vrp, buffer, p_vt->width*p_vt->height*3+4);
     vrp_do_playback(handle->p_vrp, 1, true);
     return SUCCESS;
 }
 
 
-int vrp_drv_capture_jpeg2000(t_vrp* handle, void* buffer, size_t size, size_t bandwidth)
+int vrp_drv_capture_jpeg2000(t_vrp* handle, void* buffer, size_t size, size_t bandwidth, uint32_t device)
 {
     uint32_t jiffies_out;
 
@@ -64,7 +64,7 @@ int vrp_drv_capture_jpeg2000(t_vrp* handle, void* buffer, size_t size, size_t ba
     vrp_set_buffer(handle->p_vrp, buffer, size-4);
     vrp_do_record(handle->p_vrp, 1);
     vio_drv_set_cfg(handle->vio, VIO_CONFIG_VRP);
-    vio_drv_encodex(handle->vio, bandwidth, 0);
+    vio_drv_encodex(handle->vio, bandwidth, 0, device);
     // wait for capture
     while(!vrp_get_idle(handle->p_vrp) && !TIMEOUT(jiffies_out)) {
         msleep(50);
@@ -75,7 +75,7 @@ int vrp_drv_capture_jpeg2000(t_vrp* handle, void* buffer, size_t size, size_t ba
     return SUCCESS;
 }
 
-int vrp_drv_show_jpeg2000(t_vrp* handle, void* buffer, t_video_timing* p_vt, int advcnt)
+int vrp_drv_show_jpeg2000(t_vrp* handle, void* buffer, t_video_timing* p_vt, int advcnt, uint32_t device)
 {
     int ret;
 
@@ -83,7 +83,7 @@ int vrp_drv_show_jpeg2000(t_vrp* handle, void* buffer, t_video_timing* p_vt, int
 
     vrp_idle(handle->p_vrp);
     vio_drv_set_cfg(handle->vio, VIO_CONFIG_VRP);
-    if ((ret = vio_drv_decodex(handle->vio, p_vt, advcnt, false))) {
+    if ((ret = vio_drv_decodex(handle->vio, p_vt, advcnt, device))) {
         VIO_REPORT_ERROR(ret);
         return ret;
     }

@@ -21,6 +21,7 @@
 #include "update.h"
 #include "edid.h"
 #include "vrb_audio.h"
+#include "hdoipd_task.h"
 
 void hdoipd_cmd_canvas(t_hoic_canvas* cmd)
 {
@@ -130,8 +131,9 @@ void hdoipd_cmd_vrb_setup(t_hoic_load* cmd)
 
 void hdoipd_cmd_play(t_hoic_cmd UNUSED *cmd)
 {
-    hdoipd_goto_vrb();
-    alive_check_start_vrb_alive();
+    if(!hdoipd_goto_vrb()) {
+        alive_check_start_vrb_alive();
+    }
 }
 
 void hdoipd_cmd_pause(t_hoic_cmd UNUSED *cmd)
@@ -150,7 +152,7 @@ void hdoipd_cmd_pause(t_hoic_cmd UNUSED *cmd)
     rscp_default_response_setup((void*)&buf);
     ret = rscp_parse_response(&client->con, tab_response_pause, (void*)&buf, 0, CFG_RSP_TIMEOUT);
     if (ret == RSCP_SUCCESS) {
-        rmsr_pause(media, 0, 0);
+        rmsr_pause(media, 0);
     }
 }
 
@@ -257,7 +259,7 @@ void hdoipd_get_usb(t_hoic_getusb* cmd, int rsp)
 void hdoipd_get_hdcp_state(t_hoic_gethdcpstate* cmd, int rsp)
 {
     char *buff;
-    char *buff_ptr = &buff;
+    char **buff_ptr = &buff;
 
     task_get_hdcp_status(buff_ptr);
     if (strlen(buff) < 100) {
@@ -282,7 +284,7 @@ void hdoipd_debug(t_hoic_cmd UNUSED *cmd)
     hoi_drv_debug();
 }
 
-void hdoipd_read_ram(t_hoic_kvparam* cmd, int rsp)
+void hdoipd_read_ram(t_hoic_kvparam* cmd, int UNUSED rsp)
 {
 	hoi_drv_read_ram(atoi(cmd->str));
 }

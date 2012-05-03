@@ -93,6 +93,6 @@ typedef struct {
 
 int led_drv_init(t_led* handle, t_i2c* p_vid_i2c, t_i2c* p_aud_i2c, void* p_led, t_bdt* handle_bdt);
 void led_drv_handler(t_led* handle);
-int led_drv_set_status(t_led* handle, uint32_t instruction);
+void led_drv_set_status(t_led* handle, uint32_t instruction);
 
 #endif /* LED_DRV_H_ */

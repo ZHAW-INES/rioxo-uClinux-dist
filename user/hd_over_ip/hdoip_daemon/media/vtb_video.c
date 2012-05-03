@@ -38,10 +38,9 @@ int vtb_video_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* r
 
 int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
-    int n, ret;
+    int n;
 
     t_multicast_cookie* cookie = media->cookie;
-    t_edid edid, edid_old;
 
     report(VTB_METHOD "vtb_video_setup");
 
