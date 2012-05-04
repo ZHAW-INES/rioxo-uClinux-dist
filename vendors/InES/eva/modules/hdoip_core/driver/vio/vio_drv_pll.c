@@ -25,7 +25,7 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, t_si598* si598, int in, int out, 
     // temporary
     int64_t kn, km, kc, ki;
     int64_t kfvco, tfvco, kferr;
-    
+
     // output frequency 
     fout = vio_get_fin(p);
 
@@ -53,7 +53,6 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, t_si598* si598, int in, int out, 
     pll->fout[2] = fout * rel / 2;
     pll->fout[3] = fout;
 
-
     // input frequency for HDMI
     if (device == BDT_ID_HDMI_BOARD) {
         pll->insel      = in;
@@ -68,27 +67,31 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, t_si598* si598, int in, int out, 
         pll->fin[1]     = vio_get_fin(p);
 
         // fin = fout / set SI598 output frequency
-        if (fout == 148500000) {
-            set_si598_output_frequency (si598, 148);
-            pll->fin[0]     = 148500000;
-            vio_set_input_clockmux(p, advcnt, false);
-        }
-        if (fout == 74250000) {
-
-            if (advcnt == 4) {
+        if (out != 0) {
+            if (fout == 148500000) {
                 set_si598_output_frequency (si598, 148);
-            } else {
-                set_si598_output_frequency (si598, 74);
+                pll->fin[0] = 148500000;
             }
+            if (fout == 74250000) {
+                if (advcnt == 4) {
+                    set_si598_output_frequency (si598, 148);
+                } else {
+                    set_si598_output_frequency (si598, 74);
+                }
+                pll->fin[0] = 74250000;
+            }
+            if (fout == 13500000) {
+                set_si598_output_frequency (si598, 27);
+                pll->fin[0] = 13500000;
+            } 
+        }
 
-            pll->fin[0]     = 74250000;
+        if (in == 1) {
+            vio_set_input_clockmux(p, advcnt, true);
+        } else {
             vio_set_input_clockmux(p, advcnt, false);
         }
-        if (fout == 13500000) {
-            set_si598_output_frequency (si598, 27);
-            pll->fin[0]     = 13500000;
-            vio_set_input_clockmux(p, advcnt, false);
-        }
+
         fin = pll->fin[in];
     } 
 
@@ -97,7 +100,7 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, t_si598* si598, int in, int out, 
     cmax = fmax / fout;
     if (cmax >= 512) cmax = 511;
     if (cmin >= 512) cmin = 511;
-    
+
     // c needs to be multiple of 2
     if (rel == VIO_JVCLK_DOUBLE) {
         cmin = cmin + (cmin&1);
@@ -147,11 +150,11 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, t_si598* si598, int in, int out, 
     if ((n >= 512) || (m >= 512) || !b) {
         return ERR_VIO_NO_PLL_CONFIG;
     } 
-    
+
     if ((fvco>fmax)||(fvco<fmin)) {
         return ERR_VIO_VCO_OUT_OF_RANGE;
     }
-    
+
     c1 = c0 * 2 / rel;
 
     // output set
