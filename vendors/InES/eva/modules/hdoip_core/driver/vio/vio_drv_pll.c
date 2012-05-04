@@ -26,9 +26,9 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, t_si598* si598, int in, int out, 
     int64_t kn, km, kc, ki;
     int64_t kfvco, tfvco, kferr;
     
-
     // output frequency 
-    fout = fin;
+    fout = vio_get_fin(p);
+
     if (device == BDT_ID_HDMI_BOARD) {
         if (out != 0) {
             fout = out;
@@ -91,7 +91,7 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, t_si598* si598, int in, int out, 
         }
         fin = pll->fin[in];
     } 
-    
+
     // VCO is between 600 and 1100 MHz
     cmin = fmin / fout + 1;
     cmax = fmax / fout;
