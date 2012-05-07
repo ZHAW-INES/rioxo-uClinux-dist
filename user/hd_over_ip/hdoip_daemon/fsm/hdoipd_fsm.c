@@ -548,6 +548,7 @@ void hdoipd_fsm_vtb(uint32_t event)
 void hdoipd_event(uint32_t event)
 {
     uint32_t buff;
+    char *s;
 
     lock("hdoipd_event");
         report(EVENT "(%x) %s ", event, event_str(event));
@@ -688,7 +689,8 @@ void hdoipd_event(uint32_t event)
             hdoipd_set_rsc(RSC_VIDEO_IN);
             hdoipd_set_rsc(RSC_VIDEO_IN_SDI);
             hdoipd_set_rsc(RSC_AUDIO0_IN);
-            if (hdoipd_state(HOID_VTB)) {
+            s = reg_get("mode-start"); // hdoipd_state(HOID_VTB) is not set yet, when sdi input is active on startup
+            if (strcmp(s, "vtb") == 0) {
                 hoi_drv_set_led_status(SDI_IN_CONNECTED_WITH_AUDIO);
             }
         break;
@@ -701,7 +703,8 @@ void hdoipd_event(uint32_t event)
             }
         break;
         case E_GS2971_LOOP_ON:
-            if (hdoipd_state(HOID_VTB)) {
+            s = reg_get("mode-start");
+            if (strcmp(s, "vtb") == 0) {
                 hoi_drv_set_led_status(SDI_LOOP_ON_WITH_AUDIO);
             }
         break;

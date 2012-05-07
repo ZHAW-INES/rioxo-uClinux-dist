@@ -19,6 +19,7 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     handle->video_status = false;
     handle->no_phase_info = false;
     handle->delay_queue_input = 0;
+    handle->input_active = false;
 
     REPORT(INFO, "+--------------------------------------------------+");
     REPORT(INFO, "| GS2971-Driver: Initialize SDI-RX                 |");
@@ -118,12 +119,12 @@ void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
             handle->input_active = false;
             handle->delay_queue_input = 0;
         }
+        handle->video_status = video_status;
     }
 
     if ((video_format == RATE_SEL_READBACK_HD) || (video_format == RATE_SEL_READBACK_3G)) {
         gs2971_hd_3g_audio_handler(handle);
     }
-    handle->video_status = video_status;
 
     // prevent start/stop if "input active bit" toggles at higher frequency
     if (handle->input_active == true) {
