@@ -340,6 +340,16 @@ typedef struct {
 #define hoi_msg_read_init(p, a) hoi_msg_init(p, a, t_hoi_msg_param)
 #define hoi_msg_write_init(p, a) hoi_msg_init(p, a, t_hoi_msg_param)
 
+//------------------------------------------------------------------------------
+// read/write command for bandwidth
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t            bw;
+    uint32_t            chroma;
+} t_hoi_msg_bandwidth;
+
+#define hoi_msg_bandwidth_init(p) hoi_msg_init(p, HOI_MSG_BW, t_hoi_msg_bandwidth)
 
 //------------------------------------------------------------------------------
 // capture/show image command

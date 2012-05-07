@@ -23,7 +23,7 @@ typedef struct {
 
 
 void adv212_drv_init(void* p);
-void adv212_drv_rc_size(void* p, uint32_t size, t_adv212* p_adv);
+void adv212_drv_rc_size(void* p, uint32_t size, t_adv212* p_adv, uint32_t chroma);
 int adv212_drv_advcnt(t_video_timing* p_vt, int* adv_cnt);
 int adv212_drv_detect_enc(t_video_timing* p_vt, t_adv212* p_adv);
 int adv212_drv_detect_dec(t_video_timing* p_vt, t_adv212* p_adv);

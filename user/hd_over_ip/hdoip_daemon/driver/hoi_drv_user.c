@@ -184,7 +184,6 @@ HOI_WRITE(pfmt, HOI_MSG_PFMT);
 HOI_WRITE(set_mtime, HOI_MSG_SETMTIME);
 HOI_WRITE(set_stime, HOI_MSG_SETSTIME);
 HOI_WRITE(timer, HOI_MSG_TIMER);
-HOI_WRITE(bw, HOI_MSG_BW);
 HOI_WRITE(set_led_status, HOI_MSG_LED);
 HOI_WRITE(reset, HOI_MSG_OFF);
 HOI_WRITE(new_audio, HOI_MSG_NEW_AUDIO);
@@ -304,6 +303,16 @@ int hoi_drv_show(bool compress, void* buffer, t_video_timing* timing, uint32_t a
 
     return ret;
 }
+
+int hoi_drv_bw(uint32_t bw, uint32_t chroma)
+{
+    t_hoi_msg_bandwidth msg;
+    hoi_msg_bandwidth_init(&msg);
+    msg.bw = bw;
+    msg.chroma = chroma;
+    return hoi_msg(&msg);
+}
+
 /*
 const uint8_t edid_hp2710m[256]=
 {

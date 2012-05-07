@@ -721,11 +721,13 @@ int vio_drv_loop(t_vio* handle, uint32_t device)
  * @param handle vio handle
  * @param bandwidth bandwidth in byte/second
  */
-int vio_drv_set_bandwidth(t_vio* handle, int bandwidth)
+int vio_drv_set_bandwidth(t_vio* handle, int bandwidth, int chroma_percent)
 {
     handle->bandwidth = bandwidth;
+    handle->chroma = chroma_percent;
+
     if (handle->active && ((handle->config & VIO_CONFIG_MODE) == VIO_CONFIG_ENCODE)) {
-        adv212_drv_rc_size(handle->p_adv, vio_bandwidth_to_size(handle->bandwidth, &handle->timing), &handle->adv);
+        adv212_drv_rc_size(handle->p_adv, vio_bandwidth_to_size(handle->bandwidth, &handle->timing), &handle->adv, handle->chroma);
     }
     return ERR_VIO_SUCCESS;
 }

@@ -381,7 +381,7 @@ int adv212_size_per_chip(t_adv212* p_adv)
  * @param size size in byte
  * @param p_adv
  */
-void adv212_drv_rc_size(void* p, uint32_t size, t_adv212* p_adv)
+void adv212_drv_rc_size(void* p, uint32_t size, t_adv212* p_adv, uint32_t chroma)
 {
     p_adv->size = size;
     size = adv212_size_per_chip(p_adv);
@@ -389,17 +389,17 @@ void adv212_drv_rc_size(void* p, uint32_t size, t_adv212* p_adv)
     switch (p_adv->cnt) {
         case 1: adv212_set_rc_size(ADV212_0_BASE(p), size); 
         break;
-        case 2: adv212_set_rc_size(ADV212_0_BASE(p), size);
-                adv212_set_rc_size(ADV212_1_BASE(p), size); 
+        case 2: adv212_set_rc_size(ADV212_0_BASE(p), size+(size/100*(100-chroma)));
+                adv212_set_rc_size(ADV212_1_BASE(p), size/100*chroma); 
         break;
         case 3: adv212_set_rc_size(ADV212_0_BASE(p), size);
                 adv212_set_rc_size(ADV212_1_BASE(p), size);
                 adv212_set_rc_size(ADV212_2_BASE(p), size); 
         break;
-        case 4: adv212_set_rc_size(ADV212_0_BASE(p), size);
-                adv212_set_rc_size(ADV212_1_BASE(p), size);
-                adv212_set_rc_size(ADV212_2_BASE(p), size);
-                adv212_set_rc_size(ADV212_3_BASE(p), size);
+        case 4: adv212_set_rc_size(ADV212_0_BASE(p), size+(size/100*(100-chroma)));
+                adv212_set_rc_size(ADV212_1_BASE(p), size/100*chroma);
+                adv212_set_rc_size(ADV212_2_BASE(p), size+(size/100*(100-chroma)));
+                adv212_set_rc_size(ADV212_3_BASE(p), size/100*chroma);
         break;
     }
 }

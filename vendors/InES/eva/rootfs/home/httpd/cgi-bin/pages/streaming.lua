@@ -6,6 +6,7 @@ require("hdoip.pipe")
 local REG_ST_URI_LABEL = "st_uri"
 local REG_ST_RSCP_PORT_LABEL = "st_rscp_port"
 local REG_ST_BW_LABEL = "st_bw"
+local REG_ST_BW_CHROMA_LABEL = "st_bw_chroma"
 local REG_ST_NET_DELAY_LABEL = "net_delay"
 local REG_ST_OSD_LABEL = "osd_time"
 local REG_ST_VID_PORT_LABEL = "vid_port"
@@ -40,7 +41,10 @@ function show(t)
             if(tonumber(t.st_bw) ~= nil) then
                 t.st_bw = 8 * tonumber(t.st_bw) / 2^20 -- Bytes/s => MBit/s
             end
-            
+            t.st_bw_chroma = hdoip.pipe.getParam(hdoip.pipe.REG_ST_BW_CHROMA)
+            if(tonumber(t.st_bw_chroma) ~= nil) then
+                t.st_bw_chroma = tonumber(t.st_bw_chroma);
+            end
             t.multicast_en = hdoip.pipe.getParam(hdoip.pipe.REG_MULTICAST_EN)
             if(t.multicast_en == "true") then
                 t.multicast_en = 1
@@ -139,6 +143,18 @@ function show(t)
                 hdoip.html.AddError(t, label.err_datarate_not_number)
             end
             
+
+            if(tonumber(t.st_bw_chroma) ~= nil) then
+                if ((tonumber(t.st_bw_chroma) > 100) or (tonumber(t.st_bw_chroma) < 0)) then
+                    hdoip.html.AddError(t, label.err_datarate_chroma_not_in_range)
+                else
+                    hdoip.pipe.setParam(hdoip.pipe.REG_ST_BW_CHROMA, tonumber(t.st_bw_chroma))
+                end
+            else
+                hdoip.html.AddError(t, label.err_datarate_not_number)
+            end
+
+
             if(t.auto_stream ~= nil) then
                hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "true")
                t.auto_stream = 1
@@ -253,6 +269,9 @@ function show(t)
         hdoip.html.Text(label.p_st_datarate);                                               hdoip.html.TableInsElement(1);
         hdoip.html.FormText(REG_ST_BW_LABEL, t.st_bw, 4, 0); 
         hdoip.html.Text(label.u_mbps);                                                      hdoip.html.TableInsElement(2);
+        hdoip.html.Text(label.p_st_dec_chroma);                                             hdoip.html.TableInsElement(1);
+        hdoip.html.FormText(REG_ST_BW_CHROMA_LABEL, t.st_bw_chroma, 4, 0); 
+        hdoip.html.Text(label.u_percent);                                                   hdoip.html.TableInsElement(2);
         hdoip.html.Text(label.p_st_auto_stream);                                                hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                            hdoip.html.TableInsElement(2);
     end

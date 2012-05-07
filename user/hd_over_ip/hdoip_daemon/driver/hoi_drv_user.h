@@ -32,7 +32,7 @@ int hoi_drv_capture(bool compress, void* buffer, size_t size, t_video_timing* ti
 int hoi_drv_show(bool compress, void* buffer, t_video_timing* timing, uint32_t advcnt);
 int hoi_drv_debug(void);
 int hoi_drv_set_timing(t_video_timing* timing);
-int hoi_drv_bw(uint32_t bandwidth);
+int hoi_drv_bw(uint32_t bw, uint32_t chroma);
 int hoi_drv_set_led_status(uint32_t instruction);
 int hoi_drv_new_audio(uint32_t fs);
 int hoi_drv_read_ram(uint32_t addr);

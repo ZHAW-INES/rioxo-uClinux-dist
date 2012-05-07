@@ -540,9 +540,9 @@ int hoi_drv_msg_set_timing(t_hoi* handle, t_hoi_msg_image* msg)
     return ret;
 }
 
-int hoi_drv_msg_bw(t_hoi* handle, t_hoi_msg_param* msg)
+int hoi_drv_msg_bw(t_hoi* handle, t_hoi_msg_bandwidth* msg)
 {
-    vio_drv_set_bandwidth(&handle->vio, msg->value);
+    vio_drv_set_bandwidth(&handle->vio, msg->bw, msg->chroma);
     return SUCCESS;
 }
 

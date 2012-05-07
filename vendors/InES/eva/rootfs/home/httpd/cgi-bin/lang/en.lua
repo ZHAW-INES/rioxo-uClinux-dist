@@ -8,6 +8,7 @@ label = {
     u_mbps = "[MBit / s]";
     u_ms = "[ms]";
     u_s = "[s]";
+    u_percent = "[% of half datarate]";
 
     device_name = "Device name : ";
 
@@ -49,6 +50,7 @@ label = {
     err_vid_port_not_number = "Video port is not a number";
     err_datarate_not_number = "Max. datarate is not a number";
     err_datarate_not_in_range = "Max. datarate is not in range (1 .. 800)";
+    err_datarate_chroma_not_in_range = "Max. chroma datarate is not in range (0 .. 100%)";
     err_net_delay_not_number = "Max. network delay is not a number";
     err_net_delay_not_in_range = "Max. network delay is not in range (1 .. 100)";
     err_osd_time_not_number = "OSD time is not a number";
@@ -148,6 +150,7 @@ label = {
     p_st_vid_port = "Video UDP Port";
     p_st_aud_port = "Audio UDP Port";
     p_st_datarate = "Max. datarate";
+    p_st_dec_chroma = "Chroma datarate";
     p_st_net_delay = "Max. network delay";
     p_st_auto_stream = "Auto stream";
     p_st_force_hdcp = "Force HDCP"; 

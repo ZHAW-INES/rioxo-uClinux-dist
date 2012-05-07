@@ -33,6 +33,7 @@ typedef struct {
     bool            clock_control_active;   //!< true indicates if clock control is active
 
     uint32_t        bandwidth;              //!< when encoding this target bandwidth is used
+    uint32_t        chroma;                 //!< percent of bandwidth used by chroma
 
     uint32_t        hw_cfg_old;
 } t_vio;
@@ -102,7 +103,7 @@ int vio_drv_decodex(t_vio* handle, t_video_timing* p_vt, int advcnt, uint32_t de
 int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt, uint32_t device);
 int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, uint32_t device);
 
-int vio_drv_set_bandwidth(t_vio* handle, int bandwidth);
+int vio_drv_set_bandwidth(t_vio* handle, int bandwidth, int chroma_percent);
 int vio_drv_set_format_in(t_vio* handle, t_video_format f);
 int vio_drv_set_format_out(t_vio* handle, t_video_format f);
 int vio_drv_set_format_proc(t_vio* handle, t_video_format f);
