@@ -34,16 +34,23 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, t_si598* si598, int in, int out, 
             fout = out;
         }
     } else {
-
-        if ((out > 147000000) && (out < 150000000)) {
+        if ((out > 148433175) && (out < 148566825)) {
             fout = 148500000;
         }
 
-        if ((out > 73000000) && (out < 76000000)) {
+        if ((out > 148284889) && (out < 148418406)) {
+            fout = 148351648;
+        }
+
+        if ((out > 74216587) && (out < 74283412)) {
             fout = 74250000;
         }
 
-        if ((out > 12000000) && (out < 15000000)) {
+        if ((out > 74142444) && (out < 74209203)) {
+            fout = 74175824;
+        }
+
+        if ((out > 13493925) && (out < 13506075)) {
             fout = 13500000;
         }
     }
@@ -68,22 +75,8 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, t_si598* si598, int in, int out, 
 
         // fin = fout / set SI598 output frequency
         if (out != 0) {
-            if (fout == 148500000) {
-                set_si598_output_frequency (si598, 148);
-                pll->fin[0] = 148500000;
-            }
-            if (fout == 74250000) {
-                if (advcnt == 4) {
-                    set_si598_output_frequency (si598, 148);
-                } else {
-                    set_si598_output_frequency (si598, 74);
-                }
-                pll->fin[0] = 74250000;
-            }
-            if (fout == 13500000) {
-                set_si598_output_frequency (si598, 27);
-                pll->fin[0] = 13500000;
-            } 
+            set_si598_output_frequency (si598, (uint32_t)fout);
+            pll->fin[0] = fout;
         }
 
         if (in == 1) {

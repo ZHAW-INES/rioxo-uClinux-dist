@@ -64,33 +64,38 @@ void set_si598_small_frequency_change(t_si598 *handle, uint64_t rfreq_i)
 }
 
 
-void set_si598_output_frequency (t_si598 *handle, uint8_t frequency) 
+void set_si598_output_frequency (t_si598 *handle, uint32_t frequency) 
 {
     switch (frequency) {
-        case (13):  handle->n1     = 0x5B;
-                    handle->hs_div = 0x00;
-                    handle->rfreq  = ((uint64_t)13500000 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;   // rfreq  ~ 0x0871A781FE
-                    //handle->delta  = (uint64_t)SI598_CONTROL_MAX_PPM * handle->rfreq / (uint64_t)1000000;
-                    break;
-        case (27):  handle->n1     = 0x1B;
-                    handle->hs_div = 0x03;
-                    handle->rfreq  = ((uint64_t)27000000 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;   // rfreq  ~ 0x0871A781FE
-                    //handle->delta  = (uint64_t)SI598_CONTROL_MAX_PPM * handle->rfreq / (uint64_t)1000000;
-                    break;
-        case (74):  handle->n1     = 0x09;
-                    handle->hs_div = 0x03;
-                    handle->rfreq  = ((uint64_t)74250000 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;   // rfreq  ~ 0x084B0FA8D1
-                    //handle->delta  = (uint64_t)SI598_CONTROL_MAX_PPM * handle->rfreq / (uint64_t)1000000;
-                break;
-        case (148): handle->n1     = 0x03;
-                    handle->hs_div = 0x05;
-                    handle->rfreq  = ((uint64_t)148500000 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;  // rfreq  ~ 0x0887B6473D
-                    //handle->delta  = (uint64_t)SI598_CONTROL_MAX_PPM * handle->rfreq / (uint64_t)1000000;
-                break;
-        default:    handle->n1     = 0x00;
-                    handle->hs_div = 0x00;
-                    handle->rfreq  = 0x0000000000;
-                    //handle->delta  = 0x0000000000;
+        case (13500000):    handle->n1     = 0x1B;  // 13.5MHz -> Output 27MHz (Clock is divided in half in gateware)
+                            handle->hs_div = 0x03;
+                            handle->rfreq  = ((uint64_t)27000000 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;
+                            handle->mode   = SI598_MODE_SD;
+                            break;
+        case (74250000):    handle->n1     = 0x09;  // 74.25MHz
+                            handle->hs_div = 0x03;
+                            handle->rfreq  = ((uint64_t)74250000 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;
+                            handle->mode   = SI598_MODE_HD;
+                            break;
+        case (74175824):    handle->n1     = 0x09;  // 74.25MHz / 1.001
+                            handle->hs_div = 0x03;
+                            handle->rfreq  = ((uint64_t)74175824 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;
+                            handle->mode   = SI598_MODE_HD;
+                            break;
+        case (148500000):   handle->n1     = 0x03;  // 148.5MHz
+                            handle->hs_div = 0x05;
+                            handle->rfreq  = ((uint64_t)148500000 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;
+                            handle->mode   = SI598_MODE_3G;
+                            break;
+        case (148351648):   handle->n1     = 0x03;  // 148.5MHz / 1.001
+                            handle->hs_div = 0x05;
+                            handle->rfreq  = ((uint64_t)148351648 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;
+                            handle->mode   = SI598_MODE_3G;
+                            break;
+        default:            handle->n1     = 0x00;
+                            handle->hs_div = 0x00;
+                            handle->rfreq  = 0x0000000000;
+                            handle->mode   = 0;
     }
 
     set_si598_output_register(handle);
@@ -145,6 +150,7 @@ void si598_clock_control_handler (t_si598 *handle)
     uint32_t image_offset;
     int32_t  image_offset_signed;
     int32_t  clk_offset;
+    int      tmp;
 
     if (handle->active) {
 
@@ -163,62 +169,75 @@ void si598_clock_control_handler (t_si598 *handle)
         handle->mean_2 = (handle->mean_2 * 49/50) + (handle->mean_1 * 1/50);
         clk_offset = (int32_t)(handle->mean_2 >> 32);
 
-        // integrator (delimit to max 50ppm frequency change)
-        if ((handle->control_i < ((int64_t)(handle->rfreq/1000000*SI598_CONTROL_MAX_PPM)<<32)) && (clk_offset > 0)) {
-            handle->control_i += ((((int64_t)clk_offset)<<32) * SI598_CONTROL_I * SI598_CONTROL_SAMPLING_RATE);
-        }
-        if ((handle->control_i > -((int64_t)(handle->rfreq/1000000*SI598_CONTROL_MAX_PPM)<<32)) && (clk_offset < 0)) {
-            handle->control_i += ((((int64_t)clk_offset)<<32) * SI598_CONTROL_I * SI598_CONTROL_SAMPLING_RATE);
-        }
+        // use 2 different clock controllers: one for SD and one for HD/3G (because of jitter reduction)
+        if (handle->mode == SI598_MODE_SD) {
 
-        // PI controller
-        rfreq_control = handle->rfreq - (SI598_CONTROL_P * clk_offset + (handle->control_i>>32));
+            // 2 step control (+/-50ppm clock offset)
+            if ((clk_offset > 100) || (clk_offset < -100)) {
+                handle->frequency_change = true;
+            }
 
-
-
-
-/*
-        // 2 step control (+/-5ppm clock offset)
-        if ((clk_offset > 100) || (clk_offset < -100)) {
-            handle->frequency_change = true;
-        }
-
-        if (clk_offset < 0) {
-            handle->too_fast = false;
-        } else {
-            handle->too_fast = true;
-        }
-
-        rfreq_control = handle->rfreq_control_old;
-
-        if (handle->frequency_change) {
-            if (handle->too_fast) {
-                if (rfreq_control < handle->rfreq - (handle->rfreq/1000000*5)) {      // max. 5 PPM
-                    handle->frequency_change = false;
-                } else {
-                    rfreq_control = handle->rfreq_control_old - 1000;
-                }
+            // measure image offset change in 1 sec
+            if (handle->speed_count > SI598_CONTROL_SAMPLES_PER_SECOND) {
+                handle->speed_count = 0;
+                tmp = handle->speed;
+                handle->speed = handle->speed_tmp / SI598_CONTROL_SAMPLES_PER_SECOND;
+                handle->speed_result = (handle->speed - tmp);
+                handle->speed_tmp = 0;
             } else {
-                if (rfreq_control > handle->rfreq + (handle->rfreq/1000000*5)) {      // max. 5 PPM
-                    handle->frequency_change = false;
+                handle->speed_count ++;
+                handle->speed_tmp += image_offset_signed;; //clk_offset; //image_offset_signed;
+            }
+
+            rfreq_control = handle->rfreq_control_old;
+
+            if (handle->frequency_change) {
+                if (clk_offset > 0) {
+                    if (rfreq_control < handle->rfreq - (handle->rfreq/1000000*SI598_CONTROL_MAX_PPM)) {      // max. 50 PPM
+                        handle->frequency_change = false;
+                    } else {
+                        if (!((handle->speed_result < -20) && (rfreq_control < handle->rfreq))) {
+                            rfreq_control = handle->rfreq_control_old - SI598_CONTROL_MAX_STEP;
+                        }
+                    }
                 } else {
-                    rfreq_control = handle->rfreq_control_old + 1000;
+                    if (rfreq_control > handle->rfreq + (handle->rfreq/1000000*SI598_CONTROL_MAX_PPM)) {      // max. 50 PPM
+                        handle->frequency_change = false;
+                    } else {
+                        if (!((handle->speed_result > 20) && (rfreq_control > handle->rfreq))) {
+                            rfreq_control = handle->rfreq_control_old + SI598_CONTROL_MAX_STEP;
+                        }
+                    }
                 }
             }
-        }
-*/
 
-        // delimit frequency change to reduce jitter
-        if (rfreq_control > (handle->rfreq_control_old + SI598_CONTROL_MAX_STEP)) {
-            rfreq_control = (handle->rfreq_control_old + SI598_CONTROL_MAX_STEP);
-        }
-        if (rfreq_control < (handle->rfreq_control_old - SI598_CONTROL_MAX_STEP)) {
-            rfreq_control = (handle->rfreq_control_old - SI598_CONTROL_MAX_STEP);
+        } else {
+
+            // integrator (delimit to max 50ppm frequency change)
+            if ((handle->control_i < ((int64_t)(handle->rfreq/1000000*SI598_CONTROL_MAX_PPM)<<32)) && (clk_offset > 0)) {
+                handle->control_i += ((((int64_t)clk_offset)<<32) * SI598_CONTROL_I * SI598_CONTROL_SAMPLING_RATE);
+            }
+            if ((handle->control_i > -((int64_t)(handle->rfreq/1000000*SI598_CONTROL_MAX_PPM)<<32)) && (clk_offset < 0)) {
+                handle->control_i += ((((int64_t)clk_offset)<<32) * SI598_CONTROL_I * SI598_CONTROL_SAMPLING_RATE);
+            }
+
+            // PI controller
+            rfreq_control = handle->rfreq - ((SI598_CONTROL_P * clk_offset) + (handle->control_i>>32));
+
+            // delimit frequency change to reduce jitter
+            if (rfreq_control > (handle->rfreq_control_old + SI598_CONTROL_MAX_STEP)) {
+                rfreq_control = (handle->rfreq_control_old + SI598_CONTROL_MAX_STEP);
+            }
+            if (rfreq_control < (handle->rfreq_control_old - SI598_CONTROL_MAX_STEP)) {
+                rfreq_control = (handle->rfreq_control_old - SI598_CONTROL_MAX_STEP);
+            }
         }
 
         // debug messages
-        //printk("\n %i |  %i  |  ", image_offset_signed, clk_offset);
-        //printk("%i ", (int32_t)(handle->control_i >> 32));
+        //printk("\n si598: %i  ", image_offset_signed);
+        //printk("%i |", (int32_t)(handle->control_i >> 32));
+        //printk(" %02x", (rfreq_control >> 32));
+        //printk("%08x  ", rfreq_control);
 
         // write new frequency to SI598
         if (handle->rfreq_control_old != rfreq_control) {

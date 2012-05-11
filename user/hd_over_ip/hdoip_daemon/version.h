@@ -2,10 +2,10 @@
 #define VERSION_H_
 
 /* [31 .. 16] = decimal number; [15 .. 0] = after comma number */
-#define VERSION_SOFTWARE        0x00010008
+#define VERSION_SOFTWARE        0x00010009
 
 // version tag (max. 50 letters)
-#define VERSION_TAG             "dhcp"
+#define VERSION_TAG             "SDI redesign"
 
 
 #endif /* VERSION_H_ */

@@ -42,7 +42,6 @@ void hoi_drv_init(t_hoi* handle)
     handle->p_video_mux     = ioremap(BASE_VIDEO_MUX,   0xffffffff);
     handle->p_spi_tx        = ioremap(BASE_SPI_TX,      0xffffffff);
     handle->p_spi_rx        = ioremap(BASE_SPI_RX,      0xffffffff);
-    handle->p_si598         = ioremap(BASE_SI598,       0xffffffff);
 
 
     // init
@@ -68,11 +67,6 @@ void hoi_drv_init(t_hoi* handle)
         i2c_drv_init(&handle->i2c_rx, handle->p_rx, 400000);
     }
 
-    // init sdi clock generator with 400kHz
-    if (bdt_return_device(&handle->bdt) == BDT_ID_SDI8_BOARD) {
-        i2c_drv_init(&handle->i2c_si598, handle->p_si598, 400000);
-    }
-
     // init
     led_drv_init(&handle->led, &handle->i2c_tag_vid, &handle->i2c_tag_aud, handle->p_led, &handle->bdt);
     eti_drv_set_ptr(&handle->eti, handle->p_esi);
@@ -87,7 +81,7 @@ void hoi_drv_init(t_hoi* handle)
     stream_sync_init(&handle->sync, SIZE_MEANS, SIZE_RISES, handle->p_aso, handle->p_vso, handle->p_tmr, DEAD_TIME, P_GAIN, I_GAIN, INC_PPM);
 
     if (bdt_return_device(&handle->bdt) == BDT_ID_SDI8_BOARD) {
-        si598_clock_control_init(&handle->si598, &handle->i2c_si598, handle->p_vio);
+        si598_clock_control_init(&handle->si598, &handle->i2c_tag_vid, handle->p_vio);
     }
 
     hoi_drv_stop(handle);

@@ -1,12 +1,15 @@
 #ifndef STREAM_SYNC_CFG_H_
 #define STREAM_SYNC_CFG_H_
 
+// optimal values for clock controller
+// P_GAIN = 5000
+// I_GAIN = 500
 
 #define SIZE_MEANS			        (0x000001F4)
 #define SIZE_RISES                  (0x000001F4)
 #define DEAD_TIME                   (0x000001F3)
-#define P_GAIN                      (0x00005000)
-#define I_GAIN                      (0x00000500)
+#define P_GAIN                      (0x00000005)
+#define I_GAIN                      (0x00000001)
 #define INC_PPM                     (0x00000064)
 
 #define STATISTIC_REG_OFFSET_VID    (0x00000080)
