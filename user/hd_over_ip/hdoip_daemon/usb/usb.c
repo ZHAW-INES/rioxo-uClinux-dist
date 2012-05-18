@@ -438,7 +438,7 @@ void usb_attach_device(t_usb_devices* old_values, char* ip, char* device, char* 
         if (!strcmp(type, "mouse")) {
             report(INFO "connect mouse");
             // start with delay (wait until device is attached to USBIP)
-            old_values->device_queue_mouse = USB_QUEUE_ADD;
+            old_values->device_queue_mouse = USB_QUEUE_ADD*2;
         } else {
             if (!strcmp(type, "keyboard")) {
                 report(INFO "connect keyboard");

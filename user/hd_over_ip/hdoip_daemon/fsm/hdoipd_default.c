@@ -12,7 +12,7 @@
 void hdoipd_set_default()
 {
     reg_set("system-ifname", "eth0");
-    reg_set("system-hostname", "rioxo_0");
+    reg_set("system-hostname", "device_0");
     reg_set("system-dev-caption", "e.q. blu-ray player");
     reg_set("system-ip", "192.168.1.200");
     reg_set("system-subnet", "255.255.255.0");

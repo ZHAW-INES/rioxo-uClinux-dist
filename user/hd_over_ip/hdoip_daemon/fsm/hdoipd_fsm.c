@@ -950,7 +950,7 @@ bool hdoipd_init(int drv)
 
         // setup default output
         osd_permanent(true);
-        osd_printf("Welcome to rioxo\n\n");
+        osd_printf("Welcome\n\n");
     }
     unlock("hdoipd_init");
 
@@ -963,8 +963,8 @@ bool hdoipd_init(int drv)
     // initialize usb handler
     usb_handler_init(&hdoipd.usb_devices);
 
-    hoi_drv_wdg_init(2000000000); //set and start watchdog (to 20 sec.)
-    hoi_drv_wdg_enable();
+    //hoi_drv_wdg_init(2000000000); //set and start watchdog (to 20 sec.)
+    //hoi_drv_wdg_enable();
     report(INFO "START WATCHDOG");
     return true;
 }
