@@ -545,6 +545,25 @@ void hdoipd_fsm_vtb(uint32_t event)
     }
 }
 
+void show_local_ip_address_on_osd()
+{
+    int fd;
+    struct ifreq ifr;
+
+    if(hdoipd_rsc(RSC_ETH_LINK)) {
+        fd = socket(AF_INET, SOCK_DGRAM, 0);
+        ifr.ifr_addr.sa_family = AF_INET;           // get an IPv4 IP address
+        strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);  // get IP address attached to "eth0"
+        ioctl(fd, SIOCGIFADDR, &ifr);
+        close(fd);
+
+        // show IP address on OSD
+        osd_printf("local IP address: %s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+    } else {
+        osd_printf("local IP address not available\n");
+    }
+}
+
 void hdoipd_event(uint32_t event)
 {
     uint32_t buff;
@@ -778,7 +797,7 @@ void hdoipd_event(uint32_t event)
         case E_VIO_ADV212_CFTH+3:
         break;
         case E_BDT_RESET_BUTTON:
-            //osd_printf("TODO: show IP address\n");
+            show_local_ip_address_on_osd();
         break;
     }
 

@@ -161,6 +161,8 @@ int vio_drv_setup_osd(t_vio* handle, t_osd_font* font, uint32_t device)
 {
 	vio_osd_init(handle->p_vio, font, device);
 
+    vio_enable_output_timing(handle->p_vio);
+
 	VIO_REPORT_FONT(font);
 
 	return ERR_VIO_SUCCESS;
