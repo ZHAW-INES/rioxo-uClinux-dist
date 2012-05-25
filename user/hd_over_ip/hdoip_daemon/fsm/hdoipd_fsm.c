@@ -777,6 +777,9 @@ void hdoipd_event(uint32_t event)
         case E_VIO_ADV212_CFTH+2:
         case E_VIO_ADV212_CFTH+3:
         break;
+        case E_BDT_RESET_BUTTON:
+            //osd_printf("TODO: show IP address\n");
+        break;
     }
 
         if (hdoipd_state(HOID_VRB)) {

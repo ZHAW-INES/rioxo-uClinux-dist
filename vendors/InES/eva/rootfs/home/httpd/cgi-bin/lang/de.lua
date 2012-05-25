@@ -2,7 +2,7 @@
 module (..., package.seeall)
 
 label = {
-    page_name = "Rioxo&reg : ";
+    page_name = "Emcore : ";
 
     u_decimal = "[dezimal]";
     u_mbps = "[MBit / s]";
@@ -101,8 +101,8 @@ label = {
 
     -- Page USB
     p_usb_mode = "Betriebsart";
-    p_usb_host = "Host (ein USB Ger&auml;t (USB-HUB, Maus oder Tastatur) ist mit diesem Rioxo verbunden)";
-    p_usb_device = "Device (dieses Rioxo ist mit einem PC verbunden)";
+    p_usb_host = "Host (ein USB Ger&auml;t (USB-HUB, Maus oder Tastatur) ist mit diesem Ger&auml;t verbunden)";
+    p_usb_device = "Device (dieses Ger&auml;t ist mit einem PC verbunden)";
     p_usb_off = "Deaktiviert";
     p_usb_label_device = "Angeschlossenes Ger&auml;t";
 

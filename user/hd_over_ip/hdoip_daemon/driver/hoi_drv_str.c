@@ -72,6 +72,8 @@ const char* event_str(uint32_t e)
         case E_VIO_ADV212_CFTH+1: return "ADV212[1] code fifo threshold";
         case E_VIO_ADV212_CFTH+2: return "ADV212[2] code fifo threshold";
         case E_VIO_ADV212_CFTH+3: return "ADV212[3] code fifo threshold";
+
+        case E_BDT_RESET_BUTTON: return "reset button was pressed";
     }
     return "unknown";
 }

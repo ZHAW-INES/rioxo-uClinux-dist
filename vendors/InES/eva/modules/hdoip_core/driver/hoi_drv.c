@@ -219,6 +219,7 @@ void hoi_drv_handler(t_hoi* handle)
     aso_drv_handler(&handle->aso, handle->event);
     eto_drv_handler(&handle->eto, handle->event);
     eti_drv_handler(&handle->eti, handle->event);
+    bdt_drv_handler(handle->p_video_mux, handle->event);
     led_drv_handler(&handle->led);
     stream_sync(&handle->sync);
     

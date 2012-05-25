@@ -40,6 +40,10 @@ void gs2972_driver_init(t_gs2972 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     set_io_exp_tx_pin(handle->p_i2c, TX_AUDIO_1_EN);
     set_io_exp_tx_pin(handle->p_i2c, TX_AUDIO_2_EN);
 
+    // clear rate_sel to set rate for HD video
+    clr_io_exp_tx_pin(handle->p_i2c, TX_RATE_SEL_0);
+    clr_io_exp_tx_pin(handle->p_i2c, TX_RATE_SEL_1);
+
     // clear reset pin
     bdt_drv_clear_reset_1(video_mux_ptr);
 
@@ -49,8 +53,6 @@ void gs2972_driver_init(t_gs2972 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     // set drive strength to min
     spi_write_reg_16(handle->p_spi, GS2972_DRIVE_STRENGTH, DRIVE_STRENGTH_RW_4_MA);
     spi_write_reg_16(handle->p_spi, GS2972_DRIVE_STRENGTH2, DRIVE_STRENGTH2_RW_4_MA);
-
-
 }
 
 void gs2972_handler(t_gs2972 *handle, t_queue *event_queue)
@@ -86,10 +88,12 @@ void gs2972_driver_set_data_rate(t_gs2972 *handle, uint32_t pfreq)
 
 void gs2972_debug(t_gs2972 *handle)
 {
+    uint16_t format   = spi_read_reg_16(handle->p_spi, 0x04);
     uint16_t struc_1  = spi_read_reg_16(handle->p_spi, 0x12);
     uint16_t struc_2  = spi_read_reg_16(handle->p_spi, 0x13);
     uint16_t struc_3  = spi_read_reg_16(handle->p_spi, 0x14);
     uint16_t struc_4  = spi_read_reg_16(handle->p_spi, 0x15);
-    printk("\nlines per frame: %i\nwords per line: %i\n a f: %i\n a f: %i \n", struc_1, struc_2, struc_3, struc_4);
+    printk("\nlines per frame: %i\nwords per line: %i\n a f: %i\n a f: %i", struc_1, struc_2, struc_3, struc_4);
+    printk("\n hlock: %i, vlock: %i, std_lock: %i, interlaced: %i, vid_std: %02x\n", (format & 0x01), (format & 0x02), (format & 0x04), (format & 0x10), ((format & 0x03E0)>>5));
 }
 

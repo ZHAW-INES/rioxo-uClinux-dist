@@ -105,5 +105,10 @@
 #define E_VIO_ADV212_CFERR      (E_VIO_ID + 8)
 #define E_VIO_ADV212_CFTH       (E_VIO_ID + 12)
 
+/* Board detection */
+#define E_BDT_ID                (0xC0000000)
+#define E_BDT_CNT               1
+#define E_BDT_RESET_BUTTON      (E_BDT_ID + 1)
+
 #endif /* EVENT_H_ */ 
 

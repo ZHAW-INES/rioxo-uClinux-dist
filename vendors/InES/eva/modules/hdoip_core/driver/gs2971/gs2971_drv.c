@@ -216,7 +216,6 @@ void gs2971_get_video_timing_info(t_gs2971 *handle)
 
 void gs2971_debug(t_gs2971 *handle)
 {
-
 }
 
 bool gs2971_get_interlaced(t_gs2971 *handle)

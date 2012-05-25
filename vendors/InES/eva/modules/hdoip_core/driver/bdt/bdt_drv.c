@@ -69,3 +69,14 @@ void bdt_drv_clear_reset_1(void* p_video_mux)
     uint32_t tmp = bdt_get_reset_chip(p_video_mux);
     bdt_set_reset_chip_1(p_video_mux, tmp);
 }
+
+void bdt_drv_handler(void* p_video_mux, t_queue* event)
+{
+    if (bdt_get_reset_button(p_video_mux)) {
+        // send event to user space that reset button was pressed
+        queue_put(event, E_BDT_RESET_BUTTON);
+        // clear flag that button was pressed
+        bdt_set_reset_button(p_video_mux);
+        bdt_clr_reset_button(p_video_mux);
+    }
+}

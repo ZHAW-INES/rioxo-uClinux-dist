@@ -306,6 +306,11 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
         vio_get_timing(handle->p_vio, &msg->timing);
     }
 
+    // if sdi, set output data rate
+    if (handle->drivers & DRV_GS2972) {
+        gs2972_driver_set_data_rate(&handle->gs2972, msg->timing.pfreq);
+    }
+
     memcpy(&handle->vio.timing, &msg->timing, sizeof(t_video_timing));
 
     // setup vio
