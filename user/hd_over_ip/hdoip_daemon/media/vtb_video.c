@@ -6,6 +6,7 @@
  */
 
 #include "hdoipd.h"
+#include "hdoipd_osd.h"
 #include "hoi_drv_user.h"
 #include "vtb_video.h"
 #include "hdoipd_fsm.h"
@@ -219,6 +220,8 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
 
     add_client_to_vtb(MEDIA_IS_VIDEO, cookie->remote.address);
 
+    osd_permanent(false);
+
     return RSCP_SUCCESS;
 }
 
@@ -249,6 +252,10 @@ int vtb_video_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t_rsc
 
     multicast_remove_edid(cookie->remote.address);
     remove_client_from_vtb(MEDIA_IS_VIDEO, cookie->remote.address);
+
+    hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
+    osd_permanent(true);
+    osd_printf("vtb.video connection stopped...\n");
 
     return RSCP_SUCCESS;
 }
@@ -345,6 +352,9 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
                 // (will be executed after all events are processed)
                 cookie->timeout = 0;
                 rscp_listener_add_kill(&hdoipd.listener, media);
+                hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
+                osd_permanent(true);
+                osd_printf("vtb.video connection lost...\n");
             }
         break;
     }

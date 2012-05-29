@@ -61,9 +61,9 @@ void hdoipd_osd_activate(int res)
     }
 
     if (!(hdoipd.rsc_state & RSC_OSD)) {
-        // if we dont have active video IN or Out -> create own resolution
+        // if we dont have active video Out -> create own resolution
         // else we use the present video timing
-        if (!(hdoipd_rsc(RSC_VIDEO_IN | RSC_VIDEO_OUT))) {
+        if (!(hdoipd_rsc(RSC_VIDEO_OUT))) {
             report(CHANGE "activate %dx%d@%d debug output screen for osd", h_pixel, v_pixel, fps);
             if ((timing = hoi_res_timing(h_pixel, v_pixel, fps))) {
                 hoi_drv_set_timing(timing);
