@@ -261,6 +261,8 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
 	int ret;
     t_edid edid_old;
     char remote_uri[100];
+    char remote_uri_converted[100];
+    struct hostent* host;
 
     if (!hdoipd.alive_check.vtb) {
         if (hdoipd.alive_check.init_done) {
@@ -291,7 +293,10 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
         if (!alive_check_server_handler(handle, hello_msg, (msg_length+(edid_length*2)))) {
             if (!alive_check_test_msg_vrb_alive(hello_msg, client_ip, edid_table)) {
 
-                report(INFO "HELLO received from: %s", client_ip);
+                host = gethostbyname(client_ip);
+                strcpy(remote_uri_converted, inet_ntoa(*(struct in_addr*)host->h_addr_list[0]));
+
+                report(INFO "HELLO received from: %s (%s)", client_ip, remote_uri_converted);
 
                 // use default edid if requested
                 if (reg_test("edid-mode", "default")) {
@@ -307,7 +312,8 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
 
                     // only handle hello from remote uri
                     sprintf(remote_uri, "%s", reg_get("remote-uri"));
-                    if (strcmp(&(remote_uri[7]), client_ip) == 0) {
+
+                    if ((strcmp(&(remote_uri[7]), client_ip) == 0) || (strcmp(&(remote_uri[7]), remote_uri_converted) == 0)) {
                         if(!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
                             // read old edid
                             ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
