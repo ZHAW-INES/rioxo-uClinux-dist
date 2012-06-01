@@ -5,7 +5,7 @@
 #define VERSION_SOFTWARE        0x00010009
 
 // version tag (max. 50 letters)
-#define VERSION_TAG             "SDI redesign"
+#define VERSION_TAG             "USB Bugfix"
 
 
 #endif /* VERSION_H_ */

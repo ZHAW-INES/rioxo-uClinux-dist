@@ -151,66 +151,6 @@ void usb_get_dev(char* s)
     }
 }
 
-/** search in dev/input/eventX for mouse or keyboard
- *
- * - returns path of input device in "event"
- * - type of device (mouse or keyboard) must be set in "type"
- *
- */
-void usb_search_event(char* type, char* event) {
-
-    int fd = -1;
-    int active_event[] = {USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN, USB_TYPE_UNKNOWN};
-    int active_event_cnt = 0;
-    int i;
-	unsigned long bit[EV_MAX][NBITS(KEY_MAX)];
-    char path[100];
-
-    // search for connected devices to /dev/input/eventX
-    for (i=0; i<4; i++) {
-        sprintf(path, "/dev/input/event%i", i);
-        fd = open(path, O_RDONLY);
-        if (fd >= 0) {
-            if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(bit[EV_KEY])), bit[EV_KEY]) >= 0) {
-                    // Check for some common keyboard keys to be present
-                    if (test_bit(KEY_ESC, bit[EV_KEY]) ||
-                    test_bit(KEY_Q, bit[EV_KEY]) ||
-                    test_bit(KEY_W, bit[EV_KEY]) ||
-                    test_bit(KEY_E, bit[EV_KEY]) ||
-                    test_bit(KEY_R, bit[EV_KEY]) ||
-                    test_bit(KEY_T, bit[EV_KEY]) ||
-                    test_bit(KEY_ENTER, bit[EV_KEY])) {
-                    active_event[i] = USB_TYPE_KEYBOARD;
-                }
-            }
-            if (ioctl(fd, EVIOCGBIT(EV_REL, sizeof(bit[EV_REL])), bit[EV_REL]) >= 0) {
-                // Check for the X and Y mouse axes to be present
-                if (test_bit(REL_X, bit[EV_REL]) ||
-                    test_bit(REL_Y, bit[EV_REL])) {
-                    active_event[i] = USB_TYPE_MOUSE;
-                }
-            }
-            active_event_cnt ++;
-            close(fd);
-        }
-    }
-
-    // return node of connected device in variable "event"
-    sprintf(event, "no device");
-    for (i=0; i<4; i++) {
-        if (!strcmp(type, "mouse")) {
-            if (active_event[i] == USB_TYPE_MOUSE) {
-                sprintf(event, "/dev/input/event%i", i);
-            }
-        }
-        if (!strcmp(type, "keyboard")) {
-            if (active_event[i] == USB_TYPE_KEYBOARD) {
-                sprintf(event, "/dev/input/event%i", i);
-            }
-        }
-    }
-}
-
 /** Check if device on "node" is a mouse or a keyboard
  *
  */
@@ -472,7 +412,6 @@ void usb_detach_device(int vhci_port)
 void usb_device_handler(t_usb_devices* old_values)
 {
     char tmp[255];
-    char device[100];
     int device_count;
     int i, j;
     bool new_device[] = {true, true, true, true ,true ,true , true, true, true, true};
@@ -609,25 +548,26 @@ void usb_device_handler(t_usb_devices* old_values)
                 }  
             }
 
-
             if (reg_test("usb-mode", "device")) {
                 if ((old_values->device_queue_mouse & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
-                    //connect as mouse
-                    usb_search_event("mouse", device);
-                    if (strcmp(device, "no device")) {
-                        sprintf(tmp, "hdoip_usbipd mouse %s /dev/hidg1 &", device);
-                        report(INFO "%s", tmp);
-                        system(tmp);
-                    }
+                    // mouse is attached to event0 or event1, but we dont know to which event, so we try both
+                    sprintf(tmp, "hdoip_usbipd xxxxxxxxx /dev/input/event0 xxxxxxxxxx &");
+                    report(INFO "%s", tmp);
+                    system(tmp);
+
+                    sprintf(tmp, "hdoip_usbipd xxxxxxxxx /dev/input/event1 xxxxxxxxx &");
+                    report(INFO "%s", tmp);
+                    system(tmp);
                 }
                 if ((old_values->device_queue_keyboard & USB_QUEUE_TEST) == USB_QUEUE_TEST) {
-                    //connect as keyboard
-                    usb_search_event("keyboard", device);
-                    if (strcmp(device, "no device")) {
-                        sprintf(tmp, "hdoip_usbipd keyboard %s /dev/hidg0 &", device);
-                        report(INFO "%s", tmp);
-                        system(tmp);
-                    }
+                    // keyboard is attached to event0 or event1, but we dont know to which event, so we try both
+                    sprintf(tmp, "hdoip_usbipd xxxxxxxxx /dev/input/event0 xxxxxxxxxx &");
+                    report(INFO "%s", tmp);
+                    system(tmp);
+
+                    sprintf(tmp, "hdoip_usbipd xxxxxxxxx /dev/input/event1 xxxxxxxxx &");
+                    report(INFO "%s", tmp);
+                    system(tmp);
                 }
                 old_values->device_queue_mouse = old_values->device_queue_mouse >> 1;
                 old_values->device_queue_keyboard = old_values->device_queue_keyboard >> 1;
