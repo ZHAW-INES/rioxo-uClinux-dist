@@ -187,6 +187,7 @@ int main(int argc, char **argv)
     char type[20];
     char gdev[20];
 	int efd = -1, gfd = -1;
+    bool active = false;
 
 	while ((o = getopt_long(argc, argv, OPTSTRING, options, NULL)) != -1) {
 		switch (o) {
@@ -225,6 +226,8 @@ int main(int argc, char **argv)
     if (write_to_file(evdev, true))
 		goto out;
 
+    active = true;
+
 	efd = open(evdev, O_RDONLY);
 	if (efd < 0) {
 		err("failed to open event device %s: %s\n", evdev, strerror(errno));
@@ -254,7 +257,8 @@ int main(int argc, char **argv)
 	rc = hdoip_usbip_event_loop(efd, gfd, type);
 
 out:
-    write_to_file(evdev, false);
+    if (active)
+        write_to_file(evdev, false);
 	if (gfd >= 0)
 		close(gfd);
 	if (efd >= 0)
