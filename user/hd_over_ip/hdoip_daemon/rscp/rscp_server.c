@@ -13,6 +13,7 @@
 #include "hdoipd.h"
 #include "hoi_drv_user.h"
 
+
 t_rscp_server* rscp_server_create(int fd, uint32_t addr)
 {
     static int nr = 1;
@@ -87,7 +88,6 @@ int rscp_server_thread(t_rscp_server* handle)
 #ifdef REPORT_RSCP
         report(" < RSCP Server [%d] %s", handle->nr, common.rq.method);
 #endif
-
         // process request (function responses for itself)
         n = ((frscpm*)method->fnc)(media, &buf, &handle->con);
         // media may be not valid anymore!

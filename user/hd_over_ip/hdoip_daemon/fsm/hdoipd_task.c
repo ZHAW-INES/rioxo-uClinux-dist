@@ -761,4 +761,3 @@ void hdoipd_register_task()
     set_listener("edid-mode", task_set_edid_mode);
 }
 
-

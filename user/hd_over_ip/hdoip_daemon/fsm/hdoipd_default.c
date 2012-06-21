@@ -183,4 +183,3 @@ void hdoipd_registry_update()
         report(INFO "unknown config version");
     }
 }
-
