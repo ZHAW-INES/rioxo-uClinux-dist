@@ -4,13 +4,13 @@ require("hdoip.html")
 require("hdoip.pipe")
 
 local REG_ST_URI_LABEL = "st_uri"
-local REG_ST_RSCP_PORT_LABEL = "st_rscp_port"
 local REG_ST_BW_LABEL = "st_bw"
 local REG_ST_BW_CHROMA_LABEL = "st_bw_chroma"
 local REG_ST_NET_DELAY_LABEL = "net_delay"
 local REG_ST_OSD_LABEL = "osd_time"
 local REG_ST_VID_PORT_LABEL = "vid_port"
 local REG_ST_AUD_PORT_LABEL = "aud_port"
+local REG_ST_RSCP_PORT_LABEL = "rscp_port"
 
 local MEDIA_SEL_AUD = "audio"
 local MEDIA_SEL_VID = "video"
@@ -27,9 +27,11 @@ function show(t)
         
         t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
         t.aud_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_PORT)
+        t.rscp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RSCP_PORT)
         t.edit_vid_port = 0
         t.edit_aud_port = 0
-        
+        t.edit_rscp_port = 0
+
         if(hdoip.pipe.getParam(hdoip.pipe.REG_FORCE_HDCP) == "true") then
             t.hdcp_force = 1
         else 
@@ -130,6 +132,21 @@ function show(t)
             end
         else
             t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
+        end
+
+        if(t.save_rscp_port ~= nil) then 
+            if(tonumber(t.rscp_port) ~= nil) then
+                t.rscp_port = tonumber(t.rscp_port)
+                if((t.rscp_port >= 0) and (t.rscp_port < 65536)) then
+                    hdoip.pipe.setParam(hdoip.pipe.REG_ST_RSCP_PORT, t.rscp_port)
+                else
+                    hdoip.html.AddError(t, label.err_rscp_port_not_in_range)
+                end
+            else
+                hdoip.html.AddError(t, label.err_rscp_port_not_number)
+            end
+        else
+            t.rscp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RSCP_PORT)
         end
 
         if(t.mode_vtb) then
@@ -262,6 +279,16 @@ function show(t)
     else
         hdoip.html.Text(t.aud_port)                                                         hdoip.html.TableInsElement(1); 
         hdoip.html.FormCheckbox("edit_aud_port", 1, label.button_edit, t.edit_aud_port)     hdoip.html.TableInsElement(1);
+    end
+
+    hdoip.html.Text(label.p_st_rscp_port);                                                  hdoip.html.TableInsElement(1);
+    if((t.edit_rscp_port ~= nil) and (t.edit_rscp_port == "1")) then
+        hdoip.html.FormText(REG_ST_RSCP_PORT_LABEL, t.rscp_port, 5, 0);                     hdoip.html.TableInsElement(1);
+        hdoip.html.FormHidden("save_rscp_port", 1)
+        hdoip.html.Text(label.u_decimal);                                                   hdoip.html.TableInsElement(1);
+    else
+        hdoip.html.Text(t.rscp_port)                                                        hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("edit_rscp_port", 1, label.button_edit, t.edit_rscp_port)   hdoip.html.TableInsElement(1);
     end
 
     -- VTB specific fields

@@ -110,7 +110,7 @@ void vio_get_timing(void* p, t_video_timing* p_vt)
     p_vt->width     = HOI_RD16(p, VIO_OFF_TM_HA);
     p_vt->hfront    = HOI_RD16(p, VIO_OFF_TM_H);
     p_vt->hpulse    = HOI_RD16(p, VIO_OFF_TM_HP);
-    p_vt->hback     = HOI_RD16(p, VIO_OFF_TM_HB); 
+    p_vt->hback     = HOI_RD16(p, VIO_OFF_TM_HB);
     p_vt->height    = HOI_RD16(p, VIO_OFF_TM_VA);
     p_vt->vfront    = HOI_RD16(p, VIO_OFF_TM_V);
     p_vt->vpulse    = HOI_RD16(p, VIO_OFF_TM_VP);
