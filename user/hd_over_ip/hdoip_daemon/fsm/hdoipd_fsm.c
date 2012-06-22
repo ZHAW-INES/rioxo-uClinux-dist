@@ -990,4 +990,3 @@ bool hdoipd_init(int drv)
     report(INFO "START WATCHDOG");
     return true;
 }
-

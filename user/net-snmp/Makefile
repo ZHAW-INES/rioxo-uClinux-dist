@@ -2,7 +2,7 @@
 # Makefile for net-snmp
 #
 
-VER = net-snmp-5.2.1
+VER = net-snmp-5.7.1
 
 NET_SNMP_CFG = --prefix= 
 
@@ -13,7 +13,8 @@ NET_SNMP_CFG += --with-endianness=little
 endif
 
 ifdef CONFIG_USER_NETSNMP_BUILDSTATIC
-NET_SNMP_CFG += --enable-shared=no
+#NET_SNMP_CFG += --enable-shared=no
+#NET_SNMP_CFG += --with-ldflags=-Bstatic
 NET_SNMP_LIB_EXT = a
 NET_SNMP_EXE_DIR = 
 else
@@ -75,6 +76,8 @@ $(error CONFIG_LIB_LIBSSL not defined)
 else
 NET_SNMP_CFG += --with-openssl=$(ROOTDIR)/lib
 endif
+else
+NET_SNMP_CFG += --without-openssl
 endif
 
 ifdef CONFIG_USER_NETSNMP_OVRDEFAULTS
@@ -87,6 +90,31 @@ NET_SNMP_CFG += --with-enterprise-oid=$(CONFIG_USER_NETSNMP_DEFENTERPRISEOID)
 else
 NET_SNMP_CFG += --with-defaults
 endif
+
+# The additional MIBs
+#NET_SNMP_CFG += --with-mib-modules="../../../../hd_over_ip/hdoip_snmp/status/status"
+
+# To make image smaller
+#NET_SNMP_CFG += --enable-minimialist
+#NET_SNMP_CFG += --disable-debugging
+#NET_SNMP_CFG += --with-transports=UDP
+
+#NET_SNMP_CFG += --with-out-mib-modules="default_modules"
+#NET_SNMP_CFG += --with-mib-modules= "utilities/execute"
+#NET_SNMP_CFG += --with-mib-modules= "mibII/vacm_conf"
+#NET_SNMP_CFG += --with-mib-modules= "mibII/ip"
+#NET_SNMP_CFG += --with-mib-modules= "mibII/interfaces"
+
+#override CFLAGS += -Os
+# Set C and LD falgs to link the addidtional MIBs properly
+#CFLAGS += -I$(STAGEDIR)/usr/include
+#CFLAGS += -I../../../../hd_over_ip/hdoip_daemon/
+#CFLAGS += -I../../../../../vendors/InES/eva/modules/hdoip_core/hal/vid
+#CFLAGS += -std=c99
+#CFLAGS += -fno-tree-loop-optimize
+#LDFLAGS += -L$(STAGEDIR)/usr/include
+LDFLAGS += -Bstatic
+
 
 ifdef CONFIG_USER_NETSNMP_ADDMIBS
 NET_SNMP_CFG += --with-mib-modules=$(CONFIG_USER_NETSNMP_ADDITIONALMIBS)
@@ -107,10 +135,10 @@ build/Makefile: Makefile
 
 romfs:
 ifndef CONFIG_USER_NETSNMP_BUILDSTATIC
-	$(ROMFSINST) -e CONFIG_FMT_USE_FDPIC_ELF build/snmplib/.libs/libnetsnmp.so.5.2.1 /lib/libnetsnmp.so.5
-	$(ROMFSINST) -e CONFIG_FMT_USE_FDPIC_ELF build/agent/.libs/libnetsnmpagent.so.5.2.1 /lib/libnetsnmpagent.so.5
-	$(ROMFSINST) -e CONFIG_FMT_USE_FDPIC_ELF build/agent/.libs/libnetsnmpmibs.so.5.2.1 /lib/libnetsnmpmibs.so.5
-	$(ROMFSINST) -e CONFIG_FMT_USE_FDPIC_ELF build/agent/helpers/.libs/libnetsnmphelpers.so.5.2.1 /lib/libnetsnmphelpers.so.5
+	$(ROMFSINST) -e CONFIG_FMT_USE_FDPIC_ELF build/snmplib/.libs/libnetsnmp.so.30.0.1 /lib/libnetsnmp.so.30
+	$(ROMFSINST) -e CONFIG_FMT_USE_FDPIC_ELF build/agent/.libs/libnetsnmpagent.so.30.0.1 /lib/libnetsnmpagent.so.30
+	$(ROMFSINST) -e CONFIG_FMT_USE_FDPIC_ELF build/agent/.libs/libnetsnmpmibs.so.30.0.1 /lib/libnetsnmpmibs.so.30
+	$(ROMFSINST) -e CONFIG_FMT_USE_FDPIC_ELF build/agent/helpers/.libs/libnetsnmphelpers.so.30.0.1 /lib/libnetsnmphelpers.so.30
 ifdef CONFIG_USER_NETSNMP_APPS_TRAPD
 	$(ROMFSINST) -e CONFIG_FMT_USE_FDPIC_ELF build/apps/.libs/libnetsnmptrapd.so.5.2.1 /lib/libnetsnmptrapd.so.5
 endif

@@ -180,7 +180,7 @@ int detect_keyboard_or_mouse(char *type, char* gdev, int efd)
 int main(int argc, char **argv)
 {
 	int rc = -1;
-	int o;
+	int o, i;
 	struct sigaction act;
 	sigset_t mask;
 	char *evdev;
@@ -228,11 +228,22 @@ int main(int argc, char **argv)
 
     active = true;
 
-	efd = open(evdev, O_RDONLY);
-	if (efd < 0) {
-		err("failed to open event device %s: %s\n", evdev, strerror(errno));
-		goto out;
-	}
+    // poll to open device
+    for (i=0; i<8; i++){
+    	info("Loop %i\n",i);
+      	efd = open(evdev, O_RDONLY);
+  		if (efd < 0) {
+  			if (i == 7){
+  				err("failed to open event device %s: %s\n", evdev, strerror(errno));
+  				goto out;
+  			} else{
+  				usleep(500000);
+  			}
+  		}else{
+  	    	info("Tried to open event dev for %i ms\n",i*500);
+  			break;  //opening file was successful, go on
+  		}
+  	}
 
     if (detect_keyboard_or_mouse(type, gdev, efd) == -1)
         goto out;
