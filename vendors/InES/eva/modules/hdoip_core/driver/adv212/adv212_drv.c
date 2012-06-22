@@ -62,7 +62,7 @@ void adv212_enc_custom_format(uint32_t* p, int size, int interlaced)
 
     adv212_set(p, 0, ADV212_PARAMETER_BASE+ 0, adv212_param(
         ADV212_VFORMAT_CUSTOM,
-        ADV212_PREC_8BIT,
+        ADV212_PREC_10BIT,
         ADV212_CFG_TLEVEL,
         ADV212_UNI_UNIPOLAR_Y | ADV212_UNI_UNIPOLAR_C ));
 
@@ -93,7 +93,7 @@ void adv212_dec_custom_format(uint32_t* p)
 {  
     adv212_set(p, 0, ADV212_PARAMETER_BASE+ 0, adv212_param(
         ADV212_VFORMAT_CUSTOM,
-        ADV212_PREC_8BIT,
+        ADV212_PREC_10BIT,
         0,
         ADV212_UNI_UNIPOLAR_Y | ADV212_UNI_UNIPOLAR_C ));
     adv212_set(p, 1, ADV212_PARAMETER_BASE+ 8, adv212_param(
@@ -491,7 +491,7 @@ int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv)
         o = 0;
         o = adv212_reg_init    (reg, o);
         o = adv212_reg_enc_hvf (reg, o, p_vt->interlaced);
-        o = adv212_reg_mode    (reg, o, 8, adv_comp[p_adv->cnt-1][i]);
+        o = adv212_reg_mode    (reg, o, 10, adv_comp[p_adv->cnt-1][i]);
         o = adv212_reg_hsamples(reg, o, p_vt->width, p_vt->hfront, p_vt->hpulse, p_vt->hback, adv_encd[p_adv->cnt-1][i], adv_scale[p_adv->cnt-1][i]);
         o = adv212_reg_vsamples(reg, o, p_vt->height, p_vt->vfront, p_vt->vpulse, p_vt->vback, p_vt->height_1, p_vt->vfront_1, p_vt->vpulse_1, p_vt->vback_1, p_vt->interlaced);        
         
@@ -548,7 +548,7 @@ int adv212_drv_boot_dec(void* p, t_video_timing* p_vt, t_adv212* p_adv)
         o = 0;
         o = adv212_reg_init         (reg, o);
         o = adv212_reg_dec_hvf_slave(reg, o, p_vt->interlaced);
-        o = adv212_reg_mode         (reg, o, 8, adv_comp[p_adv->cnt-1][i]);
+        o = adv212_reg_mode         (reg, o, 10, adv_comp[p_adv->cnt-1][i]);
         o = adv212_reg_hsamples     (reg, o, p_vt->width, p_vt->hfront, p_vt->hpulse, p_vt->hback, adv_decd[p_adv->cnt-1][i], adv_scale[p_adv->cnt-1][i]);  
         o = adv212_reg_vsamples     (reg, o, p_vt->height, p_vt->vfront, p_vt->vpulse, p_vt->vback, p_vt->height_1, p_vt->vfront_1, p_vt->vpulse_1, p_vt->vback_1, p_vt->interlaced);                
 
