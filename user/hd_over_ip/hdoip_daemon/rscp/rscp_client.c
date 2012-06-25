@@ -96,7 +96,7 @@ t_rscp_client* rscp_client_open(t_node* list, t_rscp_media *media, char* address
         if (uri.port) {
             port = htons(atoi(uri.port));
         } else {
-            port = htons(554);
+            port = htons(reg_get_int("rscp-server-port"));
         }
 #ifdef REPORT_RSCP_CLIENT
         report(" i server name: %s - %s:%d", host->h_name, inet_ntoa(addr), ntohs(port));

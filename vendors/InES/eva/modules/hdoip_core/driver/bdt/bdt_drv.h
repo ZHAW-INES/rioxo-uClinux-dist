@@ -20,11 +20,6 @@
 #define INPUT_MUX_SDI                       0x00000001
 #define INPUT_MUX_HDMI                      0x00000002
 
-#define bdt_set_video_mux(p, v)              
-
-
-
-
 #define bdt_set_video_mux(p, v)             HOI_WR32((p), MUX_CONTROL_OFFSET, ((HOI_RD32((p), MUX_CONTROL_OFFSET) & 0xFFFFFFF0) | (v & 0x0000000F)))
 #define bdt_get_video_mux_status(p)         HOI_RD32((p), MUX_STATUS_OFFSET)
 

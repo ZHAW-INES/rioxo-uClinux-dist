@@ -50,7 +50,7 @@ int join_multicast_group(uint32_t multicast_ip)
     // set interface address
     memset(&addr, 0, sizeof(struct sockaddr_in));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(554);
+    addr.sin_port = reg_get_int("alive-check-port");
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     // open UDP socket

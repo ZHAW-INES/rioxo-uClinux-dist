@@ -15,6 +15,17 @@ local REG_ST_RSCP_PORT_LABEL = "rscp_port"
 local MEDIA_SEL_AUD = "audio"
 local MEDIA_SEL_VID = "video"
 
+function reboot(t)
+    hdoip.html.Header(t, label.page_name .. "Rebooting", script_path)
+    hdoip.html.Title("Reboot")
+    hdoip.html.Text("Please wait until device is rebooted.")
+    hdoip.html.Text("<br>")
+    hdoip.html.Loadbar(0, 30)
+    hdoip.html.Bottom(t)
+    hdoip.pipe.reboot()
+    os.exit(0)
+end
+
 -- ------------------------------------------------------------------
 -- Streamin page
 -- ------------------------------------------------------------------
@@ -139,6 +150,8 @@ function show(t)
                 t.rscp_port = tonumber(t.rscp_port)
                 if((t.rscp_port >= 0) and (t.rscp_port < 65536)) then
                     hdoip.pipe.setParam(hdoip.pipe.REG_ST_RSCP_PORT, t.rscp_port)
+                    hdoip.pipe.setParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT, t.rscp_port)
+                    pages.restart.show(t)
                 else
                     hdoip.html.AddError(t, label.err_rscp_port_not_in_range)
                 end
@@ -234,8 +247,12 @@ function show(t)
 	        end
 	        hdoip.pipe.setParam(hdoip.pipe.REG_ST_MODE_MEDIA, t.media)
         end
-        
+
         hdoip.pipe.getParam(hdoip.pipe.REG_SYS_UPDATE)
+    end
+
+    if(t.button_restart_yes ~= nil) then
+        reboot(t)
     end
 
     hdoip.html.Header(t, label.page_name .. label.page_streaming, script_path)

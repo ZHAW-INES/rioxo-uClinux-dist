@@ -398,9 +398,10 @@ void task_get_system_update(char** p)
         /* vrb alive check */
         if(update_vector & HOID_TSK_UPD_ALIVE) {
 		    report("Updating alive check...");
-            alive_check_server_close(&hdoipd.alive_check);
-            hdoipd.alive_check.init_done = false;
-            alive_check_init_msg_vrb_alive();
+        //    is updated at same time with rscp-port and this needs a restart of the device
+        //    alive_check_server_close(&hdoipd.alive_check);
+        //    hdoipd.alive_check.init_done = false;
+        //    alive_check_init_msg_vrb_alive();
         }
 
 		// -------------------------------------------------------------
