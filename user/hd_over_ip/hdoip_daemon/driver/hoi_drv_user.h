@@ -62,6 +62,7 @@ int hoi_drv_set_mtime(uint32_t p);
 int hoi_drv_get_mtime(uint32_t* p);
 int hoi_drv_set_stime(uint32_t p);
 int hoi_drv_get_stime(uint32_t* p);
+int hoi_drv_set_fps_reduction(uint32_t p);
 int hoi_drv_get_syncdelay(uint32_t* p);
 int hoi_drv_timer(uint32_t p);
 int hoi_drv_osdon();

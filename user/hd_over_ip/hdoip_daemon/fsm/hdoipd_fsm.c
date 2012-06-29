@@ -970,6 +970,9 @@ bool hdoipd_init(int drv)
             return false;
         }
 
+        // init frame rate reduction
+        hoi_drv_set_fps_reduction(reg_get_int("fps_divide"));
+
         // setup default output
         osd_permanent(true);
         osd_printf("Welcome\n\n");

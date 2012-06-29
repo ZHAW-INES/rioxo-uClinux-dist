@@ -67,7 +67,12 @@ function show(t)
                 t.unicast_en = 1
             end
             t.multicast_group = hdoip.pipe.getParam(hdoip.pipe.REG_MULTICAST_GROUP)
-            
+
+            t.fps_divide = hdoip.pipe.getParam(hdoip.pipe.REG_FPS_DIVIDE)
+            if(tonumber(t.fps_divide) ~= nil) then
+                t.fps_divide = tonumber(t.fps_divide);
+            end
+
             if(hdoip.pipe.getParam(hdoip.pipe.REG_AUTO_STREAM) == "true") then
                 t.auto_stream = 1;
             else 
@@ -184,6 +189,9 @@ function show(t)
                 hdoip.html.AddError(t, label.err_datarate_not_number)
             end
 
+            if(t.fps_divide ~= nil) then
+               hdoip.pipe.setParam(hdoip.pipe.REG_FPS_DIVIDE, t.fps_divide)
+            end
 
             if(t.auto_stream ~= nil) then
                hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "true")
@@ -316,8 +324,15 @@ function show(t)
         hdoip.html.Text(label.p_st_dec_chroma);                                             hdoip.html.TableInsElement(1);
         hdoip.html.FormText(REG_ST_BW_CHROMA_LABEL, t.st_bw_chroma, 4, 0); 
         hdoip.html.Text(label.u_percent);                                                   hdoip.html.TableInsElement(2);
-        hdoip.html.Text(label.p_st_auto_stream);                                                hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                            hdoip.html.TableInsElement(2);
+
+        hdoip.html.Text(label.p_st_fps_divide);                                             hdoip.html.TableInsElement(1);
+        hdoip.html.DropdownBox4("fps_divide", label.n_none, label.n_1_2, label.n_1_3, label.n_1_4, t.fps_divide)
+        hdoip.html.Text(label.p_st_eit_only);                                               hdoip.html.TableInsElement(2);
+
+
+
+        hdoip.html.Text(label.p_st_auto_stream);                                            hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                        hdoip.html.TableInsElement(2);
     end
 
     -- VRB specific fields

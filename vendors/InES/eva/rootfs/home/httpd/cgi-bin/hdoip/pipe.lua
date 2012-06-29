@@ -54,6 +54,7 @@ REG_SERIAL = "serial-number"
 REG_MODE_USB = "usb-mode"
 REG_MODE_TEST_IMAGE = "test-image"
 REG_EDID_MODE = "edid-mode"
+REG_FPS_DIVIDE = "fps_divide"
 
 local PIPE_CMD = "/tmp/web.cmd"
 local PIPE_RSP = "/tmp/web.rsp"

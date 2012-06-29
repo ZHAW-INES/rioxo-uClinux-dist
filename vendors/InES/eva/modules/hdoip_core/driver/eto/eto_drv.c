@@ -321,3 +321,19 @@ int eto_drv_handler(t_eto* handle, t_queue* event_queue)
     return ERR_ETO_SUCCESS;
 }
 
+void eto_drv_frame_rate_reduction(t_eto* handle, int reduction)
+{
+    switch (reduction) {
+        case 1:     eto_set_config_reduce_fps_0_ON(handle->ptr);
+                    eto_set_config_reduce_fps_1_OFF(handle->ptr);
+                    break;
+        case 2:     eto_set_config_reduce_fps_0_OFF(handle->ptr);
+                    eto_set_config_reduce_fps_1_ON(handle->ptr);
+                    break;
+        case 3:     eto_set_config_reduce_fps_0_ON(handle->ptr);
+                    eto_set_config_reduce_fps_1_ON(handle->ptr);
+                    break;
+        default:    eto_set_config_reduce_fps_0_OFF(handle->ptr);
+                    eto_set_config_reduce_fps_1_OFF(handle->ptr);
+    }
+}

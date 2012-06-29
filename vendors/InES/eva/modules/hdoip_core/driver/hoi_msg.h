@@ -62,9 +62,8 @@
 #define HOI_MSG_REPAIR              (0x7000002b)
 #define HOI_MSG_HPDON               (0x7000002c)
 #define HOI_MSG_HPDOFF              (0x7000002d)
-
-#define HOI_MSG_ASOREG		    (0x7000002e)
-#define HOI_MSG_HDCP_INIT	    (0x7000002f)
+#define HOI_MSG_ASOREG		        (0x7000002e)
+#define HOI_MSG_HDCP_INIT	        (0x7000002f)
 #define HOI_MSG_HDCPSTAT            (0x70000030)
 #define HOI_MSG_HDCP_ENVIDEO_ETI    (0x70000031)
 #define HOI_MSG_HDCP_ENVIDEO_ETO    (0x70000032)
@@ -77,6 +76,7 @@
 #define HOI_MSG_HDCP_ENAD9889	    (0x70000039)
 #define HOI_MSG_HDCP_DISAD9889	    (0x7000003a)
 #define HOI_MSG_HPDRESET            (0x7000003b)
+#define HOI_MSG_SET_FPS_REDUCTION   (0x7000003c)
 
 #define HOI_MSG_POLL                (0x700000ff)
 #define HOI_MSG_HDCP_GET_KEY        (0x70000100)

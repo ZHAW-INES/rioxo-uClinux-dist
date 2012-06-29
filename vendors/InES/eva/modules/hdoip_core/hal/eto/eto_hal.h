@@ -31,6 +31,10 @@
 #define eto_set_config_aud_frame_enable(p) 	    HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_SEND_AUD_FRAME_DISABLE)
 #define eto_set_config_start(p) 		        HOI_WR32(p, ETO_CONFIG_SET_REG, ETO_CONFIG_FSM_EN)
 #define eto_set_config_stop(p) 			        HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_FSM_EN)
+#define eto_set_config_reduce_fps_0_ON(p)       HOI_WR32(p, ETO_CONFIG_SET_REG, ETO_CONFIG_REDUCE_FPS_0)
+#define eto_set_config_reduce_fps_0_OFF(p)      HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_REDUCE_FPS_0)
+#define eto_set_config_reduce_fps_1_ON(p)       HOI_WR32(p, ETO_CONFIG_SET_REG, ETO_CONFIG_REDUCE_FPS_1)
+#define eto_set_config_reduce_fps_1_OFF(p)      HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_REDUCE_FPS_1)
 
 #define eto_clr_status_cpu_idle(p)              eto_clr_status_reg(p, ETO_STATUS_CPU_IDLE)
 #define eto_clr_status_vid_idle(p)              eto_clr_status_reg(p, ETO_STATUS_VID_IDLE)

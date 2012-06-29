@@ -901,6 +901,11 @@ int hoi_drv_msg_read_ram(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
+int hoi_drv_msg_set_fps_reduction(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    eto_drv_frame_rate_reduction(&handle->eto, msg->value);
+    return SUCCESS;
+}
 
 //------------------------------------------------------------------------------
 // message
@@ -952,6 +957,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_TIMER,                 hoi_drv_msg_tmr);
         call(HOI_MSG_STSYNC,                hoi_drv_msg_stsync);
         call(HOI_MSG_SYNCDELAY,             hoi_drv_msg_syncdelay);
+        call(HOI_MSG_SET_FPS_REDUCTION,     hoi_drv_msg_set_fps_reduction);
 
         call(HOI_MSG_ETHSTAT,               hoi_drv_msg_ethstat);
         call(HOI_MSG_VSOSTAT,               hoi_drv_msg_vsostat);

@@ -33,6 +33,7 @@ void hdoipd_set_default()
     reg_set("compress", "jp2k");
     reg_set("bandwidth", "10485760");
     reg_set("chroma-bandwidth", "100");
+    reg_set("fps_divide", "0");
     reg_set("advcnt-min", "0");
     reg_set("network-delay", "20");
     reg_set("network-alive", "1");

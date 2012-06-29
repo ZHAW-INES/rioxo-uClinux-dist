@@ -5,7 +5,7 @@
 #define VERSION_SOFTWARE        0x0001000A
 
 // version tag (max. 50 letters)
-#define VERSION_TAG             "Black white quality improvement"
+#define VERSION_TAG             "Framerate reduction"
 
 
 #endif /* VERSION_H_ */

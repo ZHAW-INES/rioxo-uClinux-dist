@@ -10,6 +10,11 @@ label = {
     u_s = "[s]";
     u_percent = "[% of half datarate]";
 
+    n_none = "off";
+    n_1_2 = "1/2";
+    n_1_3 = "1/3";
+    n_1_4 = "1/4";
+
     device_name = "Device name : ";
 
     lang_en = "English";
@@ -155,6 +160,8 @@ label = {
     p_st_datarate = "Max. datarate";
     p_st_dec_chroma = "Chroma datarate";
     p_st_net_delay = "Max. network delay";
+    p_st_fps_divide = "Reduce refresh rate";
+    p_st_eit_only = "(only with EIT software decoder)";
     p_st_auto_stream = "Auto stream";
     p_st_force_hdcp = "Force HDCP"; 
     p_st_multicast_en = "Multicast enable";

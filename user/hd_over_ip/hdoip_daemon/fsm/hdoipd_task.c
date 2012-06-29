@@ -704,6 +704,11 @@ void task_set_edid_mode(char *p)
     rscp_listener_teardown_all(&hdoipd.listener);
 }
 
+void task_set_fps_divide(char *p)
+{
+    hoi_drv_set_fps_reduction(reg_get_int("fps_divide"));
+}
+
 void hdoipd_register_task()
 {
     get_listener("system-state", task_get_system_state);
@@ -760,5 +765,6 @@ void hdoipd_register_task()
     set_listener("usb-mode", task_set_usb_mode);
     set_listener("test-image", task_set_test_image);
     set_listener("edid-mode", task_set_edid_mode);
+    set_listener("fps_divide", task_set_fps_divide);;
 }
 
