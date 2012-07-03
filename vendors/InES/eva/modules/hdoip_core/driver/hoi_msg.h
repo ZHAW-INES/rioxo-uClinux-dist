@@ -360,6 +360,7 @@ typedef struct {
     void*               buffer;     //!< userspace buffer
     size_t              size;       //!< size of buffer
     t_video_timing      timing;     //!< timing of video
+    bool				vtb;		//!< true if transmitter
     uint32_t            advcnt;     //!< adv count when compression = true
 } t_hoi_msg_image;
 

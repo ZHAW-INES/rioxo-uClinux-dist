@@ -504,6 +504,12 @@ int hoi_drv_set_timing(t_video_timing* timing)
     
     memcpy(&msg.timing, timing, sizeof(t_video_timing));
 
+    if reg_test("mode-start", "vtb") {
+        msg.vtb = true;
+    } else {
+        msg.vtb = false;
+    }
+
     hoi_msg_set_timing_init(&msg);
     ret = hoi_msg(&msg);
 

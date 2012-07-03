@@ -194,7 +194,7 @@ int vio_drv_reset(t_vio* handle, uint32_t device)
             REPORT(ERROR, "VIO-Driver: could not identify video board");
     }
 
-    handle->format_proc = vio_format(CS_RGB, SM_444);
+    handle->format_proc = vio_format(CS_YUV, SM_422);
     handle->bandwidth   = 1000000;
     memset(&handle->adv, 0, sizeof(t_adv212));
     memset(&handle->osd, 0, sizeof(t_osd));
@@ -599,9 +599,11 @@ int vio_drv_plainin(t_vio* handle, uint32_t device)
  *
  * @param handle vio handle
  */
-int vio_drv_debug(t_vio* handle, uint32_t device)
+
+int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb)
 {
     int ret = ERR_VIO_SUCCESS;    
+    int no_input = 1;
 
     REPORT(INFO, ">> VIO-Driver: debug mode");
 
@@ -609,22 +611,40 @@ int vio_drv_debug(t_vio* handle, uint32_t device)
 
     // stop everything
     vio_reset(handle->p_vio);
-    
+
+    // get input video timing if transmitter
+    if (vtb) {
+        no_input = vio_get_timing(handle->p_vio, &handle->timing);
+    }
+
     // setup timing generator
     vio_set_timing(handle->p_vio, &handle->timing, 0);
 
     // setup interface format
-    vio_set_output_format(handle->p_vio, &handle->timing, vio_format(CS_RGB, SM_444), handle->format_out, false);
-    
+    if (no_input) {
+        vio_set_output_format(handle->p_vio, &handle->timing, handle->format_in, handle->format_out, false);
+    } else {
+        vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out, false);
+    }
+
     // setup PLL
-    vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_75MHZ, handle->timing.pfreq, 1, VIO_MUX_PLLC_FREE, device, 2);    
-    
+    if (no_input) {
+        vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_75MHZ, handle->timing.pfreq, 1, VIO_MUX_PLLC_FREE, device, 2);
+    } else {
+        vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_INPUT, handle->timing.pfreq, 1, VIO_MUX_PLLC_FREE, device, 2);
+    }
+
     // setup osd
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
     
     // setup muxes
-    vio_set_vout(handle->p_vio, VIO_MUX_VOUT_DEBUG);
-    vio_set_cfg(handle->p_vio, VIO_CFG_VOUT | VIO_CFG_OVERLAY);
+    if (no_input) {
+        vio_set_vout(handle->p_vio, VIO_MUX_VOUT_DEBUG);
+        vio_set_cfg(handle->p_vio, VIO_CFG_VOUT | VIO_CFG_OVERLAY);
+    } else {
+        vio_set_vout(handle->p_vio, VIO_MUX_VOUT_LOOP);
+        vio_set_cfg(handle->p_vio, VIO_CFG_VIN | VIO_CFG_VOUT | VIO_CFG_OVERLAY);
+    }
     
     // START ...
     //////////////////////
@@ -790,11 +810,11 @@ int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt, uint32_t device)
  * @param handle vio handle
  * @param p_vt video timing struct
  */
-int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, uint32_t device)
+int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, bool vtb, uint32_t device)
 {
     PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv); PTR(p_vt);
     memcpy(&handle->timing, p_vt, sizeof(t_video_timing));
-    return vio_drv_debug(handle, device);
+    return vio_drv_debug(handle, device, vtb);
 }
 
 int vio_drv_set_format_in(t_vio* handle, t_video_format f)

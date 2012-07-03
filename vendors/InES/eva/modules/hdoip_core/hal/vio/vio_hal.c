@@ -83,11 +83,13 @@ void vio_get_input_frequency(void* p, t_video_timing* p_vt)
  * @param p_vt pointer to timing struct to be filled
  * @param wait 1 = wait until measured timings are ready
  */
-void vio_get_timing(void* p, t_video_timing* p_vt)
+int vio_get_timing(void* p, t_video_timing* timing)
 {
     unsigned long time;            
- 
-    if (!p_vt) return;
+    t_video_timing p_vt;
+    uint32_t hz;
+
+    if (!timing) return ERR_VIO_NO_INPUT;
 
     time = jiffies + (HZ/20); // wait max 50ms
     HOI_WR32(p, VIO_OFF_TM_READY, 2);   // reset timing measurement flags
@@ -95,26 +97,38 @@ void vio_get_timing(void* p, t_video_timing* p_vt)
     while(HOI_RD32(p, VIO_OFF_TM_READY) != 1) {  // wait until timing is valid
         if (time_after(jiffies, time)) {
             REPORT(ERROR, "Timeout: vio_get_timing()");
-            break;
+            return ERR_VIO_NO_INPUT;
         }
     }
 
-    p_vt->interlaced = 0;
-    p_vt->vpulse_1   = 0;
-    p_vt->vfront_1   = 0;
-    p_vt->vback_1    = 0;
-    p_vt->height_1   = 0;
+    p_vt.interlaced = 0;
+    p_vt.vpulse_1   = 0;
+    p_vt.vfront_1   = 0;
+    p_vt.vback_1    = 0;
+    p_vt.height_1   = 0;
 
-    p_vt->pfreq     = vio_get_fin(p);
+    p_vt.pfreq      = vio_get_fin(p);
     
-    p_vt->width     = HOI_RD16(p, VIO_OFF_TM_HA);
-    p_vt->hfront    = HOI_RD16(p, VIO_OFF_TM_H);
-    p_vt->hpulse    = HOI_RD16(p, VIO_OFF_TM_HP);
-    p_vt->hback     = HOI_RD16(p, VIO_OFF_TM_HB);
-    p_vt->height    = HOI_RD16(p, VIO_OFF_TM_VA);
-    p_vt->vfront    = HOI_RD16(p, VIO_OFF_TM_V);
-    p_vt->vpulse    = HOI_RD16(p, VIO_OFF_TM_VP);
-    p_vt->vback     = HOI_RD16(p, VIO_OFF_TM_VB);
+    p_vt.width      = HOI_RD16(p, VIO_OFF_TM_HA);
+    p_vt.hfront     = HOI_RD16(p, VIO_OFF_TM_H);
+    p_vt.hpulse     = HOI_RD16(p, VIO_OFF_TM_HP);
+    p_vt.hback      = HOI_RD16(p, VIO_OFF_TM_HB);
+    p_vt.height     = HOI_RD16(p, VIO_OFF_TM_VA);
+    p_vt.vfront     = HOI_RD16(p, VIO_OFF_TM_V);
+    p_vt.vpulse     = HOI_RD16(p, VIO_OFF_TM_VP);
+    p_vt.vback      = HOI_RD16(p, VIO_OFF_TM_VB);
+
+    // check if timing is valid 
+    hz = vid_fps(&p_vt);
+    if ((HOI_RD16(p, VIO_OFF_TM_VA) < 100) || (HOI_RD16(p, VIO_OFF_TM_HA) < 100) || (hz < 20) || (hz > 85)) {
+        REPORT(ERROR, "vio_get_timing(): timing not valid (%iHz)", hz);
+        return ERR_VIO_NO_INPUT;
+    }
+
+    // return measured timing only if it is ok
+    memcpy(timing, &p_vt, sizeof(t_video_timing));
+ 
+    return ERR_VIO_SUCCESS;
 }
 
 /** Activates the pll control logic
@@ -253,7 +267,7 @@ void vio_set_transform(void* p, uint32_t o, t_color_transform m, uint32_t cfg, b
     if (!m) { m = (void*)xyz_one; }
     
     p = OFFSET(p, o);
-    
+
     // transform:
     HOI_WR16(p, VIO_OFF_PP_M11, (m[0][0]));
     HOI_WR16(p, VIO_OFF_PP_M12, (m[0][1]));

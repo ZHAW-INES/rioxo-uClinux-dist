@@ -34,6 +34,7 @@
 #define ERR_VIO_VCO_OUT_OF_RANGE        	    (ERR_VIO+2)
 #define ERR_VIO_FORMAT_NOT_SUPPORTED            (ERR_VIO+3)
 #define ERR_VIO_INVALID_VALUE                   (ERR_VIO+4)
+#define ERR_VIO_NO_INPUT                        (ERR_VIO+5)
 
 #define ERR_I2C                                 (0xe4000000)
 #define ERR_I2C_SUCCESS                         (0)

@@ -535,7 +535,7 @@ int hoi_drv_msg_set_timing(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
-    vio_drv_debugx(&handle->vio, &msg->timing, bdt_return_device(&handle->bdt));
+    vio_drv_debugx(&handle->vio, &msg->timing, msg->vtb, bdt_return_device(&handle->bdt));
 
     // if sdi, set output data rate
     if (handle->drivers & DRV_GS2972) {
