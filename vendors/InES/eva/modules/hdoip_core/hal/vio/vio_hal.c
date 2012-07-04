@@ -101,6 +101,11 @@ int vio_get_timing(void* p, t_video_timing* timing)
         }
     }
 
+    p_vt.id         = timing->id;
+    p_vt.hpolarity  = timing->hpolarity;
+    p_vt.vpolarity  = timing->vpolarity;
+    p_vt.fpolarity  = timing->fpolarity;
+
     p_vt.interlaced = 0;
     p_vt.vpulse_1   = 0;
     p_vt.vfront_1   = 0;
