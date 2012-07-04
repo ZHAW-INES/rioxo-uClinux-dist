@@ -702,3 +702,4 @@ HOI_CMDSW(wdg_service);
 HOI_CMDSW(hdcp_timer_enable);
 HOI_CMDSW(hdcp_timer_disable);
 HOI_CMDSW(hdcp_timer_load);
+HOI_CMDSW(clr_osd);

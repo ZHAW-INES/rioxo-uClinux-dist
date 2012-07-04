@@ -26,6 +26,7 @@
 #include "rscp_string.h"
 #include "edid.h"
 #include "usb.h"
+#include "version.h"
 
 #include "vrb_video.h"
 #include "vtb_video.h"
@@ -212,7 +213,6 @@ bool hdoipd_goto_ready()
             return false;
         break;
     }
-    osd_printf("Device is idle\n");
     return true;
 }
 
@@ -549,6 +549,23 @@ void show_local_ip_address_on_osd()
 {
     int fd;
     struct ifreq ifr;
+    t_hoi_msg_info* info;
+    uint32_t image_freq, image_pixel;
+    uint32_t fs;
+    bool vtb;
+    hoi_drv_info_all(&info);
+    hoi_drv_get_fs(&fs);
+
+    if (!strcmp("vtb", reg_get("mode-start"))) {
+        vtb = true;
+    } else  {
+        vtb = false;
+    }
+
+    hoi_drv_clr_osd();
+
+    osd_printf("\nUnit Information");
+    osd_printf("\n----------------");
 
     if(hdoipd_rsc(RSC_ETH_LINK)) {
         fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -558,9 +575,60 @@ void show_local_ip_address_on_osd()
         close(fd);
 
         // show IP address on OSD
-        osd_printf("local IP address: %s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+        osd_printf("\nIP address:        %s", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
     } else {
-        osd_printf("local IP address not available\n");
+        osd_printf("\nIP address:        not available");
+    }
+
+    osd_printf("\nSubnetmask:        %s", reg_get("system-subnet"));
+    osd_printf("\nGateway:           %s", reg_get("system-gateway"));
+    osd_printf("\nHostname:          %s", reg_get("system-hostname"));
+
+    if (vtb) {
+        osd_printf("\nSystem mode :      Transmitter");
+    } else {
+        osd_printf("\nSystem mode :      Receiver");
+    }
+
+    osd_printf("\n\nSerial number:     %s", reg_get("serial-number"));
+    osd_printf("\nFW-Version:        %i.%i", ((VERSION_SOFTWARE >> 16) & 0xFFFF), (VERSION_SOFTWARE & 0xFFFF));
+
+    osd_printf("\n\n\nStream");
+    osd_printf("\n------");
+    osd_printf("\nUnicast address:   %s", reg_get("remote-uri"));
+    if (vtb) {
+        osd_printf("\nMulticast address: %s", reg_get("multicast_group"));
+    } else {
+        osd_printf("\nMulticast address: (transmitter only)");
+    }
+
+    if (vtb) {
+        osd_printf("\nMax. data rate:    %i Mbit/s", ((uint32_t)atol(reg_get("bandwidth"))) / 131072 );
+    } else {
+        osd_printf("\nMax. data rate:    (transmitter only)");
+    }
+
+    if (vtb) {
+        if (hdoipd.rsc_state & RSC_VIDEO_IN) {
+
+            image_pixel = (info->timing.height + info->timing.vfront + info->timing.vback + info->timing.vpulse) * (info->timing.width + info->timing.hfront + info->timing.hback + info->timing.hpulse);
+            image_freq = (info->timing.pfreq / (image_pixel / 100));
+            osd_printf("\nResolution:        %d x %d @ %d.%02d Hz / %d MHz", info->timing.width, info->timing.height, (image_freq/100), (image_freq%100), (info->timing.pfreq/1000000));
+        } else {
+            osd_printf("\nResolution:        (no input)");
+        }
+    } else {
+        osd_printf("\nResolution:        (transmitter only)");
+    }
+
+    if (vtb) {
+        if (fs != 0) {
+            osd_printf("\nAudio:             %i Hz  %i Bit  %i channel", info->audio_fs[0], info->audio_width[0], info->audio_cnt[0]);
+        } else {
+            osd_printf("\nAudio:             (no audio)");
+        }
+    } else {
+        osd_printf("\nAudio:             (transmitter only)");
     }
 }
 
@@ -579,6 +647,10 @@ void hdoipd_event(uint32_t event)
             hdoipd_set_rsc(RSC_ETH_LINK);
             if (hdoipd_state(HOID_READY)) {
                 hdoipd_start();
+            }
+            if (!hdoipd.ethernet_init) {
+                show_local_ip_address_on_osd();
+                hdoipd.ethernet_init = true;
             }
         break;
         case E_ETO_LINK_DOWN:
@@ -614,6 +686,9 @@ void hdoipd_event(uint32_t event)
             hdoipd_clr_rsc(RSC_AUDIO0_IN);
             if (hdoipd_state(HOID_VTB)) {
                 hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VTB);
+                hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
+                osd_permanent(true);
+                osd_printf("Video input lost");
             } else {
                 hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VRB);
             }
@@ -894,6 +969,7 @@ bool hdoipd_init(int drv)
 
     hdoipd.local.vid_port = htons(reg_get_int("video-port"));
     hdoipd.local.aud_port = htons(reg_get_int("audio-port"));
+    hdoipd.ethernet_init = false;
 
     // detect connected video card
     hoi_drv_get_device_id(&dev_id);
@@ -975,7 +1051,7 @@ bool hdoipd_init(int drv)
 
         // setup default output
         osd_permanent(true);
-        osd_printf("Welcome\n\n");
+        show_local_ip_address_on_osd();
     }
     unlock("hdoipd_init");
 

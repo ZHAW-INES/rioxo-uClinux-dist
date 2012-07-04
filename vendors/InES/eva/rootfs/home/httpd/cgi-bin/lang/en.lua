@@ -5,7 +5,7 @@ label = {
     page_name = "Emcore : ";
     
     u_decimal = "[decimal]";
-    u_mbps = "[MBit / s]";
+    u_mbps = "[Mbit / s]";
     u_ms = "[ms]";
     u_s = "[s]";
     u_percent = "[% of half datarate]";

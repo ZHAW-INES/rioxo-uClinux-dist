@@ -163,6 +163,9 @@ int vio_drv_setup_osd(t_vio* handle, t_osd_font* font, uint32_t device)
 
     vio_enable_output_timing(handle->p_vio);
 
+    handle->osd.x = 0;
+    handle->osd.y = 0;
+
 	VIO_REPORT_FONT(font);
 
 	return ERR_VIO_SUCCESS;
@@ -200,13 +203,17 @@ int vio_drv_reset(t_vio* handle, uint32_t device)
     memset(&handle->osd, 0, sizeof(t_osd));
     
     // set OSD border
-    handle->osd.x_border = 0;
-    handle->osd.y_border = 0;
+    handle->osd.x_border = 6;
+    handle->osd.y_border = 2;
 
     // stop everything
     vio_reset(handle->p_vio);
     adv212_drv_init(handle->p_adv);
+
+    // clear OSD
     vio_osd_clear_screen(handle->p_vio);
+    handle->osd.x = 0;
+    handle->osd.y = 0;
     
     return ERR_VIO_SUCCESS;
 }
@@ -261,7 +268,8 @@ int vio_drv_encode(t_vio* handle, uint32_t device)
     // setup osd 
     vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
-
+    handle->osd.x = 0;
+    handle->osd.y = 0;
 
 
     // setup muxes
@@ -357,6 +365,8 @@ int vio_drv_decode(t_vio* handle, uint32_t device)
     // setup osd
     vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);  
+    handle->osd.x = 0;
+    handle->osd.y = 0;
 
     // setup muxes
     vio_set_vout(handle->p_vio, VIO_MUX_VOUT_ADV212);

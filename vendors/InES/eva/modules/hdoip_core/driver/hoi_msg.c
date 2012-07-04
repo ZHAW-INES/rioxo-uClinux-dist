@@ -907,6 +907,16 @@ int hoi_drv_msg_set_fps_reduction(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
+int hoi_drv_msg_clear_osd(t_hoi* handle)
+{
+    vio_osd_clear_screen(handle->p_vio);
+
+    handle->vio.osd.x = 0;
+    handle->vio.osd.y = 0;
+
+    return SUCCESS;
+}
+
 //------------------------------------------------------------------------------
 // message
 
@@ -1002,6 +1012,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         callsw(HOI_MSG_HDCP_DISAD9889, hoi_drv_msg_hdcp_ADV9889_dis);
 
         callsw(HOI_MSG_POLL,    hoi_drv_msg_poll);
+        callsw(HOI_MSG_CLR_OSD, hoi_drv_msg_clear_osd);
 
         call(HOI_MSG_DEBUG_READ_RAM,      hoi_drv_msg_read_ram);
 

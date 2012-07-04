@@ -98,7 +98,7 @@
 #define HOI_MSG_GET_RESET_TO_DEFAULT (0x70000110)
 #define HOI_MSG_GET_ENCRYPTED_STATUS (0x70000111)
 #define HOI_MSG_DEBUG_READ_RAM      (0x70000112)
-
+#define HOI_MSG_CLR_OSD             (0x70000113)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
@@ -179,6 +179,7 @@ typedef struct {
 #define hoi_msg_wdg_enable_init(p) hoi_msg_init(p, HOI_MSG_WDG_ENABLE, t_hoi_msg)
 #define hoi_msg_wdg_disable_init(p) hoi_msg_init(p, HOI_MSG_WDG_DISABLE, t_hoi_msg)
 #define hoi_msg_wdg_service_init(p) hoi_msg_init(p, HOI_MSG_WDG_SERVICE, t_hoi_msg)
+#define hoi_msg_clr_osd_init(p) hoi_msg_init(p, HOI_MSG_CLR_OSD, t_hoi_msg)
 
 //------------------------------------------------------------------------------
 // additional driver load/unload command
