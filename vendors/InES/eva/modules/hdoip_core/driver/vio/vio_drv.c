@@ -486,7 +486,10 @@ int vio_drv_plainout(t_vio* handle, uint32_t device)
     }
 
     // setup osd
+    vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
+    handle->osd.x = 0;
+    handle->osd.y = 0;
 
     // setup muxes
     vio_set_vout(handle->p_vio, VIO_MUX_VOUT_PLAIN);
@@ -559,7 +562,10 @@ int vio_drv_plainin(t_vio* handle, uint32_t device)
     vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_INPUT, 0, 1, VIO_MUX_PLLC_FREE, device, 2);
 
     // setup osd
+    vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
+    handle->osd.x = 0;
+    handle->osd.y = 0;
 
     // setup frame size in words
     vio_set_size(handle->p_vio, vid_pixel_per_frame(&handle->timing)*3/4);
@@ -645,7 +651,10 @@ int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb)
     }
 
     // setup osd
+    vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
+    handle->osd.x = 0;
+    handle->osd.y = 0;
     
     // setup muxes
     if (no_input) {
@@ -708,7 +717,10 @@ int vio_drv_loop(t_vio* handle, uint32_t device)
     vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_INPUT, 0, 1, VIO_MUX_PLLC_FREE, device, 2);
 
     // setup osd
+    vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
+    handle->osd.x = 0;
+    handle->osd.y = 0;
 
     // setup muxes
     vio_set_stin(handle->p_vio, VIO_MUX_STIN_LOOP);
