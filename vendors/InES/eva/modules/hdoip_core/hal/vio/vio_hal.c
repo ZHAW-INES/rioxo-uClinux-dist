@@ -96,7 +96,7 @@ int vio_get_timing(void* p, t_video_timing* timing)
     HOI_WR32(p, VIO_OFF_TM_READY, 0);
     while(HOI_RD32(p, VIO_OFF_TM_READY) != 1) {  // wait until timing is valid
         if (time_after(jiffies, time)) {
-            REPORT(ERROR, "Timeout: vio_get_timing()");
+            REPORT(INFO, "Timeout: vio_get_timing()");
             return ERR_VIO_NO_INPUT;
         }
     }
@@ -126,7 +126,7 @@ int vio_get_timing(void* p, t_video_timing* timing)
     // check if timing is valid 
     hz = vid_fps(&p_vt);
     if ((HOI_RD16(p, VIO_OFF_TM_VA) < 100) || (HOI_RD16(p, VIO_OFF_TM_HA) < 100) || (hz < 20) || (hz > 85)) {
-        REPORT(ERROR, "vio_get_timing(): timing not valid (%iHz)", hz);
+        REPORT(INFO, "vio_get_timing(): timing not valid (%iHz)", hz);
         return ERR_VIO_NO_INPUT;
     }
 

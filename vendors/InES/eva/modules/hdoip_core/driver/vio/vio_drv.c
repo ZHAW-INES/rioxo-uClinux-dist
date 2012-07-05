@@ -197,7 +197,7 @@ int vio_drv_reset(t_vio* handle, uint32_t device)
             REPORT(ERROR, "VIO-Driver: could not identify video board");
     }
 
-    handle->format_proc = vio_format(CS_YUV, SM_422);
+    handle->format_proc = vio_format(CS_RGB, SM_444);
     handle->bandwidth   = 1000000;
     memset(&handle->adv, 0, sizeof(t_adv212));
     memset(&handle->osd, 0, sizeof(t_osd));
@@ -616,7 +616,7 @@ int vio_drv_plainin(t_vio* handle, uint32_t device)
  * @param handle vio handle
  */
 
-int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb)
+int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb, t_gs2972 *sdi_tx)
 {
     int ret = ERR_VIO_SUCCESS;    
     int no_input = 1;
@@ -633,15 +633,23 @@ int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb)
         no_input = vio_get_timing(handle->p_vio, &handle->timing);
     }
 
+    // if SDI, timing of h and v is inverted
+    if (device == BDT_ID_SDI8_BOARD) {
+        handle->timing.vpolarity = 0;
+        handle->timing.hpolarity = 0;
+    }
+
     // setup timing generator
     vio_set_timing(handle->p_vio, &handle->timing, 0);
 
-    // setup interface format
-    if (no_input) {
-        vio_set_output_format(handle->p_vio, &handle->timing, handle->format_in, handle->format_out, false);
-    } else {
-        vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out, false);
+    // if sdi, set output data rate
+    if (device == BDT_ID_SDI8_BOARD) {
+        gs2972_driver_set_data_rate(sdi_tx, handle->timing.pfreq);
     }
+
+    // setup interface format
+    vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out, false);
+    vio_set_input_format(handle->p_vio, &handle->timing, handle->format_in, handle->format_proc);
 
     // setup PLL
     if (no_input) {
@@ -832,11 +840,11 @@ int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt, uint32_t device)
  * @param handle vio handle
  * @param p_vt video timing struct
  */
-int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, bool vtb, uint32_t device)
+int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, bool vtb, uint32_t device, t_gs2972 *sdi_tx)
 {
     PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv); PTR(p_vt);
     memcpy(&handle->timing, p_vt, sizeof(t_video_timing));
-    return vio_drv_debug(handle, device, vtb);
+    return vio_drv_debug(handle, device, vtb, sdi_tx);
 }
 
 int vio_drv_set_format_in(t_vio* handle, t_video_format f)

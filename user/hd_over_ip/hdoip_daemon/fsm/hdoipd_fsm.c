@@ -686,9 +686,6 @@ void hdoipd_event(uint32_t event)
             hdoipd_clr_rsc(RSC_AUDIO0_IN);
             if (hdoipd_state(HOID_VTB)) {
                 hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VTB);
-                hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
-                osd_permanent(true);
-                osd_printf("Video input lost");
             } else {
                 hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VRB);
             }
