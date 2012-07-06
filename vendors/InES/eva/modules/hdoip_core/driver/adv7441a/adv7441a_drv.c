@@ -360,6 +360,9 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_5, 0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_6, 0x00);
 
+    /* Set dummy EDID */
+    adv7441a_set_edid(handle, edid);
+
     return ERR_ADV7441A_SUCCESS;
 }
 

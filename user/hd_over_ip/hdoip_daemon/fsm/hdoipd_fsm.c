@@ -808,8 +808,6 @@ void hdoipd_event(uint32_t event)
         case E_VSI_FIFO2_FULL:
         break;
         case E_VSI_CDFIFO_FULL:
-            // WORKAROUND: TODO: Check why is code fifo full at reboot of vtb
-            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
         break;
         case E_VSO_PAYLOAD_EMPTY:
         break;
