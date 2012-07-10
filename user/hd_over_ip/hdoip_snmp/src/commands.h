@@ -7,22 +7,12 @@
 
 /* function declarations */
 void init_commands(void);
-Netsnmp_Node_Handler handle_capture;
-Netsnmp_Node_Handler handle_load;
-Netsnmp_Node_Handler handle_loop;
-Netsnmp_Node_Handler handle_vtb;
-Netsnmp_Node_Handler handle_vrbUri;
+
 Netsnmp_Node_Handler handle_vrbPlay;
 Netsnmp_Node_Handler handle_vrbReady;
-Netsnmp_Node_Handler handle_vrbPause;
 Netsnmp_Node_Handler handle_reboot;
-Netsnmp_Node_Handler handle_remoteUpdate;
-Netsnmp_Node_Handler handle_version;
 Netsnmp_Node_Handler handle_factoryDefault;
-Netsnmp_Node_Handler handle_osd;
 Netsnmp_Node_Handler handle_store;
-Netsnmp_Node_Handler handle_hpd;
-Netsnmp_Node_Handler handle_fmtIn;
-Netsnmp_Node_Handler handle_fmtOut;
+Netsnmp_Node_Handler handle_remoteUpdate;
 
 #endif /* COMMANDS_H */

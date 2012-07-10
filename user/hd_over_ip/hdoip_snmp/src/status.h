@@ -9,20 +9,17 @@
 /* function declarations */
 void init_status(void);
 Netsnmp_Node_Handler handle_systemState;
-Netsnmp_Node_Handler handle_systemUpdate;
-Netsnmp_Node_Handler handle_daemonDriver;
 Netsnmp_Node_Handler handle_daemonState;
 Netsnmp_Node_Handler handle_daemonVtbState;
 Netsnmp_Node_Handler handle_daemonVrbState;
-Netsnmp_Node_Handler handle_daemonRscState;
 Netsnmp_Node_Handler handle_ethStatus;
 Netsnmp_Node_Handler handle_vsoStatus;
 Netsnmp_Node_Handler handle_vioStatus;
 Netsnmp_Node_Handler handle_asoStatus;
-Netsnmp_Node_Handler handle_syncDelay;
 Netsnmp_Node_Handler handle_streamState;
 Netsnmp_Node_Handler handle_multicast;
-Netsnmp_Node_Handler handle_vrbIsPlaying;
 Netsnmp_Node_Handler handle_hdcpStatus;
+Netsnmp_Node_Handler handle_serialNumber;
+Netsnmp_Node_Handler handle_systemUpdate;
 
 #endif /* STATUS_H */

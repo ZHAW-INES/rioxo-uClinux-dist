@@ -39,3 +39,4 @@ echo 2 > /proc/sys/net/ipv4/conf/eth0/force_igmp_version
 /bin/cat /etc/motd
 
 /bin/hdoipd /tmp/hdoipd0 /tmp/web &
+/bin/snmpd -c public &
