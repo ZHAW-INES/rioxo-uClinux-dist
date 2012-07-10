@@ -5,10 +5,15 @@ label = {
     page_name = "Emcore : ";
     
     u_decimal = "[decimal]";
-    u_mbps = "[MBit / s]";
+    u_mbps = "[Mbit / s]";
     u_ms = "[ms]";
     u_s = "[s]";
     u_percent = "[% of half datarate]";
+
+    n_none = "off";
+    n_1_2 = "1/2";
+    n_1_3 = "1/3";
+    n_1_4 = "1/4";
 
     device_name = "Device name : ";
 
@@ -48,6 +53,8 @@ label = {
     err_aud_port_not_number = "Audio port is not a number";
     err_vid_port_not_in_range = "Video port is not in range (0 .. 65535)";
     err_vid_port_not_number = "Video port is not a number";
+    err_rscp_port_not_in_range = "RSCP port is not in range (0 .. 65535)";
+    err_rscp_port_not_number = "RSCP port is not a number";
     err_datarate_not_number = "Max. datarate is not a number";
     err_datarate_not_in_range = "Max. datarate is not in range (1 .. 800)";
     err_datarate_chroma_not_in_range = "Max. chroma datarate is not in range (0 .. 100%)";
@@ -149,9 +156,12 @@ label = {
     p_st_media_sel = "Media select";
     p_st_vid_port = "Video UDP Port";
     p_st_aud_port = "Audio UDP Port";
+    p_st_rscp_port = "RSCP TCP Port";
     p_st_datarate = "Max. datarate";
     p_st_dec_chroma = "Chroma datarate";
     p_st_net_delay = "Max. network delay";
+    p_st_fps_divide = "Reduce refresh rate";
+    p_st_eit_only = "(only with EIT software decoder)";
     p_st_auto_stream = "Auto stream";
     p_st_force_hdcp = "Force HDCP"; 
     p_st_multicast_en = "Multicast enable";

@@ -5,10 +5,15 @@ label = {
     page_name = "Emcore : ";
 
     u_decimal = "[dezimal]";
-    u_mbps = "[MBit / s]";
+    u_mbps = "[Mbit / s]";
     u_ms = "[ms]";
     u_s = "[s]";
     u_percent = "[% von der halben Datenrate]";
+
+    n_none = "Aus";
+    n_1_2 = "1/2";
+    n_1_3 = "1/3";
+    n_1_4 = "1/4";
 
     device_name = "Ger&auml;tename : ";
 
@@ -44,10 +49,12 @@ label = {
     err_ip_not_valid = "IP-Adresse ist nicht g&uuml;ltig";
     err_subnet_not_valid = "Subnetzmaske ist nicht g&uuml;ltig";
     err_gateway_not_valid = "Netz&uuml;bergang ist nicht g&uuml;ltig";
-    err_aud_port_not_in_range = "Audio port ist nicht im G&uuml;ltigkeitsbereich (0 .. 65535)";
+    err_aud_port_not_in_range = "Audio Port ist nicht im G&uuml;ltigkeitsbereich (0 .. 65535)";
     err_aud_port_not_number = "Audio Port ist keine Nummer";
-    err_vid_port_not_in_range = "Video port ist nicht im G&uuml;ltigkeitsbereich (0 .. 65535)";
+    err_vid_port_not_in_range = "Video Port ist nicht im G&uuml;ltigkeitsbereich (0 .. 65535)";
     err_vid_port_not_number = "Video Port ist keine Nummer";
+    err_rscp_port_not_in_range = "RSCP Port ist nicht im G&uuml;ltigkeitsbereich (0 .. 65535)";
+    err_rscp_port_not_number = "RSCP Port ist keine Nummer";
     err_datarate_not_number = "Max. Datenrate ist keine Nummer";
     err_datarate_not_in_range = "Max. Datenrate ist nicht im G&uuml;ltigkeitsbereich (1 .. 800)";
     err_datarate_chroma_not_in_range = "Max. Chroma Datenrate ist nicht im G&uuml;ltigkeitsbereich (0 .. 100%)";
@@ -147,9 +154,12 @@ label = {
     p_st_media_sel = "Media Selektierung";
     p_st_vid_port = "Video UDP Port";
     p_st_aud_port = "Audio UDP Port";
+    p_st_rscp_port = "RSCP TCP Port";
     p_st_datarate = "Max. Datenrate";
     p_st_dec_chroma = "Chroma Datenrate";
     p_st_net_delay = "Max. Netzwerkverz&ouml;gerung";
+    p_st_fps_divide = "Bildwiederholfrequenz reduzieren";
+    p_st_eit_only = "(nur mit EIT Software Decoder)";
     p_st_auto_stream = "Auto Stream";
     p_st_force_hdcp = "HDCP erzwingen"; 
     p_st_multicast_en = "Multicast einschalten";

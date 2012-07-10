@@ -400,3 +400,36 @@ function Loadbar(time, time_restart)
     html_str = html_str .. "loadbar();"
     html_str = html_str .. "</script>"
 end
+
+function DropdownBox4(name, label1, label2, label3, label4, selected)
+    if(tonumber(selected) ~= nil) then
+        selected = tonumber(selected)
+    end
+    html_str = html_str .. "<select name=\""..name.."\" size=1>\n"
+    html_str = html_str .. "<option value=0"
+    if((selected ~= nil) and (selected == 0))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label1.." </option>\n"
+
+    html_str = html_str .. "<option value=1"
+    if((selected ~= nil) and (selected == 1))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label2.." </option>\n"
+
+    html_str = html_str .. "<option value=2"
+    if((selected ~= nil) and (selected == 2))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label3.." </option>\n"
+
+    html_str = html_str .. "<option value=3"
+    if((selected ~= nil) and (selected == 3))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label4.." </option>\n"
+    html_str = html_str .. "</select>\n"
+end
+
+

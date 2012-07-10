@@ -62,9 +62,8 @@
 #define HOI_MSG_REPAIR              (0x7000002b)
 #define HOI_MSG_HPDON               (0x7000002c)
 #define HOI_MSG_HPDOFF              (0x7000002d)
-
-#define HOI_MSG_ASOREG		    (0x7000002e)
-#define HOI_MSG_HDCP_INIT	    (0x7000002f)
+#define HOI_MSG_ASOREG		        (0x7000002e)
+#define HOI_MSG_HDCP_INIT	        (0x7000002f)
 #define HOI_MSG_HDCPSTAT            (0x70000030)
 #define HOI_MSG_HDCP_ENVIDEO_ETI    (0x70000031)
 #define HOI_MSG_HDCP_ENVIDEO_ETO    (0x70000032)
@@ -77,6 +76,7 @@
 #define HOI_MSG_HDCP_ENAD9889	    (0x70000039)
 #define HOI_MSG_HDCP_DISAD9889	    (0x7000003a)
 #define HOI_MSG_HPDRESET            (0x7000003b)
+#define HOI_MSG_SET_FPS_REDUCTION   (0x7000003c)
 
 #define HOI_MSG_POLL                (0x700000ff)
 #define HOI_MSG_HDCP_GET_KEY        (0x70000100)
@@ -98,7 +98,7 @@
 #define HOI_MSG_GET_RESET_TO_DEFAULT (0x70000110)
 #define HOI_MSG_GET_ENCRYPTED_STATUS (0x70000111)
 #define HOI_MSG_DEBUG_READ_RAM      (0x70000112)
-
+#define HOI_MSG_CLR_OSD             (0x70000113)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
@@ -179,6 +179,7 @@ typedef struct {
 #define hoi_msg_wdg_enable_init(p) hoi_msg_init(p, HOI_MSG_WDG_ENABLE, t_hoi_msg)
 #define hoi_msg_wdg_disable_init(p) hoi_msg_init(p, HOI_MSG_WDG_DISABLE, t_hoi_msg)
 #define hoi_msg_wdg_service_init(p) hoi_msg_init(p, HOI_MSG_WDG_SERVICE, t_hoi_msg)
+#define hoi_msg_clr_osd_init(p) hoi_msg_init(p, HOI_MSG_CLR_OSD, t_hoi_msg)
 
 //------------------------------------------------------------------------------
 // additional driver load/unload command
@@ -360,6 +361,7 @@ typedef struct {
     void*               buffer;     //!< userspace buffer
     size_t              size;       //!< size of buffer
     t_video_timing      timing;     //!< timing of video
+    bool				vtb;		//!< true if transmitter
     uint32_t            advcnt;     //!< adv count when compression = true
 } t_hoi_msg_image;
 

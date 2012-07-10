@@ -398,9 +398,10 @@ void task_get_system_update(char** p)
         /* vrb alive check */
         if(update_vector & HOID_TSK_UPD_ALIVE) {
 		    report("Updating alive check...");
-            alive_check_server_close(&hdoipd.alive_check);
-            hdoipd.alive_check.init_done = false;
-            alive_check_init_msg_vrb_alive();
+        //    is updated at same time with rscp-port and this needs a restart of the device
+        //    alive_check_server_close(&hdoipd.alive_check);
+        //    hdoipd.alive_check.init_done = false;
+        //    alive_check_init_msg_vrb_alive();
         }
 
 		// -------------------------------------------------------------
@@ -703,6 +704,11 @@ void task_set_edid_mode(char *p)
     rscp_listener_teardown_all(&hdoipd.listener);
 }
 
+void task_set_fps_divide(char *p)
+{
+    hoi_drv_set_fps_reduction(reg_get_int("fps_divide"));
+}
+
 void hdoipd_register_task()
 {
     get_listener("system-state", task_get_system_state);
@@ -759,5 +765,6 @@ void hdoipd_register_task()
     set_listener("usb-mode", task_set_usb_mode);
     set_listener("test-image", task_set_test_image);
     set_listener("edid-mode", task_set_edid_mode);
+    set_listener("fps_divide", task_set_fps_divide);;
 }
 

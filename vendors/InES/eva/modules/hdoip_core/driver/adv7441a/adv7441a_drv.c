@@ -255,6 +255,19 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     /* Set digital fine clamp setting for HDMI Mode (0xC8) */
     adv7441a_usr_map_write(handle, ADV7441A_REG_CP_CLAMP_POS_HS_CTRL_4, 0x08);
 
+    /* Activate manual gain control and set gain to constant 1.00 */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_AGC_3, 0xD0);
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_AGC_4, 0x04);
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_AGC_5, 0x01);
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_AGC_6, 0x00);
+
+    /* Activate manual clamp and set it to 0 */
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_CLAMP_1, 0xD0);
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_CLAMP_2, 0x00);
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_CLAMP_3, 0x00);
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_CLAMP_4, 0x00);
+    adv7441a_usr_map_write(handle, ADV7441A_REG_CP_CLAMP_5, 0x00);
+
     /* Set CP AV controll register (0x7B) */
     adv7441a_usr_map_write(handle, ADV7441A_REG_CP_AV_CONTROL, 0x04 | ADV7441A_BIT_AV_BLANK_EN | ADV7441A_BIT_DE_WITH_AVCODE);
 
@@ -346,6 +359,9 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_4, 0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_5, 0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT2_MASKB_6, 0x00);
+
+    /* Set dummy EDID */
+    adv7441a_set_edid(handle, edid);
 
     return ERR_ADV7441A_SUCCESS;
 }

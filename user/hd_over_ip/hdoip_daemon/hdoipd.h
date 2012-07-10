@@ -189,6 +189,7 @@ typedef struct {
     t_node*             client;         // list of all RSCP clients
     t_hdoip_eth         local;          // local mac, ip, video port and audio port
     int                 osd_timeout;    // time till osd will be deactivate (in seconds)
+    bool                ethernet_init;  // if ethernet is or was connected 
     uint64_t            tick;           // counts the EVENT_TICKS, UNUSED!
     int                 eth_alive;      // amount of ticks (EVENT_TICK) till rscp alive packet is sent
     int                 eth_timeout;    // amount of ticks till connection timeout is detected

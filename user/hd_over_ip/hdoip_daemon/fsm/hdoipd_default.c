@@ -33,6 +33,7 @@ void hdoipd_set_default()
     reg_set("compress", "jp2k");
     reg_set("bandwidth", "10485760");
     reg_set("chroma-bandwidth", "100");
+    reg_set("fps_divide", "0");
     reg_set("advcnt-min", "0");
     reg_set("network-delay", "20");
     reg_set("network-alive", "1");
@@ -57,7 +58,7 @@ void hdoipd_set_default()
     reg_set("multicast_group", "224.0.1.0");
     reg_set("alive-check", "true");
     reg_set("alive-check-interval", "5");
-    reg_set("alive-check-port", "2002");
+    reg_set("alive-check-port", "554");
 
     reg_set("led_instruction", "0");
     reg_set("osd-time", "10");

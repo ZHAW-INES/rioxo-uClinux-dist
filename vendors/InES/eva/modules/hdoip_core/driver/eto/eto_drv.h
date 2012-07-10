@@ -35,6 +35,6 @@ int eto_drv_start_vid(t_eto* handle);
 int eto_drv_stop_vid(t_eto* handle);
 int eto_drv_set_aud_buf(t_eto* handle, void* start_ptr, size_t size);
 int eto_drv_set_vid_buf(t_eto* handle, void* start_ptr, size_t size);
-
+void eto_drv_frame_rate_reduction(t_eto* handle, int reduction);
 
 #endif /* ETO_DRV_H_ */

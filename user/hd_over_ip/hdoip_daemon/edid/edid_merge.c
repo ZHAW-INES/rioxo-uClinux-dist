@@ -237,7 +237,7 @@ void edid_merge(t_edid *edid1, t_edid *edid2)
     strncpy(sn,   &(tmp[6]), 8);
     sn[8] = '\0';
 
-    edid.id_manufacturer    = 0xC315; // EMC  // CHANGE BRAND: 0x0F4B; // RXO
+    edid.id_manufacturer    = 0xA315; // EMC  // CHANGE BRAND: 0x0F4B; // RXO
     edid.id_product_code    = 10;
     edid.id_serial_number   = atoi(sn);
     edid.year               = (uint8_t)(atoi(year) - 1990);

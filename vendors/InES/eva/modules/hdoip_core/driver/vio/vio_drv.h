@@ -8,6 +8,7 @@
 #include "adv212_drv.h"
 #include "vio_str.h"
 #include "si598.h"
+#include "gs2972_drv.h"
 
 /** Handle
  */
@@ -95,13 +96,13 @@ int vio_drv_decode(t_vio* handle, uint32_t device);
 int vio_drv_decode_sync(t_vio* handle);
 int vio_drv_plainout(t_vio* handle, uint32_t device);
 int vio_drv_plainin(t_vio* handle, uint32_t device);
-int vio_drv_debug(t_vio* handle, uint32_t device);
+int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb, t_gs2972 *sdi_tx);
 int vio_drv_loop(t_vio* handle, uint32_t device);
 
 int vio_drv_encodex(t_vio* handle, int bandwidth, int advcnt, uint32_t device);
 int vio_drv_decodex(t_vio* handle, t_video_timing* p_vt, int advcnt, uint32_t device);
 int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt, uint32_t device);
-int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, uint32_t device);
+int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, bool vtb, uint32_t device, t_gs2972 *sdi_tx);
 
 int vio_drv_set_bandwidth(t_vio* handle, int bandwidth, int chroma_percent);
 int vio_drv_set_format_in(t_vio* handle, t_video_format f);

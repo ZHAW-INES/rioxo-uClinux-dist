@@ -274,6 +274,11 @@ void vtb_video_pause(t_rscp_media *media)
             hdoipd_hw_reset(DRV_RST_VID_IN);
 #endif
             hdoipd_set_vtb_state(VTB_VID_IDLE);
+
+            hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
+            osd_permanent(true);
+            osd_printf("Video input lost...");
+
         }
     }
 

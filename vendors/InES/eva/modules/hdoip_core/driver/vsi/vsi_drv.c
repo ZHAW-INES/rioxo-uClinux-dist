@@ -104,9 +104,6 @@ int vsi_drv_update(t_vsi* handle, struct hdoip_eth_params* eth_params)
         return err;
     }
 
-    if(activ != 0) {
-        vsi_drv_start(handle);
-    }
     return ERR_VSI_SUCCESS;
 }
 

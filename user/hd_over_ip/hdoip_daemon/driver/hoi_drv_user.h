@@ -62,6 +62,7 @@ int hoi_drv_set_mtime(uint32_t p);
 int hoi_drv_get_mtime(uint32_t* p);
 int hoi_drv_set_stime(uint32_t p);
 int hoi_drv_get_stime(uint32_t* p);
+int hoi_drv_set_fps_reduction(uint32_t p);
 int hoi_drv_get_syncdelay(uint32_t* p);
 int hoi_drv_timer(uint32_t p);
 int hoi_drv_osdon();
@@ -83,7 +84,7 @@ int hoi_drv_hdcp_auddis_eto();
 int hoi_drv_hdcp_adv9889dis();
 int hoi_drv_hdcp_adv9889en();
 int hoi_drv_hdcp_get_key(uint32_t key[4]);
-
+int hoi_drv_clr_osd();
 int hoi_drv_poll();
 int hoi_drv_getversion(t_hoic_getversion* cmd);
 int hoi_drv_getusb(t_hoic_getusb* cmd);

@@ -188,6 +188,7 @@ HOI_WRITE(set_led_status, HOI_MSG_LED);
 HOI_WRITE(reset, HOI_MSG_OFF);
 HOI_WRITE(new_audio, HOI_MSG_NEW_AUDIO);
 HOI_WRITE(read_ram, HOI_MSG_DEBUG_READ_RAM);
+HOI_WRITE(set_fps_reduction, HOI_MSG_SET_FPS_REDUCTION);
 
 HOI_READ(get_mtime, HOI_MSG_GETMTIME);
 HOI_READ(get_stime, HOI_MSG_GETSTIME);
@@ -503,6 +504,12 @@ int hoi_drv_set_timing(t_video_timing* timing)
     
     memcpy(&msg.timing, timing, sizeof(t_video_timing));
 
+    if reg_test("mode-start", "vtb") {
+        msg.vtb = true;
+    } else {
+        msg.vtb = false;
+    }
+
     hoi_msg_set_timing_init(&msg);
     ret = hoi_msg(&msg);
 
@@ -695,3 +702,4 @@ HOI_CMDSW(wdg_service);
 HOI_CMDSW(hdcp_timer_enable);
 HOI_CMDSW(hdcp_timer_disable);
 HOI_CMDSW(hdcp_timer_load);
+HOI_CMDSW(clr_osd);

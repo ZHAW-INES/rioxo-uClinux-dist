@@ -11,6 +11,7 @@
 #include "adv7441a_drv_edid.h" // TODO no edid for init
 #include "adv7441a_drv.h"
 #include "gs2971_drv.h"
+#include "sdi_edid.h"
 
 // demo workaround:
 #include <linux/types.h>
@@ -53,7 +54,7 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
         adv9889_drv_init(&handle->adv9889, &handle->i2c_tx, &handle->vio);
     }
     if (lddrv & DRV_ADV7441) {
-        adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, &handle->vio, (char*)adv7441a_edid_table, handle->p_video_mux);
+        adv7441a_drv_init(&handle->adv7441a, &handle->i2c_rx, &handle->vio, (char*)sdi_edid, handle->p_video_mux);
     }
     if (lddrv & DRV_GS2971) {
         gs2971_driver_init(&handle->gs2971, handle->p_spi_rx, &handle->i2c_tag_vid, handle->p_video_mux);
@@ -535,12 +536,7 @@ int hoi_drv_msg_set_timing(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
-    vio_drv_debugx(&handle->vio, &msg->timing, bdt_return_device(&handle->bdt));
-
-    // if sdi, set output data rate
-    if (handle->drivers & DRV_GS2972) {
-        gs2972_driver_set_data_rate(&handle->gs2972, msg->timing.pfreq);
-    }
+    vio_drv_debugx(&handle->vio, &msg->timing, msg->vtb, bdt_return_device(&handle->bdt), &handle->gs2972);
 
     return ret;
 }
@@ -901,6 +897,21 @@ int hoi_drv_msg_read_ram(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
+int hoi_drv_msg_set_fps_reduction(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    eto_drv_frame_rate_reduction(&handle->eto, msg->value);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_clear_osd(t_hoi* handle)
+{
+    vio_osd_clear_screen(handle->p_vio);
+
+    handle->vio.osd.x = 0;
+    handle->vio.osd.y = 0;
+
+    return SUCCESS;
+}
 
 //------------------------------------------------------------------------------
 // message
@@ -952,6 +963,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_TIMER,                 hoi_drv_msg_tmr);
         call(HOI_MSG_STSYNC,                hoi_drv_msg_stsync);
         call(HOI_MSG_SYNCDELAY,             hoi_drv_msg_syncdelay);
+        call(HOI_MSG_SET_FPS_REDUCTION,     hoi_drv_msg_set_fps_reduction);
 
         call(HOI_MSG_ETHSTAT,               hoi_drv_msg_ethstat);
         call(HOI_MSG_VSOSTAT,               hoi_drv_msg_vsostat);
@@ -996,6 +1008,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         callsw(HOI_MSG_HDCP_DISAD9889, hoi_drv_msg_hdcp_ADV9889_dis);
 
         callsw(HOI_MSG_POLL,    hoi_drv_msg_poll);
+        callsw(HOI_MSG_CLR_OSD, hoi_drv_msg_clear_osd);
 
         call(HOI_MSG_DEBUG_READ_RAM,      hoi_drv_msg_read_ram);
 

@@ -4,16 +4,27 @@ require("hdoip.html")
 require("hdoip.pipe")
 
 local REG_ST_URI_LABEL = "st_uri"
-local REG_ST_RSCP_PORT_LABEL = "st_rscp_port"
 local REG_ST_BW_LABEL = "st_bw"
 local REG_ST_BW_CHROMA_LABEL = "st_bw_chroma"
 local REG_ST_NET_DELAY_LABEL = "net_delay"
 local REG_ST_OSD_LABEL = "osd_time"
 local REG_ST_VID_PORT_LABEL = "vid_port"
 local REG_ST_AUD_PORT_LABEL = "aud_port"
+local REG_ST_RSCP_PORT_LABEL = "rscp_port"
 
 local MEDIA_SEL_AUD = "audio"
 local MEDIA_SEL_VID = "video"
+
+function reboot(t)
+    hdoip.html.Header(t, label.page_name .. "Rebooting", script_path)
+    hdoip.html.Title("Reboot")
+    hdoip.html.Text("Please wait until device is rebooted.")
+    hdoip.html.Text("<br>")
+    hdoip.html.Loadbar(0, 30)
+    hdoip.html.Bottom(t)
+    hdoip.pipe.reboot()
+    os.exit(0)
+end
 
 -- ------------------------------------------------------------------
 -- Streamin page
@@ -27,9 +38,11 @@ function show(t)
         
         t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
         t.aud_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_PORT)
+        t.rscp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RSCP_PORT)
         t.edit_vid_port = 0
         t.edit_aud_port = 0
-        
+        t.edit_rscp_port = 0
+
         if(hdoip.pipe.getParam(hdoip.pipe.REG_FORCE_HDCP) == "true") then
             t.hdcp_force = 1
         else 
@@ -54,7 +67,12 @@ function show(t)
                 t.unicast_en = 1
             end
             t.multicast_group = hdoip.pipe.getParam(hdoip.pipe.REG_MULTICAST_GROUP)
-            
+
+            t.fps_divide = hdoip.pipe.getParam(hdoip.pipe.REG_FPS_DIVIDE)
+            if(tonumber(t.fps_divide) ~= nil) then
+                t.fps_divide = tonumber(t.fps_divide);
+            end
+
             if(hdoip.pipe.getParam(hdoip.pipe.REG_AUTO_STREAM) == "true") then
                 t.auto_stream = 1;
             else 
@@ -132,6 +150,23 @@ function show(t)
             t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
         end
 
+        if(t.save_rscp_port ~= nil) then 
+            if(tonumber(t.rscp_port) ~= nil) then
+                t.rscp_port = tonumber(t.rscp_port)
+                if((t.rscp_port >= 0) and (t.rscp_port < 65536)) then
+                    hdoip.pipe.setParam(hdoip.pipe.REG_ST_RSCP_PORT, t.rscp_port)
+                    hdoip.pipe.setParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT, t.rscp_port)
+                    pages.restart.show(t)
+                else
+                    hdoip.html.AddError(t, label.err_rscp_port_not_in_range)
+                end
+            else
+                hdoip.html.AddError(t, label.err_rscp_port_not_number)
+            end
+        else
+            t.rscp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RSCP_PORT)
+        end
+
         if(t.mode_vtb) then
             if(tonumber(t.st_bw) ~= nil) then
                 if ((tonumber(t.st_bw) > 800) or (tonumber(t.st_bw) < 1)) then
@@ -154,6 +189,9 @@ function show(t)
                 hdoip.html.AddError(t, label.err_datarate_not_number)
             end
 
+            if(t.fps_divide ~= nil) then
+               hdoip.pipe.setParam(hdoip.pipe.REG_FPS_DIVIDE, t.fps_divide)
+            end
 
             if(t.auto_stream ~= nil) then
                hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "true")
@@ -217,8 +255,12 @@ function show(t)
 	        end
 	        hdoip.pipe.setParam(hdoip.pipe.REG_ST_MODE_MEDIA, t.media)
         end
-        
+
         hdoip.pipe.getParam(hdoip.pipe.REG_SYS_UPDATE)
+    end
+
+    if(t.button_restart_yes ~= nil) then
+        reboot(t)
     end
 
     hdoip.html.Header(t, label.page_name .. label.page_streaming, script_path)
@@ -264,6 +306,16 @@ function show(t)
         hdoip.html.FormCheckbox("edit_aud_port", 1, label.button_edit, t.edit_aud_port)     hdoip.html.TableInsElement(1);
     end
 
+    hdoip.html.Text(label.p_st_rscp_port);                                                  hdoip.html.TableInsElement(1);
+    if((t.edit_rscp_port ~= nil) and (t.edit_rscp_port == "1")) then
+        hdoip.html.FormText(REG_ST_RSCP_PORT_LABEL, t.rscp_port, 5, 0);                     hdoip.html.TableInsElement(1);
+        hdoip.html.FormHidden("save_rscp_port", 1)
+        hdoip.html.Text(label.u_decimal);                                                   hdoip.html.TableInsElement(1);
+    else
+        hdoip.html.Text(t.rscp_port)                                                        hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("edit_rscp_port", 1, label.button_edit, t.edit_rscp_port)   hdoip.html.TableInsElement(1);
+    end
+
     -- VTB specific fields
     if(t.mode_vtb) then
         hdoip.html.Text(label.p_st_datarate);                                               hdoip.html.TableInsElement(1);
@@ -272,8 +324,15 @@ function show(t)
         hdoip.html.Text(label.p_st_dec_chroma);                                             hdoip.html.TableInsElement(1);
         hdoip.html.FormText(REG_ST_BW_CHROMA_LABEL, t.st_bw_chroma, 4, 0); 
         hdoip.html.Text(label.u_percent);                                                   hdoip.html.TableInsElement(2);
-        hdoip.html.Text(label.p_st_auto_stream);                                                hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                            hdoip.html.TableInsElement(2);
+
+        hdoip.html.Text(label.p_st_fps_divide);                                             hdoip.html.TableInsElement(1);
+        hdoip.html.DropdownBox4("fps_divide", label.n_none, label.n_1_2, label.n_1_3, label.n_1_4, t.fps_divide)
+        hdoip.html.Text(label.p_st_eit_only);                                               hdoip.html.TableInsElement(2);
+
+
+
+        hdoip.html.Text(label.p_st_auto_stream);                                            hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                        hdoip.html.TableInsElement(2);
     end
 
     -- VRB specific fields

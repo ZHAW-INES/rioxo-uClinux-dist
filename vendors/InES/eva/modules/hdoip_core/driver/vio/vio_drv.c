@@ -163,6 +163,9 @@ int vio_drv_setup_osd(t_vio* handle, t_osd_font* font, uint32_t device)
 
     vio_enable_output_timing(handle->p_vio);
 
+    handle->osd.x = 0;
+    handle->osd.y = 0;
+
 	VIO_REPORT_FONT(font);
 
 	return ERR_VIO_SUCCESS;
@@ -200,13 +203,17 @@ int vio_drv_reset(t_vio* handle, uint32_t device)
     memset(&handle->osd, 0, sizeof(t_osd));
     
     // set OSD border
-    handle->osd.x_border = 0;
-    handle->osd.y_border = 0;
+    handle->osd.x_border = 6;
+    handle->osd.y_border = 2;
 
     // stop everything
     vio_reset(handle->p_vio);
     adv212_drv_init(handle->p_adv);
+
+    // clear OSD
     vio_osd_clear_screen(handle->p_vio);
+    handle->osd.x = 0;
+    handle->osd.y = 0;
     
     return ERR_VIO_SUCCESS;
 }
@@ -261,7 +268,8 @@ int vio_drv_encode(t_vio* handle, uint32_t device)
     // setup osd 
     vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
-
+    handle->osd.x = 0;
+    handle->osd.y = 0;
 
 
     // setup muxes
@@ -357,6 +365,8 @@ int vio_drv_decode(t_vio* handle, uint32_t device)
     // setup osd
     vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);  
+    handle->osd.x = 0;
+    handle->osd.y = 0;
 
     // setup muxes
     vio_set_vout(handle->p_vio, VIO_MUX_VOUT_ADV212);
@@ -476,7 +486,10 @@ int vio_drv_plainout(t_vio* handle, uint32_t device)
     }
 
     // setup osd
+    vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
+    handle->osd.x = 0;
+    handle->osd.y = 0;
 
     // setup muxes
     vio_set_vout(handle->p_vio, VIO_MUX_VOUT_PLAIN);
@@ -549,7 +562,10 @@ int vio_drv_plainin(t_vio* handle, uint32_t device)
     vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_INPUT, 0, 1, VIO_MUX_PLLC_FREE, device, 2);
 
     // setup osd
+    vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
+    handle->osd.x = 0;
+    handle->osd.y = 0;
 
     // setup frame size in words
     vio_set_size(handle->p_vio, vid_pixel_per_frame(&handle->timing)*3/4);
@@ -599,9 +615,11 @@ int vio_drv_plainin(t_vio* handle, uint32_t device)
  *
  * @param handle vio handle
  */
-int vio_drv_debug(t_vio* handle, uint32_t device)
+
+int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb, t_gs2972 *sdi_tx)
 {
     int ret = ERR_VIO_SUCCESS;    
+    int no_input = 1;
 
     REPORT(INFO, ">> VIO-Driver: debug mode");
 
@@ -609,22 +627,51 @@ int vio_drv_debug(t_vio* handle, uint32_t device)
 
     // stop everything
     vio_reset(handle->p_vio);
-    
+
+    // get input video timing if transmitter
+    if (vtb) {
+        no_input = vio_get_timing(handle->p_vio, &handle->timing);
+    }
+
+    // if SDI, timing of h and v is inverted
+    if (device == BDT_ID_SDI8_BOARD) {
+        handle->timing.vpolarity = 0;
+        handle->timing.hpolarity = 0;
+    }
+
     // setup timing generator
     vio_set_timing(handle->p_vio, &handle->timing, 0);
 
+    // if sdi, set output data rate
+    if (device == BDT_ID_SDI8_BOARD) {
+        gs2972_driver_set_data_rate(sdi_tx, handle->timing.pfreq);
+    }
+
     // setup interface format
-    vio_set_output_format(handle->p_vio, &handle->timing, vio_format(CS_RGB, SM_444), handle->format_out, false);
-    
+    vio_set_output_format(handle->p_vio, &handle->timing, handle->format_proc, handle->format_out, false);
+    vio_set_input_format(handle->p_vio, &handle->timing, handle->format_in, handle->format_proc);
+
     // setup PLL
-    vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_75MHZ, handle->timing.pfreq, 1, VIO_MUX_PLLC_FREE, device, 2);    
-    
+    if (no_input) {
+        vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_75MHZ, handle->timing.pfreq, 1, VIO_MUX_PLLC_FREE, device, 2);
+    } else {
+        vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_INPUT, handle->timing.pfreq, 1, VIO_MUX_PLLC_FREE, device, 2);
+    }
+
     // setup osd
+    vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
+    handle->osd.x = 0;
+    handle->osd.y = 0;
     
     // setup muxes
-    vio_set_vout(handle->p_vio, VIO_MUX_VOUT_DEBUG);
-    vio_set_cfg(handle->p_vio, VIO_CFG_VOUT | VIO_CFG_OVERLAY);
+    if (no_input) {
+        vio_set_vout(handle->p_vio, VIO_MUX_VOUT_DEBUG);
+        vio_set_cfg(handle->p_vio, VIO_CFG_VOUT | VIO_CFG_OVERLAY);
+    } else {
+        vio_set_vout(handle->p_vio, VIO_MUX_VOUT_LOOP);
+        vio_set_cfg(handle->p_vio, VIO_CFG_VIN | VIO_CFG_VOUT | VIO_CFG_OVERLAY);
+    }
     
     // START ...
     //////////////////////
@@ -678,7 +725,10 @@ int vio_drv_loop(t_vio* handle, uint32_t device)
     vio_drv_pll_setup(handle->p_vio, &handle->pll, handle->si598, VIO_SEL_INPUT, 0, 1, VIO_MUX_PLLC_FREE, device, 2);
 
     // setup osd
+    vio_osd_clear_screen(handle->p_vio);
     vio_osd_set_resolution(handle->p_vio, handle->timing.width, handle->timing.height);
+    handle->osd.x = 0;
+    handle->osd.y = 0;
 
     // setup muxes
     vio_set_stin(handle->p_vio, VIO_MUX_STIN_LOOP);
@@ -790,11 +840,11 @@ int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt, uint32_t device)
  * @param handle vio handle
  * @param p_vt video timing struct
  */
-int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, uint32_t device)
+int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, bool vtb, uint32_t device, t_gs2972 *sdi_tx)
 {
     PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv); PTR(p_vt);
     memcpy(&handle->timing, p_vt, sizeof(t_video_timing));
-    return vio_drv_debug(handle, device);
+    return vio_drv_debug(handle, device, vtb, sdi_tx);
 }
 
 int vio_drv_set_format_in(t_vio* handle, t_video_format f)
