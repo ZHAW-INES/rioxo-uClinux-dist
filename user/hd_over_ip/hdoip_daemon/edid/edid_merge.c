@@ -167,13 +167,13 @@ void edid_merge_display_dsc(uint8_t *edid, uint8_t *dscs1, uint8_t *dscs2, bool 
         ptr3[2]  = 0x00;
         ptr3[3]  = 0xFC;
         ptr3[4]  = 0x00;
-        ptr3[5]  = 'E';
-        ptr3[6]  = 'M';
-        ptr3[7]  = 'C';
-        ptr3[8]  = 'O';
-        ptr3[9]  = 'R';
-        ptr3[10] = 'E';
-        ptr3[11] = 0x0A;
+        ptr3[5]  = 'R';
+        ptr3[6]  = 'I';
+        ptr3[7]  = 'O';
+        ptr3[8]  = 'X';
+        ptr3[9]  = 'O';
+        ptr3[10] = 0x0A;
+        ptr3[11] = 0x20;
         ptr3[12] = 0x20;
         ptr3[13] = 0x20;
         ptr3[14] = 0x20;
@@ -237,7 +237,7 @@ void edid_merge(t_edid *edid1, t_edid *edid2)
     strncpy(sn,   &(tmp[6]), 8);
     sn[8] = '\0';
 
-    edid.id_manufacturer    = 0xA315; // EMC  // CHANGE BRAND: 0x0F4B; // RXO
+    edid.id_manufacturer    = 0x0F4B; // RXO  0xA315; // EMC
     edid.id_product_code    = 10;
     edid.id_serial_number   = atoi(sn);
     edid.year               = (uint8_t)(atoi(year) - 1990);

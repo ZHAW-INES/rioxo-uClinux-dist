@@ -11,6 +11,7 @@ local REG_ST_OSD_LABEL = "osd_time"
 local REG_ST_VID_PORT_LABEL = "vid_port"
 local REG_ST_AUD_PORT_LABEL = "aud_port"
 local REG_ST_RSCP_PORT_LABEL = "rscp_port"
+local REG_ST_HELLO_PORT_LABEL = "hello_port"
 
 local MEDIA_SEL_AUD = "audio"
 local MEDIA_SEL_VID = "video"
@@ -39,9 +40,11 @@ function show(t)
         t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
         t.aud_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_PORT)
         t.rscp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RSCP_PORT)
+        t.hello_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT)
         t.edit_vid_port = 0
         t.edit_aud_port = 0
         t.edit_rscp_port = 0
+        t.edit_hello_port = 0
 
         if(hdoip.pipe.getParam(hdoip.pipe.REG_FORCE_HDCP) == "true") then
             t.hdcp_force = 1
@@ -155,7 +158,6 @@ function show(t)
                 t.rscp_port = tonumber(t.rscp_port)
                 if((t.rscp_port >= 0) and (t.rscp_port < 65536)) then
                     hdoip.pipe.setParam(hdoip.pipe.REG_ST_RSCP_PORT, t.rscp_port)
-                    hdoip.pipe.setParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT, t.rscp_port)
                     pages.restart.show(t)
                 else
                     hdoip.html.AddError(t, label.err_rscp_port_not_in_range)
@@ -165,6 +167,22 @@ function show(t)
             end
         else
             t.rscp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RSCP_PORT)
+        end
+
+        if(t.save_hello_port ~= nil) then 
+            if(tonumber(t.hello_port) ~= nil) then
+                t.hello_port = tonumber(t.hello_port)
+                if((t.hello_port >= 0) and (t.hello_port < 65536)) then
+                    hdoip.pipe.setParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT, t.hello_port)
+                    pages.restart.show(t)
+                else
+                    hdoip.html.AddError(t, label.err_hello_port_not_in_range)
+                end
+            else
+                hdoip.html.AddError(t, label.err_hello_port_not_number)
+            end
+        else
+            t.hello_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT)
         end
 
         if(t.mode_vtb) then
@@ -314,6 +332,16 @@ function show(t)
     else
         hdoip.html.Text(t.rscp_port)                                                        hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("edit_rscp_port", 1, label.button_edit, t.edit_rscp_port)   hdoip.html.TableInsElement(1);
+    end
+
+    hdoip.html.Text(label.p_st_hello_port);                                                 hdoip.html.TableInsElement(1);
+    if((t.edit_hello_port ~= nil) and (t.edit_hello_port == "1")) then
+        hdoip.html.FormText(REG_ST_HELLO_PORT_LABEL, t.hello_port, 5, 0);                   hdoip.html.TableInsElement(1);
+        hdoip.html.FormHidden("save_hello_port", 1)
+        hdoip.html.Text(label.u_decimal);                                                   hdoip.html.TableInsElement(1);
+    else
+        hdoip.html.Text(t.hello_port)                                                       hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("edit_hello_port", 1, label.button_edit, t.edit_hello_port) hdoip.html.TableInsElement(1);
     end
 
     -- VTB specific fields

@@ -2,7 +2,7 @@
 module (..., package.seeall)
 
 label = {
-    page_name = "Emcore : ";
+    page_name = "Rioxo&reg : ";
     
     u_decimal = "[decimal]";
     u_mbps = "[Mbit / s]";
@@ -54,7 +54,9 @@ label = {
     err_vid_port_not_in_range = "Video port is not in range (0 .. 65535)";
     err_vid_port_not_number = "Video port is not a number";
     err_rscp_port_not_in_range = "RSCP port is not in range (0 .. 65535)";
+    err_hello_port_not_in_range = "HELLO port is not in range (0 .. 65535)";
     err_rscp_port_not_number = "RSCP port is not a number";
+    err_hello_port_not_number = "HELLO port is not a number";
     err_datarate_not_number = "Max. datarate is not a number";
     err_datarate_not_in_range = "Max. datarate is not in range (1 .. 800)";
     err_datarate_chroma_not_in_range = "Max. chroma datarate is not in range (0 .. 100%)";
@@ -157,6 +159,7 @@ label = {
     p_st_vid_port = "Video UDP Port";
     p_st_aud_port = "Audio UDP Port";
     p_st_rscp_port = "RSCP TCP Port";
+    p_st_hello_port = "HELLO UDP Port";
     p_st_datarate = "Max. datarate";
     p_st_dec_chroma = "Chroma datarate";
     p_st_net_delay = "Max. network delay";
