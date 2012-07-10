@@ -20,7 +20,7 @@
 #include <errno.h>
 
 #include "only_registry.h"
-#include "hdoipd_msgg.h"
+#include "../../hdoip_daemon/hdoipd_msg.h"
 #include "hdoip_common.h"
 
 // MACROS
@@ -29,7 +29,7 @@ int handle_##h_para(netsnmp_mib_handler *handler,                             \
                           netsnmp_handler_registration *reginfo,              \
                           netsnmp_agent_request_info   *reqinfo,              \
                           netsnmp_request_info         *requests){            \
-    t_snmp_array arr = {1, hoic_get_param, 0, parameter};                     \
+    t_snmp_array arr = {HOIC_GET_SET, 0, parameter};                     \
     if (getset_value_generic(&arr, reqinfo->mode, requests) != 0){            \
         snmp_log(LOG_ERR, "Could not get/set parameter in (%d)\n", reqinfo->mode ); \
         return SNMP_ERR_GENERR;}                                              \
@@ -61,8 +61,8 @@ void init_only_registry(void){
 
 /* These functions register the handler for each request
  *
- * @param   1. Name of function, only used for macro to generate function name
- * @param   2. Name of the parameter we want to set/get in the registry
+ * @param       1. Name of function, only used for macro to generate function name
+ * @param       2. Name of the parameter we want to set/get in the registry
  * @return      error message
  * */
 HANDLE_FUNCTION(audioPort, "audio-port")
@@ -71,8 +71,4 @@ HANDLE_FUNCTION(rscpServerPort, "rscp-server-port")
 HANDLE_FUNCTION(hdcpForce, "hdcp-force")
 HANDLE_FUNCTION(networkAlive, "network-alive")
 HANDLE_FUNCTION(networkTimeout, "network-timeout")
-
-//Move to status
-//HANDLE_FUNCTION(serialNumber, "serial-number")  //should be read only
-
 

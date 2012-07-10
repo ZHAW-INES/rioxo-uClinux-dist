@@ -390,7 +390,6 @@ int rscp_parse_request(t_rscp_connection* con, const t_map_set srv_method[], con
 
     // find method
     *method = map_find_set(srv_method, common->rq.method);
-    report(" ? method %s\n", common->rq.method);
     if (!*method) {
         rscp_ommit_header(con, 0);
         rscp_response_error(con, 405, "Method not allowed");

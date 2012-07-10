@@ -13,8 +13,6 @@ NET_SNMP_CFG += --with-endianness=little
 endif
 
 ifdef CONFIG_USER_NETSNMP_BUILDSTATIC
-#NET_SNMP_CFG += --enable-shared=no
-#NET_SNMP_CFG += --with-ldflags=-Bstatic
 NET_SNMP_LIB_EXT = a
 NET_SNMP_EXE_DIR = 
 else
@@ -91,30 +89,7 @@ else
 NET_SNMP_CFG += --with-defaults
 endif
 
-# The additional MIBs
-#NET_SNMP_CFG += --with-mib-modules="../../../../hd_over_ip/hdoip_snmp/status/status"
-
-# To make image smaller
-#NET_SNMP_CFG += --enable-minimialist
-#NET_SNMP_CFG += --disable-debugging
-#NET_SNMP_CFG += --with-transports=UDP
-
-#NET_SNMP_CFG += --with-out-mib-modules="default_modules"
-#NET_SNMP_CFG += --with-mib-modules= "utilities/execute"
-#NET_SNMP_CFG += --with-mib-modules= "mibII/vacm_conf"
-#NET_SNMP_CFG += --with-mib-modules= "mibII/ip"
-#NET_SNMP_CFG += --with-mib-modules= "mibII/interfaces"
-
-#override CFLAGS += -Os
-# Set C and LD falgs to link the addidtional MIBs properly
-#CFLAGS += -I$(STAGEDIR)/usr/include
-#CFLAGS += -I../../../../hd_over_ip/hdoip_daemon/
-#CFLAGS += -I../../../../../vendors/InES/eva/modules/hdoip_core/hal/vid
-#CFLAGS += -std=c99
-#CFLAGS += -fno-tree-loop-optimize
-#LDFLAGS += -L$(STAGEDIR)/usr/include
 LDFLAGS += -Bstatic
-
 
 ifdef CONFIG_USER_NETSNMP_ADDMIBS
 NET_SNMP_CFG += --with-mib-modules=$(CONFIG_USER_NETSNMP_ADDITIONALMIBS)
@@ -198,4 +173,3 @@ endif
 
 clean:
 	rm -rf build
-

@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Dist builder
-# Wed Jun 20 12:56:16 2012
+# Fri Jul  6 10:14:41 2012
 #
 CONFIG_DISTVERSION="4.0"
 
@@ -335,7 +335,7 @@ CONFIG_USER_NETSNMP_MIBS=y
 # CONFIG_USER_NETSNMP_OPENSSL is not set
 # CONFIG_USER_NETSNMP_OVRDEFAULTS is not set
 CONFIG_USER_NETSNMP_ADDMIBS=y
-CONFIG_USER_NETSNMP_ADDITIONALMIBS="status listener only_registry"
+CONFIG_USER_NETSNMP_ADDITIONALMIBS="../../../../hd_over_ip/hdoip_snmp/src/commands ../../../../hd_over_ip/hdoip_snmp/src/hdoip_common ../../../../hd_over_ip/hdoip_snmp/src/listener ../../../../hd_over_ip/hdoip_snmp/src/only_registry ../../../../hd_over_ip/hdoip_snmp/src/status"
 # CONFIG_USER_MARADNS_ZONESERVER is not set
 # CONFIG_USER_NMAP_NMAP is not set
 # CONFIG_USER_NTPCLIENT_NTPCLIENT is not set

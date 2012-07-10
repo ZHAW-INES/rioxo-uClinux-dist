@@ -20,17 +20,17 @@
 #include <errno.h>
 
 #include "commands.h"
-#include "hdoipd_msgg.h"
+#include "../../hdoip_daemon/hdoipd_msg.h"
 #include "hdoip_common.h"
 
 // MACROS
-#define HANDLE_FUNCTION(h_para, nr_of_args, name_of_function, parameter)      \
+#define HANDLE_FUNCTION(h_para, function_name, parameter)                     \
 int handle_##h_para(netsnmp_mib_handler *handler,                             \
                           netsnmp_handler_registration *reginfo,              \
                           netsnmp_agent_request_info   *reqinfo,              \
                           netsnmp_request_info         *requests){            \
-    t_snmp_array arr = {nr_of_args, name_of_function, parameter, ""};         \
-    if (getset_value_generic(&arr, reqinfo->mode, requests) != 0){          \
+    t_snmp_array arr = {function_name, parameter, ""};                        \
+    if (getset_value_generic(&arr, reqinfo->mode, requests) != 0){            \
         snmp_log(LOG_ERR, "Could not get/set parameter in (%d)\n", reqinfo->mode ); \
         return SNMP_ERR_GENERR;}                                              \
     return SNMP_ERR_NOERROR;}                                                 \
@@ -62,15 +62,13 @@ void init_commands(void){
 /* This functions register the handler for each request
  *
  * @param       1. Name of function, only used for macro to generate function name
- * @param       2. Number of parameters: 0=read only, 1=read/write,
- *              2=r/w with callback function, 3=r/w with callback function and parameter
- * @param       3. function pointer
- * @param       4. parameter for the function we point to
+ * @param       2. Name of function to call to execute command
+ * @param       3. Name of the command to execute
  * @return      error message
  * */
-HANDLE_FUNCTION(vrbPlay, 2, hoic_sw, HOIC_VRB_PLAY)
-HANDLE_FUNCTION(vrbReady, 2, hoic_sw, HOIC_READY)
-HANDLE_FUNCTION(reboot, 2, hoic_sw, HOIC_REBOOT)
-HANDLE_FUNCTION(factoryDefault, 2, hoic_sw, HOIC_FACTORY_DEFAULT)
-HANDLE_FUNCTION(store, 2, hoic_sw, HOIC_STORE_CFG)
-HANDLE_FUNCTION(remoteUpdate, 3, hoic_sw, 0)
+HANDLE_FUNCTION(vrbPlay, HOIC_SW, HOIC_VRB_PLAY)
+HANDLE_FUNCTION(vrbReady, HOIC_SW, HOIC_READY)
+HANDLE_FUNCTION(reboot, HOIC_SW, HOIC_REBOOT)
+HANDLE_FUNCTION(factoryDefault, HOIC_SW, HOIC_FACTORY_DEFAULT)
+HANDLE_FUNCTION(store, HOIC_SW, HOIC_STORE_CFG)
+HANDLE_FUNCTION(remoteUpdate, HOIC_REMOTE_UP, 0)

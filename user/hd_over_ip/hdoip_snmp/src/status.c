@@ -19,7 +19,7 @@
 #include <errno.h>
 
 #include "status.h"
-#include "hdoipd_msgg.h"
+#include "../../hdoip_daemon/hdoipd_msg.h"
 #include "hdoip_common.h"
 
 
@@ -29,7 +29,7 @@ int handle_##h_para(netsnmp_mib_handler *handler,                             \
                           netsnmp_handler_registration *reginfo,              \
                           netsnmp_agent_request_info   *reqinfo,              \
                           netsnmp_request_info         *requests){            \
-    t_snmp_array arr = {0, hoic_get_param, 0, parameter};                     \
+    t_snmp_array arr = {HOIC_GET_R_ONLY, 0, parameter};                       \
     if (getset_value_generic(&arr, reqinfo->mode, requests) != 0){            \
         snmp_log(LOG_ERR, "Could not get/set parameter in (%d)\n", reqinfo->mode ); \
         return SNMP_ERR_GENERR;}                                              \
@@ -80,7 +80,7 @@ void init_status(void){
  * @return     error message
  * */
 HANDLE_FUNCTION(systemState, "system-state")
-HANDLE_FUNCTION(daemonState, "daemon-state")  //TODO: really neccessary
+HANDLE_FUNCTION(daemonState, "daemon-state")
 HANDLE_FUNCTION(daemonVtbState, "daemon-vtb-state")
 HANDLE_FUNCTION(daemonVrbState, "daemon-vrb-state")
 HANDLE_FUNCTION(ethStatus, "eth-status")

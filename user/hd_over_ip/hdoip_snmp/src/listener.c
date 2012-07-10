@@ -21,7 +21,7 @@
 #include <errno.h>
 
 #include "listener.h"
-#include "hdoipd_msgg.h"
+#include "../../hdoip_daemon/hdoipd_msg.h"
 #include "hdoip_common.h"
 
 
@@ -31,7 +31,7 @@ int handle_##h_para(netsnmp_mib_handler *handler,                             \
                           netsnmp_handler_registration *reginfo,              \
                           netsnmp_agent_request_info   *reqinfo,              \
                           netsnmp_request_info         *requests){            \
-    t_snmp_array arr = {1, hoic_get_param, 0, parameter};                     \
+    t_snmp_array arr = {HOIC_GET_SET, 0, parameter};                     \
     if (getset_value_generic(&arr, reqinfo->mode, requests) != 0){            \
         snmp_log(LOG_ERR, "Could not get/set parameter in (%d)\n", reqinfo->mode ); \
         return SNMP_ERR_GENERR;}                                              \
