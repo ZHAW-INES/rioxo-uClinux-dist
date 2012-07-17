@@ -39,7 +39,7 @@ int vtb_video_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* r
 
 int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
-    int n;
+    int hdcp;
 
     t_multicast_cookie* cookie = media->cookie;
 
@@ -67,21 +67,21 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     }
 */
     // get own MAC address
-    if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
+    if (net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac) != RSCP_SUCCESS) {
         report(" ? net_get_local_hwaddr failed");
         rscp_err_server(rsp);
         return RSCP_REQUEST_ERROR;
     }
 
     // get own IP address
-    if ((n = net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address)) != RSCP_SUCCESS) {
+    if (net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address) != RSCP_SUCCESS) {
         report(" ? net_get_local_addr failed");
         rscp_err_server(rsp);
         return RSCP_REQUEST_ERROR;
     }
 
     // get MAC address of next in rout
-    if ((n = net_get_remote_hwaddr(hdoipd.listener.sockfd, "eth0", rsp->address, (uint8_t*)&cookie->remote.mac)) != RSCP_SUCCESS) {
+    if (net_get_remote_hwaddr(hdoipd.listener.sockfd, "eth0", rsp->address, (uint8_t*)&cookie->remote.mac) != RSCP_SUCCESS) {
         report(" ? net_get_remote_hwaddr failed");
         rscp_err_retry(rsp);
         return RSCP_REQUEST_ERROR;
@@ -96,6 +96,11 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     cookie->alive_ping = 1;
 
     //check if hdcp is forced by HDMI, user or client (over RSCP)
+    hoi_drv_get_encrypted_status(&hdcp);
+    if (hdcp) {
+        report(INFO "\n ******* Incomming stream is encrypted!! ****** ");
+        hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
+    }
     if (reg_test("hdcp-force", "true") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
     	m->hdcp.hdcp_on = 1;
     	hdoipd.hdcp.enc_state = HDCP_ENABLED;
@@ -115,7 +120,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
 
 int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* rsp)
 {
-    int n;
+    int n, hdcp;
     t_video_timing timing;
     t_rscp_rtp_format fmt;
     hdoip_eth_params eth;
@@ -134,14 +139,11 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
         return RSCP_REQUEST_ERROR;
     }
 
-   /* if((!get_multicast_enable()) || (check_client_availability == CLIENT_NOT_AVAILABLE)) {
-        if (!hdoipd_tstate(VTB_VID_IDLE)) {
-            // we don't have the resource reserved
-            report(" ? require state VTB_IDLE");
-            rscp_err_server(rsp);
-            return RSCP_REQUEST_ERROR;
-        }
-    }*/
+    //check if hdcp is enabled
+    hoi_drv_get_encrypted_status(&hdcp);
+    if ((hdcp) && !hdoipd_rsc(RSC_VIDEO_IN_HDCP)) {
+        return RSCP_REQUEST_ERROR;
+    }
 
     if (!hdoipd_rsc(RSC_VIDEO_IN)) {
         // currently no video input active
@@ -197,7 +199,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     fmt.value = reg_get_int("advcnt-min");
 
     // probe config
-    if ((n = hoi_drv_info(&timing, &fmt.value))) {
+    if (hoi_drv_info(&timing, &fmt.value)) {
         rscp_err_server(rsp);
         return RSCP_REQUEST_ERROR;
     }
@@ -210,7 +212,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // activate vsi
 #ifdef VID_IN_PATH
-        if ((n = hoi_drv_vsi(fmt.compress, 0, reg_get_int("bandwidth"), &eth, &timing, &fmt.value))) {
+        if (hoi_drv_vsi(fmt.compress, 0, reg_get_int("bandwidth"), &eth, &timing, &fmt.value)) {
             return RSCP_REQUEST_ERROR;
         }
 #endif
@@ -325,10 +327,13 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
         case EVENT_VIDEO_IN_OFF:
         	report(INFO "EVENT VIDEO IN OFF");
             if (rscp_media_splaying(media)) {
-                vtb_video_pause(media);
                 rscp_server_update(media, EVENT_VIDEO_IN_OFF);
+                rscp_listener_add_kill(&hdoipd.listener, media);
+                hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
+                osd_permanent(true);
+                osd_printf("vtb.video no input...\n");
+
             }
-            return RSCP_PAUSE;
         break;
         case EVENT_TICK:
             if (cookie->alive_ping) {

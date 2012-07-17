@@ -32,7 +32,7 @@ int vtb_audio_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* r
 
 int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
-    int n;
+    int hdcp;
     t_multicast_cookie* cookie = media->cookie;
 
     report(VTB_METHOD "vtb_audio_setup");
@@ -58,21 +58,21 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
 */
 
     // get own MAC address
-    if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
+    if (net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac) != RSCP_SUCCESS) {
         report(" ? net_get_local_hwaddr failed");
         rscp_err_server(rsp);
         return RSCP_REQUEST_ERROR;
     }
 
     // get own IP address
-    if ((n = net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address)) != RSCP_SUCCESS) {
+    if (net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address) != RSCP_SUCCESS) {
         report(" ? net_get_local_addr failed");
         rscp_err_server(rsp);
         return RSCP_REQUEST_ERROR;
     }
 
     // get MAC address of next in rout
-    if ((n = net_get_remote_hwaddr(hdoipd.listener.sockfd, "eth0", rsp->address, (uint8_t*)&cookie->remote.mac)) != RSCP_SUCCESS) {
+    if (net_get_remote_hwaddr(hdoipd.listener.sockfd, "eth0", rsp->address, (uint8_t*)&cookie->remote.mac) != RSCP_SUCCESS) {
         report(" ? net_get_remote_hwaddr failed");
         rscp_err_retry(rsp);
         return RSCP_REQUEST_ERROR;
@@ -84,6 +84,11 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     }
 
     //check if hdcp is forced by HDMI, user or client (over RSCP)
+    hoi_drv_get_encrypted_status(&hdcp);
+    if (hdcp) {
+        report(INFO "\n ******* Incomming stream is encrypted!! ****** ");
+        hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
+    }
     if (reg_test("hdcp-force", "true") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
     	m->hdcp.hdcp_on = 1;
     	hdoipd.hdcp.enc_state = HDCP_ENABLED;
@@ -108,7 +113,7 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
 
 int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connection* rsp)
 {
-    int n;
+    int n, hdcp;
     t_rscp_rtp_format fmt;
     hdoip_eth_params eth;
     char dst_mac[6];
@@ -126,13 +131,10 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
         return RSCP_REQUEST_ERROR;
     }
 
-    if((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
-        if (!hdoipd_tstate(VTB_AUD_IDLE)) {
-            // we don't have the resource reserved
-            report(" ? require state VTB_AUD_IDLE");
-            rscp_err_server(rsp);
-            return RSCP_REQUEST_ERROR;
-        }
+    //check if hdcp is enabled
+    hoi_drv_get_encrypted_status(&hdcp);
+    if ((hdcp) && !hdoipd_rsc(RSC_VIDEO_IN_HDCP)) {
+        return RSCP_REQUEST_ERROR;
     }
 
     if (!hdoipd_rsc(RSC_AUDIO_IN)) {
@@ -302,10 +304,9 @@ int vtb_audio_event(t_rscp_media *media, uint32_t event)
         break;
         case EVENT_AUDIO_IN0_OFF:
             if (rscp_media_splaying(media)) {
-                vtb_audio_pause(media);
                 rscp_server_update(media, EVENT_AUDIO_IN0_OFF);
+                rscp_listener_add_kill(&hdoipd.listener, media);
             }
-            return RSCP_PAUSE;
         break;
         case EVENT_TICK:
             if (cookie->alive_ping) {

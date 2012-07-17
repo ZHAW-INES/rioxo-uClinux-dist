@@ -91,6 +91,7 @@ int hoi_drv_getusb(t_hoic_getusb* cmd);
 int hoi_drv_get_reset_to_default(uint32_t *p);
 int hoi_drv_get_active_resolution(uint32_t *p);
 int hoi_drv_wdg_init(uint32_t service_time);
+int hoi_drv_get_encrypted_status(uint32_t *p);
 
 int hoi_drv_reset(uint32_t rv);
 

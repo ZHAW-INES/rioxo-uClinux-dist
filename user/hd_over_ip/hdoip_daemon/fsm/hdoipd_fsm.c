@@ -690,8 +690,6 @@ void hdoipd_event(uint32_t event)
                 hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VRB);
             }
         break;
-        case E_ADV7441A_CONNECT:
-        break;
         case E_ADV7441A_NEW_HDMI_RES:
             if (!hdoipd_rsc(RSC_VIDEO_IN)) { 
                 hdoipd_set_rsc(RSC_VIDEO_IN);
@@ -720,10 +718,6 @@ void hdoipd_event(uint32_t event)
                     hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VRB);
                 }
             }
-        break;
-        case E_ADV7441A_ACTIVITY_ON_SYNC:
-        break;
-        case E_ADV7441A_NEW_AUDIO:
         break;
         case E_ADV7441A_NO_AUDIO:
         break;
@@ -762,15 +756,6 @@ void hdoipd_event(uint32_t event)
         break;
         case E_ETO_AUDIO_OFF:
             hdoipd_clr_rsc(RSC_EAO);
-        break;
-        case E_ADV7441A_HDCP:
-            report(INFO "\n ******* Incomming stream is encrypted!! ****** ");
-            hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
-        break;
-        case E_ADV7441A_NO_HDCP:
-            report(INFO "\n ******* Incomming stream is not encrypted!! ****** ");
-            // TODO: once, if encryption is enable, is remains enabled -> disabling causes error (decoder crashes)
-            //       hdoipd_clr_rsc(RSC_VIDEO_IN_HDCP);
         break;
         case E_HDCP_STREAMING_ERROR:   // restart VTB if Kernel detects HDCP streaming error
         	report(INFO "*********** HDCP streaming error ***********");

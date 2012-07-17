@@ -343,8 +343,8 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_3,0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_4,0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_1, 0x00);
-    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_2, ADV7441A_BIT_HDMI_ENCRPT_MB1 | ADV7441A_BIT_AUDIO_C_PCKT_MB1 | ADV7441A_BIT_AUDIO_PLL_LCK_MB1);
-    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_3, ADV7441A_BIT_VIDEO_PLL_LCK_MB1 | ADV7441A_BIT_V_LOCKED_MB1 | ADV7441A_BIT_TMDS_CLK_A_MB1);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_2, ADV7441A_BIT_AUDIO_C_PCKT_MB1 | ADV7441A_BIT_AUDIO_PLL_LCK_MB1);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_3, ADV7441A_BIT_VIDEO_PLL_LCK_MB1 | ADV7441A_BIT_TMDS_CLK_A_MB1);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_4, 0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_5, ADV7441A_BIT_CTS_PASS_THRS_M1);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_6, 0x00);
@@ -637,7 +637,12 @@ int adv7441a_get_analog_video_timing(t_adv7441a* handle)
  */
 int adv7441a_get_hdcp_status(t_adv7441a* handle)
 {
-    return (adv7441a_usr_map1_read(handle, ADV7441A_REG_REGISTER_05H) & ADV7441A_BIT_HDMI_CONTENT_ENCRYPTED);
+    int ret;
+    ret = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_RAW_STATUS_2) & ADV7441A_BIT_HDMI_ENCRPT_RAW;
+    if (ret) {
+        handle->status = handle->status | ADV7441A_STATUS_ENCRYPTED;
+    }
+    return ret;
 }
 
 
@@ -678,7 +683,7 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
         if ((hdmi_raw3 & ADV7441A_BIT_TMDS_CLK_A_RAW) == 0) {                   // if tmds clock is not active: VGA, otherwise HDMI is connected
             REPORT(INFO, "[HDMI IN] configure ADV7441 to RGB\n");
             adv7441a_usr_map_write(handle, ADV7441A_REG_PRIMARY_MODE, 0x02);
-            queue_put(event_queue, E_ADV7441A_ACTIVITY_ON_SYNC);
+            // queue_put(event_queue, E_ADV7441A_ACTIVITY_ON_SYNC);
         }
     }
 
@@ -690,21 +695,11 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
             REPORT(INFO, "[HDMI IN] configure ADV7441 to HDMI\n");
             adv7441a_usr_map_write(handle, ADV7441A_REG_PRIMARY_MODE, 0x06);
             adv7441a_usr_map_write(handle, ADV7441A_REG_VIDEO_STANDARD, 0x02);
-            queue_put(event_queue, E_ADV7441A_CONNECT);
+            // queue_put(event_queue, E_ADV7441A_CONNECT);
 		} else {
             REPORT(INFO, "[HDMI IN] no TMDS clock active\n");
         }
 	}
-
-    /* Video PLL changed */
-    if((hdmi_status3 & ADV7441A_BIT_VIDEO_PLL_LCK_ST) != 0) {
-        int3_clr |= ADV7441A_BIT_VIDEO_PLL_LCK_CLR;
-        //if((hdmi_raw3 & ADV7441A_BIT_VIDEO_PLL_LCK_RAW) != 0){
-        //    REPORT(INFO, "[HDMI IN] Video PLL locked\n");
-        //} else {
-        //    REPORT(INFO, "[HDMI IN] Video PLL unlocked\n");
-        //}	
-    }
 
 	/* Audio PLL changed */
     if((hdmi_status2 & ADV7441A_BIT_AUDIO_PLL_LCK_ST) != 0) {
@@ -731,37 +726,11 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
      */
 
     if(((hdmi_raw3 & ADV7441A_BIT_TMDS_CLK_A_RAW) != 0) && ((hdmi_raw3 & ADV7441A_BIT_VIDEO_PLL_LCK_RAW) != 0)) {
-        /* Encryption detection */
-        if(hdmi_status2 & ADV7441A_BIT_HDMI_ENCRPT_ST) {
-            int2_clr |= ADV7441A_BIT_HDMI_ENCRPT_CLR;
-            if(hdmi_raw2 & ADV7441A_BIT_HDMI_ENCRPT_RAW) {
-                handle->status = handle->status | ADV7441A_STATUS_ENCRYPTED;
-                REPORT(INFO, "[HDMI IN] link is encrypted\n");
-                queue_put(event_queue, E_ADV7441A_HDCP);
-
-                reg_04 = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_04H);
-                if(((reg_04 & ADV7441A_BIT_HDCP_KEY_ERROR) > 0) || ((reg_04 & ADV7441A_BIT_HDCP_KEYS_READ) == 0)) {
-                    REPORT(INFO, "[HDMI IN] HDCP key error\n");
-                    queue_put(event_queue, E_ADV7441A_HDCP_KEY_ERR);
-                }
-            } else {
-                handle->status = handle->status & ~ADV7441A_STATUS_ENCRYPTED;
-                REPORT(INFO, "[HDMI IN] link is not encrypted\n");
-                queue_put(event_queue, E_ADV7441A_NO_HDCP);
-            }
-        }
 
         /* vertical synch filter status changed */
         if((hdmi_status3 & ADV7441A_BIT_V_LOCKED_ST) != 0) { 
             int3_clr |= ADV7441A_BIT_V_LOCKED_CLR;
             if((hdmi_raw3 & ADV7441A_BIT_V_LOCKED_RAW) != 0) {
-
-                if(hdmi_raw3 & ADV7441A_BIT_HDMI_MODE_RAW) {
-                    REPORT(INFO, "[HDMI IN] Chip in HDMI mode\n");
-                } else {
-                    REPORT(INFO, "[HDMI IN] Chip in DVI mode\n");
-                }
-
 			    handle->status = handle->status | ADV7441A_STATUS_CONNECTION;
                 REPORT(INFO, "[HDMI IN] vertical synch filter has locked\n");
 			    REPORT(INFO, "[HDMI IN] link on port A established\n");
@@ -784,8 +753,6 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
             REPORT(INFO, "[HDMI IN] CTS changes by more than threshold\n");
             adv7441a_drv_aud_pll_reset(handle);
         }
-
-
     } else {
         if((handle->status & ADV7441A_STATUS_CONNECTION) != 0) {
                     handle->status = handle->status & ~ADV7441A_STATUS_CONNECTION;
@@ -819,50 +786,6 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
  */ 
 int adv7441a_irq2_handler(t_adv7441a* handle, t_queue* event_queue)
 {
-	uint8_t hdmi_status4, hdmi_raw3;
-
-	hdmi_raw3 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_RAW_STATUS_3);
-	hdmi_status4 = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_INT_STATUS_4);
-	adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_CLR_4, 0xFF); 		/* clear hdmi int 4 */
-
-    /* IRQ only valid under following conditions 
-     *  TMDS clock active
-     *  Video PLL locked
-     */  
-    if(((hdmi_raw3 & ADV7441A_BIT_TMDS_CLK_A_RAW) != 0) && ((hdmi_raw3 & ADV7441A_BIT_VIDEO_PLL_LCK_RAW) != 0)) {
-
-    	if(hdmi_status4 & ADV7441A_BIT_NEW_AVI_INFO_ST) {
-    		REPORT(INFO,"[HDMI IN] New AVI infoframe received\n");
-    	}
-		
-    	if(hdmi_status4 & ADV7441A_BIT_NEW_AUDIO_INFO_ST) {
-    		REPORT(INFO,"[HDMI IN] New AUDIO infoframe received\n");
-    	}
-
-	    if(hdmi_status4 & ADV7441A_BIT_NEW_SPD_INFO_ST) {
-    		REPORT(INFO,"[HDMI IN] New SPD infoframe received\n");
-    	}
-
-    	if(hdmi_status4 & ADV7441A_BIT_NEW_MS_INFO_ST) {
-    		REPORT(INFO,"[HDMI IN] New MS infoframe received\n");
-    	}
-
-	    if(hdmi_status4 & ADV7441A_BIT_NEW_ACP_PCKT_ST) {
-    		REPORT(INFO,"[HDMI IN] New ACP infoframe received\n");
-    	}
-
-	    if(hdmi_status4 & ADV7441A_BIT_NEW_ISRC1_PCKT_ST) {
-    		REPORT(INFO,"[HDMI IN] New ISRC1 infoframe received\n");
-    	}
-
-	    if(hdmi_status4 & ADV7441A_BIT_NEW_ISRC2_PCKT_ST) {
-    		REPORT(INFO,"[HDMI IN] New ISRC2 infoframe received\n");
-    	}
-
-	    if(hdmi_status4 & ADV7441A_BIT_NEW_GAMUT_MDATA_ST) {
-    		REPORT(INFO,"[HDMI IN] New GAMUT infoframe received\n");
-    	}
-    }	 
 	return ERR_ADV7441A_SUCCESS;
 }
 

@@ -338,7 +338,7 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
                         // response only when not already unicast is streaming
                         if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) {
                             for (timeout=0;timeout<120;timeout++) {             // wait up to 1.2s if video-in in active (and hpd is low after edid is written)
-                                if(!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
+                                if(hdoipd.drivers & DRV_ADV7441) {
                                     hoi_drv_get_active_resolution(&active_res);
                                     if (active_res == 2) {                      // input is active
                                         hdoipd_set_rsc(RSC_VIDEO_IN);
