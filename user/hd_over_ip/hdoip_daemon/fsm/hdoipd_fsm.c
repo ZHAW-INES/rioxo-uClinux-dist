@@ -693,10 +693,14 @@ void hdoipd_event(uint32_t event)
         case E_ADV7441A_CONNECT:
         break;
         case E_ADV7441A_NEW_HDMI_RES:
-            hdoipd_set_rsc(RSC_VIDEO_IN);
-            hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
-            hdoipd_set_rsc(RSC_AUDIO0_IN);
-            hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
+            if (!hdoipd_rsc(RSC_VIDEO_IN)) { 
+                hdoipd_set_rsc(RSC_VIDEO_IN);
+                hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
+                hdoipd_set_rsc(RSC_AUDIO0_IN);
+                hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
+                hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
+                show_local_ip_address_on_osd();
+            }
         break;
         case E_ADV7441A_NEW_VGA_RES:
             hdoipd_set_rsc(RSC_VIDEO_IN);

@@ -36,5 +36,6 @@ int adv7441a_disable_portA(t_adv7441a* handle);
 int adv7441a_audio_fs_change(t_adv7441a* handle, uint32_t fs, uint32_t ch_cnt);
 int adv7441a_get_analog_video_timing(t_adv7441a* handle);
 int adv7441a_get_hdcp_status(t_adv7441a* handle);
+int adv7441a_poll_active_resolution(t_adv7441a* handle, void* p_vio);
 
 #endif /* ADV7441A_DRV_H_ */

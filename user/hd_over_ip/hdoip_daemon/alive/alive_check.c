@@ -249,19 +249,21 @@ int alive_check_init_msg_vrb_alive()
 
 void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
 {
-    int  msg_length = 30;
-    int  edid_length = 256;
+    int msg_length = 30;
+    int edid_length = 256;
+    int timeout;
+    int ret;
+    int i;
     char hello_msg[msg_length+(edid_length*2)];    
     char client_ip[100];
     char edid_string[edid_length*2];
     char buff[2];
-    uint8_t edid_table[edid_length];
-    int i;
-    t_rscp_edid edid;
-	int ret;
-    t_edid edid_old;
     char remote_uri[100];
     char remote_uri_converted[100];
+    uint8_t edid_table[edid_length];
+    uint32_t active_res;
+    t_rscp_edid edid;
+    t_edid edid_old;
     struct hostent* host;
 
     if (!hdoipd.alive_check.vtb) {
@@ -335,8 +337,30 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
 
                         // response only when not already unicast is streaming
                         if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) {
-                            if (hdoipd_rsc(RSC_VIDEO_IN)) {
-                                alive_check_response_vrb_alive(client_ip);
+                            for (timeout=0;timeout<120;timeout++) {             // wait up to 1.2s if video-in in active (and hpd is low after edid is written)
+                                if(!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
+                                    hoi_drv_get_active_resolution(&active_res);
+                                    if (active_res == 2) {                      // input is active
+                                        hdoipd_set_rsc(RSC_VIDEO_IN);
+                                        hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
+                                        hdoipd_set_rsc(RSC_AUDIO0_IN);
+                                        hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
+                                        alive_check_response_vrb_alive(client_ip);
+                                        break;
+                                    }
+                                    if (active_res == 1) {                      // no input
+                                        break;
+                                    }
+                                    usleep(10000);   // 10ms
+                                } else {
+                                    if (hdoipd_rsc(RSC_VIDEO_IN)) {
+                                        alive_check_response_vrb_alive(client_ip);
+                                        break;
+                                    }
+                                }
+                            }
+                            if (timeout == 120) {
+                                report(INFO "alive check: timeout -> no active input");
                             }
                         }
                     }

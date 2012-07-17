@@ -616,7 +616,7 @@ int vio_drv_plainin(t_vio* handle, uint32_t device)
  * @param handle vio handle
  */
 
-int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb, t_gs2972 *sdi_tx)
+int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb, t_gs2972 *sdi_tx, t_adv7441a* hdmi_in)
 {
     int ret = ERR_VIO_SUCCESS;    
     int no_input = 1;
@@ -628,9 +628,15 @@ int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb, t_gs2972 *sdi_tx)
     // stop everything
     vio_reset(handle->p_vio);
 
-    // get input video timing if transmitter
+    // get input video timing if transmitter and input is active
     if (vtb) {
-        no_input = vio_get_timing(handle->p_vio, &handle->timing);
+        if (device == BDT_ID_HDMI_BOARD) {
+            if (adv7441a_poll_active_resolution(hdmi_in, handle->p_vio) == 2) {
+                no_input = vio_get_timing(handle->p_vio, &handle->timing);
+            }
+        } else {
+            no_input = vio_get_timing(handle->p_vio, &handle->timing);
+        }
     }
 
     // if SDI, timing of h and v is inverted
@@ -840,11 +846,11 @@ int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt, uint32_t device)
  * @param handle vio handle
  * @param p_vt video timing struct
  */
-int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, bool vtb, uint32_t device, t_gs2972 *sdi_tx)
+int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, bool vtb, uint32_t device, t_gs2972 *sdi_tx, t_adv7441a* hdmi_in)
 {
     PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv); PTR(p_vt);
     memcpy(&handle->timing, p_vt, sizeof(t_video_timing));
-    return vio_drv_debug(handle, device, vtb, sdi_tx);
+    return vio_drv_debug(handle, device, vtb, sdi_tx, hdmi_in);
 }
 
 int vio_drv_set_format_in(t_vio* handle, t_video_format f)

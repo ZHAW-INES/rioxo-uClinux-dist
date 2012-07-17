@@ -9,35 +9,8 @@
 #include "vio_str.h"
 #include "si598.h"
 #include "gs2972_drv.h"
-
-/** Handle
- */
-typedef struct {
-    bool            active;
-    uint32_t		config;			        //!< config mode
-    
-    void*           p_vio;                  //!< pointer to vio hardware registers
-    void*           p_adv;                  //!< pointer to adv212 direct registers
-    t_si598*        si598;                  //!< pointer to si598 struct
-
-    t_adv212        adv;                    //!< ADV212 configuration
-    t_vio_pll       pll;                    //!< PLL configuration
-    t_video_timing  timing;                 //!< Video timing
-    t_video_format  format_in;              //!< Video format input
-    t_video_format  format_proc;            //!< Video format internal processing
-    t_video_format  format_out;                 //!< Video format output
-    t_osd			osd;			        //!< OSD
-    
-    uint64_t        mean_1;                 //!< Mean of image offset (used for clock control) (32.32 fractional)
-    uint64_t        mean_2;                 //!< "
-    uint32_t        mean_cnt;               //!< count of captured values to calculate mean
-    bool            clock_control_active;   //!< true indicates if clock control is active
-
-    uint32_t        bandwidth;              //!< when encoding this target bandwidth is used
-    uint32_t        chroma;                 //!< percent of bandwidth used by chroma
-
-    uint32_t        hw_cfg_old;
-} t_vio;
+#include "vio_drv_struct.h"
+#include "adv7441a_drv_cfg.h"
 
 
 /** config labels
@@ -96,13 +69,13 @@ int vio_drv_decode(t_vio* handle, uint32_t device);
 int vio_drv_decode_sync(t_vio* handle);
 int vio_drv_plainout(t_vio* handle, uint32_t device);
 int vio_drv_plainin(t_vio* handle, uint32_t device);
-int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb, t_gs2972 *sdi_tx);
+int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb, t_gs2972 *sdi_tx, t_adv7441a* hdmi_in);
 int vio_drv_loop(t_vio* handle, uint32_t device);
 
 int vio_drv_encodex(t_vio* handle, int bandwidth, int advcnt, uint32_t device);
 int vio_drv_decodex(t_vio* handle, t_video_timing* p_vt, int advcnt, uint32_t device);
 int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt, uint32_t device);
-int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, bool vtb, uint32_t device, t_gs2972 *sdi_tx);
+int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, bool vtb, uint32_t device, t_gs2972 *sdi_tx, t_adv7441a* hdmi_in);
 
 int vio_drv_set_bandwidth(t_vio* handle, int bandwidth, int chroma_percent);
 int vio_drv_set_format_in(t_vio* handle, t_video_format f);

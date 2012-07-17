@@ -99,6 +99,7 @@
 #define HOI_MSG_GET_ENCRYPTED_STATUS (0x70000111)
 #define HOI_MSG_DEBUG_READ_RAM      (0x70000112)
 #define HOI_MSG_CLR_OSD             (0x70000113)
+#define HOI_MSG_GET_ACTIVE_RESOLUTION (0x70000114)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)

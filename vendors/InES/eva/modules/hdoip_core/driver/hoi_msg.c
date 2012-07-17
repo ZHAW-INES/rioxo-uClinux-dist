@@ -290,7 +290,7 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
     // get video timing
     if (handle->drivers & DRV_ADV7441) {
         if (adv7441a_get_video_timing(&handle->adv7441a)) {
-            REPORT(ERROR, "adv7441a_get_video_timing results not valid");
+            REPORT(INFO, "adv7441a_get_video_timing results not valid");
         }
         vio_copy_adv7441_timing(&msg->timing, &handle->adv7441a);
     }
@@ -536,7 +536,7 @@ int hoi_drv_msg_set_timing(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
-    vio_drv_debugx(&handle->vio, &msg->timing, msg->vtb, bdt_return_device(&handle->bdt), &handle->gs2972);
+    vio_drv_debugx(&handle->vio, &msg->timing, msg->vtb, bdt_return_device(&handle->bdt), &handle->gs2972, &handle->adv7441a);
 
     return ret;
 }
@@ -678,7 +678,7 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
 
     if (handle->drivers & DRV_ADV7441) {
         if (adv7441a_get_video_timing(&handle->adv7441a)) {
-            REPORT(ERROR, "adv7441a_get_video_timing results not valid");
+            REPORT(INFO, "adv7441a_get_video_timing results not valid");
         }
         vio_copy_adv7441_timing(&msg->timing, &handle->adv7441a);
     }
@@ -786,7 +786,14 @@ int hoi_drv_msg_get_device_id(t_hoi* handle, t_hoi_msg_param* msg)
 
 int hoi_drv_mgs_get_encrypted_status(t_hoi* handle, t_hoi_msg_param* msg)
 {
-    return adv7441a_get_hdcp_status(&handle->adv7441a);
+    msg->value = adv7441a_get_hdcp_status(&handle->adv7441a);
+    return SUCCESS;
+}
+
+int hoi_drv_mgs_get_active_resolution(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    msg->value = adv7441a_poll_active_resolution(&handle->adv7441a, handle->p_vio);
+    return SUCCESS;
 }
 
 int hoi_drv_msg_get_reset_to_default(t_hoi* handle, t_hoi_msg_param* msg)
@@ -945,6 +952,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_GET_DEV_ID,            hoi_drv_msg_get_device_id);
         call(HOI_MSG_GET_RESET_TO_DEFAULT,  hoi_drv_msg_get_reset_to_default);
         call(HOI_MSG_GET_ENCRYPTED_STATUS,  hoi_drv_mgs_get_encrypted_status);
+        call(HOI_MSG_GET_ACTIVE_RESOLUTION, hoi_drv_mgs_get_active_resolution);
         call(HOI_MSG_OFF,                   hoi_drv_msg_off);
         call(HOI_MSG_IFMT,                  hoi_drv_msg_ifmt);
         call(HOI_MSG_OFMT,                  hoi_drv_msg_ofmt);
