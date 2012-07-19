@@ -636,6 +636,7 @@ void hdoipd_event(uint32_t event)
 {
     uint32_t buff;
     char *s;
+    uint32_t hdcp;
 
     lock("hdoipd_event");
         report(EVENT "(%x) %s ", event, event_str(event));
@@ -681,16 +682,14 @@ void hdoipd_event(uint32_t event)
                 hoi_drv_set_led_status(DVI_OUT_DISCONNECTED_VRB);
             }
         break;
-        case E_ADV7441A_NC:
-            hdoipd_clr_rsc(RSC_VIDEO_IN);
-            hdoipd_clr_rsc(RSC_AUDIO0_IN);
-            if (hdoipd_state(HOID_VTB)) {
-                hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VTB);
-            } else {
-                hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VRB);
-            }
-        break;
         case E_ADV7441A_NEW_HDMI_RES:
+            hoi_drv_get_encrypted_status(&hdcp);        // wait up to 1s until register is valid
+            if (hdcp) {
+                report(INFO "\n ******* Incoming stream is encrypted!! ****** ");
+                hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
+                // enable HDCP on AD9889 for loopback
+                hoi_drv_hdcp_adv9889en();
+            }
             if (!hdoipd_rsc(RSC_VIDEO_IN)) { 
                 hdoipd_set_rsc(RSC_VIDEO_IN);
                 hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
@@ -711,12 +710,22 @@ void hdoipd_event(uint32_t event)
                 hdoipd_clr_rsc(RSC_VIDEO_IN);
                 hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
                 event = event & ~E_ADV7441A_NEW_VGA_RES;                // clear event to prevent that video will be started in hdoipd_fsm_vtb
-                event = event | E_ADV7441A_NC;                          // set event to stop video
-                if (hdoipd_state(HOID_VTB)) {
-                    hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VTB);
-                } else {
-                    hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VRB);
+                event = event | E_ADV7441A_NC;                          // set event to stop video, LEDs are set in case "E_ADV7441A_NC"
+            }
+        break;
+        case E_ADV7441A_NC:
+            hdoipd_clr_rsc(RSC_VIDEO_IN);
+            hdoipd_clr_rsc(RSC_AUDIO0_IN);
+            if (hdoipd_state(HOID_VTB)) {
+                hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VTB);
+                hoi_drv_hdcp_adv9889dis();
+                if(!hdoipd_rsc(RSC_EVO)) {
+                    hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
+                    osd_permanent(true);
+                    osd_printf("no video input...\n");
                 }
+            } else {
+                hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VRB);
             }
         break;
         case E_ADV7441A_NO_AUDIO:

@@ -72,11 +72,6 @@ int vtb_audio_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     }
 
     //check if hdcp is forced by HDMI, user or client (over RSCP)
-    hoi_drv_get_encrypted_status(&hdcp);
-    if (hdcp) {
-        report(INFO "\n ******* Incomming stream is encrypted!! ****** ");
-        hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
-    }
     if (reg_test("hdcp-force", "true") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
     	m->hdcp.hdcp_on = 1;
     	hdoipd.hdcp.enc_state = HDCP_ENABLED;
@@ -116,12 +111,6 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
         // we don't have the resource reserved
         report(" ? require state VTB");
         rscp_err_server(rsp);
-        return RSCP_REQUEST_ERROR;
-    }
-
-    //check if hdcp is enabled
-    hoi_drv_get_encrypted_status(&hdcp);
-    if ((hdcp) && !hdoipd_rsc(RSC_VIDEO_IN_HDCP)) {
         return RSCP_REQUEST_ERROR;
     }
 

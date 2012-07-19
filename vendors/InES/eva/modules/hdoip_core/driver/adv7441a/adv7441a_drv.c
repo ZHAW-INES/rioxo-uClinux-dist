@@ -344,7 +344,7 @@ int adv7441a_drv_init(t_adv7441a* handle, t_i2c* p_i2c, t_vio* p_vio, char* edid
     adv7441a_usr_map1_write(handle, ADV7441A_REG_INTERRUPT_MASKB_4,0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_1, 0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_2, ADV7441A_BIT_AUDIO_C_PCKT_MB1 | ADV7441A_BIT_AUDIO_PLL_LCK_MB1);
-    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_3, ADV7441A_BIT_VIDEO_PLL_LCK_MB1 | ADV7441A_BIT_TMDS_CLK_A_MB1);
+    adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_3, ADV7441A_BIT_VIDEO_PLL_LCK_MB1 | ADV7441A_BIT_V_LOCKED_MB1 | ADV7441A_BIT_TMDS_CLK_A_MB1);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_4, 0x00);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_5, ADV7441A_BIT_CTS_PASS_THRS_M1);
     adv7441a_usr_map1_write(handle, ADV7441A_REG_HDMI_INT_MASKB_6, 0x00);
@@ -637,11 +637,19 @@ int adv7441a_get_analog_video_timing(t_adv7441a* handle)
  */
 int adv7441a_get_hdcp_status(t_adv7441a* handle)
 {
-    int ret;
-    ret = adv7441a_usr_map1_read(handle, ADV7441A_REG_HDMI_RAW_STATUS_2) & ADV7441A_BIT_HDMI_ENCRPT_RAW;
-    if (ret) {
-        handle->status = handle->status | ADV7441A_STATUS_ENCRYPTED;
+    int i, ret;
+    uint32_t time;
+
+    for(i=0;i<100;i++) {
+        time = jiffies;
+        while ((time + HZ/100) >= jiffies); // wait ~1000ms until bit is valid
+        ret = adv7441a_hdmi_map_read(handle, ADV7441A_REG_REGISTER_05H) & ADV7441A_BIT_HDMI_CONTENT_ENCRYPTED;
+        if (ret) {
+            handle->status = handle->status | ADV7441A_STATUS_ENCRYPTED;
+            break;
+        }
     }
+
     return ret;
 }
 

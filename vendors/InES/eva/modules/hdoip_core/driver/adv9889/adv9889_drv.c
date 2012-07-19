@@ -333,6 +333,7 @@ int adv9889_drv_handler(t_adv9889* handle, t_queue* event_queue)
                                                 REPORT(INFO, "[HDMI OUT] HDCP link isn't okay");
                                                 adv9889_drv_av_mute(handle);
                                                 adv9889_drv_hdcp_off(handle);
+                                                handle->hdcp_en = true;         // HDCP should be still enabled
                                             }
                                         }
                                         break;
