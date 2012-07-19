@@ -55,17 +55,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
         rscp_err_no_vtb(rsp);
         return RSCP_REQUEST_ERROR;
     }
-/*
-    // test if resource is available (only on first connection)
-    if((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
-        if (hdoipd_tstate(VTB_VID_MASK)) {
-            report(" ? vtb busy");
-            rscp_err_busy(rsp);
 
-            return RSCP_REQUEST_ERROR;
-        }
-    }
-*/
     // get own MAC address
     if (net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac) != RSCP_SUCCESS) {
         report(" ? net_get_local_hwaddr failed");
@@ -100,6 +90,8 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     if (hdcp) {
         report(INFO "\n ******* Incomming stream is encrypted!! ****** ");
         hdoipd_set_rsc(RSC_VIDEO_IN_HDCP);
+        // enable HDCP on AD9889 for loopback
+        hoi_drv_hdcp_adv9889en();
     }
     if (reg_test("hdcp-force", "true") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
     	m->hdcp.hdcp_on = 1;
