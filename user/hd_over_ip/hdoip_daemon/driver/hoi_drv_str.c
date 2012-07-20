@@ -26,6 +26,7 @@ const char* event_str(uint32_t e)
 
         case E_ADV9889_CABLE_ON: return "HDMI sink connected";
         case E_ADV9889_CABLE_OFF: return "HDMI sink disconnected";
+        case E_ADV9889_HDCP_NOT_OK: return "HDCP Link is not OK";
 
         case E_VSI_FIFO2_FULL: return "vsi fifo 2 full";
         case E_VSI_CDFIFO_FULL: return "vsi code fifo full";

@@ -866,6 +866,12 @@ int hoi_drv_msg_hdcp_timer_load(t_hoi* handle)
     return SUCCESS;
 }
 
+int hoi_drv_msg_hdcp_black_output(t_hoi* handle)
+{
+    vio_drv_set_black_output(&handle->vio);
+    return SUCCESS;
+}
+
 int hoi_drv_msg_wdg_enable(t_hoi* handle)
 {
     wdg_enable(handle->p_wdg);
@@ -996,6 +1002,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         callsw(HOI_MSG_HDCP_TIMER_ENABLE,   hoi_drv_msg_hdcp_timer_enable);
         callsw(HOI_MSG_HDCP_TIMER_DISABLE,  hoi_drv_msg_hdcp_timer_disable);
         callsw(HOI_MSG_HDCP_TIMER_LOAD,     hoi_drv_msg_hdcp_timer_load);
+        callsw(HOI_MSG_HDCP_BLACK_OUTPUT,   hoi_drv_msg_hdcp_black_output);
 
         call(HOI_MSG_WDG_INIT,              hoi_drv_msg_wdg_init);
         callsw(HOI_MSG_WDG_ENABLE,          hoi_drv_msg_wdg_enable);

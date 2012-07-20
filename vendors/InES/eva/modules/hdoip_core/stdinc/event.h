@@ -23,10 +23,11 @@
 
 /* AD9889 events */
 #define E_ADV9889_ID            (0x90000000)
-#define E_ADV9889_CNT           3
+#define E_ADV9889_CNT           4
 #define E_ADV9889_CABLE_ON      (E_ADV9889_ID + 0x00000001)  /* HDMI connected */
 #define E_ADV9889_CABLE_OFF     (E_ADV9889_ID + 0x00000002)  /* no HDMI connected */
 #define E_ADV9889_NEXT_EDID     (E_ADV9889_ID + 0x00000003)  /* next edid segment ready */
+#define E_ADV9889_HDCP_NOT_OK   (E_ADV9889_ID + 0x00000004)  /* HDCP link not okay */
 
 /* GS2971 events*/
 #define E_GS2971_ID             (0xA0000000)

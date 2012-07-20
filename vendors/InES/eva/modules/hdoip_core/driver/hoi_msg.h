@@ -100,6 +100,7 @@
 #define HOI_MSG_DEBUG_READ_RAM      (0x70000112)
 #define HOI_MSG_CLR_OSD             (0x70000113)
 #define HOI_MSG_GET_ACTIVE_RESOLUTION (0x70000114)
+#define HOI_MSG_HDCP_BLACK_OUTPUT   (0x70000115)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
@@ -177,6 +178,9 @@ typedef struct {
 #define hoi_msg_hdcp_timer_enable_init(p) hoi_msg_init(p, HOI_MSG_HDCP_TIMER_ENABLE, t_hoi_msg)
 #define hoi_msg_hdcp_timer_disable_init(p) hoi_msg_init(p, HOI_MSG_HDCP_TIMER_DISABLE, t_hoi_msg)
 #define hoi_msg_hdcp_timer_load_init(p) hoi_msg_init(p, HOI_MSG_HDCP_TIMER_LOAD, t_hoi_msg)
+
+#define hoi_msg_hdcp_black_output_init(p) hoi_msg_init(p, HOI_MSG_HDCP_BLACK_OUTPUT, t_hoi_msg)
+
 #define hoi_msg_wdg_enable_init(p) hoi_msg_init(p, HOI_MSG_WDG_ENABLE, t_hoi_msg)
 #define hoi_msg_wdg_disable_init(p) hoi_msg_init(p, HOI_MSG_WDG_DISABLE, t_hoi_msg)
 #define hoi_msg_wdg_service_init(p) hoi_msg_init(p, HOI_MSG_WDG_SERVICE, t_hoi_msg)

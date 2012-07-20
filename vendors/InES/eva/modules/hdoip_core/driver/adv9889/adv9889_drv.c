@@ -331,9 +331,10 @@ int adv9889_drv_handler(t_adv9889* handle, t_queue* event_queue)
                                             // HDCP link not okay?
                                             if((adv9889_read(handle, ADV9889_OFF_MODE_STATUS) & ADV9889_MSTATUS_ENCRYPTED) == 0) {
                                                 REPORT(INFO, "[HDMI OUT] HDCP link isn't okay");
-                                                adv9889_drv_av_mute(handle);
+                                                //adv9889_drv_av_mute(handle);  // output is muted via daemon (only osd)
                                                 adv9889_drv_hdcp_off(handle);
                                                 handle->hdcp_en = true;         // HDCP should be still enabled
+                                                queue_put(event_queue, E_ADV9889_HDCP_NOT_OK);
                                             }
                                         }
                                         break;
@@ -404,7 +405,7 @@ int adv9889_irq_handler(t_adv9889* handle, t_queue* event_queue)
 
     // is used to enable HDCP after some vsync pulses
     if (irq & ADV9889_INT1_VS) {
-        if (handle->hdcp_en) {
+        if ((handle->hdcp_en) && (handle->hdcp_state != HDCP_OFF)) {
             if (handle->hdcp_wait_cnt == 5) {
                 // enable HDCP
                 tmp = adv9889_read(handle, ADV9889_OFF_MODE);

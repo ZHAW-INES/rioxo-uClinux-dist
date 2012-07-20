@@ -682,6 +682,12 @@ void hdoipd_event(uint32_t event)
                 hoi_drv_set_led_status(DVI_OUT_DISCONNECTED_VRB);
             }
         break;
+        case E_ADV9889_HDCP_NOT_OK:
+            hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
+            osd_permanent(true);
+            osd_printf("HDCP link is not ok\n");
+            hoi_drv_hdcp_black_output();
+        break;
         case E_ADV7441A_NEW_HDMI_RES:
             hoi_drv_get_encrypted_status(&hdcp);        // wait up to 1s until register is valid
             if (hdcp) {
