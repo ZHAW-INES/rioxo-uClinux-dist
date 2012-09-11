@@ -357,10 +357,10 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     vid = vid_duration_in_us(&msg->timing);  
     delay = msg->delay_ms * 1000 + 2 * vid;
     if (&msg->timing.interlaced)
-        delay += (vid + 2*vid);  //TODO: if interlaced video starts with wrong field (+vid) / (+2*vid) if field signal is not transmitted correctly (BUG!)
+        delay += (76*1000);  //TODO: why works interlaced only with an additional delay?
     scomm5 = vid * 1500;
     vsd = vid * 800;
-    if ((n = vso_drv_update(&handle->vso, &msg->timing, delay, vsd, scomm5, 1000000))) {
+    if ((n = vso_drv_update(&handle->vso, &msg->timing, delay, vsd, scomm5, 1000))) {
         REPORT(INFO, "vso_drv_update failed: %s", vso_str_err(n));
         return n;
     }

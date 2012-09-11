@@ -2,10 +2,10 @@
 #define VERSION_H_
 
 /* [31 .. 16] = decimal number; [15 .. 0] = after comma number */
-#define VERSION_SOFTWARE        0x0001000B
+#define VERSION_SOFTWARE        0x00020000
 
 // version tag (max. 50 letters)
-#define VERSION_TAG             "Framerate reduction"
+#define VERSION_TAG             "packet loss test version"
 
 
 #endif /* VERSION_H_ */

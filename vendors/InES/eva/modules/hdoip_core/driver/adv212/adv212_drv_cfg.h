@@ -5,12 +5,10 @@
 #define ADV212_MAX_SAMPLES          (65000000)
 #define ADV212_MAX_VCLK             (75000000)
 #define ADV212_MAX_SIZE             (1048000)
-// max datarate interlaced = 80mbit/s (workaround)
-#define ADV212_CFG_MAX_DATARATE_I   (174602)
 
 // encoder configuration
 
-#define ADV212_CFG_CODE             (ADV212_COD_FORMAT_J2C)
+#define ADV212_CFG_CODE             (ADV212_COD_FORMAT_J2C | ADV212_COD_PPT)
 #define ADV212_CFG_TLEVEL           (ADV212_XFORMLEV_5)
 #define ADV212_CFG_CBSIZE_P         (ADV212_CBSIZE_64x64)
 #define ADV212_CFG_CBSIZE_I         (ADV212_CBSIZE_128x32)
