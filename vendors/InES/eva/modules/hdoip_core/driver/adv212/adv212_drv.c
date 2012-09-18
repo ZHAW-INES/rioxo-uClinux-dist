@@ -483,10 +483,12 @@ int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv)
     uint32_t param[2*ADV212_PARAM_ENC_COUNT];
     uint32_t reg[2*ADV212_REGISTER_COUNT];    
     int size, o;
+    int chroma;
 
     REPORT(INFO, "<adv212_drv_boot_enc()>");
          
     size = adv212_size_per_chip(p_adv);
+    chroma = p_adv->chroma;
     
     // Initialize all ADV212 because of shared bus (HDATA)
     adv212_drv_init(p);
@@ -495,7 +497,15 @@ int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv)
     for (int i=0; i<p_adv->cnt; i++) {
         
         // Setup parameter
-        adv212_enc_custom_format(param, size, p_vt->interlaced);    
+        if ((p_adv->cnt == 1) || (p_adv->cnt == 3)) {
+            adv212_enc_custom_format(param, size, p_vt->interlaced);
+        } else {
+            if ((i == 1) || (i == 3)) {
+                adv212_enc_custom_format(param, (size/100*chroma), p_vt->interlaced);
+            } else {
+                adv212_enc_custom_format(param, (size+(size/100*(100-chroma))), p_vt->interlaced);
+            }
+        }
 
         // Setup register
         o = 0;

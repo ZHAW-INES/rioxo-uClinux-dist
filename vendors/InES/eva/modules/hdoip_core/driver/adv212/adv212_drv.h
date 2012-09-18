@@ -19,6 +19,7 @@
 typedef struct {
     uint32_t    cnt;        //!< Number of ADV212 to be used
     uint32_t    size;       //!< Total compressed frame size
+    uint32_t    chroma;     //!< percent of chroma bandwidth
 } t_adv212;
 
 

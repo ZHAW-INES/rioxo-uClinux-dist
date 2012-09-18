@@ -287,6 +287,7 @@ typedef struct {
     hoi_msg_extends;
     hdoip_eth_params    eth;        //!< (wr) ethernet parameter
     uint32_t            compress;   //!< (wr) use jpeg2000 compressor
+    uint32_t            chroma;     //!< (wr) percent of chroma bandwidth
     uint32_t            encrypt;    //!< (wr) encryption key or '0'
     uint32_t            bandwidth;  //!< (wr) bandwidth
     t_video_timing      timing;     //!< (rd) timing of video
@@ -423,6 +424,7 @@ typedef struct {
     hoi_msg_extends;
     t_video_timing      timing;         //!< timing of video
     uint32_t            advcnt;
+    uint32_t            advcnt_old;
     uint32_t            audio_fs[2];    //!< audio sampling frequency [HZ] (0=off)
     uint32_t            audio_width[2]; //!< audio sample width [bit]
     uint32_t            audio_cnt[2];   //!< number of active channels

@@ -316,7 +316,7 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 
     // setup vio
     if (msg->compress) {
-        vio_drv_encodex(&handle->vio, msg->bandwidth, msg->advcnt, bdt_return_device(&handle->bdt));
+        vio_drv_encodex(&handle->vio, msg->bandwidth, msg->chroma, msg->advcnt, bdt_return_device(&handle->bdt));
     } else {
         vio_drv_plainin(&handle->vio, bdt_return_device(&handle->bdt));
     }
@@ -697,6 +697,9 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
 
     adv212_drv_advcnt(&msg->timing, &min);
     if (msg->advcnt < min) msg->advcnt = min;
+
+	msg->advcnt_old = handle->vio.adv.cnt;
+
     // read audio input timing (from video board) [ch: 0..15]
     if (handle->drivers & DRV_ADV7441) {
         msg->audio_fs[0] = handle->adv7441a.aud_st.fs;

@@ -110,6 +110,8 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     t_rscp_rtp_format fmt;
     hdoip_eth_params eth;
     char dst_mac[6];
+    uint32_t bandwidth;
+    uint32_t chroma;
 
     t_multicast_cookie* cookie = media->cookie;
 
@@ -178,12 +180,26 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     fmt.value = reg_get_int("advcnt-min");
 
     // probe config
-    if (hoi_drv_info(&timing, &fmt.value)) {
+    if (hoi_drv_info(&timing, &fmt.value, 0)) {
         rscp_err_server(rsp);
         return RSCP_REQUEST_ERROR;
     }
 
     hoi_drv_get_mtime(&fmt.rtptime);
+
+    bandwidth = (uint32_t)reg_get_int("bandwidth");             // bandwidth in byte/s 
+    chroma    = (uint32_t)reg_get_int("chroma-bandwidth");      // percent of chroma bandwidth (0 .. 100)
+
+
+    // use 4 ADV212 if 1080i and bandwidth >= 50Mbit/s
+    if ((timing.width == 1920) && (timing.height == 540) && (bandwidth >= (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8))) {
+        fmt.value = 4;
+    }
+
+    // limit bandwidth to 120Mbit/s for 1080i
+    if ((timing.width == 1920) && (timing.height == 540) && (bandwidth > (uint32_t)((uint64_t)(60+60*chroma/100)*(1048576)/8))) {
+        bandwidth = (uint32_t)((uint64_t)(60+60*chroma/100)*(1048576)/8);
+    }
 
     // send timing
     rscp_response_play(rsp, media->sessionid, &fmt, &timing);
@@ -191,7 +207,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // activate vsi
 #ifdef VID_IN_PATH
-        if (hoi_drv_vsi(fmt.compress, 0, reg_get_int("bandwidth"), &eth, &timing, &fmt.value)) {
+        if (hoi_drv_vsi(fmt.compress, chroma, 0, bandwidth, &eth, &timing, &fmt.value)) {
             return RSCP_REQUEST_ERROR;
         }
 #endif

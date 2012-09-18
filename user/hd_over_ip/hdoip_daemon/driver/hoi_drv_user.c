@@ -111,16 +111,19 @@ int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud,
 
 }
 
-int hoi_drv_info(t_video_timing* timing, uint32_t *advcnt)
+int hoi_drv_info(t_video_timing* timing, uint32_t *advcnt, uint32_t *advcnt_old)
 {
     int ret;
     t_hoi_msg_info msg;
 
     hoi_msg_info_init(&msg);
     msg.advcnt = 0;
+    msg.advcnt_old = 0;
     if (advcnt) msg.advcnt = *advcnt;
+    if (advcnt_old) msg.advcnt_old = *advcnt_old;
     ret = hoi_msg(&msg);
     if (advcnt) *advcnt = msg.advcnt;
+    if (advcnt_old) *advcnt_old = msg.advcnt_old;
     memcpy(timing, &msg.timing, sizeof(t_video_timing));
 
     return ret;
@@ -203,13 +206,14 @@ HOI_READ(get_active_resolution, HOI_MSG_GET_ACTIVE_RESOLUTION);
 //------------------------------------------------------------------------------
 // capture/show image command
 
-int hoi_drv_vsi(uint32_t compress, uint32_t encrypt, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt)
+int hoi_drv_vsi(uint32_t compress, uint32_t chroma, uint32_t encrypt, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt)
 {
     int ret;
     t_hoi_msg_vsi msg;
 
     hoi_msg_vsi_init(&msg);
     msg.bandwidth = bandwidth;
+    msg.chroma = chroma;
     msg.compress = compress;
     msg.encrypt = encrypt;
     if (advcnt) msg.advcnt = *advcnt;

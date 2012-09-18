@@ -500,7 +500,7 @@ void task_get_rscp_state(char** s)
 
     if (hdoipd.state & HOID_VTB) {
         if (hdoipd.rsc_state & RSC_VIDEO_IN) {
-            hoi_drv_info(&vid_timing, &advcnt);
+            hoi_drv_info(&vid_timing, &advcnt, 0);
             image_pixel = (vid_timing.height + vid_timing.vfront + vid_timing.vback + vid_timing.vpulse) * (vid_timing.width + vid_timing.hfront + vid_timing.hback + vid_timing.hpulse);
             image_freq = (vid_timing.pfreq / (image_pixel / 100));
             buf_ptr += sprintf(buf_ptr, "resolution     : %d x %d @ %d.%02d Hz / %d MHz\n", vid_timing.width, vid_timing.height, (image_freq/100), (image_freq%100), (vid_timing.pfreq/1000000));
@@ -558,10 +558,39 @@ void task_restart(int state)
 
 void task_set_bw(char* p)
 {
-    int bw     = reg_get_int("bandwidth");
-    int chroma = reg_get_int("chroma-bandwidth");
+    t_video_timing timing;
+    uint32_t advcnt_old;
+    uint32_t bw     = reg_get_int("bandwidth");             // bandwidth in byte/s 
+    uint32_t chroma = reg_get_int("chroma-bandwidth");      // percent of chroma bandwidth (0 .. 100)
     report("update bandwidth: %d Byte/s %d%% Chroma", bw, chroma);
-    bw = bw - bw / 20; // 5% overhead approx.
+    //bw = bw - bw / 20; // 5% overhead approx.
+
+    // get video timing
+    if (hoi_drv_info(&timing, 0, &advcnt_old)) {
+        report("cant get video timing");
+    }
+
+    // use 4 ADV212 if 1080i and bandwidth >= 50Mbit/s
+    if ((timing.width == 1920) && (timing.height == 540) && (bw >= (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8))) {
+        if (advcnt_old != 4) {
+            update_vector |= HOID_TSK_EXEC_RESTART_VTB;
+            return;
+        }
+    }
+
+    // use 2 ADV212 if 1080i and bandwidth < 50Mbit/s
+    if ((timing.width == 1920) && (timing.height == 540) && (bw < (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8))) {
+        if (advcnt_old != 2) {
+            update_vector |= HOID_TSK_EXEC_RESTART_VTB;
+            return;
+        }
+    }
+
+    // limit bandwidth to 120Mbit/s for 1080i
+    if ((timing.width == 1920) && (timing.height == 540) && (bw > (uint32_t)((uint64_t)(60+60*chroma/100)*(1048576)/8))) {
+        bw = (uint32_t)((uint64_t)(60+60*chroma/100)*(1048576)/8);
+    }
+
     if (bw) hoi_drv_bw(bw, chroma);
 }
 
@@ -652,7 +681,7 @@ void task_set_led_instruction(char* p)
 
 void task_set_osd_time(char* p)
 {
-    report("\n osd-time: %d", atoi(p));
+    report("osd-time: %d", atoi(p));
     if (atoi(p) == 100) {
         hoi_drv_osdon();
         hdoipd.rsc_state |= RSC_OSD;

@@ -64,7 +64,7 @@ int vrp_drv_capture_jpeg2000(t_vrp* handle, void* buffer, size_t size, size_t ba
     vrp_set_buffer(handle->p_vrp, buffer, size-4);
     vrp_do_record(handle->p_vrp, 1);
     vio_drv_set_cfg(handle->vio, VIO_CONFIG_VRP);
-    vio_drv_encodex(handle->vio, bandwidth, 0, device);
+    vio_drv_encodex(handle->vio, bandwidth, 100, 0, device);
     // wait for capture
     while(!vrp_get_idle(handle->p_vrp) && !TIMEOUT(jiffies_out)) {
         msleep(50);

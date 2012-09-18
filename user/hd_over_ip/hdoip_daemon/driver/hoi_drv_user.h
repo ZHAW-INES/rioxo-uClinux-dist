@@ -24,7 +24,7 @@ int hoi_drv_hdcp(uint32_t* hdcp_keys);
 int hoi_drv_hdcpstat(uint32_t *eto_hdcp_audio,uint32_t *eto_hdcp_video,uint32_t *eti_hdcp_audio, uint32_t *eti_hdcp_video);
 
 int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud, uint32_t vid, uint32_t aud);
-int hoi_drv_vsi(uint32_t compress, uint32_t encrypt, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt);
+int hoi_drv_vsi(uint32_t compress, uint32_t chroma, uint32_t encrypt, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt);
 int hoi_drv_vso(uint32_t compress, uint32_t encrypt, t_video_timing* timing, uint32_t advcnt, uint32_t delay_ms);
 int hoi_drv_asi(uint32_t cfg, hdoip_eth_params* eth, uint32_t fs, uint32_t width, uint32_t cnt, uint8_t* sel);
 int hoi_drv_aso(uint32_t fs, uint32_t fs_tol, uint32_t width, uint32_t cnt, uint8_t* sel, uint32_t delay_ms, uint32_t cfg);
@@ -39,7 +39,7 @@ int hoi_drv_read_ram(uint32_t addr);
 int hoi_drv_get_fs(uint32_t* p);
 int hoi_drv_get_analog_timing(uint32_t* p);
 int hoi_drv_get_device_id(uint32_t* p);
-int hoi_drv_info(t_video_timing* timing, uint32_t *advcnt);
+int hoi_drv_info(t_video_timing* timing, uint32_t *advcnt, uint32_t *advcnt_old);
 int hoi_drv_info_all(t_hoi_msg_info** nfo);
 int hoi_drv_ethstat(t_hoi_msg_ethstat** stat);
 int hoi_drv_vsostat(t_hoi_msg_vsostat** stat);

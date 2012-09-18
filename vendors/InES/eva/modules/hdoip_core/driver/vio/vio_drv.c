@@ -248,6 +248,7 @@ int vio_drv_encode(t_vio* handle, uint32_t device)
     } else {
         handle->adv.size = vio_bandwidth_to_size(handle->bandwidth, &handle->timing);
     }
+    handle->adv.chroma = handle->chroma;
 
     // ... TODO: testing range
     
@@ -801,10 +802,11 @@ int vio_drv_set_bandwidth(t_vio* handle, int bandwidth, int chroma_percent)
  * @param bandwidth the initial bandwidth in [bytes/s]
  * @param advcnt numbers of adv212 to be used for encoding(0: autodetect)
  */
-int vio_drv_encodex(t_vio* handle, int bandwidth, int advcnt, uint32_t device)
+int vio_drv_encodex(t_vio* handle, int bandwidth, uint32_t chroma, int advcnt, uint32_t device)
 {
     PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv);
     handle->bandwidth = bandwidth;
+    handle->chroma = chroma;
     handle->adv.cnt = advcnt;
     return vio_drv_encode(handle, device);
 }
