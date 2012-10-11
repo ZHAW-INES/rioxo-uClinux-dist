@@ -2,6 +2,7 @@
 #include "adv212_str.h"
 #include "adv212_decode_2_14_1.h"
 #include "adv212_encode_2_13_0.h"
+#include "hoi_msg.h"
 
 #define adv212_set(p, o, a, v) { uint32_t *_p_ = (p); uint32_t _o_ = 2*(o); \
                                  _p_[_o_] = (a); \
@@ -131,14 +132,25 @@ static uint32_t adv212_color_depth(int bit)
  * @param o offset within register set
  * @return next unused offset in set
  */
-int adv212_reg_init(uint32_t* p, int o)
+int adv212_reg_init(uint32_t* p, int o, int decoder)
 {
-    adv212_set(p, o+0, ADV212_PMODE2,           ADV212_PMODE2_VCLK_P | 
-                                                ADV212_PMODE2_UNIPOLAR_Y | 
-                                                ADV212_PMODE2_UNIPOLAR_C |
-                                                ADV212_PMODE2_VSYNC_P | 
-                                                ADV212_PMODE2_HSYNC_P | 
-                                                ADV212_PMODE2_FIELD_N);
+    // if decoder, invert field signal (TODO: check gateware why is this required)
+    if (decoder) {
+        adv212_set(p, o+0, ADV212_PMODE2,           ADV212_PMODE2_VCLK_P |
+                                                    ADV212_PMODE2_UNIPOLAR_Y |
+                                                    ADV212_PMODE2_UNIPOLAR_C |
+                                                    ADV212_PMODE2_VSYNC_P |
+                                                    ADV212_PMODE2_HSYNC_P |
+                                                    ADV212_PMODE2_FIELD_N);
+    } else {
+        adv212_set(p, o+0, ADV212_PMODE2,           ADV212_PMODE2_VCLK_P |
+                                                    ADV212_PMODE2_UNIPOLAR_Y |
+                                                    ADV212_PMODE2_UNIPOLAR_C |
+                                                    ADV212_PMODE2_VSYNC_P |
+                                                    ADV212_PMODE2_HSYNC_P |
+                                                    ADV212_PMODE2_FIELD_P);
+    }
+
     adv212_set(p, o+1, ADV212_V0_REGION_ST,     0);
     adv212_set(p, o+2, ADV212_V1_REGION_ST,     0);
     adv212_set(p, o+3, ADV212_V0_REGION_END,    0xffff);
@@ -266,34 +278,47 @@ int adv212_reg_hsamples(uint32_t* p, int o, uint32_t w, uint32_t fp, uint32_t hp
 *  @param bp_1 back porch field 1
  * @return next free offset within register set
  */
-int adv212_reg_vsamples(uint32_t* p, int o, uint32_t h, uint32_t fp, uint32_t vp, uint32_t bp, uint32_t h_1, uint32_t fp_1, uint32_t vp_1, uint32_t bp_1, uint32_t interlaced, int decoder)
+int adv212_reg_vsamples(uint32_t* p, int o, uint32_t h, uint32_t fp, uint32_t vp, uint32_t bp, uint32_t h_1, uint32_t fp_1, uint32_t vp_1, uint32_t bp_1, uint32_t interlaced, int decoder, uint32_t device)
 {
     // V starts with index '1' at first line after falling edge vsync
-    adv212_set(p, o+0, ADV212_V0_START,         bp + 1);
-    adv212_set(p, o+1, ADV212_V0_END,           bp + h);
+    if (interlaced) {
+        adv212_set(p,     o+3, ADV212_YTOT,     fp + vp + bp + h + fp_1 + vp_1 + bp_1 + h_1 + 1);    // (+ 1) because fp_1 and bp_1 are a half line longer
+    } else {
+        adv212_set(p,     o+3, ADV212_YTOT,     fp + vp + bp + h);
+    }
 
     if (interlaced) {
-        adv212_set(p, o+3, ADV212_YTOT,         fp + vp + bp + h + fp_1 + vp_1 + bp_1 + h_1 + 1);    // (+ 1) because fp_1 and bp_1 are a half line longer
         if (decoder) {
             adv212_set(p, o+2, ADV212_F0_START, bp + h - vp/2);
             adv212_set(p, o+6, ADV212_F1_START, bp + h + fp_1 + vp_1 + bp_1 + h_1 + 1 - vp/2);
-            // correct vertical offset of field 1 ((+1) why is this required?)
-            adv212_set(p, o+4, ADV212_V1_START, bp + h + fp_1 + vp_1 + bp_1 + 2);
-            adv212_set(p, o+5, ADV212_V1_END,   bp + h + fp_1 + vp_1 + bp_1 + h_1 + 1);
         } else {
-            adv212_set(p, o+4, ADV212_V1_START, bp + h + fp_1 + vp_1 + bp_1 + 1);
-            adv212_set(p, o+5, ADV212_V1_END,   bp + h + fp_1 + vp_1 + bp_1 + h_1);
             // mysterious cause but this improves performance for interlaced video
             adv212_set(p, o+2, ADV212_F0_START, 0);
             adv212_set(p, o+6, ADV212_F1_START, bp + h + fp_1 + vp_1);
         }
+    } else {
+        adv212_set(p,     o+2, ADV212_F0_START, 1);
+        adv212_set(p,     o+6, ADV212_F1_START, 0);
     }
-    else {
-        adv212_set(p, o+3, ADV212_YTOT,         fp + vp + bp + h);
-        adv212_set(p, o+4, ADV212_V1_START,     0);
-        adv212_set(p, o+5, ADV212_V1_END,       0);
-        adv212_set(p, o+2, ADV212_F0_START,     0);
-        adv212_set(p, o+6, ADV212_F1_START,     0);
+
+    if (interlaced) {
+        if (!decoder && (device == BDT_ID_HDMI_BOARD)) {
+            // if HDMI encoder and interlaced, vsync is inverted (TODO: check gateware why is this required)
+            adv212_set(p, o+0, ADV212_V0_START, -vp + bp);
+            adv212_set(p, o+1, ADV212_V0_END,   -vp + bp + h);
+            adv212_set(p, o+4, ADV212_V1_START, -vp + bp + h + fp_1 + vp_1 + bp_1);
+            adv212_set(p, o+5, ADV212_V1_END,   -vp + bp + h + fp_1 + vp_1 + bp_1 + h_1);
+        } else {
+            adv212_set(p, o+0, ADV212_V0_START, bp);
+            adv212_set(p, o+1, ADV212_V0_END,   bp + h);
+            adv212_set(p, o+4, ADV212_V1_START, bp + h + fp_1 + vp_1 + bp_1);
+            adv212_set(p, o+5, ADV212_V1_END,   bp + h + fp_1 + vp_1 + bp_1 + h_1);
+        }
+    } else {
+        adv212_set(p,     o+0, ADV212_V0_START, bp);
+        adv212_set(p,     o+1, ADV212_V0_END,   bp + h);
+        adv212_set(p,     o+4, ADV212_V1_START, 0);
+        adv212_set(p,     o+5, ADV212_V1_END,   0);
     }
 
     return o+7;
@@ -477,7 +502,7 @@ int adv212_drv_detect_dec(t_video_timing* p_vt, t_adv212* p_adv)
  * @param p_adv adv configuration struct
  * @return error code (0 on success)
  */
-int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv)
+int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv, uint32_t device)
 {
     int ret;
     uint32_t param[2*ADV212_PARAM_ENC_COUNT];
@@ -509,11 +534,11 @@ int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv)
 
         // Setup register
         o = 0;
-        o = adv212_reg_init    (reg, o);
+        o = adv212_reg_init    (reg, o, 0);
         o = adv212_reg_enc_hvf (reg, o, p_vt->interlaced);
         o = adv212_reg_mode    (reg, o, 10, adv_comp[p_adv->cnt-1][i]);
         o = adv212_reg_hsamples(reg, o, p_vt->width, p_vt->hfront, p_vt->hpulse, p_vt->hback, adv_encd[p_adv->cnt-1][i], adv_scale[p_adv->cnt-1][i]);
-        o = adv212_reg_vsamples(reg, o, p_vt->height, p_vt->vfront, p_vt->vpulse, p_vt->vback, p_vt->height_1, p_vt->vfront_1, p_vt->vpulse_1, p_vt->vback_1, p_vt->interlaced, 0);
+        o = adv212_reg_vsamples(reg, o, p_vt->height, p_vt->vfront, p_vt->vpulse, p_vt->vback, p_vt->height_1, p_vt->vfront_1, p_vt->vpulse_1, p_vt->vback_1, p_vt->interlaced, 0, device);
         
         // Boot ADV
         if ((ret = adv212_boot_jdata(OFFSET(p, i * ADV212_SIZE),
@@ -546,7 +571,7 @@ int adv212_drv_boot_enc(void* p, t_video_timing* p_vt, t_adv212* p_adv)
  * @param p_adv adv configuration struct
  * @return error code (0 on success)
  */
-int adv212_drv_boot_dec(void* p, t_video_timing* p_vt, t_adv212* p_adv)
+int adv212_drv_boot_dec(void* p, t_video_timing* p_vt, t_adv212* p_adv, uint32_t device)
 {
     int ret = SUCCESS;
     uint32_t param[2*ADV212_PARAM_DEC_COUNT];
@@ -566,11 +591,11 @@ int adv212_drv_boot_dec(void* p, t_video_timing* p_vt, t_adv212* p_adv)
         
         // Setup register
         o = 0;
-        o = adv212_reg_init         (reg, o);
+        o = adv212_reg_init         (reg, o, 1);
         o = adv212_reg_dec_hvf_slave(reg, o, p_vt->interlaced);
         o = adv212_reg_mode         (reg, o, 10, adv_comp[p_adv->cnt-1][i]);
         o = adv212_reg_hsamples     (reg, o, p_vt->width, p_vt->hfront, p_vt->hpulse, p_vt->hback, adv_decd[p_adv->cnt-1][i], adv_scale[p_adv->cnt-1][i]);  
-        o = adv212_reg_vsamples     (reg, o, p_vt->height, p_vt->vfront, p_vt->vpulse, p_vt->vback, p_vt->height_1, p_vt->vfront_1, p_vt->vpulse_1, p_vt->vback_1, p_vt->interlaced, 1);
+        o = adv212_reg_vsamples     (reg, o, p_vt->height, p_vt->vfront, p_vt->vpulse, p_vt->vback, p_vt->height_1, p_vt->vfront_1, p_vt->vpulse_1, p_vt->vback_1, p_vt->interlaced, 1, device);
 
 
         // Boot ADV

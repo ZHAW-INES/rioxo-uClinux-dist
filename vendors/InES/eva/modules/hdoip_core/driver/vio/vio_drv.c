@@ -287,7 +287,7 @@ int vio_drv_encode(t_vio* handle, uint32_t device)
     vio_pll_update(handle->p_vio, &handle->pll);
 
     // 2.) start the adv212
-    if ((ret = adv212_drv_boot_enc(handle->p_adv, &handle->timing, &handle->adv))) {
+    if ((ret = adv212_drv_boot_enc(handle->p_adv, &handle->timing, &handle->adv, device))) {
         REPORT(ERROR, "adv212_drv_boot_enc failed: %s", adv212_str_err(ret));
         return ret;
     }    
@@ -400,7 +400,7 @@ int vio_drv_decode(t_vio* handle, uint32_t device)
     vio_enable_output_timing(handle->p_vio);
 
     // 4.) start the adv212
-    if ((ret = adv212_drv_boot_dec(handle->p_adv, &handle->timing, &handle->adv))) {
+    if ((ret = adv212_drv_boot_dec(handle->p_adv, &handle->timing, &handle->adv, device))) {
         REPORT(ERROR, "adv212_drv_boot_dec failed: %s", adv212_str_err(ret));
         return ret;
     }

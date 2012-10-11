@@ -159,6 +159,7 @@ void hdoipd_off(bool osd)
     hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
     hdoipd_set_state(HOID_READY);
 
+    osd_printf("device is idle...\n");
     osd_permanent(osd);
 }
 
