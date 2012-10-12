@@ -578,6 +578,14 @@ void task_set_bw(char* p)
         }
     }
 
+    // use 2 ADV212 if 576i or 480i and bandwidth >= 50Mbit/s
+    if ((timing.width == 720) && ((timing.height == 240) || (timing.height == 288)) && (bw >= (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8))) {
+        if (advcnt_old != 2) {
+            update_vector |= HOID_TSK_EXEC_RESTART_VTB;
+            return;
+        }
+    }
+
     // use 2 ADV212 if 1080i and bandwidth < 50Mbit/s
     if ((timing.width == 1920) && (timing.height == 540) && (bw < (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8))) {
         if (advcnt_old != 2) {
@@ -586,9 +594,22 @@ void task_set_bw(char* p)
         }
     }
 
+    // use 1 ADV212 if 576i or 480i and bandwidth < 50Mbit/s
+    if ((timing.width == 720) && ((timing.height == 240) || (timing.height == 288)) && (bw < (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8))) {
+        if (advcnt_old != 1) {
+            update_vector |= HOID_TSK_EXEC_RESTART_VTB;
+            return;
+        }
+    }
+
     // limit bandwidth to 120Mbit/s for 1080i
     if ((timing.width == 1920) && (timing.height == 540) && (bw > (uint32_t)((uint64_t)(60+60*chroma/100)*(1048576)/8))) {
         bw = (uint32_t)((uint64_t)(60+60*chroma/100)*(1048576)/8);
+    }
+
+    // limit bandwidth to 60Mbit/s for 576i and 480i
+    if ((timing.width == 720) && ((timing.height == 240) || (timing.height == 288)) && (bw > (uint32_t)((uint64_t)(30+30*chroma/100)*(1048576)/8))) {
+        bw = (uint32_t)((uint64_t)(30+30*chroma/100)*(1048576)/8);
     }
 
     if (bw) hoi_drv_bw(bw, chroma);
