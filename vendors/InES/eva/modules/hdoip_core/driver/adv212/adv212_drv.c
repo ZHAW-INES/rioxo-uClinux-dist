@@ -305,27 +305,27 @@ int adv212_reg_vsamples(uint32_t* p, int o, uint32_t h, uint32_t fp, uint32_t vp
         if (!decoder && (device == BDT_ID_HDMI_BOARD)) {
             // if HDMI encoder and interlaced, vsync is inverted (TODO: check gateware why is this required)
             adv212_set(p, o+0, ADV212_V0_START, -vp + bp);
-            adv212_set(p, o+1, ADV212_V0_END,   -vp + bp + h);
+            adv212_set(p, o+1, ADV212_V0_END,   -vp + bp + h - 1);
             adv212_set(p, o+4, ADV212_V1_START, -vp + bp + h + fp_1 + vp_1 + bp_1);
-            adv212_set(p, o+5, ADV212_V1_END,   -vp + bp + h + fp_1 + vp_1 + bp_1 + h_1);
+            adv212_set(p, o+5, ADV212_V1_END,   -vp + bp + h + fp_1 + vp_1 + bp_1 + h_1 - 1);
         } else {
             if (!decoder && (device == BDT_ID_SDI8_BOARD) && ((h == 243) || (h == 288)) ) {
                 // if SDI encoder and 525i or 625i, image is one line shifted (TODO: check gateware)
                 adv212_set(p, o+0, ADV212_V0_START, 1 + bp);
-                adv212_set(p, o+1, ADV212_V0_END,   1 + bp + h);
+                adv212_set(p, o+1, ADV212_V0_END,   1 + bp + h - 1);
                 adv212_set(p, o+4, ADV212_V1_START, 1 + bp + h + fp_1 + vp_1 + bp_1);
-                adv212_set(p, o+5, ADV212_V1_END,   1 + bp + h + fp_1 + vp_1 + bp_1 + h_1);
+                adv212_set(p, o+5, ADV212_V1_END,   1 + bp + h + fp_1 + vp_1 + bp_1 + h_1 - 1);
             } else {
                 adv212_set(p, o+0, ADV212_V0_START, bp);
-                adv212_set(p, o+1, ADV212_V0_END,   bp + h);
+                adv212_set(p, o+1, ADV212_V0_END,   bp + h - 1);
                 adv212_set(p, o+4, ADV212_V1_START, bp + h + fp_1 + vp_1 + bp_1);
-                adv212_set(p, o+5, ADV212_V1_END,   bp + h + fp_1 + vp_1 + bp_1 + h_1);
+                adv212_set(p, o+5, ADV212_V1_END,   bp + h + fp_1 + vp_1 + bp_1 + h_1 - 1);
             }
         }
     } else {
         adv212_set(p,     o+0, ADV212_V0_START, bp);
-        adv212_set(p,     o+1, ADV212_V0_END,   bp + h);
-        adv212_set(p,     o+4, ADV212_V1_START, 0);
+        adv212_set(p,     o+1, ADV212_V0_END,   bp + h - 1);
+        adv212_set(p,     o+4, ADV212_V1_START, 1);
         adv212_set(p,     o+5, ADV212_V1_END,   0);
     }
 
