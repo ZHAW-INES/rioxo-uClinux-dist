@@ -201,9 +201,9 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
         bandwidth = (uint32_t)((uint64_t)(60+60*chroma/100)*(1048576)/8);
     }
 
-    // limit bandwidth to 60Mbit/s for 576i and 480i
-    if ((timing.width == 720) && ((timing.height == 240) || (timing.height == 288)) && (bandwidth > (uint32_t)((uint64_t)(30+30*chroma/100)*(1048576)/8))) {
-        bandwidth = (uint32_t)((uint64_t)(30+30*chroma/100)*(1048576)/8);
+    // limit bandwidth to 50Mbit/s for 576i and 480i
+    if ((timing.width == 720) && ((timing.height == 240) || (timing.height == 243) || (timing.height == 244) || (timing.height == 288)) && (bandwidth > (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8))) {
+        bandwidth = (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8);
     }
 
     // send timing
