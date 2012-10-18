@@ -127,6 +127,7 @@ function show(t)
                 t.aud_port = tonumber(t.aud_port)
                 if((t.aud_port >= 0) and (t.aud_port < 65536)) then
                     hdoip.pipe.setParam(hdoip.pipe.REG_ST_AUD_PORT, t.aud_port)
+                    pages.restart.show(t)
                 else
                     hdoip.html.AddError(t, label.err_aud_port_not_in_range)
                 end
@@ -143,6 +144,7 @@ function show(t)
                 t.vid_port = tonumber(t.vid_port)
                 if((t.vid_port >= 0) and (t.vid_port < 65536)) then
                     hdoip.pipe.setParam(hdoip.pipe.REG_ST_VID_PORT, t.vid_port)
+                    pages.restart.show(t)
                 else
                     hdoip.html.AddError(t, label.err_vid_port_not_in_range)
                 end
@@ -304,24 +306,27 @@ function show(t)
     hdoip.html.Text(label.p_st_force_hdcp);                                                 hdoip.html.TableInsElement(1);
     hdoip.html.FormCheckbox("hdcp_force", 1, "", t.hdcp_force)                              hdoip.html.TableInsElement(2);
 
-    hdoip.html.Text(label.p_st_vid_port);                                                   hdoip.html.TableInsElement(1);
-    if((t.edit_vid_port ~= nil) and (t.edit_vid_port == "1"))then
-        hdoip.html.FormText(REG_ST_VID_PORT_LABEL, t.vid_port, 5, 0);                       hdoip.html.TableInsElement(1);
-        hdoip.html.FormHidden("save_vid_port", 1)
-        hdoip.html.Text(label.u_decimal);                                                   hdoip.html.TableInsElement(1);
-    else
-        hdoip.html.Text(t.vid_port)                                                         hdoip.html.TableInsElement(1);  
-        hdoip.html.FormCheckbox("edit_vid_port", 1, label.button_edit, t.edit_vid_port)     hdoip.html.TableInsElement(1);
-    end
 
-    hdoip.html.Text(label.p_st_aud_port);                                                   hdoip.html.TableInsElement(1);
-    if((t.edit_aud_port ~= nil) and (t.edit_aud_port == "1")) then
-        hdoip.html.FormText(REG_ST_AUD_PORT_LABEL, t.aud_port, 5, 0);                       hdoip.html.TableInsElement(1); 
-        hdoip.html.FormHidden("save_aud_port", 1)
-        hdoip.html.Text(label.u_decimal);                                                   hdoip.html.TableInsElement(1);
-    else
-        hdoip.html.Text(t.aud_port)                                                         hdoip.html.TableInsElement(1); 
-        hdoip.html.FormCheckbox("edit_aud_port", 1, label.button_edit, t.edit_aud_port)     hdoip.html.TableInsElement(1);
+    if(t.mode_vrb) then
+        hdoip.html.Text(label.p_st_vid_port);                                                   hdoip.html.TableInsElement(1);
+        if((t.edit_vid_port ~= nil) and (t.edit_vid_port == "1"))then
+            hdoip.html.FormText(REG_ST_VID_PORT_LABEL, t.vid_port, 5, 0);                       hdoip.html.TableInsElement(1);
+            hdoip.html.FormHidden("save_vid_port", 1)
+            hdoip.html.Text(label.u_decimal);                                                   hdoip.html.TableInsElement(1);
+        else
+            hdoip.html.Text(t.vid_port)                                                         hdoip.html.TableInsElement(1);  
+            hdoip.html.FormCheckbox("edit_vid_port", 1, label.button_edit, t.edit_vid_port)     hdoip.html.TableInsElement(1);
+        end
+
+        hdoip.html.Text(label.p_st_aud_port);                                                   hdoip.html.TableInsElement(1);
+        if((t.edit_aud_port ~= nil) and (t.edit_aud_port == "1")) then
+            hdoip.html.FormText(REG_ST_AUD_PORT_LABEL, t.aud_port, 5, 0);                       hdoip.html.TableInsElement(1); 
+            hdoip.html.FormHidden("save_aud_port", 1)
+            hdoip.html.Text(label.u_decimal);                                                   hdoip.html.TableInsElement(1);
+        else
+            hdoip.html.Text(t.aud_port)                                                         hdoip.html.TableInsElement(1); 
+            hdoip.html.FormCheckbox("edit_aud_port", 1, label.button_edit, t.edit_aud_port)     hdoip.html.TableInsElement(1);
+        end
     end
 
     hdoip.html.Text(label.p_st_rscp_port);                                                  hdoip.html.TableInsElement(1);
