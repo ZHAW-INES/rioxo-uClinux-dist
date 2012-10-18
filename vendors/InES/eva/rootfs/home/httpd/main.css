@@ -191,7 +191,7 @@ input.file {
 }
 #mainmenu ul.menu li {
     display:inline;
-    margin-left:5px;
+    margin-left:2px;
 }
 #mainmenu ul.menu li a {
     font-size:12px;
@@ -202,11 +202,11 @@ input.file {
     height:48px;
     background-position:bottom right;
     background-repeat:no-repeat;
-    padding-right:6px;
+    padding-right:2px;
     cursor:pointer;
 }
 #mainmenu ul.menu li a span {
-    padding:10px 6px 0px 12px;
+    padding:10px 6px 0px 6px;
     height:38px;
     display:inline-block;
     background-position:bottom left;
