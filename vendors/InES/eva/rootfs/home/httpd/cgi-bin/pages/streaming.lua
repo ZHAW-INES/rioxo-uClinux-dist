@@ -7,6 +7,7 @@ local REG_ST_URI_LABEL = "st_uri"
 local REG_ST_BW_LABEL = "st_bw"
 local REG_ST_BW_CHROMA_LABEL = "st_bw_chroma"
 local REG_ST_NET_DELAY_LABEL = "net_delay"
+local REG_ST_AV_DELAY_LABEL = "av_delay"
 local REG_ST_OSD_LABEL = "osd_time"
 local REG_ST_VID_PORT_LABEL = "vid_port"
 local REG_ST_AUD_PORT_LABEL = "aud_port"
@@ -86,6 +87,7 @@ function show(t)
         if(t.mode_vrb) then
         
 	        t.net_delay = hdoip.pipe.getParam(hdoip.pipe.REG_ST_NET_DELAY)
+            t.av_delay = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AV_DELAY)
 	        t.media_sel = hdoip.pipe.getParam(hdoip.pipe.REG_ST_MODE_MEDIA)
 	        t.osd_time = hdoip.pipe.getParam(hdoip.pipe.REG_OSD_TIME)
 
@@ -247,6 +249,17 @@ function show(t)
 	            hdoip.html.AddError(t, label.err_net_delay_not_number)
 	        end 
 	
+	        if(tonumber(t.av_delay) ~= nil) then
+                if ((tonumber(t.av_delay) > 100) or (tonumber(t.av_delay) < -100)) then
+    	            hdoip.html.AddError(t, label.err_av_delay_not_in_range)
+                else
+                    hdoip.pipe.setParam(hdoip.pipe.REG_ST_AV_DELAY, t.av_delay)
+                end
+	        else
+	            hdoip.html.AddError(t, label.err_av_delay_not_number)
+	        end 
+
+
 	        if(tonumber(t.osd_time) ~= nil) then
                 if ((tonumber(t.osd_time) > 100) or (tonumber(t.osd_time) < 0)) then
     	            hdoip.html.AddError(t, label.err_osd_time_not_in_range)
@@ -376,6 +389,10 @@ function show(t)
         hdoip.html.FormCheckbox("cb_audio", 1, label.p_st_audio.."<br>", t.cb_audio)            hdoip.html.TableInsElement(2);
 	    hdoip.html.Text(label.p_st_net_delay);                                                  hdoip.html.TableInsElement(1);
 	    hdoip.html.FormText(REG_ST_NET_DELAY_LABEL, t.net_delay, 4, 0); 
+	    hdoip.html.Text(label.u_ms);                                                            hdoip.html.TableInsElement(2);
+
+	    hdoip.html.Text(label.p_st_av_delay);                                                   hdoip.html.TableInsElement(1);
+	    hdoip.html.FormText(REG_ST_AV_DELAY_LABEL, t.av_delay, 4, 0); 
 	    hdoip.html.Text(label.u_ms);                                                            hdoip.html.TableInsElement(2);
 
         hdoip.html.Text(label.p_osd_time);                                                      hdoip.html.TableInsElement(1);

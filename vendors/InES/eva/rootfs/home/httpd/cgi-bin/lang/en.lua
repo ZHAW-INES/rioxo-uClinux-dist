@@ -61,7 +61,9 @@ label = {
     err_datarate_not_in_range = "Max. datarate is not in range (1 .. 800)";
     err_datarate_chroma_not_in_range = "Max. chroma datarate is not in range (0 .. 100%)";
     err_net_delay_not_number = "Max. network delay is not a number";
+    err_av_delay_not_number = "Audio-video delay is not a number";
     err_net_delay_not_in_range = "Max. network delay is not in range (1 .. 100)";
+    err_av_delay_not_in_range = "Audio-video delay is not in range (-100 .. 100)";
     err_osd_time_not_number = "OSD time is not a number";
     err_osd_time_not_in_range = "OSD time is not in range (0 .. 100)";
 
@@ -163,6 +165,7 @@ label = {
     p_st_datarate = "Max. datarate";
     p_st_dec_chroma = "Chroma datarate";
     p_st_net_delay = "Max. network delay";
+    p_st_av_delay = "Audio-video delay";
     p_st_fps_divide = "Reduce refresh rate";
     p_st_eit_only = "(only with EIT software decoder)";
     p_st_auto_stream = "Auto stream";

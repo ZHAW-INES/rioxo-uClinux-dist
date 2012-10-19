@@ -36,6 +36,7 @@ void hdoipd_set_default()
     reg_set("fps_divide", "0");
     reg_set("advcnt-min", "0");
     reg_set("network-delay", "20");
+    reg_set("av-delay", "0");
     reg_set("network-alive", "1");
     reg_set("network-timeout", "3");
     reg_set("video-port", "3400");
