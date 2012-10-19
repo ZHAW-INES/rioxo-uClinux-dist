@@ -467,10 +467,15 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
     aud_params.ch_cnt_right = msg->channel_cnt - aud_params.ch_cnt_left;
     aud_params.fs = msg->fs;
     aud_params.sample_width = msg->width;
+
     if (handle->vio.active) {
-        vid = 4 * vid_duration_in_us(&handle->vio.timing);
+        vid = 2 * vid_duration_in_us(&handle->vio.timing);
+        if (&handle->vio.timing.interlaced) {
+            vid += (76*1000); //TODO: remove workaround for interlaced
+        }
     }
-    aso_drv_update(&handle->aso, &aud_params, msg->delay_ms*1000+vid);
+
+    aso_drv_update(&handle->aso, &aud_params, ((msg->delay_ms+msg->av_delay)*1000)+vid);
     aso_drv_start(&handle->aso);
 
     if (handle->drivers & DRV_ADV9889) {

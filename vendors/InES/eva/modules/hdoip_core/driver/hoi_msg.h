@@ -326,6 +326,7 @@ typedef struct {
     hoi_msg_extends;
     uint32_t            cfg;
     uint32_t            delay_ms;       //!< (wr) audio delay
+    uint32_t            av_delay;       //!< (wr) audio-video delay
     uint32_t            fs;             //!< (wr) sampel frequency in Hz
     uint32_t            fs_tol;         //!< (wr) frequency tolerance (fs +/- fs_tol)
     uint32_t            width;          //!< (wr) sampel bit width

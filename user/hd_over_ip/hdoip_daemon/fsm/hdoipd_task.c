@@ -728,6 +728,11 @@ void task_set_network_delay(char* p)
     update_vector |= HOID_TSK_EXEC_RESTART_VRB;
 }
 
+void task_set_av_delay(char* p)
+{
+    update_vector |= HOID_TSK_EXEC_RESTART_VRB;
+}
+
 void task_set_dhcp(char *p)
 {
     update_vector |= HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX | HOID_TSK_UPD_DHCP;
@@ -780,6 +785,7 @@ void hdoipd_register_task()
     set_listener("system-dns1", task_set_system_dns1);
     set_listener("system-dns2", task_set_system_dns2);
     set_listener("network-delay", task_set_network_delay);
+    set_listener("av-delay", task_set_av_delay);
     set_listener("mode-start", task_set_mode_start);
     set_listener("mode-media", task_set_mode_media);
     set_listener("remote-uri", task_set_remote);

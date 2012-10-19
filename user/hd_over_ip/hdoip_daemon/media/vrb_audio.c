@@ -128,7 +128,7 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 #ifdef AUD_OUT_PATH
     // start aso (TODO: delay = 4*vframe+networkdelay)
     uint8_t channel_select[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
-    hoi_drv_aso(m->format.value, 1000, m->format.compress, m->format.value2, channel_select, 20, compress);
+    hoi_drv_aso(m->format.value, 1000, m->format.compress, m->format.value2, channel_select, reg_get_int("network-delay"),reg_get_int("av-delay"), compress);
     report(INFO "\naudio streaming started(fs = %d Hz, bitwidth = %d Bit, channels = %d)", m->format.value, m->format.compress, m->format.value2);
 #endif
 
