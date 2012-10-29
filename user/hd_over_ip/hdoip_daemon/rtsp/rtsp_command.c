@@ -84,8 +84,8 @@ void rtsp_header_transport(t_rtsp_connection* msg, t_rtsp_transport* t)
 void rtsp_header_transport_usb(t_rtsp_connection* msg, t_rtsp_transport* t)
 {
     msgprintf(msg, "Transport: USB/RAW/TCP;%s;", rtsp_str_multicast(t->multicast));
-    msgprintf(msg, "usb-host-ip=%s;", t->usb_host_ip);
-    msgprintf(msg, "usb-host-port=%d;",  ntohs(t->usb_host_port));
+    msgprintf(msg, "destination=%s;", t->destination_str);
+    msgprintf(msg, "port=%d;",  ntohs(t->port));
     msgprintf(msg, "mode=\"PLAY\"\r\n");
 }
 

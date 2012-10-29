@@ -87,14 +87,13 @@ typedef struct {
     uint32_t            lower;                      //!< "UDP"
     bool                multicast;
     uint32_t            destination;
+    char                destination_str[50];
     bool                append;
     uint32_t            ttl;
     uint32_t            layers;
     uint32_t            port;                       //!< low 16 Bit: port range start; high 16 Bit: port range stop
     uint32_t            client_port;
     uint32_t            server_port;
-    char                usb_host_ip[50];
-    uint32_t            usb_host_port;
     uint32_t            ssrc;
     uint32_t            mode;
 } t_rtsp_transport;

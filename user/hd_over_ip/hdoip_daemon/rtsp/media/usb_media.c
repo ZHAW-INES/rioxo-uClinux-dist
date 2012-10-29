@@ -21,7 +21,6 @@
 
 //TODO: do not use global variables
 char        usb_host_ip[50];
-uint32_t    usb_host_port;
 int         timer;
 int         alive_ping;
 
@@ -29,11 +28,10 @@ int usb_setup(t_rtsp_media UNUSED *media, t_rtsp_req_setup* m, t_rtsp_connection
 {
     report(VRB_METHOD "usb_setup");
     
-    strncpy(usb_host_ip, m->transport.usb_host_ip, 49);
-    usb_host_port = m->transport.usb_host_port;
+    strncpy(usb_host_ip, m->transport.destination_str, 49);
 
     //TODO: set port in usbip
-    m->transport.usb_host_port = htons(3240);
+    m->transport.port = htons(3240);
 
     rtsp_response_usb_setup(rsp, &m->transport, media->sessionid);
 
@@ -94,12 +92,12 @@ int usb_dosetup(t_rtsp_media *media, t_rtsp_usb* UNUSED m, void* UNUSED rsp)
     if (!client) { report(ERROR "usb_dosetup: no client"); return RTSP_NULL_POINTER; }
 
     transport.multicast = false;
-    transport.usb_host_port = htons(3242);
+    transport.port = htons(3242);
  
     if (reg_test("system-dhcp", "true")) {
-        strncpy(transport.usb_host_ip, reg_get("system-hostname"), 49);
+        strncpy(transport.destination_str, reg_get("system-hostname"), 49);
     } else {
-        strncpy(transport.usb_host_ip, reg_get("system-ip"), 49);
+        strncpy(transport.destination_str, reg_get("system-ip"), 49);
     }
 
     // send USB SETUP
