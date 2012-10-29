@@ -1,5 +1,5 @@
 /*
- * rscp_connection.c
+ * rtsp_connection.c
  *
  *  Created on: 22.11.2010
  *      Author: alda
@@ -7,16 +7,16 @@
  *  Functions to send/receive data
  */
 
-#include "rscp.h"
-#include "rscp_net.h"
-#include "rscp_error.h"
-#include "rscp_string.h"
-#include "rscp_connection.h"
+#include "rtsp.h"
+#include "rtsp_net.h"
+#include "rtsp_error.h"
+#include "rtsp_string.h"
+#include "rtsp_connection.h"
 
 #include "hdoipd.h"
 
 
-void rscp_coninit(t_rscp_connection* m, int fd, uint32_t addr)
+void rtsp_coninit(t_rtsp_connection* m, int fd, uint32_t addr)
 {
     m->fdw = fd;
     m->fdr = fd;
@@ -26,11 +26,11 @@ void rscp_coninit(t_rscp_connection* m, int fd, uint32_t addr)
     m->in.buf[0] = 0;
     m->out.buf[0] = 0;
     m->address = addr;
-    m->doc = RSCP_CON_DOC_RX | RSCP_CON_DOC_TX;
+    m->doc = RTSP_CON_DOC_RX | RTSP_CON_DOC_TX;
 }
 
 
-bool rscp_receive_crlf(char** s, char* eol)
+bool rtsp_receive_crlf(char** s, char* eol)
 {
     char* p = *s;
     for (;(p<(eol-1)) && !((p[0]=='\r')&&(p[1]=='\n'));p++);
@@ -45,7 +45,7 @@ bool rscp_receive_crlf(char** s, char* eol)
 }
 /** Not yet used, only header of protocol is used
  * */
-int rscp_receive_body(t_rscp_connection* con, char* buf, size_t length)
+int rtsp_receive_body(t_rtsp_connection* con, char* buf, size_t length)
 {
     int i;
     char* sol = con->in.sol;
@@ -76,7 +76,7 @@ int rscp_receive_body(t_rscp_connection* con, char* buf, size_t length)
 /** Read the received chars in the socket
  *
  * */
-int rscp_receive(t_rscp_connection* con, char** line, int timeout)
+int rtsp_receive(t_rtsp_connection* con, char** line, int timeout)
 {
     int ret = 0;
     size_t s;
@@ -87,7 +87,7 @@ int rscp_receive(t_rscp_connection* con, char** line, int timeout)
 
     *line = 0;
 
-    while (!rscp_receive_crlf(&eol, con->in.eol)) {
+    while (!rtsp_receive_crlf(&eol, con->in.eol)) {
         s = (eol - sol);
         memmove(con->in.buf, sol, s);
         sol = con->in.buf;
@@ -100,21 +100,21 @@ int rscp_receive(t_rscp_connection* con, char** line, int timeout)
             tv.tv_usec = 0;
             ret = select(con->fdr+1, &rfds, NULL, NULL, &tv);
             if (ret == -1) {
-                report(ERROR "rscp_receive() select failed");
+                report(ERROR "rtsp_receive() select failed");
                 return -1;
             } else if (ret == 0) {
-                report(ERROR "rscp_receive() timeout");
-                return RSCP_TIMEOUT;
+                report(ERROR "rtsp_receive() timeout");
+                return RTSP_TIMEOUT;
             }
         }
 
         // read is blocking -> so thread can be cancelled at this position
         pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
-        ret = read(con->fdr, eol, RSCP_MSG_MAX_LENGTH - 1 - s);
+        ret = read(con->fdr, eol, RTSP_MSG_MAX_LENGTH - 1 - s);
         pthread_setcancelstate (PTHREAD_CANCEL_DISABLE, NULL);
 
         if (ret == 0) {
-            return RSCP_CLOSE;
+            return RTSP_CLOSE;
         } else if (ret == -1) {
             return -1;
         }
@@ -127,32 +127,32 @@ int rscp_receive(t_rscp_connection* con, char** line, int timeout)
 
     *line = sol;
 
-#ifdef REPORT_RSCP_PACKETS
-    if (con->doc & RSCP_CON_DOC_RX) {
+#ifdef REPORT_RTSP_PACKETS
+    if (con->doc & RTSP_CON_DOC_RX) {
         struct in_addr addr = { .s_addr = con->address };
-        report_rscp("[%15s] < %s", inet_ntoa(addr), *line);
+        report_rtsp("[%15s] < %s", inet_ntoa(addr), *line);
     }
 #endif
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-/** Sends message to receiver, function equal to rscp_write
+/** Sends message to receiver, function equal to rtsp_write
  *
  * */
-void rscp_send(t_rscp_connection* con)
+void rtsp_send(t_rtsp_connection* con)
 {
     if (send(con->fdw, con->out.buf, con->out.eol - con->out.buf, MSG_NOSIGNAL) == -1) {
     //if (write(con->fdw, con->out.buf, con->out.eol - con->out.buf) == -1) {
-        perrno("rscp_send() send failed");
+        perrno("rtsp_send() send failed");
     }
 
-#ifdef REPORT_RSCP_PACKETS
-    if (con->doc & RSCP_CON_DOC_TX) {
+#ifdef REPORT_RTSP_PACKETS
+    if (con->doc & RTSP_CON_DOC_TX) {
         struct in_addr addr = { .s_addr = con->address };
         char* sol = con->out.buf;
         while (*sol) {
-            report_rscp("[%15s] > %s", inet_ntoa(addr), str_next_token(&sol, "%:\r\n;%0"));
+            report_rtsp("[%15s] > %s", inet_ntoa(addr), str_next_token(&sol, "%:\r\n;%0"));
         }
     }
 #endif
@@ -162,22 +162,22 @@ void rscp_send(t_rscp_connection* con)
     con->out.buf[0] = 0;
 }
 
-/** Sends message to receiver, function equal to rscp_send
+/** Sends message to receiver, function equal to rtsp_send
  *
  * */
-void rscp_write(t_rscp_connection* con)
+void rtsp_write(t_rtsp_connection* con)
 {
     //if (send(con->fdw, con->out.buf, con->out.eol - con->out.buf, 0) == -1) {
     if (write(con->fdw, con->out.buf, con->out.eol - con->out.buf) == -1) {
-        perrno("rscp_send() write failed");
+        perrno("rtsp_send() write failed");
     }
 
-#ifdef REPORT_RSCP_PACKETS
-    if (con->doc & RSCP_CON_DOC_TX) {
+#ifdef REPORT_RTSP_PACKETS
+    if (con->doc & RTSP_CON_DOC_TX) {
         struct in_addr addr = { .s_addr = con->address };
         char* sol = con->out.buf;
         while (*sol) {
-            report_rscp("[%15s] > %s", inet_ntoa(addr), str_next_token(&sol, "%:\r\n;%0"));
+            report_rtsp("[%15s] > %s", inet_ntoa(addr), str_next_token(&sol, "%:\r\n;%0"));
         }
     }
 #endif
@@ -189,24 +189,24 @@ void rscp_write(t_rscp_connection* con)
 /** Creates the two pipes to write in the responses/requests ??
  *
  * */
-int rscp_split(t_rscp_connection* con, t_rscp_connection* con1, t_rscp_connection* con2)
+int rtsp_split(t_rtsp_connection* con, t_rtsp_connection* con1, t_rtsp_connection* con2)
 {
     int pfd1[2], pfd2[2]; // 0=read, 1=write
 
     if (pipe(pfd1) == -1) return -1;
     if (pipe(pfd2) == -1) return -1;
 
-    rscp_coninit(con1, 0, con->address);
+    rtsp_coninit(con1, 0, con->address);
     con1->doc = 0;
     con1->fdr = con->fdr;
     con1->fdw = pfd1[1];
     con->fdr  = pfd1[0];
 
-    rscp_coninit(con2, 0, con->address);
-    con2->doc = RSCP_CON_DOC_RX;
+    rtsp_coninit(con2, 0, con->address);
+    con2->doc = RTSP_CON_DOC_RX;
     con2->fdw = pfd2[1];
     con2->fdr = pfd2[0];
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 

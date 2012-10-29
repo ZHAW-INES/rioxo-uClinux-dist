@@ -1,13 +1,13 @@
 /*
- * rscp_default.c
+ * rtsp_default.c
  *
  *  Created on: 23.11.2010
  *      Author: alda
  */
 
-#include "rscp_default.h"
+#include "rtsp_default.h"
 
-void rscp_default_transport(t_rscp_transport* t)
+void rtsp_default_transport(t_rtsp_transport* t)
 {
     t->protocol = PROTOCOL_RTP;
     t->profile = PROFILE_AVP;
@@ -21,18 +21,18 @@ void rscp_default_transport(t_rscp_transport* t)
     t->client_port = PORT_RANGE(0, 0);
     t->server_port = PORT_RANGE(0, 0);
     t->ssrc = 0;
-    t->mode = RSCP_METHOD_PLAY;
+    t->mode = RTSP_METHOD_PLAY;
 }
 
-void rscp_default_response_setup(t_rscp_rsp_setup* p)
+void rtsp_default_response_setup(t_rtsp_rsp_setup* p)
 {
     p->cseq = 0;
     p->session[0] = 0;
-    rscp_default_transport(&p->transport);
+    rtsp_default_transport(&p->transport);
     p->hdcp.hdcp_on = 0;
 }
 
-void rscp_default_response_hdcp(t_rscp_rsp_hdcp* p)
+void rtsp_default_response_hdcp(t_rtsp_rsp_hdcp* p)
 {
     p->cseq = 0;
     p->session[0] = 0;
@@ -40,19 +40,19 @@ void rscp_default_response_hdcp(t_rscp_rsp_hdcp* p)
     p->content[0]= 0;
 }
 
-void rscp_default_response_play(t_rscp_rsp_play* p)
+void rtsp_default_response_play(t_rtsp_rsp_play* p)
 {
     p->cseq = 0;
     p->session[0] = 0;
 }
 
-void rscp_default_response_pause(t_rscp_rsp_pause* p)
+void rtsp_default_response_pause(t_rtsp_rsp_pause* p)
 {
     p->cseq = 0;
     p->session[0] = 0;
 }
 
-void rscp_default_response_teardown(t_rscp_rsp_teardown* p)
+void rtsp_default_response_teardown(t_rtsp_rsp_teardown* p)
 {
     p->cseq = 0;
     p->session[0] = 0;

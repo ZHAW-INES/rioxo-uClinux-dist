@@ -1,10 +1,10 @@
 /*
- * rscp_string.c
+ * rtsp_string.c
  *
  *  Created on: 19.11.2010
  *      Author: alda
  */
-#include "rscp_string.h"
+#include "rtsp_string.h"
 
 int str_test(char* s, const char* fmt)
 {

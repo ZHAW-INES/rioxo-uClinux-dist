@@ -16,7 +16,7 @@
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "hdoipd_task.h"
-#include "rscp_include.h"
+#include "rtsp_include.h"
 #include "vrb_video.h"
 #include "update.h"
 #include "edid.h"
@@ -138,33 +138,33 @@ void hdoipd_cmd_play(t_hoic_cmd UNUSED *cmd)
 
 void hdoipd_cmd_pause(t_hoic_cmd UNUSED *cmd)
 {
-    t_rscp_media* media = &vrb_audio;           // audio only for debug purposes
-    t_rscp_client *client = media->creator;
-    u_rscp_header buf;
+    t_rtsp_media* media = &vrb_audio;           // audio only for debug purposes
+    t_rtsp_client *client = media->creator;
+    u_rtsp_header buf;
     int ret;
 
     if (!client)                        { report(ERROR "no client");      return; }
-    if (media->state != RSCP_PLAYING)   { report(ERROR "wrong state");    return; }
+    if (media->state != RTSP_PLAYING)   { report(ERROR "wrong state");    return; }
 
-    rscp_client_pause(client);
+    rtsp_client_pause(client);
 
     // response
-    rscp_default_response_setup((void*)&buf);
-    ret = rscp_parse_response(&client->con, tab_response_pause, (void*)&buf, 0, CFG_RSP_TIMEOUT);
-    if (ret == RSCP_SUCCESS) {
+    rtsp_default_response_setup((void*)&buf);
+    ret = rtsp_parse_response(&client->con, tab_response_pause, (void*)&buf, 0, CFG_RSP_TIMEOUT);
+    if (ret == RTSP_SUCCESS) {
         rmsr_pause(media, 0);
     }
 }
 
 void hdoipd_cmd_pause_play(t_hoic_cmd UNUSED *cmd)
 {
-    t_rscp_media* media = &vrb_audio;           // audio only for debug purposes
-    t_rscp_client *client = media->creator;
-    t_rscp_rtp_format fmt;
+    t_rtsp_media* media = &vrb_audio;           // audio only for debug purposes
+    t_rtsp_client *client = media->creator;
+    t_rtsp_rtp_format fmt;
     char *s;
 
     if (!client)                        { report(ERROR "no client");      return; }
-    if (media->state != RSCP_READY)     { report(ERROR "wrong state");    return; }
+    if (media->state != RTSP_READY)     { report(ERROR "wrong state");    return; }
 
     s = reg_get("compress");
     if (strcmp(s, "jp2k") == 0) {
@@ -175,7 +175,7 @@ void hdoipd_cmd_pause_play(t_hoic_cmd UNUSED *cmd)
     fmt.rtptime = 0;
     fmt.value = reg_get_int("advcnt-min");
 
-    rscp_client_play(client, &fmt);
+    rtsp_client_play(client, &fmt);
 }
 
 void hdoipd_ready(t_hoic_cmd UNUSED *cmd)

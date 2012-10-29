@@ -38,7 +38,7 @@ bool strscmp(char **p, char *s)
  *
  * @param media 0: choose from registry, 1: active, 2: all, ptr*: one specific
  */
-int hdoipd_media_callback(t_rscp_media* media, int (*f)(t_rscp_media*, void*), void* d)
+int hdoipd_media_callback(t_rtsp_media* media, int (*f)(t_rtsp_media*, void*), void* d)
 {
     char *s;
     int ret = 0;
@@ -55,8 +55,8 @@ int hdoipd_media_callback(t_rscp_media* media, int (*f)(t_rscp_media*, void*), v
     } else if (media == (void*)1) {
     	report("hdoipd_media_callback() media = 1");
         // Choose all active media
-        if (rscp_media_active(&vrb_video)) ret |= f(&vrb_video, d);
-        if (rscp_media_active(&vrb_audio)) ret |= f(&vrb_audio, d);
+        if (rtsp_media_active(&vrb_video)) ret |= f(&vrb_video, d);
+        if (rtsp_media_active(&vrb_audio)) ret |= f(&vrb_audio, d);
     } else if (media == (void*)2) {
     	report("hdoipd_media_callback() media = 2");
         // Choose all media

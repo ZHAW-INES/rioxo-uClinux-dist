@@ -1,12 +1,12 @@
 /*
- * rscp_string.h
+ * rtsp_string.h
  *
  *  Created on: 19.11.2010
  *      Author: alda
  */
 
-#ifndef RSCP_STRING_H_
-#define RSCP_STRING_H_
+#ifndef RTSP_STRING_H_
+#define RTSP_STRING_H_
 
 #include <stdint.h>
 #include <stddef.h>
@@ -45,4 +45,4 @@ bool str_split_response_line(t_str_response_line* rsp, char* s);
 int str_hdcp(char* str);
 
 
-#endif /* RSCP_STRING_H_ */
+#endif /* RTSP_STRING_H_ */

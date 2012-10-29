@@ -11,7 +11,7 @@
 #include "hdoipd_fsm.h"
 #include "hoi_image.h"
 #include "hoi_res.h"
-#include "rscp_string.h"
+#include "rtsp_string.h"
 #include "hdoip_log.h"
 #include "multicast.h"
 
@@ -114,12 +114,12 @@ void* hdoipd_osd_timer(void UNUSED *d)
 
         hdoipd.tick++;
 #ifdef USE_SYS_TICK
-        rscp_client_event(hdoipd.client, EVENT_TICK);
-        rscp_listener_event(&hdoipd.listener, EVENT_TICK);
+        rtsp_client_event(hdoipd.client, EVENT_TICK);
+        rtsp_listener_event(&hdoipd.listener, EVENT_TICK);
 #endif
         // Log file handler
         hdoip_log_handler(&hdoipd.main_log);
-        hdoip_log_handler(&hdoipd.rscp_log);
+        hdoip_log_handler(&hdoipd.rtsp_log);
 
         unlock("hdoipd_tick_timer");
 

@@ -28,8 +28,8 @@ void hdoipd_set_default()
     reg_set("mode-media", "video");
     reg_set("mode-sync", "streamsync");
     reg_set("sync-target", "video");
-    reg_set("remote-uri", "rscp://192.168.1.201");
-    reg_set("hello-uri", "rscp://192.168.1.201");
+    reg_set("remote-uri", "rtsp://192.168.1.201");
+    reg_set("hello-uri", "rtsp://192.168.1.201");
     reg_set("compress", "jp2k");
     reg_set("bandwidth", "10485760");
     reg_set("chroma-bandwidth", "100");
@@ -41,7 +41,7 @@ void hdoipd_set_default()
     reg_set("network-timeout", "3");
     reg_set("video-port", "3400");
     reg_set("audio-port", "3402");
-    reg_set("rscp-server-port", "554");
+    reg_set("rtsp-server-port", "554");
 
     reg_set("hdcp-force", "false");
 
@@ -75,16 +75,16 @@ static void update_0_0_to_0_1()
     char *p;
     p = reg_get("rtsp-server-port");
     if (p) {
-        reg_set("rscp-server-port", p);
+        reg_set("rtsp-server-port", p);
         reg_del("rtsp-server-port");
     }
     p = reg_get("remote-uri");
     if (p && (strncmp(p, "rtsp", 4) == 0)) {
-        memcpy(p, "rscp", 4);
+        memcpy(p, "rtsp", 4);
     }
     p = reg_get("hello-uri");
     if (p && (strncmp(p, "rtsp", 4) == 0)) {
-        memcpy(p, "rscp", 4);
+        memcpy(p, "rtsp", 4);
     }
 
     reg_set(CFGTAG, "v0.1");

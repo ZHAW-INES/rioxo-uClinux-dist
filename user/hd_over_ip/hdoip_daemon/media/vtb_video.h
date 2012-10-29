@@ -8,8 +8,8 @@
 #ifndef VTB_VIDEO_H_
 #define VTB_VIDEO_H_
 
-#include "rscp_include.h"
+#include "rtsp_include.h"
 
-extern t_rscp_media vtb_video;
+extern t_rtsp_media vtb_video;
 
 #endif /* VTB_VIDEO_H_ */

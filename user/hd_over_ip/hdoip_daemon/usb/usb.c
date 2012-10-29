@@ -40,7 +40,7 @@ void usb_load_driver(char* mode)
 
 /** Bind an USB device to USBIP
  *
- *  Device is been attached to USBIP and a message is sent via RSCP that an USB device is connected to host. 
+ *  Device is been attached to USBIP and a message is sent via RTSP that an USB device is connected to host.
  *
  */
 void bind_usb_dev(char* s)
@@ -242,36 +242,36 @@ int detect_device(char* node_param)
     return device_count;
 }
 
-/** Send an RSCP Message that a new usb device has connected
+/** Send an RTSP Message that a new usb device has connected
  *
  */
-int usb_connect_device(t_rscp_usb* usb)
+int usb_connect_device(t_rtsp_usb* usb)
 {
     int ret;
-    t_rscp_media* media;
-    t_rscp_usb* usb_clone;
+    t_rtsp_media* media;
+    t_rtsp_usb* usb_clone;
 
     media = &usb_media;
 
-    usb_clone = (t_rscp_usb*) malloc(sizeof(t_rscp_usb));
-    memcpy(usb_clone, usb, sizeof(t_rscp_usb));
+    usb_clone = (t_rtsp_usb*) malloc(sizeof(t_rtsp_usb));
+    memcpy(usb_clone, usb, sizeof(t_rtsp_usb));
 
     // start connection for usb if it doesnt exists
     if (!media->creator) {
         hdoipd_start_vrb_cb(media, 0);
     }
 
-    ret = RSCP_SUCCESS;
+    ret = RTSP_SUCCESS;
 
     // do usb setup
-    if (media->state == RSCP_INIT) {
+    if (media->state == RTSP_INIT) {
         if (media->dosetup) {
             ret = media->dosetup(media, 0, 0);
         }
     }
 
     // do usb play
-    if (ret == RSCP_SUCCESS) {
+    if (ret == RTSP_SUCCESS) {
         if (media->doplay) {
             ret = media->doplay(media, usb_clone, 0);
         }
@@ -282,19 +282,19 @@ int usb_connect_device(t_rscp_usb* usb)
     return ret;
 }
 
-/** Send an RSCP Message if there are connected devices
+/** Send an RTSP Message if there are connected devices
  *
  */
 void usb_try_to_connect_device(t_usb_devices* old_values)
 {
-    t_rscp_media* media;
-    t_rscp_usb* usb_clone;
+    t_rtsp_media* media;
+    t_rtsp_usb* usb_clone;
     int i, ret;
 
     if (old_values->device_count > 0) {
 
         media = &usb_media;
-        usb_clone = (t_rscp_usb*) malloc(sizeof(t_rscp_usb));
+        usb_clone = (t_rtsp_usb*) malloc(sizeof(t_rtsp_usb));
 
         sprintf(usb_clone->mouse,      "");
         sprintf(usb_clone->keyboard,   "");
@@ -322,17 +322,17 @@ void usb_try_to_connect_device(t_usb_devices* old_values)
                 hdoipd_start_vrb_cb(media, 0);
             }
 
-            ret = RSCP_SUCCESS;
+            ret = RTSP_SUCCESS;
 
             // do usb setup
-            if (media->state == RSCP_INIT) {
+            if (media->state == RTSP_INIT) {
                 if (media->dosetup) {
                     ret = media->dosetup(media, 0, 0);
                 }
             }
 
             // do usb play
-            if (ret == RSCP_SUCCESS) {
+            if (ret == RTSP_SUCCESS) {
                 if (media->doplay) {
                     ret = media->doplay(media, usb_clone, 0);
                 }
@@ -344,13 +344,13 @@ void usb_try_to_connect_device(t_usb_devices* old_values)
 }
 
 
-/** Send an RSCP Message that an usb device is lost
+/** Send an RTSP Message that an usb device is lost
  *
  */
 int usb_teardown_device(void)
 {
-    int ret = RSCP_NULL_POINTER;
-    t_rscp_media* media;
+    int ret = RTSP_NULL_POINTER;
+    t_rtsp_media* media;
 
     media = &usb_media;
 
@@ -419,7 +419,7 @@ void usb_device_handler(t_usb_devices* old_values)
     char zerostring[] = "         ";
     char *s;
     bool active = false;
-    t_rscp_usb usb;
+    t_rtsp_usb usb;
 
     // load drivers and start usbip on first call
     // if usbip-device is started to early, there are some problems with vhci driver

@@ -15,7 +15,7 @@
 #include <pthread.h>
 
 #include "debug.h"
-#include "rscp_include.h"
+#include "rtsp_include.h"
 #include "bstmap.h"
 #include "alive_check.h"
 #include "usb.h"
@@ -185,13 +185,13 @@ typedef struct {
     pthread_mutex_t     mutex;          // mutex of the structure
 
     void*               canvas;         // pointer to picture
-    t_rscp_listener     listener;       // RSCP listener
-    t_node*             client;         // list of all RSCP clients
+    t_rtsp_listener     listener;       // RTSP listener
+    t_node*             client;         // list of all RTSP clients
     t_hdoip_eth         local;          // local mac, ip, video port and audio port
     int                 osd_timeout;    // time till osd will be deactivate (in seconds)
     bool                ethernet_init;  // if ethernet is or was connected 
     uint64_t            tick;           // counts the EVENT_TICKS, UNUSED!
-    int                 eth_alive;      // amount of ticks (EVENT_TICK) till rscp alive packet is sent
+    int                 eth_alive;      // amount of ticks (EVENT_TICK) till rtsp alive packet is sent
     int                 eth_timeout;    // amount of ticks till connection timeout is detected
 
     bool                auto_stream;    // flag if device should do auto stream after boot
@@ -202,7 +202,7 @@ typedef struct {
     bool                dhcp;           // flag if DHCP client is used
 
     t_hdoip_log         main_log;
-    t_hdoip_log         rscp_log;
+    t_hdoip_log         rtsp_log;
 
     uint32_t*           img_buff;       // pointer to test-image buffer
 } t_hdoipd;
@@ -225,8 +225,8 @@ extern t_hdoipd                 hdoipd;
     hdoip_perrno(&hdoipd.main_log, __VA_ARGS__);\
 }
 
-#define report_rscp(...) {\
-    hdoip_report(&hdoipd.rscp_log, __VA_ARGS__); \
+#define report_rtsp(...) {\
+    hdoip_report(&hdoipd.rtsp_log, __VA_ARGS__); \
 }
 
 //------------------------------------------------------------------------------

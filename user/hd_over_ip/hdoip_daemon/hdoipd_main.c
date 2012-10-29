@@ -203,15 +203,15 @@ int main(int argc, char **argv)
     }
 #endif
 
-#ifdef RSCP_LOG
-    #ifndef DBGCONSOLERSCP
-        ret = hdoip_log_init(&hdoipd.rscp_log, "/var/log/hdoipd.rscp0.log", "/var/log/hdoipd.rscp1.log", 10240);
+#ifdef RTSP_LOG
+    #ifndef DBGCONSOLERTSP
+        ret = hdoip_log_init(&hdoipd.rtsp_log, "/var/log/hdoipd.rtsp0.log", "/var/log/hdoipd.rtsp1.log", 10240);
     #else
-        ret = hdoip_log_init(&hdoipd.rscp_log, "", "", 0);
+        ret = hdoip_log_init(&hdoipd.rtsp_log, "", "", 0);
     #endif
 
     if(ret < 0) {
-        perrno("Init RSCP log failed");
+        perrno("Init RTSP log failed");
         return 0;
     }
 #endif
@@ -255,7 +255,7 @@ int main(int argc, char **argv)
     }
 
     hdoip_log_close(&hdoipd.main_log);
-    hdoip_log_close(&hdoipd.rscp_log);
+    hdoip_log_close(&hdoipd.rtsp_log);
 
     pthread_mutex_destroy(&hdoipd.mutex);
 

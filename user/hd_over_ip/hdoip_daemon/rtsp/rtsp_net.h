@@ -1,12 +1,12 @@
 /*
- * rscp_net.h
+ * rtsp_net.h
  *
  *  Created on: 01.12.2010
  *      Author: alda
  */
 
-#ifndef RSCP_NET_H_
-#define RSCP_NET_H_
+#ifndef RTSP_NET_H_
+#define RTSP_NET_H_
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -34,4 +34,4 @@ int net_get_local_addr(int sock, char* ifn, uint32_t* addr);
 int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac);
 
 
-#endif /* RSCP_NET_H_ */
+#endif /* RTSP_NET_H_ */

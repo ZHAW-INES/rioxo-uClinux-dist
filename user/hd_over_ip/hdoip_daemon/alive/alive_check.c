@@ -10,9 +10,9 @@
 
 #include "alive_check.h"
 #include "multicast.h"
-#include "rscp_net.h"
+#include "rtsp_net.h"
 #include "hdoipd.h"
-#include "rscp_string.h"
+#include "rtsp_string.h"
 #include "box_sys.h"
 #include "hdoipd_fsm.h"
 #include "edid.h"
@@ -262,7 +262,7 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
     char remote_uri_converted[100];
     uint8_t edid_table[edid_length];
     uint32_t active_res;
-    t_rscp_edid edid;
+    t_rtsp_edid edid;
     t_edid edid_old;
     struct hostent* host;
 
@@ -396,18 +396,18 @@ int alive_check_test_msg_vrb_alive(char *hello_msg, char *client_ip, uint8_t *ed
 
 int alive_check_response_vrb_alive(char *client_ip) 
 {
-    t_rscp_client *client;
+    t_rtsp_client *client;
     char uri[40];
 
     if (client_ip) {
-        sprintf(uri, "%s://%s","rscp", client_ip);
-        client = rscp_client_open(hdoipd.client, 0, uri);
+        sprintf(uri, "%s://%s","rtsp", client_ip);
+        client = rtsp_client_open(hdoipd.client, 0, uri);
         if (client) {
 #ifdef REPORT_ALIVE_HELLO
             report(INFO "alive check: say hello to %s", uri);
 #endif
-            rscp_client_hello(client);
-            rscp_client_close(client);
+            rtsp_client_hello(client);
+            rtsp_client_close(client);
             return ALIVE_CHECK_SUCCESS;
         } else {
             report(ERROR "alive check: could not say hello to %s", uri);

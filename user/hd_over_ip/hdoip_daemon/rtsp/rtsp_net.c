@@ -1,5 +1,5 @@
 /*
- * rscp_net.c
+ * rtsp_net.c
  *
  *  Created on: 01.12.2010
  *      Author: alda
@@ -12,8 +12,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include "rscp_net.h"
-#include "rscp_error.h"
+#include "rtsp_net.h"
+#include "rtsp_error.h"
 #include "hdoipd.h"
 
 
@@ -36,14 +36,14 @@ int net_get_local_hwaddr(int sock, char* ifn, uint8_t* mac)
 
     if((n = ioctl(sock, SIOCGIFHWADDR, (void*)&req)) == -1 ) {
         perrno("ioctl(SIOCGIFHWADDR) failed");
-        return RSCP_ERRORNO;
+        return RTSP_ERRORNO;
     }
 
     for (int i=0; i<6; i++) {
         mac[i] = req.ifr_hwaddr.sa_data[i];
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
 int net_get_local_addr(int sock, char* ifn, uint32_t* addr)
@@ -55,12 +55,12 @@ int net_get_local_addr(int sock, char* ifn, uint32_t* addr)
 
     if((n = ioctl(sock, SIOCGIFADDR, (void*)&req)) == -1 ) {
         perrno("ioctl(SIOCGIFADDR) failed");
-        return RSCP_ERRORNO;
+        return RTSP_ERRORNO;
     }
 
     *addr = ((struct sockaddr_in*)&req.ifr_addr)->sin_addr.s_addr;
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
 int net_read_arp_map(int sock, char* ifn, uint32_t address, uint8_t* mac)
@@ -76,18 +76,18 @@ int net_read_arp_map(int sock, char* ifn, uint32_t address, uint8_t* mac)
 
     if (ioctl(sock, SIOCGARP, (void*)&req) == -1) {
         perrno("ioctl(SIOCGARP) failed");
-        return RSCP_ERRORNO;
+        return RTSP_ERRORNO;
     }
 
     if(!(req.arp_flags & ATF_COM)){
-        return RSCP_ERRORNO;
+        return RTSP_ERRORNO;
     }
 
     for (int i=0;i<6;i++) {
         mac[i] = req.arp_ha.sa_data[i];
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
 
@@ -98,7 +98,7 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
     struct hostent* gw;
     struct ifreq ifreq;
     struct sockaddr_in sin;
-    int ret = RSCP_ERRORNO;
+    int ret = RTSP_ERRORNO;
     uint32_t subnet, dev_ip;
 
     memset(&ifreq, 0, sizeof(ifreq));
@@ -107,7 +107,7 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
     /* Read device ip */
     if((ioctl(sock, SIOCGIFADDR, (void*)&ifreq)) == -1 ) {
         perrno("ioctl(SIOCGIFADDR) failed");
-        return RSCP_ERRORNO;
+        return RTSP_ERRORNO;
     }
 
     memcpy(&sin, &ifreq.ifr_addr, sizeof(struct sockaddr));
@@ -116,7 +116,7 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
     /* Read subnet mask */
     if((ioctl(sock, SIOCGIFNETMASK, (void*)&ifreq)) == -1 ) {
         perrno("ioctl(SIOCGIFNETMASK) failed");
-        return RSCP_ERRORNO;
+        return RTSP_ERRORNO;
     }
 
     memcpy(&sin, &ifreq.ifr_addr, sizeof(struct sockaddr));
@@ -125,7 +125,7 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
     /* destination is in local network*/
     if((subnet & address) == (subnet & dev_ip)) {
         ret = net_read_arp_map(sock, ifn, address, mac);
-        if (ret != RSCP_SUCCESS) {
+        if (ret != RTSP_SUCCESS) {
             sin.sin_addr.s_addr = address;
             sprintf(buf, "/bin/busybox arping -c 1 %s", inet_ntoa(sin.sin_addr));
             system(buf);
@@ -134,8 +134,8 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
         }
     }
 
-    if(ret == RSCP_SUCCESS) {
-        return RSCP_SUCCESS;
+    if(ret == RTSP_SUCCESS) {
+        return RTSP_SUCCESS;
     }
 
     /* Switching to gateway */
@@ -144,13 +144,13 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
 
     if (!gw) {
         perrno("net_get_remote_hwaddr() gethostbyname failed");
-        return RSCP_ERRORNO;
+        return RTSP_ERRORNO;
     }
 
     address = *((uint32_t*)gw->h_addr_list[0]);
     ret = net_read_arp_map(sock, ifn, address, mac);
 
-    if(ret != RSCP_SUCCESS) {
+    if(ret != RTSP_SUCCESS) {
         sprintf(buf, "/sbin/busybox arping -c 1 %s", str);
         system(buf);
         ret =  net_read_arp_map(sock, ifn, address, mac);

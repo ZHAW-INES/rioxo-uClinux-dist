@@ -17,7 +17,7 @@
 #include "hdoipd_fsm.h"
 #include "edid.h"
 #include "hdcp.h"
-#include "rscp_string.h"
+#include "rtsp_string.h"
 #include "multicast.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
@@ -32,17 +32,17 @@ static struct {
     bool                multicast_en;
 } vrb;
 
-int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection* rsp)
+int vrb_video_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection* rsp)
 {
     int n;
-    t_rscp_client* client = media->creator;
+    t_rtsp_client* client = media->creator;
     report(VRB_METHOD "vrb_video_setup");
 
-    if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
+    if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RTSP_SUCCESS) {
         return n;
     }
 
-    if ((n = net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address)) != RSCP_SUCCESS) {
+    if ((n = net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address)) != RTSP_SUCCESS) {
         return n;
     }
 
@@ -66,8 +66,8 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
         report(INFO "encrypted video output on SDI is not allowed");
         osd_permanent(true);
         osd_printf("encrypted video output on SDI is not allowed\n");
-        rscp_client_set_teardown(client);
-        return RSCP_REQUEST_ERROR;
+        rtsp_client_set_teardown(client);
+        return RTSP_REQUEST_ERROR;
     }
 
     /*start hdcp session key exchange if necessary */
@@ -75,10 +75,10 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     hdoipd.hdcp.enc_state = m->hdcp.hdcp_on;
 
     if ((m->hdcp.hdcp_on == 1) && !(hdoipd.hdcp.ske_executed)){
-		if (rscp_client_hdcp(client) != RSCP_SUCCESS){
+		if (rtsp_client_hdcp(client) != RTSP_SUCCESS){
 			report(" ? Session key exchange failed");
-			//rscp_err_hdcp(rsp);  DONT CALL THIS AT VRB!!!!!!!!!!!!!!!
-			return RSCP_REQUEST_ERROR;
+			//rtsp_err_hdcp(rsp);  DONT CALL THIS AT VRB!!!!!!!!!!!!!!!
+			return RTSP_REQUEST_ERROR;
 		}
     }
 
@@ -89,14 +89,14 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
     hdoipd_set_vtb_state(VTB_VID_IDLE);
 
-    media->result = RSCP_RESULT_READY;
+    media->result = RTSP_RESULT_READY;
     vrb.alive_ping = 1;
     vrb.timeout = 0;
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UNUSED *rsp)
+int vrb_video_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UNUSED *rsp)
 {
     uint32_t compress = 0;
     report(VRB_METHOD "vrb_video_play");
@@ -114,7 +114,7 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 		    }
 		    else {
 			    report(INFO "No valid HDCP ske executed!");
-			    return RSCP_ERRORNO;
+			    return RTSP_ERRORNO;
 		    }
         } else {
             // disable HDCP on AD9889
@@ -122,7 +122,7 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
         }
 	}
 
-    media->result = RSCP_RESULT_PLAYING;
+    media->result = RTSP_RESULT_PLAYING;
 
     osd_permanent(false);
 
@@ -165,14 +165,14 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
 
     hoi_drv_set_led_status(SDI_OUT_NO_AUDIO);
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rscp_connection *rsp)
+int vrb_video_teardown(t_rtsp_media *media, t_rtsp_rsp_teardown UNUSED *m, t_rtsp_connection *rsp)
 {
     report(VRB_METHOD "vrb_video_teardown");
 
-    media->result = RSCP_RESULT_TEARDOWN;
+    media->result = RTSP_RESULT_TEARDOWN;
 
     if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
 #ifdef VID_OUT_PATH
@@ -202,51 +202,51 @@ int vrb_video_teardown(t_rscp_media *media, t_rscp_rsp_teardown UNUSED *m, t_rsc
 
     hoi_drv_set_led_status(SDI_OUT_OFF);
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
 
-int vrb_video_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
+int vrb_video_error(t_rtsp_media *media, intptr_t m, t_rtsp_connection* rsp)
 {
-	t_rscp_client *client = media->creator;
+	t_rtsp_client *client = media->creator;
 
     if(rsp) {
         report(" ? client failed (%d): %d - %s", m, rsp->ecode, rsp->ereason);
         osd_permanent(true);
         osd_printf("vrb.video streaming could not be established: %d - %s\n", rsp->ecode, rsp->ereason);
         switch(rsp->ecode) {
-            case 300:   media->result = RSCP_RESULT_SERVER_TRY_LATER;
+            case 300:   media->result = RTSP_RESULT_SERVER_TRY_LATER;
                         break;
-            case 404:   media->result = RSCP_RESULT_SERVER_BUSY;
+            case 404:   media->result = RTSP_RESULT_SERVER_BUSY;
                         break;
-            case 405:   media->result = RSCP_RESULT_SERVER_NO_VTB;
+            case 405:   media->result = RTSP_RESULT_SERVER_NO_VTB;
                         break;
-            case 406:   media->result = RSCP_RESULT_SERVER_NO_VIDEO_IN;
+            case 406:   media->result = RTSP_RESULT_SERVER_NO_VIDEO_IN;
                         break;
-            case 408:   media->result = RSCP_RESULT_SERVER_HDCP_ERROR;
-                        rscp_client_set_teardown(client);
+            case 408:   media->result = RTSP_RESULT_SERVER_HDCP_ERROR;
+                        rtsp_client_set_teardown(client);
 			    		// start sending alive packets
                         if(hdoipd.auto_stream) {
                             alive_check_start_vrb_alive();
                         }
                         break;
             case 400:
-            default:    media->result = RSCP_RESULT_SERVER_ERROR;
+            default:    media->result = RTSP_RESULT_SERVER_ERROR;
                         break;
         }
     } else {    
         osd_permanent(true);
         osd_printf("vrb.video streaming could not be established: connection refused\n");
-        media->result = RSCP_RESULT_CONNECTION_REFUSED;
+        media->result = RTSP_RESULT_CONNECTION_REFUSED;
     }
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
 
-void vrb_video_pause(t_rscp_media *media)
+void vrb_video_pause(t_rtsp_media *media)
 {
 	report(INFO "vrb_video_pause");
-    media->result = RSCP_RESULT_PAUSE_Q;
+    media->result = RTSP_RESULT_PAUSE_Q;
 
     report(VRB_METHOD "vrb_video_pause");
 
@@ -269,14 +269,14 @@ void vrb_video_pause(t_rscp_media *media)
     hoi_drv_set_led_status(SDI_OUT_OFF);
 }
 
-int vrb_video_ext_pause(t_rscp_media* media, void* UNUSED m, t_rscp_connection* rsp)
+int vrb_video_ext_pause(t_rtsp_media* media, void* UNUSED m, t_rtsp_connection* rsp)
 {
     vrb_video_pause(media);
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
+int vrb_video_update(t_rtsp_media *media, t_rtsp_req_update *m, t_rtsp_connection UNUSED *rsp)
 {
 	//report(INFO "EVENT NR: %08x", m->event);
     switch (m->event) {
@@ -288,11 +288,11 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
         case EVENT_VIDEO_IN_ON:
             // No multicast for now...simply stop before starting new
         	report(INFO "vrb_video_update; EVENT_VIDEO_IN_ON");
-            if (!rscp_media_splaying(media)) {
+            if (!rtsp_media_splaying(media)) {
                 vrb_video_pause(media);
                 // restart
-                rscp_client_set_play(media->creator);  
-                return RSCP_PAUSE;
+                rtsp_client_set_play(media->creator);
+                return RTSP_PAUSE;
             }
         break;
         case EVENT_VIDEO_IN_OFF:
@@ -301,41 +301,41 @@ int vrb_video_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connectio
             osd_permanent(true);
             osd_printf("vtb.video stopped streaming - no video input\n");
             report(ERROR "vtb.video stopped streaming - no video input");
-            return RSCP_PAUSE;
+            return RTSP_PAUSE;
         break;
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vrb_video_ready(t_rscp_media UNUSED *media)
+int vrb_video_ready(t_rtsp_media UNUSED *media)
 {
     //if (hdoipd_tstate(VTB_VID_MASK)) {
     //    // not ready ->
-    //    return RSCP_ERRORNO;
+    //    return RTSP_ERRORNO;
     //}
     if (!hdoipd_rsc(RSC_VIDEO_SINK)) {
         // no video sink
-        return RSCP_ERRORNO;
+        return RTSP_ERRORNO;
     }
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vrb_video_dosetup(t_rscp_media *media, void* UNUSED m, void* UNUSED rsp)
+int vrb_video_dosetup(t_rtsp_media *media, void* UNUSED m, void* UNUSED rsp)
 {
     int port;
-    t_rscp_transport transport;
-    t_rscp_edid edid;
-    t_rscp_client *client = media->creator;
-    t_rscp_hdcp hdcp;
+    t_rtsp_transport transport;
+    t_rtsp_edid edid;
+    t_rtsp_client *client = media->creator;
+    t_rtsp_hdcp hdcp;
 
     hdcp.hdcp_on = reg_test("hdcp-force", "true");
 
     report(VRB_METHOD "vrb_video_dosetup");
 
-    if (!client) return RSCP_NULL_POINTER;
+    if (!client) return RTSP_NULL_POINTER;
 
-    rscp_default_transport(&transport); // TODO: daemon transport configuration
+    rtsp_default_transport(&transport); // TODO: daemon transport configuration
     port = reg_get_int("video-port");
     transport.client_port = PORT_RANGE(htons(port), htons(port+1));
 
@@ -345,18 +345,18 @@ int vrb_video_dosetup(t_rscp_media *media, void* UNUSED m, void* UNUSED rsp)
     edid_report((void*)edid.edid);
 #endif
 
-    return rscp_client_setup(client, &transport, &edid, &hdcp);
+    return rtsp_client_setup(client, &transport, &edid, &hdcp);
 }
 
-int vrb_video_doplay(t_rscp_media *media, void* UNUSED m, void* UNUSED rsp)
+int vrb_video_doplay(t_rtsp_media *media, void* UNUSED m, void* UNUSED rsp)
 {
     char *s;
-    t_rscp_rtp_format fmt;
-    t_rscp_client *client = media->creator;
+    t_rtsp_rtp_format fmt;
+    t_rtsp_client *client = media->creator;
 
     report(VRB_METHOD "vrb_video_doplay");
 
-    if (!client) return RSCP_NULL_POINTER;
+    if (!client) return RTSP_NULL_POINTER;
 
     // open media
     s = reg_get("compress");
@@ -368,12 +368,12 @@ int vrb_video_doplay(t_rscp_media *media, void* UNUSED m, void* UNUSED rsp)
     fmt.rtptime = 0;
     fmt.value = reg_get_int("advcnt-min");
 
-    return rscp_client_play(client, &fmt);
+    return rtsp_client_play(client, &fmt);
 }
 
-int vrb_video_event(t_rscp_media *media, uint32_t event)
+int vrb_video_event(t_rtsp_media *media, uint32_t event)
 {
-    t_rscp_client *client = media->creator;
+    t_rtsp_client *client = media->creator;
 
     switch (event) {
         case EVENT_TICK:
@@ -383,7 +383,7 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
                 vrb.alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
            //     if (hdoipd_tstate(VTB_VIDEO)) { // only if video stream = active
-                rscp_client_update(client, EVENT_TICK);
+                rtsp_client_update(client, EVENT_TICK);
            //     }
             }
             if (vrb.timeout <= TICK_TIMEOUT) {
@@ -392,7 +392,7 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
                 report(INFO "vrb_video_event: timeout");
                 // timeout -> kill connection
                 vrb.timeout = 0;
-                rscp_client_set_kill(client);
+                rtsp_client_set_kill(client);
                 osd_permanent(true);
                 osd_printf("vrb.video connection lost...\n");
             }
@@ -400,27 +400,27 @@ int vrb_video_event(t_rscp_media *media, uint32_t event)
 
         case EVENT_VIDEO_SINK_OFF:
             // Note: after teardown call media/client is not anymore a valid struct
-            rscp_client_set_teardown(client);
+            rtsp_client_set_teardown(client);
         break;
 
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-t_rscp_media vrb_video = {
+t_rtsp_media vrb_video = {
     .name = "video",
     .owner = 0,
     .cookie = 0,
-    .setup = (frscpm*)vrb_video_setup,
-    .play = (frscpm*)vrb_video_play,
-    .pause = (frscpm*)vrb_video_ext_pause,
-    .teardown = (frscpm*)vrb_video_teardown,
-    .error = (frscpm*)vrb_video_error,
-    .update = (frscpm*)vrb_video_update,
-    .ready = (frscpl*)vrb_video_ready,
-    .dosetup = (frscpm*)vrb_video_dosetup,
-    .doplay = (frscpm*)vrb_video_doplay,
-    .event = (frscpe*)vrb_video_event
+    .setup = (frtspm*)vrb_video_setup,
+    .play = (frtspm*)vrb_video_play,
+    .pause = (frtspm*)vrb_video_ext_pause,
+    .teardown = (frtspm*)vrb_video_teardown,
+    .error = (frtspm*)vrb_video_error,
+    .update = (frtspm*)vrb_video_update,
+    .ready = (frtspl*)vrb_video_ready,
+    .dosetup = (frtspm*)vrb_video_dosetup,
+    .doplay = (frtspm*)vrb_video_doplay,
+    .event = (frtspe*)vrb_video_event
 };
 

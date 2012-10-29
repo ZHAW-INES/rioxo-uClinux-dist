@@ -26,16 +26,16 @@ function show(t)
         t.err = t.err .. ret 
     end
 
-    if(t.dl_rscp0_log ~= nil) then
-        ret = hdoip.download.file("/var/log/hdoipd.rscp0.log", "rscp0.log")
+    if(t.dl_rtsp0_log ~= nil) then
+        ret = hdoip.download.file("/var/log/hdoipd.rtsp0.log", "rtsp0.log")
         if(ret == "") then
             return
         end       
         t.err = t.err .. ret 
     end
     
-    if(t.dl_rscp1_log ~= nil) then
-        ret = hdoip.download.file("/var/log/hdoipd.rscp1.log", "rscp1.log")
+    if(t.dl_rtsp1_log ~= nil) then
+        ret = hdoip.download.file("/var/log/hdoipd.rtsp1.log", "rtsp1.log")
         if(ret == "") then
             return
         end       
@@ -114,10 +114,10 @@ function show(t)
     hdoip.html.OneButtonForm(t, script_path, "dl_hdoipd0_log",label.button_dump);       hdoip.html.TableInsElement(1);
     hdoip.html.Text("hdoipd1.log");                                                     hdoip.html.TableInsElement(1);
     hdoip.html.OneButtonForm(t, script_path, "dl_hdoipd1_log",label.button_dump);       hdoip.html.TableInsElement(1);
-    hdoip.html.Text("rscp0.log");                                                       hdoip.html.TableInsElement(1);
-    hdoip.html.OneButtonForm(t, script_path, "dl_rscp0_log",label.button_dump);         hdoip.html.TableInsElement(1);
-    hdoip.html.Text("rscp1.log");                                                       hdoip.html.TableInsElement(1);
-    hdoip.html.OneButtonForm(t, script_path, "dl_rscp1_log",label.button_dump);         hdoip.html.TableInsElement(1);
+    hdoip.html.Text("rtsp0.log");                                                       hdoip.html.TableInsElement(1);
+    hdoip.html.OneButtonForm(t, script_path, "dl_rtsp0_log",label.button_dump);         hdoip.html.TableInsElement(1);
+    hdoip.html.Text("rtsp1.log");                                                       hdoip.html.TableInsElement(1);
+    hdoip.html.OneButtonForm(t, script_path, "dl_rtsp1_log",label.button_dump);         hdoip.html.TableInsElement(1);
     hdoip.html.Text("kernel.log");                                                      hdoip.html.TableInsElement(1);
     hdoip.html.OneButtonForm(t, script_path, "dl_kernel_log",label.button_dump);        hdoip.html.TableInsElement(1);
     hdoip.html.Text("boa.access.log");                                                  hdoip.html.TableInsElement(1);

@@ -29,11 +29,11 @@ void hdoipd_hw_reset(int rv);
 bool hdoipd_goto_ready();
 void hdoipd_goto_vtb();
 int hdoipd_goto_vrb();
-int hdoipd_vrb_setup(t_rscp_media* media, void* d);
-int hdoipd_vrb_play(t_rscp_media* media, void* d);
+int hdoipd_vrb_setup(t_rtsp_media* media, void* d);
+int hdoipd_vrb_play(t_rtsp_media* media, void* d);
 void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps);
 
-int hdoipd_start_vrb_cb(t_rscp_media* media, void* d);
+int hdoipd_start_vrb_cb(t_rtsp_media* media, void* d);
 int hdoipd_start_vrb(void* d);
 void hdoipd_task(void);
 void hdoipd_set_task_start_vrb(void);

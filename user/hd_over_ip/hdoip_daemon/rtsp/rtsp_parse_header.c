@@ -1,20 +1,20 @@
 /*
- * rscp_parse_header.c
+ * rtsp_parse_header.c
  *
  *  Created on: 22.11.2010
  *      Author: alda
  *
  *  Functions to parse the received message string back to the struct values
- *  Every line of the RSCP message has its own parsing function.
+ *  Every line of the RTSP message has its own parsing function.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <netinet/in.h>
-#include "rscp_parse_header.h"
-#include "rscp_error.h"
-#include "rscp_string.h"
+#include "rtsp_parse_header.h"
+#include "rtsp_error.h"
+#include "rtsp_string.h"
 #include "map.h"
 #include "hoi_msg.h"
 #include "hdoipd.h"
@@ -22,13 +22,13 @@
 #define next(x, l) \
 { \
     x = str_next_token(&(l), ";%0"); \
-    if (!x || !*x) return RSCP_PARSE_ERROR; \
+    if (!x || !*x) return RTSP_PARSE_ERROR; \
 }
 
 #define nextsp(x, l) \
 { \
     x = str_next_token(&(l), " %0"); \
-    if (!x || !*x) return RSCP_PARSE_ERROR; \
+    if (!x || !*x) return RTSP_PARSE_ERROR; \
 }
 
 static inline uint8_t nextbyte(char* s)
@@ -44,7 +44,7 @@ static inline uint8_t nextbyte(char* s)
     return r;
 }
 
-int rscp_parse_port(char* str, uint32_t* p)
+int rtsp_parse_port(char* str, uint32_t* p)
 {
     char* s2;
 
@@ -54,10 +54,10 @@ int rscp_parse_port(char* str, uint32_t* p)
         *p = htons(atoi(str));
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int rscp_parse_ip(char* str, uint32_t* p)
+int rtsp_parse_ip(char* str, uint32_t* p)
 {
     char* s;
     uint32_t ip = 0;
@@ -71,10 +71,10 @@ int rscp_parse_ip(char* str, uint32_t* p)
 
     *p = ip;
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int rscp_parse_timing(char* line, t_video_timing* timing)
+int rtsp_parse_timing(char* line, t_video_timing* timing)
 {
     char* token;
     // Timing:   Horizontal       : pfreq width fp p bp pol 
@@ -123,10 +123,10 @@ int rscp_parse_timing(char* line, t_video_timing* timing)
     if (strcmp(token, "P") == 0) timing->interlaced = 0;
     else timing->interlaced = 1;
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int rscp_parse_rtp_format(char* line, t_rscp_rtp_format* p)
+int rtsp_parse_rtp_format(char* line, t_rtsp_rtp_format* p)
 {
     char* token;
     // RTP-Format: compress[ value] rtptime
@@ -169,16 +169,16 @@ int rscp_parse_rtp_format(char* line, t_rscp_rtp_format* p)
 
     p->rtptime = (uint32_t)atoll(token);
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int rscp_parse_uint32(char* line, uint32_t* p)
+int rtsp_parse_uint32(char* line, uint32_t* p)
 {
     *p = (uint32_t)atol(line);
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int rscp_parse_transport(char* line, t_rscp_transport* p)
+int rtsp_parse_transport(char* line, t_rtsp_transport* p)
 {
     char* token;
 
@@ -190,53 +190,53 @@ int rscp_parse_transport(char* line, t_rscp_transport* p)
         p->multicast = false;
     } else if (!strcmp(token, "multicast")) {
         p->multicast = true;
-    } else return RSCP_PARSE_ERROR;
+    } else return RTSP_PARSE_ERROR;
 
 
     while (*(token = str_next_token(&line, ";%0"))) {
 
         // port
-        if (str_starts_with(&token, "port=")) rscp_parse_port(token, &p->port);
-        else if (str_starts_with(&token, "client_port=")) rscp_parse_port(token, &p->client_port);
-        else if (str_starts_with(&token, "server_port=")) rscp_parse_port(token, &p->server_port);
-        else if (str_starts_with(&token, "multicast_group=")) rscp_parse_ip(token, &p->multicast_group);
+        if (str_starts_with(&token, "port=")) rtsp_parse_port(token, &p->port);
+        else if (str_starts_with(&token, "client_port=")) rtsp_parse_port(token, &p->client_port);
+        else if (str_starts_with(&token, "server_port=")) rtsp_parse_port(token, &p->server_port);
+        else if (str_starts_with(&token, "multicast_group=")) rtsp_parse_ip(token, &p->multicast_group);
         else if (str_starts_with(&token, "usb-host-ip="))  strncpy(p->usb_host_ip, token, 49);
-        else if (str_starts_with(&token, "usb-host-port=")) rscp_parse_port(token, &p->usb_host_port);
+        else if (str_starts_with(&token, "usb-host-port=")) rtsp_parse_port(token, &p->usb_host_port);
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
 
-int rscp_parse_rtp_info(char UNUSED *line, t_rscp_rtp_info UNUSED *p)
+int rtsp_parse_rtp_info(char UNUSED *line, t_rtsp_rtp_info UNUSED *p)
 {
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
 
-int rscp_parse_ui32(char* line, uint32_t* p)
+int rtsp_parse_ui32(char* line, uint32_t* p)
 {
     *p = atoi(line);
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
 
-int rscp_parse_str(char* line, char* p)
+int rtsp_parse_str(char* line, char* p)
 {
     memcpy(p, line, strlen(line)+1);
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int rscp_parse_edid(char* line, t_rscp_edid *edid)
+int rtsp_parse_edid(char* line, t_rtsp_edid *edid)
 {
     edid->segment = nextbyte(&line[0]);
     for (int i=0;i<256;i++) {
         edid->edid[i] = nextbyte(&line[2*i+2]);
     }
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int rscp_parse_hdcp(char* line, t_rscp_hdcp *hdcp)
+int rtsp_parse_hdcp(char* line, t_rtsp_hdcp *hdcp)
 {
 	int a;
 	char* token;
@@ -245,10 +245,10 @@ int rscp_parse_hdcp(char* line, t_rscp_hdcp *hdcp)
 	a = str_hdcp(token);
 	hdcp->hdcp_on = a;
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int rscp_parse_usb(char* line, t_rscp_usb *usb)
+int rtsp_parse_usb(char* line, t_rtsp_usb *usb)
 {
     char* token;
 
@@ -263,16 +263,16 @@ int rscp_parse_usb(char* line, t_rscp_usb *usb)
         else if (str_starts_with(&token, "device-storage="))    strcpy(usb->storage,  token);
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int rscp_ommit_header(t_rscp_connection* con, int timeout)
+int rtsp_ommit_header(t_rtsp_connection* con, int timeout)
 {
-    int n = RSCP_SUCCESS;
+    int n = RTSP_SUCCESS;
     char *line;
 
-    while (!(n = rscp_receive(con, &line, timeout)) ) {
-        // RSCP Header ends with empty line
+    while (!(n = rtsp_receive(con, &line, timeout)) ) {
+        // RTSP Header ends with empty line
         if (!*line) break;
     }
     // ommit body
@@ -280,15 +280,15 @@ int rscp_ommit_header(t_rscp_connection* con, int timeout)
     return n;
 }
 
-int rscp_parse_header(t_rscp_connection* con, const t_map_fnc attr[], void* base, t_rscp_header_common* common, int timeout)
+int rtsp_parse_header(t_rtsp_connection* con, const t_map_fnc attr[], void* base, t_rtsp_header_common* common, int timeout)
 {
     int n;
     char *line, *attrstr;
 
     if (common) common->session[0] = 0;
 
-    while (!(n = rscp_receive(con, &line, timeout))) {
-        // RSCP Header ends with empty line
+    while (!(n = rtsp_receive(con, &line, timeout))) {
+        // RTSP Header ends with empty line
         if (!*line) break;
 
         if ((attrstr = str_next_token(&line, "%:: ;"))) {
@@ -302,7 +302,7 @@ int rscp_parse_header(t_rscp_connection* con, const t_map_fnc attr[], void* base
                 }
             }
             n = map_call_fnc(attr, attrstr, line, base);
-            if (n == RSCP_UNKNOWN_HEADER) {
+            if (n == RTSP_UNKNOWN_HEADER) {
                 report(" ? unknown header: %s", attrstr);
             } else if (n) {
                 report(" ? parse header error: %s: %s", attrstr, line);
@@ -315,94 +315,94 @@ int rscp_parse_header(t_rscp_connection* con, const t_map_fnc attr[], void* base
     return n;
 }
 
-void rscp_common_default(t_rscp_header_common* common)
+void rtsp_common_default(t_rtsp_header_common* common)
 {
     common->content_length = 0;
     common->content_type[0] = 0;
     common->session[0] = 0;
 }
 
-int rscp_parse_response(t_rscp_connection* con, const t_map_fnc attr[], void* base, t_rscp_header_common* common, int timeout)
+int rtsp_parse_response(t_rtsp_connection* con, const t_map_fnc attr[], void* base, t_rtsp_header_common* common, int timeout)
 {
     t_str_response_line rsp;
     int n;
     char* line;
 
-    rscp_common_default(common);
+    rtsp_common_default(common);
 
     // Response Header
-    if ((n = rscp_receive(con, &line, timeout))) {
-        if(n != RSCP_CLOSE) {
-            report("rscp response receive header failed");
+    if ((n = rtsp_receive(con, &line, timeout))) {
+        if(n != RTSP_CLOSE) {
+            report("rtsp response receive header failed");
         } else {
-            report("rscp response receive unexpected close");
+            report("rtsp response receive unexpected close");
         }
         return n;
     }
 
     //strcpy(common->line, line);
     if (!str_split_response_line(&rsp, line)) {
-        report("rscp response split error (%s)", line);
-        return RSCP_SERVER_ERROR;
+        report("rtsp response split error (%s)", line);
+        return RTSP_SERVER_ERROR;
     }
 
     if (strcmp(rsp.code, "200") != 0) {
         con->ecode = atoi(rsp.code);
         con->ereason = rsp.reason;
-        report("rscp error (%s): %s", rsp.code, rsp.reason);
-        rscp_ommit_header(con, timeout);
-        return RSCP_RESPONSE_ERROR;
+        report("rtsp error (%s): %s", rsp.code, rsp.reason);
+        rtsp_ommit_header(con, timeout);
+        return RTSP_RESPONSE_ERROR;
     }
 
-    if (strcmp(rsp.version, RSCP_VERSION) != 0) {
+    if (strcmp(rsp.version, RTSP_VERSION) != 0) {
         report("unsupported version: %s", rsp.version);
-        rscp_ommit_header(con, timeout);
-        return RSCP_VERSION_ERROR;
+        rtsp_ommit_header(con, timeout);
+        return RTSP_VERSION_ERROR;
     }
 
-    if((n = rscp_parse_header(con, attr, base, common, timeout))) {
-        report("rscp response receive header fields failed");
+    if((n = rtsp_parse_header(con, attr, base, common, timeout))) {
+        report("rtsp response receive header fields failed");
     }
 
     return n;
 }
 
-int rscp_parse_request(t_rscp_connection* con, const t_map_set srv_method[], const t_map_set** method, void* req, t_rscp_header_common* common)
+int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], const t_map_set** method, void* req, t_rtsp_header_common* common)
 {
     char* line;
     int n;
 
-    rscp_common_default(common);
+    rtsp_common_default(common);
 
     // receive request line
-    if ((n = rscp_receive(con, &line, 0))) {
+    if ((n = rtsp_receive(con, &line, 0))) {
         return n;
     }
     strcpy(common->line, line);
 
     // Request: (METHOD URI VERSION)
-    if (!str_split_request_line(&common->rq, common->line)) return RSCP_CLIENT_ERROR;
-    if (strcmp(common->rq.version, RSCP_VERSION) != 0) return RSCP_VERSION_ERROR;
+    if (!str_split_request_line(&common->rq, common->line)) return RTSP_CLIENT_ERROR;
+    if (strcmp(common->rq.version, RTSP_VERSION) != 0) return RTSP_VERSION_ERROR;
 
     // test uri
-    if (!str_split_uri(&common->uri, common->rq.uri)) return RSCP_CLIENT_ERROR;
-    if (strcmp(common->uri.scheme, RSCP_SCHEME) != 0) return RSCP_CLIENT_ERROR;
+    if (!str_split_uri(&common->uri, common->rq.uri)) return RTSP_CLIENT_ERROR;
+    if (strcmp(common->uri.scheme, RTSP_SCHEME) != 0) return RTSP_CLIENT_ERROR;
 
     // find method
     *method = map_find_set(srv_method, common->rq.method);
 
     if (!*method) {
-        rscp_ommit_header(con, 0);
-        rscp_response_error(con, 405, "Method not allowed");
+        rtsp_ommit_header(con, 0);
+        rtsp_response_error(con, 405, "Method not allowed");
         report(" ? unsupported method %s", common->rq.method);
-        return RSCP_SUCCESS;
+        return RTSP_SUCCESS;
     }
 
-    if ((n = rscp_parse_header(con, (*method)->rec, req, common, 0))) {
+    if ((n = rtsp_parse_header(con, (*method)->rec, req, common, 0))) {
         report(" ? parse request-header error (%d)", n);
         return n;
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 

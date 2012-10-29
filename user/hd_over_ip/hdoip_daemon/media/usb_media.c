@@ -10,11 +10,11 @@
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 #include "usb_media.h"
-#include "rscp_string.h"
+#include "rtsp_string.h"
 #include "vrb_video.h"
-#include "rscp_parse_header.h"
-#include "rscp_client.h"
-#include "rscp_server.h"
+#include "rtsp_parse_header.h"
+#include "rtsp_client.h"
+#include "rtsp_server.h"
 
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout * 2)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
@@ -25,7 +25,7 @@ uint32_t    usb_host_port;
 int         timer;
 int         alive_ping;
 
-int usb_setup(t_rscp_media UNUSED *media, t_rscp_req_setup* m, t_rscp_connection* rsp)
+int usb_setup(t_rtsp_media UNUSED *media, t_rtsp_req_setup* m, t_rtsp_connection* rsp)
 {
     report(VRB_METHOD "usb_setup");
     
@@ -35,14 +35,14 @@ int usb_setup(t_rscp_media UNUSED *media, t_rscp_req_setup* m, t_rscp_connection
     //TODO: set port in usbip
     m->transport.usb_host_port = htons(3240);
 
-    rscp_response_usb_setup(rsp, &m->transport, media->sessionid);
+    rtsp_response_usb_setup(rsp, &m->transport, media->sessionid);
 
-    media->result = RSCP_RESULT_READY;
+    media->result = RTSP_RESULT_READY;
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int usb_play(t_rscp_media UNUSED *media, t_rscp_req_play* m, t_rscp_connection* rsp)
+int usb_play(t_rtsp_media UNUSED *media, t_rtsp_req_play* m, t_rtsp_connection* rsp)
 {
     report(VRB_METHOD "usb_play");
 
@@ -56,14 +56,14 @@ int usb_play(t_rscp_media UNUSED *media, t_rscp_req_play* m, t_rscp_connection* 
         usb_attach_device(&hdoipd.usb_devices, usb_host_ip, m->usb.storage, "storage");
     }
 
-    rscp_response_usb_play(rsp, media->sessionid);
+    rtsp_response_usb_play(rsp, media->sessionid);
 
-    media->result = RSCP_RESULT_PLAYING;
+    media->result = RTSP_RESULT_PLAYING;
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int usb_teardown(t_rscp_media UNUSED *media, t_rscp_req_teardown* m, t_rscp_connection* rsp)
+int usb_teardown(t_rtsp_media UNUSED *media, t_rtsp_req_teardown* m, t_rtsp_connection* rsp)
 {
     report(VRB_METHOD "usb_teardown");
 
@@ -71,27 +71,27 @@ int usb_teardown(t_rscp_media UNUSED *media, t_rscp_req_teardown* m, t_rscp_conn
     usb_detach_device(1);
     
     if (rsp) {
-        rscp_response_usb_teardown(rsp, media->sessionid);
+        rtsp_response_usb_teardown(rsp, media->sessionid);
     }
 
-    media->result = RSCP_RESULT_TEARDOWN;
+    media->result = RTSP_RESULT_TEARDOWN;
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int usb_dosetup(t_rscp_media *media, t_rscp_usb* UNUSED m, void* UNUSED rsp)
+int usb_dosetup(t_rtsp_media *media, t_rtsp_usb* UNUSED m, void* UNUSED rsp)
 {
-    t_rscp_client *client = media->creator;
-    t_rscp_transport transport;
-    t_rscp_header_common common;
-    u_rscp_header buf;
+    t_rtsp_client *client = media->creator;
+    t_rtsp_transport transport;
+    t_rtsp_header_common common;
+    u_rtsp_header buf;
     int ret;
 
     report(VTB_METHOD "usb_dosetup");
 
-    rscp_default_transport(&transport);
+    rtsp_default_transport(&transport);
 
-    if (!client) { report(ERROR "usb_dosetup: no client"); return RSCP_NULL_POINTER; }
+    if (!client) { report(ERROR "usb_dosetup: no client"); return RTSP_NULL_POINTER; }
 
     transport.multicast = false;
     transport.usb_host_port = htons(3242);
@@ -103,123 +103,123 @@ int usb_dosetup(t_rscp_media *media, t_rscp_usb* UNUSED m, void* UNUSED rsp)
     }
 
     // send USB SETUP
-    rscp_request_usb_setup(&client->con, client->uri, &transport);
+    rtsp_request_usb_setup(&client->con, client->uri, &transport);
 
     // response
-    rscp_default_response_setup((void*)&buf);
-    ret = rscp_parse_response(&client->con, tab_response_setup, (void*)&buf, &common, CFG_RSP_TIMEOUT);
+    rtsp_default_response_setup((void*)&buf);
+    ret = rtsp_parse_response(&client->con, tab_response_setup, (void*)&buf, &common, CFG_RSP_TIMEOUT);
 
-    if (ret == RSCP_SUCCESS) {
+    if (ret == RTSP_SUCCESS) {
 
         strcpy(client->media->sessionid, common.session);
 
         switch (media->state) {
-            case RSCP_INIT:
-            case RSCP_READY:
-                media->state = RSCP_READY;
+            case RTSP_INIT:
+            case RTSP_READY:
+                media->state = RTSP_READY;
             break;
-            case RSCP_PLAYING:
-                media->state = RSCP_PLAYING;
+            case RTSP_PLAYING:
+                media->state = RTSP_PLAYING;
             break;
         }
     } else {
         report(ERROR "USB Setup Response ERROR");
     }
 
-    media->result = RSCP_RESULT_READY;
+    media->result = RTSP_RESULT_READY;
 
     return ret;
 }
 
-int usb_doplay(t_rscp_media *media, t_rscp_usb* m, void* UNUSED rsp)
+int usb_doplay(t_rtsp_media *media, t_rtsp_usb* m, void* UNUSED rsp)
 {
-    t_rscp_client *client = media->creator;
-    u_rscp_header buf;
+    t_rtsp_client *client = media->creator;
+    u_rtsp_header buf;
     int n, ret;
 
     report(VTB_METHOD "usb_doplay");
 
-    if (!client) return RSCP_NULL_POINTER;
+    if (!client) return RTSP_NULL_POINTER;
 
     // send USB PLAY
-    rscp_request_usb_play(&client->con, client->uri, client->media->sessionid, m->mouse, m->keyboard, m->storage);
+    rtsp_request_usb_play(&client->con, client->uri, client->media->sessionid, m->mouse, m->keyboard, m->storage);
 
     // response
-    rscp_default_response_play((void*)&buf);
-    n = rscp_parse_response(&client->con, tab_response_play, (void*)&buf, 0, CFG_RSP_TIMEOUT);
+    rtsp_default_response_play((void*)&buf);
+    n = rtsp_parse_response(&client->con, tab_response_play, (void*)&buf, 0, CFG_RSP_TIMEOUT);
 
-    if (n == RSCP_SUCCESS) {
-        ret = RSCP_SUCCESS;
+    if (n == RTSP_SUCCESS) {
+        ret = RTSP_SUCCESS;
     } else {
         report(ERROR "USB Play Response ERROR");
-        ret = RSCP_CLIENT_ERROR;
+        ret = RTSP_CLIENT_ERROR;
     }
 
     switch (media->state) {
-        case RSCP_INIT:
+        case RTSP_INIT:
             // TODO: send error message
         break;
-        case RSCP_READY:
-        case RSCP_PLAYING:
-            media->state = RSCP_PLAYING;
+        case RTSP_READY:
+        case RTSP_PLAYING:
+            media->state = RTSP_PLAYING;
         break;
     }
 
-    media->result = RSCP_RESULT_PLAYING;
+    media->result = RTSP_RESULT_PLAYING;
 
     return ret;
 }
 
-int usb_doteardown(t_rscp_media *media, t_rscp_usb* UNUSED m, void* UNUSED rsp)
+int usb_doteardown(t_rtsp_media *media, t_rtsp_usb* UNUSED m, void* UNUSED rsp)
 {
-    t_rscp_client *client = media->creator;
-    u_rscp_header buf;
+    t_rtsp_client *client = media->creator;
+    u_rtsp_header buf;
     int n, ret;
 
     report(VTB_METHOD "usb_doteardown");
 
-    if (!client) return RSCP_NULL_POINTER;
+    if (!client) return RTSP_NULL_POINTER;
 
     // send USB TEARDOWN
-    rscp_request_usb_teardown(&client->con, client->uri, client->media->sessionid);
+    rtsp_request_usb_teardown(&client->con, client->uri, client->media->sessionid);
 
     // response
-    rscp_default_response_teardown((void*)&buf);
-    n = rscp_parse_response(&client->con, tab_response_teardown, (void*)&buf, 0, CFG_RSP_TIMEOUT);
+    rtsp_default_response_teardown((void*)&buf);
+    n = rtsp_parse_response(&client->con, tab_response_teardown, (void*)&buf, 0, CFG_RSP_TIMEOUT);
 
-    if (n == RSCP_SUCCESS) {
-        ret = RSCP_SUCCESS;
+    if (n == RTSP_SUCCESS) {
+        ret = RTSP_SUCCESS;
     } else {
         report(ERROR "USB Teardown Response ERROR");
-        ret = RSCP_CLIENT_ERROR;
+        ret = RTSP_CLIENT_ERROR;
     }
 
-    rscp_client_close(client);
+    rtsp_client_close(client);
 
     // TODO: correct handling of mouse and keyboard and storage teardown separate
     // also in rmsq teardown for device side
-    media->state = RSCP_INIT;
+    media->state = RTSP_INIT;
 
-    media->result = RSCP_RESULT_TEARDOWN;
+    media->result = RTSP_RESULT_TEARDOWN;
 
     return ret;
 }
 
-int usb_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
+int usb_update(t_rtsp_media UNUSED *media, t_rtsp_req_update *m, t_rtsp_connection UNUSED *rsp)
 {
     if (m->event == EVENT_TICK) {
         // reset timeout
         timer = 0;
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int usb_event(t_rscp_media *media, uint32_t event)
+int usb_event(t_rtsp_media *media, uint32_t event)
 {
-    t_rscp_client *client = media->creator;
+    t_rtsp_client *client = media->creator;
 
-    if (!client) { report(ERROR "usb_event: no client") return RSCP_CLIENT_ERROR; }
+    if (!client) { report(ERROR "usb_event: no client") return RTSP_CLIENT_ERROR; }
 
     if (event == EVENT_TICK) {
         if (alive_ping) {
@@ -228,9 +228,9 @@ int usb_event(t_rscp_media *media, uint32_t event)
             alive_ping = TICK_SEND_ALIVE;
             // send tick we are alive (until something like rtcp is used)
             if reg_test("mode-start", "vtb") {
-                rscp_server_update(media, EVENT_TICK);
+                rtsp_server_update(media, EVENT_TICK);
             } else {
-               rscp_client_update(client, EVENT_TICK);
+               rtsp_client_update(client, EVENT_TICK);
             }
         }
 
@@ -244,27 +244,27 @@ int usb_event(t_rscp_media *media, uint32_t event)
             timer = 0;
 
             if reg_test("mode-start", "vtb") {
-                rscp_listener_add_kill(&hdoipd.listener, media);
+                rtsp_listener_add_kill(&hdoipd.listener, media);
             } else {
-                rscp_client_set_kill(client);
+                rtsp_client_set_kill(client);
             }
         }
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
 
-t_rscp_media usb_media = {
+t_rtsp_media usb_media = {
     .name = "usb",
     .owner = 0,
     .cookie = 0,
-    .setup = (frscpm*)usb_setup,
-    .play = (frscpm*)usb_play,
-    .teardown = (frscpm*)usb_teardown,
-    .dosetup = (frscpm*)usb_dosetup,
-    .doplay = (frscpm*)usb_doplay,
-    .doteardown = (frscpm*)usb_doteardown,
-    .update = (frscpm*)usb_update,
-    .event = (frscpe*)usb_event
+    .setup = (frtspm*)usb_setup,
+    .play = (frtspm*)usb_play,
+    .teardown = (frtspm*)usb_teardown,
+    .dosetup = (frtspm*)usb_dosetup,
+    .doplay = (frtspm*)usb_doplay,
+    .doteardown = (frtspm*)usb_doteardown,
+    .update = (frtspm*)usb_update,
+    .event = (frtspe*)usb_event
 };

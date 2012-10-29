@@ -9,7 +9,7 @@
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "multicast.h"
-#include "rscp_listener.h"
+#include "rtsp_listener.h"
 #include "hoi_cfg.h"
 #include "usb.h"
 #include "testimage.h"
@@ -398,7 +398,7 @@ void task_get_system_update(char** p)
         /* vrb alive check */
         if(update_vector & HOID_TSK_UPD_ALIVE) {
 		    report("Updating alive check...");
-        //    is updated at same time with rscp-port and this needs a restart of the device
+        //    is updated at same time with rtsp-port and this needs a restart of the device
         //    alive_check_server_close(&hdoipd.alive_check);
         //    hdoipd.alive_check.init_done = false;
         //    alive_check_init_msg_vrb_alive();
@@ -443,37 +443,37 @@ void task_get_system_update(char** p)
 	*p = buf;
 }
 
-char* task_conv_rscp_state(int state)
+char* task_conv_rtsp_state(int state)
 {
     switch(state) {
-        case RSCP_RESULT_IDLE                   : return "idle";
-        case RSCP_RESULT_READY                  : return "ready";
-        case RSCP_RESULT_PLAYING                : return "playing";
-        case RSCP_RESULT_TEARDOWN               : return "teardown";
-        case RSCP_RESULT_TEARDOWN_Q             : return "teardown_q";
-        case RSCP_RESULT_PAUSE                  : return "pause";
-        case RSCP_RESULT_PAUSE_Q                : return "pause_q";
-        case RSCP_RESULT_NO_VIDEO_IN            : return "no video in";
-        case RSCP_RESULT_SERVER_ERROR           : return "server error";
-        case RSCP_RESULT_SERVER_BUSY            : return "server busy";
-        case RSCP_RESULT_SERVER_NO_VTB          : return "server no vtb";
-        case RSCP_RESULT_SERVER_TRY_LATER       : return "server try later";
-        case RSCP_RESULT_SERVER_NO_VIDEO_IN     : return "server no video in";
+        case RTSP_RESULT_IDLE                   : return "idle";
+        case RTSP_RESULT_READY                  : return "ready";
+        case RTSP_RESULT_PLAYING                : return "playing";
+        case RTSP_RESULT_TEARDOWN               : return "teardown";
+        case RTSP_RESULT_TEARDOWN_Q             : return "teardown_q";
+        case RTSP_RESULT_PAUSE                  : return "pause";
+        case RTSP_RESULT_PAUSE_Q                : return "pause_q";
+        case RTSP_RESULT_NO_VIDEO_IN            : return "no video in";
+        case RTSP_RESULT_SERVER_ERROR           : return "server error";
+        case RTSP_RESULT_SERVER_BUSY            : return "server busy";
+        case RTSP_RESULT_SERVER_NO_VTB          : return "server no vtb";
+        case RTSP_RESULT_SERVER_TRY_LATER       : return "server try later";
+        case RTSP_RESULT_SERVER_NO_VIDEO_IN     : return "server no video in";
         default                                 : 
-        case RSCP_RESULT_CONNECTION_REFUSED     : return "connection refused";
+        case RTSP_RESULT_CONNECTION_REFUSED     : return "connection refused";
     }
 }
 
 char *buf_ptr;
-void task_get_rscp_sessions(char UNUSED *key, char* value, void* fd)
+void task_get_rtsp_sessions(char UNUSED *key, char* value, void* fd)
 {
     int *cnt = (int *) fd; 
-    t_rscp_media* media = (t_rscp_media*) value;
-    buf_ptr += sprintf(buf_ptr, "stream %02d {out}: %s (%s)\n", *cnt, task_conv_rscp_state(media->result), media->owner->name);
+    t_rtsp_media* media = (t_rtsp_media*) value;
+    buf_ptr += sprintf(buf_ptr, "stream %02d {out}: %s (%s)\n", *cnt, task_conv_rtsp_state(media->result), media->owner->name);
     *cnt += 1;
 }
 
-void task_get_rscp_state(char** s)
+void task_get_rtsp_state(char** s)
 {
     t_video_timing vid_timing;
     uint32_t advcnt;
@@ -511,14 +511,14 @@ void task_get_rscp_state(char** s)
         buf_ptr += sprintf(buf_ptr, "resolution     : (only visible at transmitter box)\n");
     }
 
-    t_rscp_client* client;
+    t_rtsp_client* client;
     LIST_FOR(client, hdoipd.client) {
-        buf_ptr += sprintf(buf_ptr, "stream %02d {in} : %s (%s)\n",client->nr, task_conv_rscp_state(client->media->result), client->media->name);
+        buf_ptr += sprintf(buf_ptr, "stream %02d {in} : %s (%s)\n",client->nr, task_conv_rtsp_state(client->media->result), client->media->name);
     }
 
     if(hdoipd.listener.sessions) {
         unlock("task_get_stream_state");
-        rscp_listener_session_traverse(&hdoipd.listener, task_get_rscp_sessions, &cnt);
+        rtsp_listener_session_traverse(&hdoipd.listener, task_get_rtsp_sessions, &cnt);
         lock("task_get_stream_state"); 
     }
 
@@ -529,12 +529,12 @@ void task_get_vrb_is_playing(char** p)
 {
     *p = "false";
     switch(vrb_video.state) {
-        case RSCP_PLAYING:  *p = "true";
+        case RTSP_PLAYING:  *p = "true";
                             break;
     }
 
     switch(vrb_audio.state) {
-        case RSCP_PLAYING:  *p = "true";
+        case RTSP_PLAYING:  *p = "true";
                             break;
     }
 }
@@ -740,7 +740,7 @@ void task_set_dhcp(char *p)
 
 void task_set_edid_mode(char *p)
 {
-    rscp_listener_teardown_all(&hdoipd.listener);
+    rtsp_listener_teardown_all(&hdoipd.listener);
 }
 
 void task_set_fps_divide(char *p)
@@ -768,7 +768,7 @@ void hdoipd_register_task()
     get_listener("aso-status", task_get_aso_status);
     get_listener("hdcp-status", task_get_hdcp_status);
     get_listener("sync-delay", task_get_sync_delay);
-    get_listener("stream-state", task_get_rscp_state);
+    get_listener("stream-state", task_get_rtsp_state);
     get_listener("multicast", task_get_multicast_client);
     get_listener("vrb_is_playing", task_get_vrb_is_playing);
 

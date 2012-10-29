@@ -9,8 +9,8 @@
 #include <stdbool.h>
 #include "multicast.h"
 #include "client_list.h"
-#include "rscp_parse_header.h"
-#include "rscp_net.h"
+#include "rtsp_parse_header.h"
+#include "rtsp_net.h"
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 
@@ -224,7 +224,7 @@ void multicast_handler()
                             edid_write_function(&edid, "multicast first edid");
                         } else if (multicast_compare_edid(&edid, &edid_old)) {
                             // teardown all connections so that connection with new resolution can be started
-                            rscp_listener_teardown_all(&hdoipd.listener);
+                            rtsp_listener_teardown_all(&hdoipd.listener);
 
                             // clear start list
                             while (count_client_list(&multicast.client_list_start)) {
@@ -274,7 +274,7 @@ void multicast_handler()
                 if (!multicast_merge_edid(&edid)) {
                     if (multicast_compare_edid(&edid, &edid_old)) {
                         // teardown all connections so that connection with new resolution can be started
-                        rscp_listener_teardown_all(&hdoipd.listener);
+                        rtsp_listener_teardown_all(&hdoipd.listener);
                         edid_write_function(&edid, "multicast client lost");
                     }
                 }

@@ -44,7 +44,7 @@ netsnmp_register_scalar(                                                      \
 void init_only_registry(void){
     static oid audioPort_oid[] = { 1,3,6,1,4,1,1111,1,3,1 };
     static oid videoPort_oid[] = { 1,3,6,1,4,1,1111,1,3,2 };
-    static oid rscpServerPort_oid[] = { 1,3,6,1,4,1,1111,1,3,3 };
+    static oid rtspServerPort_oid[] = { 1,3,6,1,4,1,1111,1,3,3 };
     static oid hdcpForce_oid[] = { 1,3,6,1,4,1,1111,1,3,4 };
     static oid networkAlive_oid[] = { 1,3,6,1,4,1,1111,1,3,5 };
     static oid networkTimeout_oid[] = { 1,3,6,1,4,1,1111,1,3,6 };
@@ -53,7 +53,7 @@ void init_only_registry(void){
 
     REGISTER_SCALAR(audioPort, "audio-port")
     REGISTER_SCALAR(videoPort, "video-port")
-    REGISTER_SCALAR(rscpServerPort, "rscp-server-port")
+    REGISTER_SCALAR(rtspServerPort, "rtsp-server-port")
     REGISTER_SCALAR(hdcpForce, "hdcp-force")
     REGISTER_SCALAR(networkAlive, "network-alive")
     REGISTER_SCALAR(networkTimeout, "network-timeout")
@@ -67,7 +67,7 @@ void init_only_registry(void){
  * */
 HANDLE_FUNCTION(audioPort, "audio-port")
 HANDLE_FUNCTION(videoPort, "video-port")
-HANDLE_FUNCTION(rscpServerPort, "rscp-server-port")
+HANDLE_FUNCTION(rtspServerPort, "rtsp-server-port")
 HANDLE_FUNCTION(hdcpForce, "hdcp-force")
 HANDLE_FUNCTION(networkAlive, "network-alive")
 HANDLE_FUNCTION(networkTimeout, "network-timeout")

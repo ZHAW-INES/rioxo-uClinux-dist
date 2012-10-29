@@ -9,7 +9,7 @@
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 #include "box_sys.h"
-#include "rscp_string.h"
+#include "rtsp_string.h"
 #include "vrb_video.h"
 
 struct {
@@ -18,7 +18,7 @@ struct {
     .address = 0
 };
 
-int box_sys_hello(t_rscp_media UNUSED *media, intptr_t UNUSED m, t_rscp_connection* rsp)
+int box_sys_hello(t_rtsp_media UNUSED *media, intptr_t UNUSED m, t_rtsp_connection* rsp)
 {
     if ((rsp->address == box.address) && box.address) {
         report(INFO "hello received from remote device");
@@ -65,9 +65,9 @@ int box_sys_set_remote(char* address)
     return 0;
 }
 
-t_rscp_media box_sys = {
+t_rtsp_media box_sys = {
     .name = "",
     .owner = 0,
     .cookie = 0,
-    .hello = (frscpm*)box_sys_hello
+    .hello = (frtspm*)box_sys_hello
 };
