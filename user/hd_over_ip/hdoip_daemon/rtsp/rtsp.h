@@ -67,35 +67,21 @@ typedef enum {
     FORMAT_JPEG2000
 } e_rtsp_rtp_format;
 
-//------------------------------------------------------------------------------
-// Set
-
-typedef uint32_t s_rtsp_method;
-#define RTSP_METHOD_OPTIONS         (0x0001)
-#define RTSP_METHOD_SETUP           (0x0002)
-#define RTSP_METHOD_PLAY            (0x0004)
-#define RTSP_METHOD_TEARDOWN        (0x0008)
-
 
 //------------------------------------------------------------------------------
 // Header fields
 
 // transport field
 typedef struct {
-    uint32_t            protocol;                   //!< "RTP"
-    uint32_t            profile;                    //!< "AVP"
-    uint32_t            lower;                      //!< "UDP"
+    uint32_t            protocol;                   //!< "RTP" or "USB"
+    uint32_t            profile;                    //!< "AVP" or "RAW"
+    uint32_t            lower;                      //!< "UDP" or "TCP"
     bool                multicast;
     uint32_t            destination;
     char                destination_str[50];
-    bool                append;
-    uint32_t            ttl;
-    uint32_t            layers;
     uint32_t            port;                       //!< low 16 Bit: port range start; high 16 Bit: port range stop
     uint32_t            client_port;
     uint32_t            server_port;
-    uint32_t            ssrc;
-    uint32_t            mode;
 } t_rtsp_transport;
 
 typedef struct {

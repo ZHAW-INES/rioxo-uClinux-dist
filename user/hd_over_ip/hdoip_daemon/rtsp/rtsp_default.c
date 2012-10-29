@@ -14,14 +14,9 @@ void rtsp_default_transport(t_rtsp_transport* t)
     t->lower = LOWER_UDP;
     t->multicast = false;
     t->destination = 0;
-    t->append = false;
-    t->ttl = 0;
-    t->layers = 0;
     t->port = PORT_RANGE(0, 0);
     t->client_port = PORT_RANGE(0, 0);
     t->server_port = PORT_RANGE(0, 0);
-    t->ssrc = 0;
-    t->mode = RTSP_METHOD_PLAY;
 }
 
 void rtsp_default_response_setup(t_rtsp_rsp_setup* p)
