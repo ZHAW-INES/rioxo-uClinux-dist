@@ -199,7 +199,7 @@ int rtsp_parse_transport(char* line, t_rtsp_transport* p)
         if (str_starts_with(&token, "port=")) rtsp_parse_port(token, &p->port);
         else if (str_starts_with(&token, "client_port=")) rtsp_parse_port(token, &p->client_port);
         else if (str_starts_with(&token, "server_port=")) rtsp_parse_port(token, &p->server_port);
-        else if (str_starts_with(&token, "multicast_group=")) rtsp_parse_ip(token, &p->multicast_group);
+        else if (str_starts_with(&token, "destination=")) rtsp_parse_ip(token, &p->destination);
         else if (str_starts_with(&token, "usb-host-ip="))  strncpy(p->usb_host_ip, token, 49);
         else if (str_starts_with(&token, "usb-host-port=")) rtsp_parse_port(token, &p->usb_host_port);
     }

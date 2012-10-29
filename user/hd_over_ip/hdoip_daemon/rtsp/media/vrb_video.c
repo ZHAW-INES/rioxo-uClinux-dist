@@ -53,7 +53,7 @@ int vrb_video_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection*
     vrb.multicast_en = m->transport.multicast;
 
     if (vrb.multicast_en) {
-        vrb.dst_ip = m->transport.multicast_group;
+        vrb.dst_ip = m->transport.destination;
     }
     else {
         vrb.dst_ip = hdoipd.local.address;
