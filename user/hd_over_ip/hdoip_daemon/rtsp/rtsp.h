@@ -45,20 +45,23 @@
 // Enumeration
 
 typedef enum {
-    PROTOCOL_RTP = 0
+    PROTOCOL_RTP = 0,
+    PROTOCOL_USB
 } e_rtsp_protocol;
 
 // profile values
 typedef enum {
-    PROFILE_AVP = 0
+    PROFILE_RAW = 0,
+    PROFILE_AVP
 } e_rtsp_profile;
 
 // lower transport values
 typedef enum {
-    LOWER_UDP = 0
+    LOWER_UDP = 0,
+    LOWER_TCP
 } e_rtsp_lower;
 
-// lower transport values
+// transport format values
 typedef enum {
     FORMAT_PLAIN = 0,
     FORMAT_JPEG2000

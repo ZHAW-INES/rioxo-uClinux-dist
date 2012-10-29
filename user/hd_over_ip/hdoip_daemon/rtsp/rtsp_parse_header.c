@@ -181,9 +181,14 @@ int rtsp_parse_uint32(char* line, uint32_t* p)
 int rtsp_parse_transport(char* line, t_rtsp_transport* p)
 {
     char* token;
+    int ret;
 
-    // transport spec (for now ignore) -> TODO
+    // transport spec
     next(token, line);
+    if ((ret = rtsp_parse_transport_protocol(token, p)) != RTSP_SUCCESS) {
+        report(" ? unknown transport protocol: %s", token);
+        return ret;
+    }
     // "unicast" or "multicast"
     next(token, line);
     if (!strcmp(token, "unicast")) {
@@ -202,6 +207,74 @@ int rtsp_parse_transport(char* line, t_rtsp_transport* p)
         else if (str_starts_with(&token, "destination=")) rtsp_parse_ip(token, &p->destination);
         else if (str_starts_with(&token, "usb-host-ip="))  strncpy(p->usb_host_ip, token, 49);
         else if (str_starts_with(&token, "usb-host-port=")) rtsp_parse_port(token, &p->usb_host_port);
+    }
+
+    return RTSP_SUCCESS;
+}
+
+
+int rtsp_parse_transport_protocol(char *line, t_rtsp_transport* p)
+{
+    char *pos = NULL;
+    char *token = line;
+    size_t length = 0;
+
+    if (line == NULL)
+        return RTSP_PARSE_ERROR;
+  
+    pos = strchrnul(line, '/');
+    if (pos == NULL || *pos == '\0')
+        return RTSP_PARSE_ERROR;
+    
+    length = pos - line;
+    if (strncmp(token, "RTP", length) == 0) {
+        p->protocol = PROTOCOL_RTP;
+        p->profile = PROFILE_AVP;
+        p->lower = LOWER_UDP;
+    }
+    else if (strncmp(token, "USB", length) == 0) {
+        p->protocol = PROTOCOL_USB;
+        p->profile = PROFILE_RAW;
+        p->lower = LOWER_TCP;
+    }
+    else {
+        report(" ? unknown transport protocol");
+        return RTSP_PARSE_ERROR;
+    }
+
+    token = pos + 1;
+    pos = strchrnul(token, '/');
+    if (pos == NULL)
+        return RTSP_PARSE_ERROR;
+
+    length = pos - token;
+    if (strncmp(token, "AVP", length) == 0)
+        p->protocol = PROFILE_AVP;
+    else if (strncmp(token, "RAW", length) == 0)
+        p->profile = PROFILE_RAW;
+    else {
+        report(" ? unknown transport profile");
+        return RTSP_PARSE_ERROR;
+    }
+
+    // the lower protocol part is optional
+    if (*pos == '\0')
+        return RTSP_SUCCESS;
+
+    token = pos + 1;
+    pos = strchrnul(token, '/');
+    // this must be the last part of the protocol definition
+    if (pos == NULL || *pos != '\0')
+        return RTSP_PARSE_ERROR;
+
+    length = pos - token;
+    if (strncmp(token, "UDP", length) == 0)
+        p->lower = LOWER_UDP;
+    else if (strncmp(token, "TCP", length) == 0)
+        p->lower = LOWER_TCP;
+    else {
+        report(" ? unknown transport lower");
+        return RTSP_PARSE_ERROR;
     }
 
     return RTSP_SUCCESS;
