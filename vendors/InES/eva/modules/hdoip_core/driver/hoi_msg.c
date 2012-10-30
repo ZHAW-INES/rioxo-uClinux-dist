@@ -355,9 +355,11 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     // setup vso (20ms delay, 15ms scomm5 delay, 1ms packet timeout)
     vso_set_vsync_blanking(&handle->vso, &msg->timing);
     vid = vid_duration_in_us(&msg->timing);  
-    delay = msg->delay_ms * 1000 + 2 * vid;
-    if (&msg->timing.interlaced)
-        delay += (76*1000);  //TODO: why works interlaced only with an additional delay?
+    delay = (((67 + msg->delay_ms) * 1000) + vid);
+    if (msg->timing.interlaced) {
+        delay += (2*vid);
+    }
+
     scomm5 = vid * 1500;
     vsd = vid * 800;
     if ((n = vso_drv_update(&handle->vso, &msg->timing, delay, vsd, scomm5, 1000))) {
@@ -456,7 +458,7 @@ int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
 
 int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
 {
-    int vid = 0;
+    int delay, vid = 0;
     struct hdoip_aud_params aud_params;
 
     // sync...
@@ -469,13 +471,20 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
     aud_params.sample_width = msg->width;
 
     if (handle->vio.active) {
-        vid = 2 * vid_duration_in_us(&handle->vio.timing);
-        if (&handle->vio.timing.interlaced) {
-            vid += (76*1000); //TODO: remove workaround for interlaced
+        vid = vid_duration_in_us(&handle->vio.timing);
+        delay = (((67 + msg->delay_ms + msg->av_delay - 53) * 1000) + vid);     // audio is 53ms too late
+        
+        if (handle->vio.timing.interlaced) {
+            delay += (2*vid);
         }
     }
 
-    aso_drv_update(&handle->aso, &aud_params, ((msg->delay_ms+msg->av_delay)*1000)+vid);
+    // if av-delay is too small
+    if (delay < msg->delay_ms) {
+        delay = msg->delay_ms;
+    }
+
+    aso_drv_update(&handle->aso, &aud_params, delay);
     aso_drv_start(&handle->aso);
 
     if (handle->drivers & DRV_ADV9889) {
