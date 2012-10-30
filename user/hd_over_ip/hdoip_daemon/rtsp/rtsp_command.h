@@ -9,6 +9,7 @@
 #define RTSP_COMMAND_H_
 
 #include "rtsp_connection.h"
+#include "map.h"
 
 #define rtsp_err_server(x)          rtsp_response_error(x, 400, "Server error")
 #define rtsp_err_busy(x)            rtsp_response_error(x, 404, "Busy")

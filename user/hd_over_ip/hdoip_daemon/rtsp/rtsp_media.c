@@ -53,7 +53,14 @@ int rtsp_media_check_request(t_map_set *method, t_rtsp_media* media, void* msg, 
 ///////////////////////////////////////////////////////////////////////////////
 // received a request as a server (can answer -> rsp != 0)
 
+int rmsq_options(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
+{
+    int ret;
+    if ((ret = media->options(media, srv_method, rsp)) != 0)
+        return ret;
 
+    return RTSP_SUCCESS;
+}
 
 int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
 {
@@ -268,6 +275,14 @@ int rmsr_pause(t_rtsp_media* media, void* msg)
 ///////////////////////////////////////////////////////////////////////////////
 // received a request as a client (can answer -> rsp != 0)
 
+int rmcq_options(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
+{
+    int ret;
+    if ((ret = media->options(media, client_method, rsp)) != 0)
+        return ret;
+
+    return RTSP_SUCCESS;
+}
 
 int rmcq_update(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 {

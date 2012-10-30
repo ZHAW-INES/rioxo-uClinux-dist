@@ -161,7 +161,7 @@ typedef struct {
 
 typedef struct {
     uint32_t            cseq;
-} t_rtsp_req_option;
+} t_rtsp_req_options;
 
 typedef struct {
     uint32_t            cseq;
@@ -214,10 +214,6 @@ typedef struct {
 
 typedef struct {
     uint32_t            cseq;
-} t_rtsp_rsp_option;
-
-typedef struct {
-    uint32_t            cseq;
     char                session[50];
     t_rtsp_transport    transport;
     t_rtsp_hdcp			hdcp;
@@ -248,7 +244,7 @@ typedef struct {
 } t_rtsp_rsp_pause;
 
 typedef union {
-    t_rtsp_req_option   req_option;
+    t_rtsp_req_options  req_options;
     t_rtsp_req_setup    req_setup;
     t_rtsp_req_hdcp     req_hdcp;
     t_rtsp_req_play     req_play;
@@ -256,7 +252,6 @@ typedef union {
     t_rtsp_req_hello    req_hello;
     t_rtsp_req_update   req_update;
     t_rtsp_req_update   req_pause;
-    t_rtsp_rsp_option   rsp_option;
     t_rtsp_rsp_setup    rsp_setup;
     t_rtsp_rsp_play     rsp_play;
     t_rtsp_rsp_pause    rsp_pause;

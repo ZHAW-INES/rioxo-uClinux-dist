@@ -18,9 +18,9 @@
 #include "rtsp_media.h"
 
 
-// OPTION attributes
-const t_map_fnc tab_request_option[] ={
-        { "CSeq", rtsp_parse_ui32, offsetof(t_rtsp_req_option, cseq) },
+// OPTIONS attributes
+const t_map_fnc tab_request_options[] ={
+        { "CSeq", rtsp_parse_ui32, offsetof(t_rtsp_req_options, cseq) },
         MAP_FNC_NULL
 };
 
@@ -121,6 +121,7 @@ const t_map_fnc tab_request_hello[] ={
 
 // the methodes
 const t_map_set srv_method[] = {
+    { "OPTIONS",  (void*)tab_request_options,   (void*)rmsq_options,  false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, options)   },
     { "SETUP",    (void*)tab_request_setup,     (void*)rmsq_setup,    false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, setup)     },
     { "HDCP",     (void*)tab_request_hdcp,      (void*)rmsq_hdcp,     true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, hdcp)      },
     { "PLAY",     (void*)tab_request_play,      (void*)rmsq_play,     true,   RTSP_STATE_READY | RTSP_STATE_PLAYING,  offsetof(t_rtsp_media, play)      },
@@ -133,6 +134,7 @@ const t_map_set srv_method[] = {
 
 // the methodes
 const t_map_set client_method[] = {
+    { "OPTIONS",  (void*)tab_request_options,   (void*)rmcq_options,  false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, options)   },
     { "UPDATE",   (void*)tab_request_update,    (void*)rmcq_update,   true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, update)    },
     { "PAUSE",    (void*)tab_request_pause,     (void*)rmcq_pause,    true,   RTSP_STATE_PLAYING,                     offsetof(t_rtsp_media, pause)     },
     { "TEARDOWN", (void*)tab_request_teardown,  (void*)rmcq_teardown, true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, teardown)  },

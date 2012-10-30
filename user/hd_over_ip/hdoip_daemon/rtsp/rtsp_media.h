@@ -115,6 +115,7 @@ typedef struct {
 int rtsp_media_check_request(t_map_set* method, t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 
 // rtsp media server
+int rmsq_options(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_setup(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_play(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
@@ -129,6 +130,7 @@ int rmsr_pause(t_rtsp_media* media, void* msg);
 
 
 // rtsp media client
+int rmcq_options(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmcq_update(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmcq_pause(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmcq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
