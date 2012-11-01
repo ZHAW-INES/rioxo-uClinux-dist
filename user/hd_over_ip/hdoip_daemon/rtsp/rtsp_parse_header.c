@@ -455,26 +455,48 @@ int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], con
     strcpy(common->line, line);
 
     // Request: (METHOD URI VERSION)
-    if (!str_split_request_line(&common->rq, common->line)) return RTSP_CLIENT_ERROR;
-    if (strcmp(common->rq.version, RTSP_VERSION) != 0) return RTSP_VERSION_ERROR;
+    if (!str_split_request_line(&common->rq, common->line)) {
+        rtsp_ommit_header(con, 0);
+        rtsp_response_error(con, 400, "Bad request line");
+        report(" ? unknown request line (%s)", common->line);
+        return RTSP_HANDLED;
+    }
+    if (strcmp(common->rq.version, RTSP_VERSION) != 0) {
+        rtsp_ommit_header(con, 0);
+        rtsp_response_error(con, 505, "Version not supported");
+        report(" ? mismatching RTSP version (%s)", common->rq.version);
+        return RTSP_HANDLED;
+    }
 
     // test uri
-    if (!str_split_uri(&common->uri, common->rq.uri)) return RTSP_CLIENT_ERROR;
-    if (strcmp(common->uri.scheme, RTSP_SCHEME) != 0) return RTSP_CLIENT_ERROR;
+    if (!str_split_uri(&common->uri, common->rq.uri)) {
+        rtsp_ommit_header(con, 0);
+        rtsp_response_error(con, 404, "Not found");
+        report(" ? unknown URI (%s)", common->rq.uri);
+        return RTSP_HANDLED;
+    }
+    if (strcmp(common->uri.scheme, RTSP_SCHEME) != 0) {
+        rtsp_ommit_header(con, 0);
+        rtsp_response_error(con, 400, "Bad URI schema");
+        report(" ? mismatching URI schema (%s)", common->uri.scheme);
+        return RTSP_HANDLED;
+    }
 
     // find method
     *method = map_find_set(srv_method, common->rq.method);
 
     if (!*method) {
         rtsp_ommit_header(con, 0);
-        rtsp_response_error(con, 405, "Method not allowed");
-        report(" ? unsupported method %s", common->rq.method);
-        return RTSP_SUCCESS;
+        rtsp_response_error(con, 501, "Not implemented");
+        report(" ? unsupported method (%s)", common->rq.method);
+        return RTSP_HANDLED;
     }
 
     if ((n = rtsp_parse_header(con, (*method)->rec, req, common, 0))) {
+        rtsp_ommit_header(con, 0);
+        rtsp_response_error(con, 400, "Bad request header");
         report(" ? parse request-header error (%d)", n);
-        return n;
+        return RTSP_HANDLED;
     }
 
     return RTSP_SUCCESS;

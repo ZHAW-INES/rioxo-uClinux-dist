@@ -24,7 +24,8 @@ typedef enum {
     RTSP_NULL_POINTER,
     RTSP_TIMEOUT,
     RTSP_HDCP_ERROR,
-    RTSP_WRONG_STATE
+    RTSP_WRONG_STATE,
+    RTSP_HANDLED
 } e_error;
 
 #endif /* RTSP_ERROR_H_ */

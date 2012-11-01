@@ -60,8 +60,11 @@ int rtsp_server_thread(t_rtsp_server* handle)
 
         n = rtsp_parse_request(&handle->con, srv_method, &method, &buf, &common);
 
-        // connection closed...
+        // request has already been handled (probably because an error occured)
+        if (n == RTSP_HANDLED)
+          continue;
 
+        // connection closed...
         if (n) {
         	break;
         }
@@ -91,10 +94,9 @@ int rtsp_server_thread(t_rtsp_server* handle)
         // process request (function responses for itself)
         n = ((frtspm*)method->fnc)(media, &buf, &handle->con);
         // media may be not valid anymore!
-        if (n != RTSP_SUCCESS) {
+        if (n != RTSP_SUCCESS && n != RTSP_HANDLED) {
+            rtsp_response_error(&handle->con, 500, "Internal server error");
             report(" ? execute method \"%s\" error (%d)", common.rq.method, n);
-            unlock("rtsp_server_thread");
-            break;
         }
 
         unlock("rtsp_server_thread");
