@@ -45,7 +45,7 @@ void rtsp_request_line(t_rtsp_connection* msg, char* method, char* uri)
 
 void rtsp_request_cseq(t_rtsp_connection* msg, int s)
 {
-    msgprintf(msg, "CSeq: %03d\r\n", s);
+    msgprintf(msg, "CSeq: %d\r\n", s);
 }
 /** Terminate every message with "\r\n"
  *
