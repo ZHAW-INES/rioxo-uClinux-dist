@@ -475,7 +475,10 @@ int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], con
         report(" ? unknown URI (%s)", common->rq.uri);
         return RTSP_HANDLED;
     }
-    if (strcmp(common->uri.scheme, RTSP_SCHEME) != 0) {
+    // the URI's schema must either be "rtsp://" or
+    // "*" but then uri.server must be empty
+    if (strcmp(common->uri.scheme, RTSP_SCHEME) != 0 &&
+       (strcmp(common->uri.scheme, "*") != 0 || common->uri.server)) {
         rtsp_ommit_header(con, 0);
         rtsp_response_error(con, 400, "Bad URI schema");
         report(" ? mismatching URI schema (%s)", common->uri.scheme);

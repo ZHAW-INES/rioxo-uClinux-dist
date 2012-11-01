@@ -81,6 +81,14 @@ bool str_starts_with(char** line, const char* str)
 
 bool str_split_uri(t_str_uri* uri, char* s)
 {
+    if (strcmp(s, "*") == 0) {
+        uri->scheme = "*";
+        uri->server = NULL;
+        uri->port = NULL;
+        uri->name = "";
+        return true;
+    }
+    
     // scheme://server:port/name
     uri->scheme = str_next_token(&s, "%:://;");
     uri->server = str_next_token(&s, "/%0");
