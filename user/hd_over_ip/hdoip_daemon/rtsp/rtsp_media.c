@@ -101,7 +101,7 @@ int rmsq_play(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 
     switch (media->state) {
         case RTSP_STATE_INIT:
-            rtsp_response_error(rsp, RTSP_SC_METHOD_NVIS, "Method not Valid in this State");
+            rtsp_response_error(rsp, RTSP_STATUS_METHOD_NOT_VALID_IN_THIS_STATE, NULL);
         break;
         case RTSP_STATE_READY:
         case RTSP_STATE_PLAYING:
@@ -314,7 +314,7 @@ int rmcr_play(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 
     switch (media->state) {
         case RTSP_STATE_INIT:
-            rtsp_response_error(rsp, RTSP_STATUS_METHOD_NOT_VALID_IN_THIS_STATE, "Method not Valid in this State");
+            rtsp_response_error(rsp, RTSP_STATUS_METHOD_NOT_VALID_IN_THIS_STATE, NULL);
         break;
         case RTSP_STATE_READY:
         case RTSP_STATE_PLAYING:

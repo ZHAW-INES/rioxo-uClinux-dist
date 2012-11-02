@@ -26,12 +26,52 @@
 //------------------------------------------------------------------------------
 // Status Codes
 
-#define RTSP_SC_CONTINUE                (100)
-#define RTSP_SC_OK                      (200)
-#define RTSP_SC_MULTIPLE_CHOICES        (300)
-#define RTSP_SC_BAD_REQUEST             (400)
-#define RTSP_SC_METHOD_NVIS             (455)
-#define RTSP_SC_SERVER_ERROR            (500)
+typedef enum {
+  RTSP_STATUS_UNKNOWN                           =   0,
+  RTSP_STATUS_CONTINUE                          = 100,
+  RTSP_STATUS_OK                                = 200,
+  RTSP_STATUS_CREATED                           = 201,
+  RTSP_STATUS_LOW_ON_STORAGE_SPACE              = 250,
+  RTSP_STATUS_MULTIPLE_CHOICES                  = 300,
+  RTSP_STATUS_MOVED_PERMANENTLY                 = 301,
+  RTSP_STATUS_MOVED_TEMPORARILY                 = 302,
+  RTSP_STATUS_SEE_OTHER                         = 303,
+  RTSP_STATUS_USE_PROXY                         = 305,
+  RTSP_STATUS_BAD_REQUEST                       = 400,
+  RTSP_STATUS_UNAUTHORIZED                      = 401,
+  RTSP_STATUS_PAYMENT_REQUIRED                  = 402,
+  RTSP_STATUS_FORBIDDEN                         = 403,
+  RTSP_STATUS_NOT_FOUND                         = 404,
+  RTSP_STATUS_METHOD_NOT_ALLOWED                = 405,
+  RTSP_STATUS_NOT_ACCEPTABLE                    = 406,
+  RTSP_STATUS_PROXY_AUTHENTICATION_REQUIRED     = 407,
+  RTSP_STATUS_REQUEST_TIMEOUT                   = 408,
+  RTSP_STATUS_GONE                              = 410,
+  RTSP_STATUS_LENGTH_REQUIRED                   = 411,
+  RTSP_STATUS_PRECONDITION_FAILED               = 412,
+  RTSP_STATUS_REQUEST_ENTITY_TOO_LARGE          = 413,
+  RTSP_STATUS_REQUEST_URI_TOO_LONG              = 414,
+  RTSP_STATUS_UNSUPPORTED_MEDIA_TYPE            = 415,
+  RTSP_STATUS_INVALID_PARAMETER                 = 451,
+  RTSP_STATUS_ILLEGAL_CONFERENCE_IDENTIFIER     = 452,
+  RTSP_STATUS_NOT_ENOUGH_BANDWIDTH              = 453,
+  RTSP_STATUS_SESSION_NOT_FOUND                 = 454,
+  RTSP_STATUS_METHOD_NOT_VALID_IN_THIS_STATE    = 455,
+  RTSP_STATUS_HEADER_FIELD_NOT_VALID            = 456,
+  RTSP_STATUS_INVALID_RANGE                     = 457,
+  RTSP_STATUS_PARAMETER_IS_READ_ONLY            = 458,
+  RTSP_STATUS_AGGREGATE_OPERATION_NOT_ALLOWED   = 459,
+  RTSP_STATUS_ONLY_AGGREGATE_OPERATION_ALLOWED  = 460,
+  RTSP_STATUS_UNSUPPORTED_TRANSPORT             = 461,
+  RTSP_STATUS_DESTINATION_UNREACHABLE           = 462,
+  RTSP_STATUS_INTERNAL_SERVER_ERROR             = 500,
+  RTSP_STATUS_NOT_IMPLEMENTED                   = 501,
+  RTSP_STATUS_BAD_GATEWAY                       = 502,
+  RTSP_STATUS_SERVICE_UNAVAILABLE               = 503,
+  RTSP_STATUS_GATEWAY_TIMEOUT                   = 504,
+  RTSP_STATUS_RTSP_VERSION_NOT_SUPPORTED        = 505,
+  RTSP_STATUS_OPTION_NOT_SUPPORTED              = 551
+} e_rtsp_status_code;
 
 //------------------------------------------------------------------------------
 // Macros

@@ -74,7 +74,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
 
         // fail response
         if (!media) {
-            rtsp_response_error(&handle->con, 462, "Destination unreachable");
+            rtsp_response_error(&handle->con, RTSP_STATUS_DESTINATION_UNREACHABLE, NULL);
             continue;
         }
 
@@ -95,7 +95,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
         n = ((frtspm*)method->fnc)(media, &buf, &handle->con);
         // media may be not valid anymore!
         if (n != RTSP_SUCCESS && n != RTSP_HANDLED) {
-            rtsp_response_error(&handle->con, 500, "Internal server error");
+            rtsp_response_error(&handle->con, RTSP_STATUS_INTERNAL_SERVER_ERROR, NULL);
             report(" ? execute method \"%s\" error (%d)", common.rq.method, n);
         }
 

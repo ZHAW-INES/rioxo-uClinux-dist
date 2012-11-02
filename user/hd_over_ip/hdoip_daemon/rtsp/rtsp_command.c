@@ -26,6 +26,146 @@ void rtsp_response_line(t_rtsp_connection* msg, int code, char* reason)
 
 void rtsp_response_error(t_rtsp_connection* msg, int code, char* reason)
 {
+    if (reason == NULL)
+    {
+        switch (code)
+        {
+          case RTSP_STATUS_CONTINUE:
+            reason = "Continue";
+            break;
+          case RTSP_STATUS_OK:
+            reason = "OK";
+            break;
+          case RTSP_STATUS_CREATED:
+            reason = "Created";
+            break;
+          case RTSP_STATUS_LOW_ON_STORAGE_SPACE:
+            reason = "Low on Storage Space";
+            break;
+          case RTSP_STATUS_MULTIPLE_CHOICES:
+            reason = "Multiple Choices";
+            break;
+          case RTSP_STATUS_MOVED_PERMANENTLY:
+            reason = "Moved Permanently";
+            break;
+          case RTSP_STATUS_MOVED_TEMPORARILY:
+            reason = "Moved Temporarily";
+            break;
+          case RTSP_STATUS_SEE_OTHER:
+            reason = "See Other";
+            break;
+          case RTSP_STATUS_USE_PROXY:
+            reason = "Use Proxy";
+            break;
+          case RTSP_STATUS_BAD_REQUEST:
+            reason = "Bad Request";
+            break;
+          case RTSP_STATUS_UNAUTHORIZED:
+            reason = "Unauthorized";
+            break;
+          case RTSP_STATUS_PAYMENT_REQUIRED:
+            reason = "Payment Required";
+            break;
+          case RTSP_STATUS_FORBIDDEN:
+            reason = "Forbidden";
+            break;
+          case RTSP_STATUS_NOT_FOUND:
+            reason = "Not Found";
+            break;
+          case RTSP_STATUS_METHOD_NOT_ALLOWED:
+            reason = "Method Not Allowed";
+            break;
+          case RTSP_STATUS_NOT_ACCEPTABLE:
+            reason = "Not Acceptable";
+            break;
+          case RTSP_STATUS_PROXY_AUTHENTICATION_REQUIRED:
+            reason = "Proxy Authentication Required";
+            break;
+          case RTSP_STATUS_REQUEST_TIMEOUT:
+            reason = "Request Timeout";
+            break;
+          case RTSP_STATUS_GONE:
+            reason = "Gone";
+            break;
+          case RTSP_STATUS_LENGTH_REQUIRED:
+            reason = "Length Required";
+            break;
+          case RTSP_STATUS_PRECONDITION_FAILED:
+            reason = "Precondition Failed";
+            break;
+          case RTSP_STATUS_REQUEST_ENTITY_TOO_LARGE:
+            reason = "Request Entity Too Large";
+            break;
+          case RTSP_STATUS_REQUEST_URI_TOO_LONG:
+            reason = "Request-URI Too Long";
+            break;
+          case RTSP_STATUS_UNSUPPORTED_MEDIA_TYPE:
+            reason = "Unsupported Media Type";
+            break;
+          case RTSP_STATUS_INVALID_PARAMETER:
+            reason = "Invalid parameter";
+            break;
+          case RTSP_STATUS_ILLEGAL_CONFERENCE_IDENTIFIER:
+            reason = "Illegal Conference Identifier";
+            break;
+          case RTSP_STATUS_NOT_ENOUGH_BANDWIDTH:
+            reason = "Not Enough Bandwidth";
+            break;
+          case RTSP_STATUS_SESSION_NOT_FOUND:
+            reason = "Session Not Found";
+            break;
+          case RTSP_STATUS_METHOD_NOT_VALID_IN_THIS_STATE:
+            reason = "Method Not Valid In This State";
+            break;
+          case RTSP_STATUS_HEADER_FIELD_NOT_VALID:
+            reason = "Header Field Not Valid";
+            break;
+          case RTSP_STATUS_INVALID_RANGE:
+            reason = "Invalid Range";
+            break;
+          case RTSP_STATUS_PARAMETER_IS_READ_ONLY:
+            reason = "Parameter Is Read-Only";
+            break;
+          case RTSP_STATUS_AGGREGATE_OPERATION_NOT_ALLOWED:
+            reason = "Aggregate Operation Not Allowed";
+            break;
+          case RTSP_STATUS_ONLY_AGGREGATE_OPERATION_ALLOWED:
+            reason = "Only Aggregate Operation Allowed";
+            break;
+          case RTSP_STATUS_UNSUPPORTED_TRANSPORT:
+            reason = "Unsupported Transport";
+            break;
+          case RTSP_STATUS_DESTINATION_UNREACHABLE:
+            reason = "Destination Unreachable";
+            break;
+          case RTSP_STATUS_INTERNAL_SERVER_ERROR:
+            reason = "Internal Server Error";
+            break;
+          case RTSP_STATUS_NOT_IMPLEMENTED:
+            reason = "Not Implemented";
+            break;
+          case RTSP_STATUS_BAD_GATEWAY:
+            reason = "Bad Gateway";
+            break;
+          case RTSP_STATUS_SERVICE_UNAVAILABLE:
+            reason = "Service Unavailable";
+            break;
+          case RTSP_STATUS_GATEWAY_TIMEOUT:
+            reason = "Gateway Timeout";
+            break;
+          case RTSP_STATUS_RTSP_VERSION_NOT_SUPPORTED:
+            reason = "RTSP Version Not Supported";
+            break;
+          case RTSP_STATUS_OPTION_NOT_SUPPORTED:
+            reason = "Option not support";
+            break;
+          case RTSP_STATUS_UNKNOWN:
+          default:
+            reason = "Unknown error";
+            break;
+        }
+    }
+  
     rtsp_response_line(msg, code, reason);
     rtsp_eoh(msg);
     rtsp_send(msg);
