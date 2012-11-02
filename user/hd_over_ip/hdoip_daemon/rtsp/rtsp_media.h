@@ -16,12 +16,16 @@
 #include "rtsp.h"
 #include "rtsp_connection.h"
 #include "linked_list.h"
+#include "map.h"
 
 typedef enum {
-    RTSP_INIT,
-    RTSP_READY,
-    RTSP_PLAYING
+    RTSP_STATE_NONE     = 0x0,
+    RTSP_STATE_INIT     = 0x1,
+    RTSP_STATE_READY    = 0x2,
+    RTSP_STATE_PLAYING  = 0x4
 } e_rtsp_media_state;
+
+#define RTSP_STATE_ALL  (RTSP_STATE_INIT | RTSP_STATE_READY | RTSP_STATE_PLAYING)
 
 typedef enum {
     HDCP_SEND_RTX,
@@ -139,17 +143,17 @@ int rtsp_media_event(t_rtsp_media* media, uint32_t event);
 
 static inline bool rtsp_media_sinit(t_rtsp_media* media)
 {
-    return (media->state == RTSP_INIT);
+    return (media->state == RTSP_STATE_INIT);
 }
 
 static inline bool rtsp_media_sready(t_rtsp_media* media)
 {
-    return (media->state == RTSP_READY);
+    return (media->state == RTSP_STATE_READY);
 }
 
 static inline bool rtsp_media_splaying(t_rtsp_media* media)
 {
-    return (media->state == RTSP_PLAYING);
+    return (media->state == RTSP_STATE_PLAYING);
 }
 
 static inline bool rtsp_media_active(t_rtsp_media* media)

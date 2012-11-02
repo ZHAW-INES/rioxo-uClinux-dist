@@ -144,7 +144,7 @@ void hdoipd_cmd_pause(t_hoic_cmd UNUSED *cmd)
     int ret;
 
     if (!client)                        { report(ERROR "no client");      return; }
-    if (media->state != RTSP_PLAYING)   { report(ERROR "wrong state");    return; }
+    if (media->state != RTSP_STATE_PLAYING)   { report(ERROR "wrong state");    return; }
 
     rtsp_client_pause(client);
 
@@ -164,7 +164,7 @@ void hdoipd_cmd_pause_play(t_hoic_cmd UNUSED *cmd)
     char *s;
 
     if (!client)                        { report(ERROR "no client");      return; }
-    if (media->state != RTSP_READY)     { report(ERROR "wrong state");    return; }
+    if (media->state != RTSP_STATE_READY)     { report(ERROR "wrong state");    return; }
 
     s = reg_get("compress");
     if (strcmp(s, "jp2k") == 0) {

@@ -264,7 +264,7 @@ int usb_connect_device(t_rtsp_usb* usb)
     ret = RTSP_SUCCESS;
 
     // do usb setup
-    if (media->state == RTSP_INIT) {
+    if (media->state == RTSP_STATE_INIT) {
         if (media->dosetup) {
             ret = media->dosetup(media, 0, 0);
         }
@@ -325,7 +325,7 @@ void usb_try_to_connect_device(t_usb_devices* old_values)
             ret = RTSP_SUCCESS;
 
             // do usb setup
-            if (media->state == RTSP_INIT) {
+            if (media->state == RTSP_STATE_INIT) {
                 if (media->dosetup) {
                     ret = media->dosetup(media, 0, 0);
                 }

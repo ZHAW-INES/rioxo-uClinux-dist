@@ -529,12 +529,12 @@ void task_get_vrb_is_playing(char** p)
 {
     *p = "false";
     switch(vrb_video.state) {
-        case RTSP_PLAYING:  *p = "true";
+        case RTSP_STATE_PLAYING:  *p = "true";
                             break;
     }
 
     switch(vrb_audio.state) {
-        case RTSP_PLAYING:  *p = "true";
+        case RTSP_STATE_PLAYING:  *p = "true";
                             break;
     }
 }

@@ -112,12 +112,12 @@ int usb_dosetup(t_rtsp_media *media, t_rtsp_usb* UNUSED m, void* UNUSED rsp)
         strcpy(client->media->sessionid, common.session);
 
         switch (media->state) {
-            case RTSP_INIT:
-            case RTSP_READY:
-                media->state = RTSP_READY;
+            case RTSP_STATE_INIT:
+            case RTSP_STATE_READY:
+                media->state = RTSP_STATE_READY;
             break;
-            case RTSP_PLAYING:
-                media->state = RTSP_PLAYING;
+            case RTSP_STATE_PLAYING:
+                media->state = RTSP_STATE_PLAYING;
             break;
         }
     } else {
@@ -154,12 +154,12 @@ int usb_doplay(t_rtsp_media *media, t_rtsp_usb* m, void* UNUSED rsp)
     }
 
     switch (media->state) {
-        case RTSP_INIT:
+        case RTSP_STATE_INIT:
             // TODO: send error message
         break;
-        case RTSP_READY:
-        case RTSP_PLAYING:
-            media->state = RTSP_PLAYING;
+        case RTSP_STATE_READY:
+        case RTSP_STATE_PLAYING:
+            media->state = RTSP_STATE_PLAYING;
         break;
     }
 
@@ -196,7 +196,7 @@ int usb_doteardown(t_rtsp_media *media, t_rtsp_usb* UNUSED m, void* UNUSED rsp)
 
     // TODO: correct handling of mouse and keyboard and storage teardown separate
     // also in rmsq teardown for device side
-    media->state = RTSP_INIT;
+    media->state = RTSP_STATE_INIT;
 
     media->result = RTSP_RESULT_TEARDOWN;
 

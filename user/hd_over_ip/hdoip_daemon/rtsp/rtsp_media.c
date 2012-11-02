@@ -64,12 +64,12 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
 
     if (ret == RTSP_SUCCESS) {
         switch (media->state) {
-            case RTSP_INIT:
-            case RTSP_READY:
-                media->state = RTSP_READY;
+            case RTSP_STATE_INIT:
+            case RTSP_STATE_READY:
+                media->state = RTSP_STATE_READY;
             break;
-            case RTSP_PLAYING:
-                media->state = RTSP_PLAYING;
+            case RTSP_STATE_PLAYING:
+                media->state = RTSP_STATE_PLAYING;
             break;
         }
     }
@@ -100,19 +100,19 @@ int rmsq_play(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
     if (!media->owner) return RTSP_CLIENT_ERROR;
 
     switch (media->state) {
-        case RTSP_INIT:
+        case RTSP_STATE_INIT:
             rtsp_response_error(rsp, RTSP_SC_METHOD_NVIS, "Method not Valid in this State");
         break;
-        case RTSP_READY:
-        case RTSP_PLAYING:
+        case RTSP_STATE_READY:
+        case RTSP_STATE_PLAYING:
             if (media->play) ret = media->play(media, msg, rsp);
             if (ret == RTSP_SUCCESS) {
-                media->state = RTSP_PLAYING;
+                media->state = RTSP_STATE_PLAYING;
             } else {
                 // 3xx error codes go to init
                 // 4xx error codes do not change
                 if ((ret >= 300) && (ret < 400)) {
-                    media->state = RTSP_INIT;
+                    media->state = RTSP_STATE_INIT;
                 }
             }
         break;
@@ -145,8 +145,8 @@ int rmsq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
     if (!media->owner) return RTSP_CLIENT_ERROR;
 
 
-    if ((media->teardown) && (media->state != RTSP_INIT)) ret = media->teardown(media, msg, rsp);
-    media->state = RTSP_INIT;
+    if ((media->teardown) && (media->state != RTSP_STATE_INIT)) ret = media->teardown(media, msg, rsp);
+    media->state = RTSP_STATE_INIT;
     if(server) {
     	server->media = 0;
     }
@@ -177,9 +177,9 @@ int rmsq_hdcp(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 int rmsq_pause(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 {
     int ret = RTSP_SUCCESS;
-    if (media->state == RTSP_PLAYING) {
+    if (media->state == RTSP_STATE_PLAYING) {
         if (media->pause) ret = media->pause(media, msg, rsp);
-        if (!ret) media->state = RTSP_READY;
+        if (!ret) media->state = RTSP_STATE_READY;
     }
     return ret;
 }
@@ -190,8 +190,8 @@ int rmsq_update(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
     int ret = RTSP_SUCCESS;
     if (media->update) ret = media->update(media, msg, rsp);
     switch (ret) {
-    	case RTSP_PAUSE: media->state = RTSP_READY; ret = RTSP_SUCCESS; break;
-    	case RTSP_CLOSE: media->state = RTSP_INIT; ret = RTSP_SUCCESS; break;
+    	case RTSP_PAUSE: media->state = RTSP_STATE_READY; ret = RTSP_SUCCESS; break;
+    	case RTSP_CLOSE: media->state = RTSP_STATE_INIT; ret = RTSP_SUCCESS; break;
     }
     return ret;
 }
@@ -214,8 +214,8 @@ int rmsr_teardown(t_rtsp_media* media, void* msg)
     // needs to be a session
     if (!media->owner) return RTSP_CLIENT_ERROR;
 
-    if ((media->teardown) && (media->state != RTSP_INIT)) ret = media->teardown(media, msg, 0);
-    media->state = RTSP_INIT;
+    if ((media->teardown) && (media->state != RTSP_STATE_INIT)) ret = media->teardown(media, msg, 0);
+    media->state = RTSP_STATE_INIT;
     if(server) {
     	server->media = 0;
     }
@@ -228,9 +228,9 @@ int rmsr_teardown(t_rtsp_media* media, void* msg)
 int rmsr_pause(t_rtsp_media* media, void* msg)
 {
     int ret = RTSP_SUCCESS;
-    if (media->state == RTSP_PLAYING) {
+    if (media->state == RTSP_STATE_PLAYING) {
         if (media->pause) ret = media->pause(media, msg, 0);
-        if (!ret) media->state = RTSP_READY;
+        if (!ret) media->state = RTSP_STATE_READY;
     }
     return ret;
 }
@@ -245,8 +245,8 @@ int rmcq_update(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
     int ret = RTSP_SUCCESS;
     if (media->update) ret = media->update(media, msg, rsp);
     switch (ret) {
-    	case RTSP_PAUSE: media->state = RTSP_READY; ret = RTSP_SUCCESS; break;
-    	case RTSP_CLOSE: media->state = RTSP_INIT; ret = RTSP_SUCCESS; break;
+    	case RTSP_PAUSE: media->state = RTSP_STATE_READY; ret = RTSP_SUCCESS; break;
+    	case RTSP_CLOSE: media->state = RTSP_STATE_INIT; ret = RTSP_SUCCESS; break;
     }
     return ret;
 }
@@ -254,9 +254,9 @@ int rmcq_update(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 int rmcq_pause(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 {
     int ret = RTSP_SUCCESS;
-    if (media->state == RTSP_PLAYING) {
+    if (media->state == RTSP_STATE_PLAYING) {
         if (media->pause) ret = media->pause(media, msg, rsp);
-        if (!ret) media->state = RTSP_READY;
+        if (!ret) media->state = RTSP_STATE_READY;
     }
     return ret;
 }
@@ -265,8 +265,8 @@ int rmcq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 {
     int ret = RTSP_SUCCESS;
 
-    if ((media->teardown) && (media->state != RTSP_INIT)) ret = media->teardown(media, msg, rsp);
-    media->state = RTSP_INIT;
+    if ((media->teardown) && (media->state != RTSP_STATE_INIT)) ret = media->teardown(media, msg, rsp);
+    media->state = RTSP_STATE_INIT;
 
     ((t_rtsp_client*)media->creator)->task = E_RTSP_CLIENT_KILL;
 
@@ -280,9 +280,9 @@ int rmcq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 int rmcr_pause(t_rtsp_media* media, void* msg)
 {
     int ret = RTSP_SUCCESS;
-    if (media->state == RTSP_PLAYING) {
+    if (media->state == RTSP_STATE_PLAYING) {
         if (media->pause) ret = media->pause(media, msg, 0);
-        if (!ret) media->state = RTSP_READY;
+        if (!ret) media->state = RTSP_STATE_READY;
     }
     return ret;
 }
@@ -295,12 +295,12 @@ int rmcr_setup(t_rtsp_media* media, void* msg)
 
     if (ret == RTSP_SUCCESS) {
         switch (media->state) {
-            case RTSP_INIT:
-            case RTSP_READY:
-                media->state = RTSP_READY;
+            case RTSP_STATE_INIT:
+            case RTSP_STATE_READY:
+                media->state = RTSP_STATE_READY;
             break;
-            case RTSP_PLAYING:
-                media->state = RTSP_PLAYING;
+            case RTSP_STATE_PLAYING:
+                media->state = RTSP_STATE_PLAYING;
             break;
         }
     }
@@ -313,19 +313,19 @@ int rmcr_play(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
     int ret = RTSP_SUCCESS;
 
     switch (media->state) {
-        case RTSP_INIT:
-            rtsp_response_error(rsp, RTSP_SC_METHOD_NVIS, "Method not Valid in this State");
+        case RTSP_STATE_INIT:
+            rtsp_response_error(rsp, RTSP_STATUS_METHOD_NOT_VALID_IN_THIS_STATE, "Method not Valid in this State");
         break;
-        case RTSP_READY:
-        case RTSP_PLAYING:
+        case RTSP_STATE_READY:
+        case RTSP_STATE_PLAYING:
             ret = media->play(media, msg, 0);
             if (ret == RTSP_SUCCESS) {
-                media->state = RTSP_PLAYING;
+                media->state = RTSP_STATE_PLAYING;
             } else {
                 // 3xx error codes go to init
                 // 4xx error codes do not change
                 if ((ret >= 300) && (ret < 400)) {
-                    media->state = RTSP_INIT;
+                    media->state = RTSP_STATE_INIT;
                 }
             }
         break;
@@ -338,8 +338,8 @@ int rmcr_teardown(t_rtsp_media* media, void* msg)
 {
     int ret = RTSP_SUCCESS;
 
-    if ((media->teardown) && (media->state != RTSP_INIT)) ret = media->teardown(media, msg, 0);
-    media->state = RTSP_INIT;
+    if ((media->teardown) && (media->state != RTSP_STATE_INIT)) ret = media->teardown(media, msg, 0);
+    media->state = RTSP_STATE_INIT;
     return ret;
 }
 
@@ -359,7 +359,7 @@ int rtsp_media_setup(t_rtsp_media* media)
 {
     int ret = RTSP_NULL_POINTER;
     if (media && media->creator) {
-        if (media->state != RTSP_PLAYING) {
+        if (media->state != RTSP_STATE_PLAYING) {
             if (media->dosetup) ret = media->dosetup(media, 0, 0);
         } else {
             ret = RTSP_WRONG_STATE;
@@ -374,7 +374,7 @@ int rtsp_media_play(t_rtsp_media* media)
     t_rtsp_client *client = media->creator;
 
     if (media && media->creator) {
-        if (media->state == RTSP_READY) {
+        if (media->state == RTSP_STATE_READY) {
             if (media->doplay) ret = media->doplay(media, 0, 0);
             //check if kill / teardown is set because of HDCP error
             if(client->task & E_RTSP_CLIENT_KILL) {
@@ -399,11 +399,11 @@ int rtsp_media_event(t_rtsp_media* media, uint32_t event)
     int ret = RTSP_NULL_POINTER;
 
     if (media && media->creator) {
-    	if (media->state != RTSP_INIT) {
+    	if (media->state != RTSP_STATE_INIT) {
 			if (media->event) ret = media->event(media, event);
 			switch (ret) {
-				case RTSP_PAUSE: media->state = RTSP_READY; ret = RTSP_SUCCESS; break;
-				case RTSP_CLOSE: media->state = RTSP_INIT; ret = RTSP_SUCCESS; break;
+				case RTSP_PAUSE: media->state = RTSP_STATE_READY; ret = RTSP_SUCCESS; break;
+				case RTSP_CLOSE: media->state = RTSP_STATE_INIT; ret = RTSP_SUCCESS; break;
 			}
     	}
     }
