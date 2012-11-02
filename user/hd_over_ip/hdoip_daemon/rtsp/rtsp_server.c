@@ -82,6 +82,16 @@ int rtsp_server_thread(t_rtsp_server* handle)
         smedia = rtsp_listener_get_session(handle->owner, common.session);
         if (smedia) media = smedia;
 
+        // check if the request is valid (session, state, media-control)
+        n = rtsp_media_check_request(method, media, &buf, &handle->con);
+        if (n == RTSP_HANDLED)
+          continue;
+        if (n != RTSP_SUCCESS) {
+            rtsp_response_error(&handle->con, RTSP_STATUS_INTERNAL_SERVER_ERROR, NULL);
+            report (" ? request check failed on method (%s) in media-control (%s)", method->name, media->name);
+            continue;
+        }
+
         // TODO: receive body
 
         lock("rtsp_server_thread");

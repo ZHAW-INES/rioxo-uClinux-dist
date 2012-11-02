@@ -121,20 +121,20 @@ const t_map_fnc tab_request_hello[] ={
 
 // the methodes
 const t_map_set srv_method[] = {
-    { "SETUP", (void*)tab_request_setup, (void*)rmsq_setup },
-    { "HDCP", (void*)tab_request_hdcp, (void*)rmsq_hdcp },
-    { "PLAY", (void*)tab_request_play, (void*)rmsq_play },
-    { "PAUSE", (void*)tab_request_pause, (void*)rmsq_pause },
-    { "TEARDOWN", (void*)tab_request_teardown, (void*)rmsq_teardown },
-    { "HELLO", (void*)tab_request_hello, (void*)rmsq_hello },
-    { "UPDATE", (void*)tab_request_update, (void*)rmsq_update },
+    { "SETUP",    (void*)tab_request_setup,     (void*)rmsq_setup,    false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, setup)     },
+    { "HDCP",     (void*)tab_request_hdcp,      (void*)rmsq_hdcp,     true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, hdcp)      },
+    { "PLAY",     (void*)tab_request_play,      (void*)rmsq_play,     true,   RTSP_STATE_READY | RTSP_STATE_PLAYING,  offsetof(t_rtsp_media, play)      },
+    { "PAUSE",    (void*)tab_request_pause,     (void*)rmsq_pause,    true,   RTSP_STATE_PLAYING,                     offsetof(t_rtsp_media, pause)     },
+    { "TEARDOWN", (void*)tab_request_teardown,  (void*)rmsq_teardown, true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, teardown)  },
+    { "HELLO",    (void*)tab_request_hello,     (void*)rmsq_hello,    false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, hello)     },
+    { "UPDATE",   (void*)tab_request_update,    (void*)rmsq_update,   true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, update)    },
     MAP_SET_NULL
 };
 
 // the methodes
 const t_map_set client_method[] = {
-    { "UPDATE", (void*)tab_request_update, (void*)rmcq_update },
-    { "PAUSE", (void*)tab_request_pause, (void*)rmcq_pause },
-    { "TEARDOWN", (void*)tab_request_teardown, (void*)rmcq_teardown },
+    { "UPDATE",   (void*)tab_request_update,    (void*)rmcq_update,   true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, update)    },
+    { "PAUSE",    (void*)tab_request_pause,     (void*)rmcq_pause,    true,   RTSP_STATE_PLAYING,                     offsetof(t_rtsp_media, pause)     },
+    { "TEARDOWN", (void*)tab_request_teardown,  (void*)rmcq_teardown, true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, teardown)  },
     MAP_SET_NULL
 };

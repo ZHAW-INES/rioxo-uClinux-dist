@@ -16,24 +16,27 @@
 typedef int (mapfnc2)(void*, void*);
 
 typedef struct {
-    char*   name;       //!< function name
-    void*   fnc;        //!< function pointer
-    size_t  offset;     //!< data offset;
+    char*   name;         //!< function name
+    void*   fnc;          //!< function pointer
+    size_t  offset;       //!< data offset;
 } t_map_fnc;
 
 typedef struct {
-    char*   name;       //!< function name
-    void*   rec;        //!< record pointer
-    void*   fnc;        //!< function;
+    char*   name;         //!< function name
+    void*   rec;          //!< record pointer
+    void*   fnc;          //!< function;
+    bool    in_session;   //!< whether the method is only valid in a session
+    int     states;       //!< states in which this method is valid
+    size_t  impl_offset;  //!< offset of the implementation in t_rtsp_media
 } t_map_set;
 
 typedef struct {
-    char*   name;       //!< function name
-    void*   rec;        //!< record pointer
+    char*   name;         //!< function name
+    void*   rec;          //!< record pointer
 } t_map_rec;
 
 #define MAP_FNC_NULL { 0, 0, 0 }
-#define MAP_SET_NULL { 0, 0, 0 }
+#define MAP_SET_NULL { 0, 0, 0, false, 0, 0 }
 #define MAP_REC_NULL { 0, 0 }
 
 #define map_offset(x, y)            ((typeof(x))((uint8_t*)x + y))

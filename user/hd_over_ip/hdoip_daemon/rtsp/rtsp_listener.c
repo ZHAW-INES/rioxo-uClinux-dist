@@ -224,6 +224,8 @@ int rtsp_listener_close(t_rtsp_listener* handle)
 
 int rtsp_listener_add_media(t_rtsp_listener* handle, t_rtsp_media* media)
 {
+    if (media->state == RTSP_STATE_NONE) media->state = RTSP_STATE_INIT;
+
     listener_lock(handle, "rtsp_listener_add_media");
         bstmap_setp(&handle->media, media->name, media);
         report(NEW "RTSP Media add \"%s\"", media->name);

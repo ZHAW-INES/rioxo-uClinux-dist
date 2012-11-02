@@ -82,6 +82,7 @@ typedef struct t_rtsp_media {
     int     result;             // Media status
     size_t  cookie_size;        // Size of cookie
     void*   cookie;             // Media related data
+    frtspm* options;
     frtspm* hdcp;
     frtspm* error;              // (media*, rtsp-code, connection)
     frtspm* setup;              // (c->s) request or response
@@ -111,6 +112,7 @@ typedef struct {
     t_hdoip_ethernet    remote;
 } t_multicast_cookie;
 
+int rtsp_media_check_request(t_map_set* method, t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 
 // rtsp media server
 int rmsq_setup(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);

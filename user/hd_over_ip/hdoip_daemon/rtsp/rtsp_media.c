@@ -20,6 +20,35 @@
 #include "rtsp_error.h"
 #include "string.h"
 
+int rtsp_media_check_request(t_map_set *method, t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
+{
+    if (method == NULL || media == NULL || rsp == NULL)
+      return RTSP_SERVER_ERROR;
+
+    // check if the request must be part of a session
+    if (method->in_session && !media->owner) {
+        report(" ? method (%s) is only valid in a session", method->name);
+        rtsp_response_error(rsp, RTSP_STATUS_SESSION_NOT_FOUND, NULL);
+        return RTSP_HANDLED;
+    }
+
+    // check if the request is valid in the current state
+    if ((media->state & method->states) == RTSP_STATE_NONE) {
+        report(" ? method (%s) is not valid in the current state (%d) of media-control (%s)", method->name, media->state, media->name);
+        rtsp_response_error(rsp, RTSP_STATUS_METHOD_NOT_VALID_IN_THIS_STATE, NULL);
+        return RTSP_HANDLED;
+    }
+
+    // check if the media implementation supports this method
+    int *impl = (int*)((char*)media + method->impl_offset);
+    if (impl == NULL || *impl == NULL) {
+        report(" ? no implementation for method (%s) in media-control (%s)", method->name, media->name);
+        rtsp_response_error(rsp, RTSP_STATUS_METHOD_NOT_ALLOWED, NULL);
+        return RTSP_HANDLED;
+    }
+    
+    return RTSP_SUCCESS;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // received a request as a server (can answer -> rsp != 0)
