@@ -33,6 +33,25 @@ int box_sys_hello(t_rtsp_media UNUSED *media, intptr_t UNUSED m, t_rtsp_connecti
     return 0;
 }
 
+int box_sys_options(t_rtsp_media UNUSED *media, t_map_set* methods, t_rtsp_connection* rsp)
+{
+    int index = 0;
+    rtsp_response_line(rsp, RTSP_STATUS_OK, "OK");
+    msgprintf(rsp, "Public: ");
+    while (methods->name != NULL)
+    {
+        if (index > 0) msgprintf(rsp, ", ");
+        msgprintf(rsp, methods->name);
+        methods++;
+        index++;
+    }
+    rtsp_eoh(rsp); // for the "Public: " line
+    rtsp_eoh(rsp); // to end the header
+    rtsp_send(rsp);
+  
+    return 0;
+}
+
 int box_sys_set_remote(char* address)
 {
     char buf[200];
@@ -69,5 +88,6 @@ t_rtsp_media box_sys = {
     .name = "",
     .owner = 0,
     .cookie = 0,
-    .hello = (frtspm*)box_sys_hello
+    .hello = (frtspm*)box_sys_hello,
+    .options = (frtspm*)box_sys_options
 };
