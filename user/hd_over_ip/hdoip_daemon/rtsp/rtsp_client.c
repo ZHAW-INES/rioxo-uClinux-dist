@@ -75,7 +75,7 @@ t_rtsp_client* rtsp_client_open(t_node* list, t_rtsp_media *media, char* address
         memcpy(buf, address, strlen(address)+1);
 
         if (!str_split_uri(&uri, buf)) {
-            report("uri error: scheme://server[:port]/name");
+            report("uri error: rtsp://server[:port][/name][/control]");
             ret = RTSP_CLIENT_ERROR;
         }
     }

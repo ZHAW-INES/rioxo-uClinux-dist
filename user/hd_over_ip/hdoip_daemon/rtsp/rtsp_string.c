@@ -86,6 +86,7 @@ bool str_split_uri(t_str_uri* uri, char* s)
         uri->server = NULL;
         uri->port = NULL;
         uri->name = "";
+        uri->control = NULL;
         return true;
     }
     
@@ -93,9 +94,10 @@ bool str_split_uri(t_str_uri* uri, char* s)
     uri->scheme = str_next_token(&s, "%:://;");
     uri->server = str_next_token(&s, "/%0");
     uri->port = str_split_token(uri->server, ":");
-    uri->name = str_next_token(&s, "%0");
+    uri->name = str_next_token(&s, "/%0");
+    uri->control = str_next_token(&s, "%0");
 
-    return (uri->scheme&&uri->server&&uri->name);
+    return (uri->scheme && uri->server && uri->name);
 }
 
 
