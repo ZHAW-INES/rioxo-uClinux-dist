@@ -501,6 +501,11 @@ int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], con
         report(" ? parse request-header error (%d)", n);
         return RTSP_HANDLED;
     }
+    
+#ifdef REPORT_RTSP
+    report("rtsp request of method %s to URI %s (media \"%s\"; control \"%s\")",
+          common->rq.method, common->rq.uri, common->uri.name, common->uri.control != NULL ? common->uri.control : "0");
+#endif
 
     return RTSP_SUCCESS;
 }
