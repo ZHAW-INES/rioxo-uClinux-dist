@@ -61,8 +61,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
         n = rtsp_parse_request(&handle->con, srv_method, &method, &buf, &common);
 
         // request has already been handled (probably because an error occured)
-        if (n == RTSP_HANDLED)
-          continue;
+        if (n == RTSP_HANDLED) continue;
 
         // connection closed...
         if (n) {
@@ -74,7 +73,9 @@ int rtsp_server_thread(t_rtsp_server* handle)
 
         // fail response
         if (!media) {
+            rtsp_ommit_body(&handle->con, 0, common.content_length);
             rtsp_response_error(&handle->con, RTSP_STATUS_DESTINATION_UNREACHABLE, NULL);
+            report(" ? no matching media (%s) found", common.uri.name);
             continue;
         }
 
@@ -85,7 +86,10 @@ int rtsp_server_thread(t_rtsp_server* handle)
         // check if the request is valid (session, state, media-control)
         n = rtsp_media_check_request(method, media, &buf, &handle->con);
         if (n == RTSP_HANDLED)
-          continue;
+        {
+            rtsp_ommit_body(&handle->con, 0, common.content_length);
+            continue;
+        }
         if (n != RTSP_SUCCESS) {
             rtsp_response_error(&handle->con, RTSP_STATUS_INTERNAL_SERVER_ERROR, NULL);
             report (" ? request check failed on method (%s) in media-control (%s)", method->name, media->name);

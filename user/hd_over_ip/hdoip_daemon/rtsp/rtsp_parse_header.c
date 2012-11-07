@@ -340,30 +340,59 @@ int rtsp_parse_usb(char* line, t_rtsp_usb *usb)
     return RTSP_SUCCESS;
 }
 
+int rtsp_ommit_message(t_rtsp_connection* con, int timeout)
+{
+  t_rtsp_header_common header;
+  int n = RTSP_SUCCESS;
+  
+  n = rtsp_parse_header(con, NULL, NULL, &header, timeout);
+  if (header.content_length > 0)
+      n = rtsp_ommit_body(con, timeout, header.content_length);
+  
+  return n;
+}
+
 int rtsp_ommit_header(t_rtsp_connection* con, int timeout)
 {
     int n = RTSP_SUCCESS;
     char *line;
+    size_t read;
 
-    while (!(n = rtsp_receive(con, &line, timeout)) ) {
+    while ((n = rtsp_receive(con, &line, timeout, 0, &read)) == RTSP_SUCCESS) {
         // RTSP Header ends with empty line
-        if (!*line) break;
+        if (*line == '\0') break;
     }
-    // ommit body
 
     return n;
+}
+
+int rtsp_ommit_body(t_rtsp_connection* con, int timeout, size_t length)
+{
+    int n = RTSP_SUCCESS;
+    char *buf;
+    size_t read;
+
+    if (length <= 0)
+        return RTSP_SUCCESS;
+    
+    return rtsp_receive(con, &buf, timeout, length, &read);
 }
 
 int rtsp_parse_header(t_rtsp_connection* con, const t_map_fnc attr[], void* base, t_rtsp_header_common* common, int timeout)
 {
     int n;
     char *line, *attrstr;
+    size_t read;
 
-    if (common) common->session[0] = 0;
-
-    while (!(n = rtsp_receive(con, &line, timeout))) {
+    if (common) {
+        common->session[0] = 0;
+        common->content_type[0] = 0;
+        common->content_length = 0;
+    }
+    
+    while ((n = rtsp_receive(con, &line, timeout, 0, &read)) == RTSP_SUCCESS) {
         // RTSP Header ends with empty line
-        if (!*line) break;
+        if (*line == '\0') break;
 
         if ((attrstr = str_next_token(&line, "%:: ;"))) {
             if (common) {
@@ -375,11 +404,14 @@ int rtsp_parse_header(t_rtsp_connection* con, const t_map_fnc attr[], void* base
                     common->content_length = atoi(line);
                 }
             }
-            n = map_call_fnc(attr, attrstr, line, base);
-            if (n == RTSP_UNKNOWN_HEADER) {
-                report(" ? unknown header: %s", attrstr);
-            } else if (n) {
-                report(" ? parse header error: %s: %s", attrstr, line);
+            if (base && attr)
+            {
+              n = map_call_fnc(attr, attrstr, line, base);
+              if (n == RTSP_UNKNOWN_HEADER) {
+                  report(" ? unknown header: %s", attrstr);
+              } else if (n) {
+                  report(" ? parse header error: %s: %s", attrstr, line);
+              }
             }
         } else {
             report(" ? defect header-line: %s", line);
@@ -401,11 +433,12 @@ int rtsp_parse_response(t_rtsp_connection* con, const t_map_fnc attr[], void* ba
     t_str_response_line rsp;
     int n;
     char* line;
+    size_t read;
 
     rtsp_common_default(common);
-
+    
     // Response Header
-    if ((n = rtsp_receive(con, &line, timeout))) {
+    if ((n = rtsp_receive(con, &line, timeout, 0, &read)) != RTSP_SUCCESS) {
         if(n != RTSP_CLOSE) {
             report("rtsp response receive header failed");
         } else {
@@ -424,13 +457,13 @@ int rtsp_parse_response(t_rtsp_connection* con, const t_map_fnc attr[], void* ba
         con->ecode = atoi(rsp.code);
         con->ereason = rsp.reason;
         report("rtsp error (%s): %s", rsp.code, rsp.reason);
-        rtsp_ommit_header(con, timeout);
+        rtsp_ommit_message(con, timeout);
         return RTSP_RESPONSE_ERROR;
     }
 
     if (strcmp(rsp.version, RTSP_VERSION) != 0) {
         report("unsupported version: %s", rsp.version);
-        rtsp_ommit_header(con, timeout);
+        rtsp_ommit_message(con, timeout);
         return RTSP_VERSION_ERROR;
     }
 
@@ -445,24 +478,25 @@ int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], con
 {
     char* line;
     int n;
+    size_t read;
 
     rtsp_common_default(common);
-
+    
     // receive request line
-    if ((n = rtsp_receive(con, &line, 0))) {
+    if ((n = rtsp_receive(con, &line, 0, 0, &read)) != RTSP_SUCCESS) {
         return n;
     }
     strcpy(common->line, line);
 
     // Request: (METHOD URI VERSION)
     if (!str_split_request_line(&common->rq, common->line)) {
-        rtsp_ommit_header(con, 0);
+        rtsp_ommit_message(con, 0);
         rtsp_response_error(con, RTSP_STATUS_BAD_REQUEST, "Bad Request Line");
         report(" ? unknown request line (%s)", common->line);
         return RTSP_HANDLED;
     }
     if (strcmp(common->rq.version, RTSP_VERSION) != 0) {
-        rtsp_ommit_header(con, 0);
+        rtsp_ommit_message(con, 0);
         rtsp_response_error(con, RTSP_STATUS_RTSP_VERSION_NOT_SUPPORTED, "Version not supported");
         report(" ? mismatching RTSP version (%s)", common->rq.version);
         return RTSP_HANDLED;
@@ -470,7 +504,7 @@ int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], con
 
     // test uri
     if (!str_split_uri(&common->uri, common->rq.uri)) {
-        rtsp_ommit_header(con, 0);
+        rtsp_ommit_message(con, 0);
         rtsp_response_error(con, RTSP_STATUS_NOT_FOUND, NULL);
         report(" ? unknown URI (%s)", common->rq.uri);
         return RTSP_HANDLED;
@@ -479,7 +513,7 @@ int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], con
     // "*" but then uri.server must be empty
     if (strcmp(common->uri.scheme, RTSP_SCHEME) != 0 &&
        (strcmp(common->uri.scheme, "*") != 0 || common->uri.server)) {
-        rtsp_ommit_header(con, 0);
+        rtsp_ommit_message(con, 0);
         rtsp_response_error(con, RTSP_STATUS_BAD_REQUEST, "Bad URI Schema");
         report(" ? mismatching URI schema (%s)", common->uri.scheme);
         return RTSP_HANDLED;
@@ -489,14 +523,14 @@ int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], con
     *method = map_find_set(srv_method, common->rq.method);
 
     if (!*method) {
-        rtsp_ommit_header(con, 0);
+        rtsp_ommit_message(con, 0);
         rtsp_response_error(con, RTSP_STATUS_NOT_IMPLEMENTED, NULL);
         report(" ? unsupported method (%s)", common->rq.method);
         return RTSP_HANDLED;
     }
 
     if ((n = rtsp_parse_header(con, (*method)->rec, req, common, 0))) {
-        rtsp_ommit_header(con, 0);
+        rtsp_ommit_body(con, 0, common->content_length);
         rtsp_response_error(con, RTSP_STATUS_BAD_REQUEST, "Bad Request Header");
         report(" ? parse request-header error (%d)", n);
         return RTSP_HANDLED;

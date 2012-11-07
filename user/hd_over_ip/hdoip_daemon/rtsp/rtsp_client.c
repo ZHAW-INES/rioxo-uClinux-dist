@@ -526,18 +526,19 @@ void* rtsp_client_thread(void* _client)
     int n;
     char* line, *tst;
     t_rtsp_client* client = _client;
+    size_t read;
 
 #ifdef REPORT_RTSP_CLIENT
     report(" + RTSP Client [%d] filter", client->nr);
 #endif
 
-    while ((n = rtsp_receive(&client->con1, &line, 0)) == RTSP_SUCCESS) {
+    while ((n = rtsp_receive(&client->con1, &line, 0, 0, &read)) == RTSP_SUCCESS) {
         tst = line;
         if (!str_starts_with(&tst, RTSP_VERSION)) { // if response
             do {
                 msgprintf(&client->con2, "%s\r\n", line);
                 if (*line == 0) break;
-            } while ((n = rtsp_receive(&client->con1, &line, 0)) == RTSP_SUCCESS);
+            } while ((n = rtsp_receive(&client->con1, &line, 0, 0, &read)) == RTSP_SUCCESS);
             if (n != RTSP_SUCCESS) {
                 report(ERROR "rtsp client filter receive error on request");
                 break;
@@ -550,7 +551,7 @@ void* rtsp_client_thread(void* _client)
             do {
                 msgprintf(&client->con1, "%s\r\n", line);
                 if (*line == 0) break;
-            } while ((n = rtsp_receive(&client->con1, &line, 0)) == RTSP_SUCCESS);
+            } while ((n = rtsp_receive(&client->con1, &line, 0, 0, &read)) == RTSP_SUCCESS);
             if (n != RTSP_SUCCESS) {
                 report("rtsp client filter receive error on response");
                 break;

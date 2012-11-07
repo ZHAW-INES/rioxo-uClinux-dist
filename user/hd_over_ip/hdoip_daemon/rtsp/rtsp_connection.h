@@ -49,7 +49,7 @@ typedef struct {
 }
 
 void rtsp_coninit(t_rtsp_connection* m, int fd, uint32_t addr);
-int rtsp_receive(t_rtsp_connection* con, char** line, int timeout);
+int rtsp_receive(t_rtsp_connection* con, char** line, int timeout, size_t length, size_t* readBytes);
 void rtsp_send(t_rtsp_connection* con);
 void rtsp_write(t_rtsp_connection* con);
 int rtsp_split(t_rtsp_connection* con, t_rtsp_connection* con1, t_rtsp_connection* con2);

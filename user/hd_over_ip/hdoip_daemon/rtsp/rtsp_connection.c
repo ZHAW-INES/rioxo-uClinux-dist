@@ -30,56 +30,40 @@ void rtsp_coninit(t_rtsp_connection* m, int fd, uint32_t addr)
 }
 
 
-bool rtsp_receive_crlf(char** s, char* eol)
+bool rtsp_receive_crlf(char** s, char* eol, size_t length, size_t* readBytes)
 {
     char* p = *s;
-    for (;(p<(eol-1)) && !((p[0]=='\r')&&(p[1]=='\n'));p++);
-    if (p<(eol-1)) {
+    if (readBytes == NULL)
+        return false;
+
+    *readBytes = 0;
+    for (; (length > 0 && *readBytes < length && p < eol) || (length == 0 && p < (eol - 1) && !(p[0] == '\r' && p[1] == '\n')); p++)
+        *readBytes = *readBytes + 1;
+
+    if (length > 0)
+    {
+        *s = p;
+        return (p <= eol && *readBytes >= length);
+    }
+    
+    if (length == 0 && p < (eol - 1)) {
         p[0] = 0;
         p[1] = 0;
         *s = p + 2;
         return true;
     }
+
     *s = eol;
     return false;
-}
-/** Not yet used, only header of protocol is used
- * */
-int rtsp_receive_body(t_rtsp_connection* con, char* buf, size_t length)
-{
-    int i;
-    char* sol = con->in.sol;
-    char* eol = con->in.eol;
-    size_t n = eol - sol;
-
-    if (n > length) {
-        // buffer not empty
-        n = length;
-        con->in.sol += n;
-    } else {
-        // buffer now empty
-        con->in.sol = con->in.buf;
-        con->in.eol = con->in.buf;
-    }
-
-    memcpy(buf, sol, n);
-
-    while (n < length) {
-        if ((i = recv(con->fdr, buf + n, length - n, 0)) <= 0) return i;
-        n += i;
-        buf[n] = 0;
-    }
-
-    return length;
 }
 
 /** Read the received chars in the socket
  *
  * */
-int rtsp_receive(t_rtsp_connection* con, char** line, int timeout)
+int rtsp_receive(t_rtsp_connection* con, char** line, int timeout, size_t length, size_t* readBytes)
 {
     int ret = 0;
-    size_t s;
+    size_t s, readLength;
     char* sol = con->in.sol;
     char* eol = sol;
     fd_set rfds;
@@ -87,7 +71,10 @@ int rtsp_receive(t_rtsp_connection* con, char** line, int timeout)
 
     *line = 0;
 
-    while (!rtsp_receive_crlf(&eol, con->in.eol)) {
+    if (readBytes == NULL)
+        return false;
+
+    while (!rtsp_receive_crlf(&eol, con->in.eol, length, readBytes)) {
         s = (eol - sol);
         memmove(con->in.buf, sol, s);
         sol = con->in.buf;
@@ -108,9 +95,13 @@ int rtsp_receive(t_rtsp_connection* con, char** line, int timeout)
             }
         }
 
+        readLength = RTSP_MSG_MAX_LENGTH - 1 - s;
+        if (length > 0 && length < readLength)
+          readLength = length;
+
         // read is blocking -> so thread can be cancelled at this position
         pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
-        ret = read(con->fdr, eol, RTSP_MSG_MAX_LENGTH - 1 - s);
+        ret = read(con->fdr, eol, readLength);
         pthread_setcancelstate (PTHREAD_CANCEL_DISABLE, NULL);
 
         if (ret == 0) {
@@ -121,6 +112,9 @@ int rtsp_receive(t_rtsp_connection* con, char** line, int timeout)
         con->in.eol = eol + ret;
         if (eol > sol) eol--;
         *(eol + ret) = 0;
+
+        if (length > 0 && *readBytes <= length)
+            length -= *readBytes;
     }
 
     con->in.sol = eol;
