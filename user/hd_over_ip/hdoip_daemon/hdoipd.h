@@ -19,6 +19,7 @@
 #include "debug.h"
 #include "led_drv_instructions.h"
 #include "rtsp_listener.h"
+#include "rtsp_client.h"
 #include "usb.h"
 
 #define CFG_FILE                    "/mnt/config/hdoipd.cfg"
@@ -147,21 +148,21 @@ typedef struct {
 
 // hdcp variables
 typedef struct {
-	uint32_t			enc_state;		//encryption enabled disabled
-    uint32_t            state;			//hdcp statemachine
-    uint32_t			ske_executed;	//session key exchange executed previously?
-    uint32_t 			keys[6];		//ks and riv ready to write to kernel
+    uint32_t enc_state;      //encryption enabled disabled
+    uint32_t state;          //hdcp statemachine
+    uint32_t ske_executed;   //session key exchange executed previously?
+    uint32_t keys[6];        //ks and riv ready to write to kernel
     //the secret values from flash
-	char				certrx[1046];	//public certificate
-	char				p[129];			//private key
-	char				q[129];			//private key
-	char				dp[129];		//private key
-	char				dq[129];		//private key
-	char				qInv[129];		//private key
-	char				lc128[33];		//secret global constant
-	char 			    ks[33];			//session key
-	char 			    ks_x_lc128[33];	//session key
-	char 				riv[17];		//random number to session key
+    char     certrx[1046];   //public certificate
+    char     p[129];         //private key
+    char     q[129];         //private key
+    char     dp[129];        //private key
+    char     dq[129];        //private key
+    char     qInv[129];      //private key
+    char     lc128[33];      //secret global constant
+    char     ks[33];         //session key
+    char     ks_x_lc128[33]; //session key
+    char     riv[17];        //random number to session key
 } t_hdcp;
 
 typedef struct {
@@ -186,18 +187,18 @@ typedef struct {
 
     void*               canvas;         // pointer to picture
     t_rtsp_listener     listener;       // RTSP listener
-    t_node*             client;         // list of all RTSP clients
+    t_rtsp_client*      client;         // RTSP client
     t_hdoip_eth         local;          // local mac, ip, video port and audio port
     int                 osd_timeout;    // time till osd will be deactivate (in seconds)
-    bool                ethernet_init;  // if ethernet is or was connected 
+    bool                ethernet_init;  // if ethernet is or was connected
     uint64_t            tick;           // counts the EVENT_TICKS, UNUSED!
     int                 eth_alive;      // amount of ticks (EVENT_TICK) till rtsp alive packet is sent
     int                 eth_timeout;    // amount of ticks till connection timeout is detected
 
     bool                auto_stream;    // flag if device should do auto stream after boot
-    t_hdcp 				hdcp;
+    t_hdcp              hdcp;
     t_alive_check       amx;            // AMX control releated structure
-    t_alive_check		alive_check;    // structure to test if server is running
+    t_alive_check       alive_check;    // structure to test if server is running
     t_usb_devices       usb_devices;    // list of connected usb devices
     bool                dhcp;           // flag if DHCP client is used
 

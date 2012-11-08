@@ -17,6 +17,7 @@
 #include "bstmap.h"
 #include "linked_list.h"
 #include "rtsp_media.h"
+#include "rtsp_server.h"
 
 #define RTSP_BACKLOG    (20)
 
@@ -41,14 +42,14 @@ int rtsp_listener_close(t_rtsp_listener* handle);
 
 // active media in server
 int rtsp_listener_add_media(t_rtsp_listener* handle, t_rtsp_media* media);
-int rtsp_listener_add_kill(t_rtsp_listener* handle, t_rtsp_media* media);
+int rtsp_listener_add_kill(t_rtsp_listener* handle, t_rtsp_server* server);
 t_rtsp_media* rtsp_listener_get_media(t_rtsp_listener* handle, char* name);
 void rtsp_listener_free_media(t_rtsp_listener* handle);
 
 // session management
-int rtsp_listener_add_session(t_rtsp_listener* handle, t_rtsp_media* media);
-int rtsp_listener_remove_session(t_rtsp_listener* handle, t_rtsp_media* media);
-t_rtsp_media* rtsp_listener_get_session(t_rtsp_listener* handle, char* id);
+int rtsp_listener_add_session(t_rtsp_listener* handle, char* id, void* owner);
+int rtsp_listener_remove_session(t_rtsp_listener* handle, char* id);
+void* rtsp_listener_get_session(t_rtsp_listener* handle, char* id);
 void rtsp_listener_create_sessionid(t_rtsp_listener* handle, char* id);
 
 // S->C communication

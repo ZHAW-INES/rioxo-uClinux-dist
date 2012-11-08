@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <netinet/in.h>
+#include <net/if.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include "rtsp_net.h"

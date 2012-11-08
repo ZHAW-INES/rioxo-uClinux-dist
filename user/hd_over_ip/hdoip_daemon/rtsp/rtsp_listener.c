@@ -36,8 +36,7 @@ static void listener_unlock(t_rtsp_listener* handle, const char* s MAYBE_UNUSED)
     pthread_mutex_unlock(&handle->mutex);
 }
 
-
-void* rtsp_listener_run_server(void *_server)
+void* rtsp_listener_run_server(t_rtsp_server* _server)
 {
 	t_rtsp_server *server = _server;
 	t_rtsp_listener *listener = server->owner;
@@ -47,17 +46,17 @@ void* rtsp_listener_run_server(void *_server)
     // remove from list & delete server
     lock("rtsp_listener_run_server");
 		listener_lock(listener, "rtsp_listener_run_server");
-			list_remove(server->idx);
+            list_remove(server->idx);
 			if (server->con.fdr != -1) {
-				shutdown(server->con.fdr, SHUT_RDWR);
+	            shutdown(server->con.fdr, SHUT_RDWR);
                 close(server->con.fdr);
 				server->con.fdr = -1;
 			}
 
-			if(server->media) {
-				bstmap_removep(&listener->sessions, server->media->sessionid);
-				rmsr_teardown(server->media, 0);
-			}
+            if (server->sessionid != NULL && strlen(server->sessionid) > 0) {
+                rtsp_listener_remove_session(listener, server->sessionid);
+                memset(server->sessionid, 0, sizeof(server->sessionid));
+            }
 
 			free(server);
 		listener_unlock(listener, "rtsp_listener_run_server");
@@ -182,8 +181,8 @@ void* rtsp_listener_thread(void *_handle)
 int rtsp_listener_start(t_rtsp_listener* handle, int port)
 {
     static int nr = 1;
-    handle->media = 0;
-    handle->sessions = 0;
+    handle->media = NULL;
+    handle->sessions = NULL;
     handle->port = port;
     handle->run = true;
     handle->cons = list_create();
@@ -227,15 +226,18 @@ int rtsp_listener_add_media(t_rtsp_listener* handle, t_rtsp_media* media)
 
     listener_lock(handle, "rtsp_listener_add_media");
         bstmap_setp(&handle->media, media->name, media);
-        report(NEW "RTSP Media add \"%s\"", media->name);
+        report(NEW "RTSP Listener [%d] add \"%s\"", handle->nr, media->name);
     listener_unlock(handle, "rtsp_listener_add_media");
     return RTSP_SUCCESS;
 }
 
-int rtsp_listener_add_kill(t_rtsp_listener* handle, t_rtsp_media* media)
+int rtsp_listener_add_kill(t_rtsp_listener* handle, t_rtsp_server* server)
 {
-    queue_put(handle->kills, media);
-    report(DEL "RTSP Media add %s:%s to kill list", media->name, media->sessionid);
+    if (handle == NULL || server == NULL)
+        return;
+
+    queue_put(handle->kills, server);
+    report(DEL "RTSP Listener [%d] add server (%d) to kill list", handle->nr, server->nr);
     return RTSP_SUCCESS;
 }
 
@@ -250,35 +252,35 @@ t_rtsp_media* rtsp_listener_get_media(t_rtsp_listener* handle, char* name)
 
 void rtsp_listener_free_media(t_rtsp_listener* handle)
 {
-    report(INFO "rtsp_listener_free_media()");
     listener_lock(handle, "rtsp_listener_free_media");
         bstmap_freep(&handle->media);
     listener_unlock(handle, "rtsp_listener_free_media");
 }
 
-int rtsp_listener_add_session(t_rtsp_listener* handle, t_rtsp_media* media)
+int rtsp_listener_add_session(t_rtsp_listener* handle, char* id, void* owner)
 {
     listener_lock(handle, "rtsp_listener_add_session");
-        bstmap_setp(&handle->sessions, media->sessionid, media);
-        report(NEW "RTSP Media add session %s:%s", media->name, media->sessionid);
+        bstmap_setp(&handle->sessions, id, owner);
+        report(NEW "RTSP Listener [%d] add session %s", handle->nr, id);
     listener_unlock(handle, "rtsp_listener_add_session");
     return RTSP_SUCCESS;
 }
 
-int rtsp_listener_remove_session(t_rtsp_listener* handle, t_rtsp_media* media)
+/**
+ * lock must already be held!!!
+ */
+int rtsp_listener_remove_session(t_rtsp_listener* handle, char* id)
 {
-    listener_lock(handle, "rtsp_listener_remove_session");
-        bstmap_removep(&handle->sessions, media->sessionid);
-        report(DEL "RTSP Media remove session(1) %s:%s", media->name, media->sessionid);
-    listener_unlock(handle, "rtsp_listener_remove_session");
+    bstmap_removep(&handle->sessions, id);
+    report(DEL "RTSP Listener [%d] remove session %s", handle->nr, id);
     return RTSP_SUCCESS;
 }
 
-t_rtsp_media* rtsp_listener_get_session(t_rtsp_listener* handle, char* id)
+void* rtsp_listener_get_session(t_rtsp_listener* handle, char* id)
 {
-    t_rtsp_media* ret = 0;
+    void* ret = 0;
     listener_lock(handle, "rtsp_listener_get_session");
-        ret = (t_rtsp_media*)bstmap_get(handle->sessions, id);
+        ret = (void*)bstmap_get(handle->sessions, id);
     listener_unlock(handle, "rtsp_listener_get_session");
     return ret;
 }
@@ -290,15 +292,27 @@ void rtsp_listener_create_sessionid(t_rtsp_listener* handle, char* id)
     } while (rtsp_listener_get_session(handle, id));
 }
 
+typedef void ftra(t_rtsp_server* media);
 
-typedef void ftra(t_rtsp_media* media);
 void rtsp_listener_traverse(char UNUSED *key, char* value, void* f)
 {
-    ((ftra*)f)((t_rtsp_media*)value);
+  t_rtsp_server* server = NULL;
+  if (value == NULL || f == NULL)
+    return;
+
+  server = (t_rtsp_server*)value;
+  ((ftra*)f)(server);
 }
-int rtsp_listener_cond(char UNUSED *key, char* value, void* d)
+
+void rtsp_listener_traverse_remove(char UNUSED *key, char* value, void* f)
 {
-    return ((t_rtsp_media*)value)->owner == d;
+  t_rtsp_server* server = NULL;
+  if (value == NULL || f == NULL)
+    return;
+
+  server = (t_rtsp_server*)value;
+  ((ftra*)f)(server);
+  memset(server->sessionid, 0, sizeof(server->sessionid));
 }
 
 struct t_listener_event {
@@ -309,31 +323,32 @@ struct t_listener_event {
 void rtsp_listener_traverse_event(char UNUSED *key, char* value, void* _cookie)
 {
 	struct t_listener_event *cookie = _cookie;
-	t_rtsp_media* media = (t_rtsp_media*)value;
-	t_rtsp_server* server = media->creator;
+	t_rtsp_server* server = (t_rtsp_server*)value;
 
 	if (server && server->kill) {
-	    rtsp_listener_add_kill(cookie->handle, media);
+	    rtsp_listener_add_kill(cookie->handle, server);
 	} else {
-	    rtsp_media_event(media, cookie->event);
+        rtsp_server_event(server, cookie->event);
 	}
 }
 
 void rtsp_listener_event(t_rtsp_listener* handle, uint32_t event)
 {
-	struct t_listener_event le;
-    t_rtsp_media* media;
+    struct t_listener_event le;
+    t_rtsp_server* server;
     listener_lock(handle, "rtsp_listener_event");
-    	le.event = event;
-    	le.handle = handle;
+        le.event = event;
+        le.handle = handle;
         bstmap_traverse(handle->sessions, rtsp_listener_traverse_event, &le);
         // event may add medias to the kill list
-        while ((media = queue_get(handle->kills))) {
-            // when we close the sessions, we also must remove it from the listener
-            if (bstmap_removep(&handle->sessions, media->sessionid)) {
-                report(DEL "RTSP Media remove session(2) %s:%s", media->name, media->sessionid);
-                rtsp_server_close(media);
+        while ((server = queue_get(handle->kills))) {
+            if (server->sessionid != NULL && strlen(server->sessionid) > 0)
+            {
+                rtsp_listener_remove_session(handle, server->sessionid);
+                memset(server->sessionid, 0, sizeof(server->sessionid));
             }
+
+            rtsp_server_close(server);
         }
     listener_unlock(handle, "rtsp_listener_event");
 }
@@ -342,7 +357,7 @@ void rtsp_listener_close_all(t_rtsp_listener* handle)
 {
     report(INFO "rtsp_listener_close_all()");
     listener_lock(handle, "rtsp_listener_teardown_all");
-        bstmap_traverse_freep(&handle->sessions, rtsp_listener_traverse, rtsp_server_close);
+        bstmap_traverse_freep(&handle->sessions, rtsp_listener_traverse_remove, rtsp_server_close);
     listener_unlock(handle, "rtsp_listener_teardown_all");
 }
 
@@ -356,7 +371,7 @@ void rtsp_listener_teardown_all(t_rtsp_listener* handle)
 {
     report(INFO "rtsp_listener_teardown_all()");
     listener_lock(handle, "rtsp_listener_teardown_all");
-        bstmap_traverse_freep(&handle->sessions, rtsp_listener_traverse, rtsp_server_teardown);
+        bstmap_traverse_freep(&handle->sessions, rtsp_listener_traverse_remove, rtsp_server_teardown);
     listener_unlock(handle, "rtsp_listener_teardown_all");
 }
 

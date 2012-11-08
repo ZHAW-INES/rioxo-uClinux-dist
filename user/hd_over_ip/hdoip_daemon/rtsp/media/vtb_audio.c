@@ -83,7 +83,7 @@ int vtb_audio_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
     m->transport.server_port = PORT_RANGE(hdoipd.local.aud_port, hdoipd.local.aud_port);
     m->transport.multicast = get_multicast_enable();
 
-    rtsp_response_setup(rsp, &m->transport, media->sessionid, &m->hdcp);
+    rtsp_response_setup(rsp, &m->transport, media->sessionid, media->name, &m->hdcp);
 
     REPORT_RTX("TX", hdoipd.local, "->", cookie->remote, aud);
 
@@ -275,15 +275,15 @@ int vtb_audio_event(t_rtsp_media *media, uint32_t event)
         case EVENT_AUDIO_IN0_ON:
             if (rtsp_media_splaying(media)) {
                 vtb_audio_pause(media);
-                rtsp_server_update(media, EVENT_AUDIO_IN0_OFF);
+                rtsp_server_update_media(media, EVENT_AUDIO_IN0_OFF);
             }
-            rtsp_server_update(media, EVENT_AUDIO_IN0_ON);
+            rtsp_server_update_media(media, EVENT_AUDIO_IN0_ON);
             return RTSP_PAUSE;
         break;
         case EVENT_AUDIO_IN0_OFF:
             if (rtsp_media_splaying(media)) {
-                rtsp_server_update(media, EVENT_AUDIO_IN0_OFF);
-                rtsp_listener_add_kill(&hdoipd.listener, media);
+                rtsp_server_update_media(media, EVENT_AUDIO_IN0_OFF);
+                rtsp_listener_add_kill(&hdoipd.listener, media->creator);
             }
         break;
         case EVENT_TICK:
@@ -293,7 +293,7 @@ int vtb_audio_event(t_rtsp_media *media, uint32_t event)
                 cookie->alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
        //         if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
-                rtsp_server_update(media, EVENT_TICK);
+                rtsp_server_update_media(media, EVENT_TICK);
        //         }
             }
 
@@ -311,7 +311,7 @@ int vtb_audio_event(t_rtsp_media *media, uint32_t event)
                 // server cannot kill itself -> add to kill list
                 // (will be executed after all events are processed)
                 cookie->timeout = 0;
-                rtsp_listener_add_kill(&hdoipd.listener, media);
+                rtsp_listener_add_kill(&hdoipd.listener, media->creator);
             }
         break;
     }

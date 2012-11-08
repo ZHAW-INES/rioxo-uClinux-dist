@@ -96,7 +96,7 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
     m->transport.server_port = PORT_RANGE(hdoipd.local.vid_port, hdoipd.local.vid_port);
     m->transport.multicast = get_multicast_enable();
 
-    rtsp_response_setup(rsp, &m->transport, media->sessionid, &m->hdcp); //respond message to setup message
+    rtsp_response_setup(rsp, &m->transport, media->sessionid, media->name, &m->hdcp); //respond message to setup message
 
     REPORT_RTX("TX", hdoipd.local, "->", cookie->remote, vid);
 
@@ -319,16 +319,16 @@ int vtb_video_event(t_rtsp_media *media, uint32_t event)
         	report(INFO "EVENT VIDEO IN ON");
             if (rtsp_media_splaying(media)) {
                 vtb_video_pause(media);
-                rtsp_server_update(media, EVENT_VIDEO_IN_OFF);
+                rtsp_server_update_media(media, EVENT_VIDEO_IN_OFF);
             }
-            rtsp_server_update(media, EVENT_VIDEO_IN_ON);
+            rtsp_server_update_media(media, EVENT_VIDEO_IN_ON);
             return RTSP_PAUSE;
         break;
         case EVENT_VIDEO_IN_OFF:
         	report(INFO "EVENT VIDEO IN OFF");
             if (rtsp_media_splaying(media)) {
-                rtsp_server_update(media, EVENT_VIDEO_IN_OFF);
-                rtsp_listener_add_kill(&hdoipd.listener, media);
+                rtsp_server_update_media(media, EVENT_VIDEO_IN_OFF);
+                rtsp_listener_add_kill(&hdoipd.listener, media->creator);
                 hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
                 osd_permanent(true);
                 osd_printf("vtb.video no input...\n");
@@ -342,7 +342,7 @@ int vtb_video_event(t_rtsp_media *media, uint32_t event)
                 cookie->alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
           //      if (hdoipd_tstate(VTB_VIDEO)) { // only if video stream = active
-                rtsp_server_update(media, EVENT_TICK);
+                rtsp_server_update_media(media, EVENT_TICK);
           //      }
             }
 
@@ -361,7 +361,7 @@ int vtb_video_event(t_rtsp_media *media, uint32_t event)
                 // server cannot kill itself -> add to kill list
                 // (will be executed after all events are processed)
                 cookie->timeout = 0;
-                rtsp_listener_add_kill(&hdoipd.listener, media);
+                rtsp_listener_add_kill(&hdoipd.listener, media->creator);
                 hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
                 osd_permanent(true);
                 osd_printf("vtb.video connection lost...\n");

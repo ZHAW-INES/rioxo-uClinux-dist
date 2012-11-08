@@ -11,6 +11,8 @@
 
 #include <pthread.h>
 #include <stdlib.h>
+#include <time.h>
+#include <sys/ioctl.h>
 
 #include <arpa/inet.h>
 #include <net/if.h>
@@ -201,7 +203,9 @@ bool hdoipd_goto_ready()
         break;
         case HOID_VRB:
             // shut down VRB
-            rtsp_client_deactivate(hdoipd.client);
+            rtsp_client_teardown(hdoipd.client, NULL);
+            rtsp_client_close(hdoipd.client, true);
+            hdoipd.client = NULL;
             rtsp_listener_free_media(&hdoipd.listener);
             hdoipd_off(true);
         break;
@@ -229,7 +233,8 @@ void hdoipd_force_ready()
 {
     switch (hdoipd.state) {
         case HOID_VRB:
-            rtsp_client_force_close(hdoipd.client);
+            rtsp_client_close(hdoipd.client, true);
+            hdoipd.client = NULL;
         break;
         case HOID_VTB:
             rtsp_listener_close_all(&hdoipd.listener);
@@ -318,9 +323,8 @@ int hdoipd_goto_vrb()
  */
 int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
 {
-    t_rtsp_client* client;
     int ret;
-    char tmp[200];
+    char *uri;
 
     report(CHANGE "vrb_setup(%s)", media->name);
 
@@ -335,24 +339,38 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
         return -1;
     }
 
-    // open media (currently all source defined by "remote-uri" + media->name)
-    sprintf(tmp, "%s/%s", reg_get("remote-uri"), media->name);
-    client = rtsp_client_open(hdoipd.client, media, tmp);
+    uri = reg_get("remote-uri");
+
+    // we can't always make sure that hdoipd.client is set to NULL
+    // after freeing it so we instead free it here.
+    if (hdoipd.client != NULL && !hdoipd.client->open)
+    {
+        report(" ? freeing old RTSP Client [%d]", hdoipd.client->nr);
+        free(hdoipd.client);
+        hdoipd.client = NULL;
+    }
+
+    // don't create client if it's already running
+    if (hdoipd.client == NULL)
+        hdoipd.client = rtsp_client_open(uri, media);
+    else
+        rtsp_client_add_media(hdoipd.client, media);
 
     // try to start only when not usb
-    if (strcmp(media->name, "usb")) {
-        if (client){
+    if (strcmp(media->name, "usb") != 0) {
+        if (hdoipd.client) {
             // try to setup a connection
             ret = rtsp_media_setup(media);
             if (ret == RTSP_SUCCESS) {
                 rtsp_media_play(media);
             } else {
-                report(ERROR "hdoipd_vrb_setup() rtsp_media_setup failed");
-                rtsp_client_close(client);
+                report(ERROR "hdoipd_vrb_setup() rtsp_media_setup failed (%d)", ret);
+                rtsp_client_close(hdoipd.client, true);
+                hdoipd.client = NULL;
             }
         } else {
             report(ERROR "hdoipd_vrb_setup() rtsp_client_open failed");
-            osd_printf("VTB(%s) not found. Waiting for %s\n", media->name, tmp);
+            osd_printf("VTB(%s) not found. Waiting for %s\n", media->name, uri);
         }
     }
 
@@ -402,7 +420,7 @@ int hdoipd_start_vrb_cb(t_rtsp_media* media, void* d)
     uint32_t dev_id;
 
     // USB
-    if (!strcmp(media->name, "usb")) {
+    if (strcmp(media->name, "usb") == 0) {
     	hdoipd_vrb_setup(media, d);
         return 0;
     }
@@ -416,11 +434,11 @@ int hdoipd_start_vrb_cb(t_rtsp_media* media, void* d)
     }
 
     if (rtsp_media_sinit(media)) {
-        if(hdoipd_vrb_setup(media, d) == -1) {
+        if (hdoipd_vrb_setup(media, d) == -1) {
             ret = 1;
         }
     } else if (rtsp_media_sready(media)) {
-        if(hdoipd_vrb_play(media, d) == -1) {
+        if (hdoipd_vrb_play(media, d) == -1) {
             ret = 1;
         }
     } else {
@@ -701,7 +719,7 @@ void hdoipd_event(uint32_t event)
                 // enable HDCP on AD9889 for loopback
                 hoi_drv_hdcp_adv9889en();
             }
-            if (!hdoipd_rsc(RSC_VIDEO_IN)) { 
+            if (!hdoipd_rsc(RSC_VIDEO_IN)) {
                 hdoipd_set_rsc(RSC_VIDEO_IN);
                 hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
                 hdoipd_set_rsc(RSC_AUDIO0_IN);
@@ -895,12 +913,12 @@ void hdoipd_hello()
 
     s = reg_get("hello-uri");
     if (s) {
-        client = rtsp_client_open(hdoipd.client, 0, s);
+        client = rtsp_client_open(s, NULL);
 
         if (client) {
             report(INFO "say hello to %s", s);
             rtsp_client_hello(client);
-            rtsp_client_close(client);
+            rtsp_client_close(client, true);
         } else {
             report(ERROR "could not say hello to %s", s);
         }
@@ -947,7 +965,7 @@ bool hdoipd_init(int drv)
     hdoipd.rsc_state = 0;
     hdoipd.vtb_state = VTB_OFF;
     hdoipd.vrb_state = VRB_OFF;
-    hdoipd.client = list_create();
+    hdoipd.client = NULL;
     hdoipd.auto_stream = false;
     hdoipd.hdcp.ske_executed = 0;
     hdoipd.hdcp.enc_state = 0;
@@ -961,7 +979,7 @@ bool hdoipd_init(int drv)
 
     hdoipd_register_task();
 
-    // if reset button was not pressed longer than 5sec, load config 
+    // if reset button was not pressed longer than 5sec, load config
     hoi_drv_get_reset_to_default(&reset_to_default);
     hoi_cfg_read(CFG_FILE, (bool) reset_to_default);
 
@@ -979,14 +997,14 @@ bool hdoipd_init(int drv)
     hoi_drv_get_device_id(&dev_id);
 
     switch (dev_id) {
-        case BDT_ID_HDMI_BOARD: hdoipd.drivers = DRV_ADV9889 | DRV_ADV7441;   
+        case BDT_ID_HDMI_BOARD: hdoipd.drivers = DRV_ADV9889 | DRV_ADV7441;
                                 break;
-        case BDT_ID_SDI8_BOARD: hdoipd.drivers = DRV_GS2971  | DRV_GS2972;    
+        case BDT_ID_SDI8_BOARD: hdoipd.drivers = DRV_GS2971  | DRV_GS2972;
                                 break;
         default:                report("Video card detection failed");
     }
 
-    // activate red LED on used video-board connectors 
+    // activate red LED on used video-board connectors
     s = reg_get("mode-start");
     if (strcmp(s, "vtb") == 0) {
         hoi_drv_set_led_status(CONFIGURE_VTB);
@@ -1025,7 +1043,7 @@ bool hdoipd_init(int drv)
             unlock("hdoipd_init");
             return false;
         }
- 
+
         if (!aud_rx) {
             report("malloc(AUD_RX_SIZE) failed");
             unlock("hdoipd_init");

@@ -304,7 +304,7 @@ int vrb_audio_dosetup(t_rtsp_media *media, void *m UNUSED, void *rsp UNUSED)
     port = reg_get_int("audio-port");
     transport.client_port = PORT_RANGE(htons(port), htons(port+1));
 
-    return rtsp_client_setup(client, &transport, 0, &hdcp);
+    return rtsp_client_setup(client, media, &transport, NULL, &hdcp);
 }
 
 int vrb_audio_doplay(t_rtsp_media *media, void *m UNUSED, void *rsp UNUSED)
@@ -315,7 +315,7 @@ int vrb_audio_doplay(t_rtsp_media *media, void *m UNUSED, void *rsp UNUSED)
 
     if (!client) return RTSP_NULL_POINTER;
 
-    return rtsp_client_play(client, 0);
+    return rtsp_client_play(client, NULL, media->name);
 }
 
 int vrb_audio_event(t_rtsp_media *media, uint32_t event)
@@ -330,7 +330,7 @@ int vrb_audio_event(t_rtsp_media *media, uint32_t event)
                 vrb.alive_ping = TICK_SEND_ALIVE;
                 // send tick we are alive (until something like rtcp is used)
          //       if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
-                rtsp_client_update(client, EVENT_TICK);
+                rtsp_client_update(client, EVENT_TICK, media->name);
          //       }
             }
             if (vrb.timeout <= TICK_TIMEOUT) {

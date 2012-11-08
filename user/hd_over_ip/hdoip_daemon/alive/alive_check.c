@@ -312,7 +312,6 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
                     add_client_to_start_list(client_ip);
                     multicast_add_edid((t_edid *)edid_table, client_ip);
                 } else { // unicast
-
                     // only handle hello from remote uri
                     sprintf(remote_uri, "%s", reg_get("remote-uri"));
 
@@ -402,13 +401,13 @@ int alive_check_response_vrb_alive(char *client_ip)
 
     if (client_ip) {
         sprintf(uri, "%s://%s",RTSP_SCHEME, client_ip);
-        client = rtsp_client_open(hdoipd.client, 0, uri);
+        client = rtsp_client_open(uri, NULL);
         if (client) {
 #ifdef REPORT_ALIVE_HELLO
             report(INFO "alive check: say hello to %s", uri);
 #endif
             rtsp_client_hello(client);
-            rtsp_client_close(client);
+            rtsp_client_close(client, true);
             return ALIVE_CHECK_SUCCESS;
         } else {
             report(ERROR "alive check: could not say hello to %s", uri);

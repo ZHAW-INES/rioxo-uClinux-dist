@@ -174,12 +174,14 @@ void rtsp_response_error(t_rtsp_connection* msg, int code, char* reason)
 /** First line of an RTSP request message. RTSP_VERSION is last parameter.
  *  In a response message, RTSP_VERSION is the first parameter
  * */
-void rtsp_request_line(t_rtsp_connection* msg, char* method, char* uri)
+void rtsp_request_line(t_rtsp_connection* msg, char* method, char* uri, char* media)
 {
-    msgprintf(msg, "%s %s %s\r\n",
+    msgprintf(msg, "%s %s",
         method,
-        uri,
-        RTSP_VERSION);
+        uri);
+    if (media != NULL)
+      msgprintf(msg, "/%s", media);
+    msgprintf(msg, " %s\r\n", RTSP_VERSION);
     rtsp_request_cseq(msg, msg->sequence);
 }
 
@@ -214,10 +216,28 @@ void rtsp_event(t_rtsp_connection* msg, uint32_t event)
 void rtsp_header_transport(t_rtsp_connection* msg, t_rtsp_transport* t)
 {
     msgprintf(msg, "Transport: RTP/AVP;%s;", rtsp_str_multicast(t->multicast));
-    if (t->port) msgprintf(msg, "port=%d-%d;", PORT_RANGE_START(t->port), PORT_RANGE_STOP(t->port));
-    if (t->client_port) msgprintf(msg, "client_port=%d-%d;", ntohs(PORT_RANGE_START(t->client_port)), ntohs(PORT_RANGE_STOP(t->client_port)));
-    if (t->server_port) msgprintf(msg, "server_port=%d-%d;", ntohs(PORT_RANGE_START(t->server_port)), ntohs(PORT_RANGE_STOP(t->server_port)));
-    msgprintf(msg, "destination=%s;", reg_get("multicast_group"));
+    if (t->port) {
+        msgprintf(msg, "port=%d-%d;", PORT_RANGE_START(t->port), PORT_RANGE_STOP(t->port));
+    }
+    if (t->client_port) {
+        msgprintf(msg, "client_port=%d-%d;", ntohs(PORT_RANGE_START(t->client_port)), ntohs(PORT_RANGE_STOP(t->client_port)));
+    }
+    if (t->server_port) {
+        msgprintf(msg, "server_port=%d-%d;", ntohs(PORT_RANGE_START(t->server_port)), ntohs(PORT_RANGE_STOP(t->server_port)));
+    }
+
+    msgprintf(msg, "destination=");
+    if (t->multicast) {
+        msgprintf(msg, (char*)reg_get("multicast_group"));
+    }
+    else if (reg_test("system-dhcp", "true")) {
+        msgprintf(msg, (char*)reg_get("system-hostname"));
+    }
+    else {
+        msgprintf(msg, (char*)reg_get("system-ip"));
+    }
+    msgprintf(msg, ";");
+
     msgprintf(msg, "mode=\"PLAY\"\r\n");
 }
 
@@ -300,9 +320,9 @@ void rtsp_header_rtp_format(t_rtsp_connection* msg, t_rtsp_rtp_format* p)
 }
 /** Create message to initiate setup
  * */
-void rtsp_request_setup(t_rtsp_connection* msg, char* uri, t_rtsp_transport* transport, t_rtsp_edid *edid, t_rtsp_hdcp *hdcp)
+void rtsp_request_setup(t_rtsp_connection* msg, char* uri, char* media, t_rtsp_transport* transport, t_rtsp_edid *edid, t_rtsp_hdcp *hdcp)
 {
-    rtsp_request_line(msg, "SETUP", uri);
+    rtsp_request_line(msg, "SETUP", uri, media);
     rtsp_header_transport(msg, transport);
     if (edid) rtsp_header_edid(msg, edid);
     rtsp_header_hdcp(msg, hdcp); //input hdcp info //if hdcp
@@ -311,7 +331,7 @@ void rtsp_request_setup(t_rtsp_connection* msg, char* uri, t_rtsp_transport* tra
 }
 /** Respond to the setup message. Send back the adapted values.
  * */
-void rtsp_response_setup(t_rtsp_connection* msg, t_rtsp_transport* transport, char* session, t_rtsp_hdcp *hdcp)
+void rtsp_response_setup(t_rtsp_connection* msg, t_rtsp_transport* transport, char* session, char* media, t_rtsp_hdcp *hdcp)
 {
     rtsp_response_line(msg, RTSP_STATUS_OK, "OK");
     rtsp_header_session(msg, session);
@@ -323,9 +343,9 @@ void rtsp_response_setup(t_rtsp_connection* msg, t_rtsp_transport* transport, ch
 
 /** Create a HDCP message for session key exchange
  * */
-void rtsp_request_hdcp(t_rtsp_connection* msg, char* session, char* uri, char* id, char* content)
+void rtsp_request_hdcp(t_rtsp_connection* msg, char* uri, char* session, char* media, char* id, char* content)
 {
-    rtsp_request_line(msg, "HDCP", uri);
+    rtsp_request_line(msg, "HDCP", uri, media);
     rtsp_header_session(msg, session);
     msgprintf(msg, "ID: %s\r\n", id);
     msgprintf(msg, "Content: %s\r\n", content);
@@ -334,9 +354,9 @@ void rtsp_request_hdcp(t_rtsp_connection* msg, char* session, char* uri, char* i
 
 }
 
-void rtsp_request_play(t_rtsp_connection* msg, char* uri, char* session, t_rtsp_rtp_format* fmt)
+void rtsp_request_play(t_rtsp_connection* msg, char* uri, char* session, char* media, t_rtsp_rtp_format* fmt)
 {
-    rtsp_request_line(msg, "PLAY", uri);
+    rtsp_request_line(msg, "PLAY", uri, media);
     rtsp_header_session(msg, session);
     rtsp_header_rtp_format(msg, fmt);
     rtsp_eoh(msg);
@@ -344,17 +364,17 @@ void rtsp_request_play(t_rtsp_connection* msg, char* uri, char* session, t_rtsp_
 
 }
 
-void rtsp_request_teardown(t_rtsp_connection* msg, char* uri, char* session)
+void rtsp_request_teardown(t_rtsp_connection* msg, char* uri, char* session, char* media)
 {
-    rtsp_request_line(msg, "TEARDOWN", uri);
+    rtsp_request_line(msg, "TEARDOWN", uri, media);
     rtsp_header_session(msg, session);
     rtsp_eoh(msg);
     rtsp_send(msg);
 }
 
-void rtsp_request_update(t_rtsp_connection* msg, char* uri, char* session, uint32_t event, t_rtsp_rtp_format* fmt)
+void rtsp_request_update(t_rtsp_connection* msg, char* uri, char* session, char* media, uint32_t event, t_rtsp_rtp_format* fmt)
 {
-    rtsp_request_line(msg, "UPDATE", uri);
+    rtsp_request_line(msg, "UPDATE", uri, media);
     rtsp_header_session(msg, session);
     rtsp_event(msg, event);
     rtsp_header_rtp_format(msg, fmt);
@@ -362,9 +382,9 @@ void rtsp_request_update(t_rtsp_connection* msg, char* uri, char* session, uint3
     rtsp_send(msg);
 }
 
-void rtsp_request_pause(t_rtsp_connection* msg, char* uri, char* session)
+void rtsp_request_pause(t_rtsp_connection* msg, char* uri, char* session, char* media)
 {
-    rtsp_request_line(msg, "PAUSE", uri);
+    rtsp_request_line(msg, "PAUSE", uri, media);
     rtsp_header_session(msg, session);
     rtsp_eoh(msg);
     rtsp_send(msg);
@@ -380,7 +400,7 @@ void rtsp_response_pause(t_rtsp_connection* msg, char* session)
 
 void rtsp_request_hello(t_rtsp_connection* msg, char* uri)
 {
-    rtsp_request_line(msg, "HELLO", uri);
+    rtsp_request_line(msg, "HELLO", uri, NULL);
     rtsp_eoh(msg);
     rtsp_send(msg);
 }
@@ -419,7 +439,7 @@ void rtsp_response_hdcp(t_rtsp_connection* msg, char* session, char* id, char* c
 
 void rtsp_request_usb_setup(t_rtsp_connection* msg, char* uri, t_rtsp_transport* transport)
 {
-    rtsp_request_line(msg, "SETUP", uri);
+    rtsp_request_line(msg, "SETUP", uri, "usb");
     rtsp_header_transport_usb(msg, transport);
     rtsp_eoh(msg);
     rtsp_send(msg);
@@ -427,7 +447,7 @@ void rtsp_request_usb_setup(t_rtsp_connection* msg, char* uri, t_rtsp_transport*
 
 void rtsp_request_usb_play(t_rtsp_connection* msg, char* uri, char* session, char* mouse_msg, char* keyboard_msg, char* storage_msg)
 {
-    rtsp_request_line(msg, "PLAY", uri);
+    rtsp_request_line(msg, "PLAY", uri, "usb");
     rtsp_header_session(msg, session);
     rtsp_header_usb(msg, mouse_msg, keyboard_msg, storage_msg);
     rtsp_eoh(msg);
@@ -436,7 +456,7 @@ void rtsp_request_usb_play(t_rtsp_connection* msg, char* uri, char* session, cha
 
 void rtsp_request_usb_teardown(t_rtsp_connection* msg, char* uri, char* session)
 {
-    rtsp_request_line(msg, "TEARDOWN", uri);
+    rtsp_request_line(msg, "TEARDOWN", uri, "usb");
     rtsp_header_session(msg, session);
     rtsp_eoh(msg);
     rtsp_send(msg);

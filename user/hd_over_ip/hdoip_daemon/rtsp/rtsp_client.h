@@ -15,6 +15,7 @@
 
 #include <pthread.h>
 
+#include "bstmap.h"
 #include "map.h"
 #include "rtsp.h"
 #include "rtsp_media.h"
@@ -35,8 +36,8 @@ typedef struct {
     t_rtsp_connection   con;            // TCP connection (?)
     t_rtsp_connection   con1;           // Copy of con for receive (?)
     t_rtsp_connection   con2;           // Copy of con for write (?)
-    t_rtsp_media        *media;         // associated media
-    t_node              *idx;           // pointer to the node in the client list (hdoipd.client)
+    t_bstmap            *media;         // associated media
+    bool                open;           // whether the client is open or not
 } t_rtsp_client;
 
 extern const t_map_set rtsp_client_methods[];
@@ -48,25 +49,24 @@ extern const t_map_fnc tab_response_pause[];
 extern const t_map_fnc tab_response_teardown[];
 extern const t_map_fnc tab_request_update[];
 
-
-// client handling based on <client list>
-t_rtsp_client* rtsp_client_open(t_node* list, t_rtsp_media *media, char* address);
-void rtsp_client_force_close(t_node* list);
-void rtsp_client_deactivate(t_node* list);
-void rtsp_client_event(t_node* list, uint32_t event);
+t_rtsp_client* rtsp_client_open(char* address, t_rtsp_media *media);
+int rtsp_client_add_media(t_rtsp_client* client, t_rtsp_media *media);
+int rtsp_client_deactivate(t_rtsp_client* client);
+int rtsp_client_close(t_rtsp_client* client, bool free);
 
 // client operation
-int rtsp_client_close(t_rtsp_client* client);
-int rtsp_client_kill(t_rtsp_client* client);
-int rtsp_client_setup(t_rtsp_client* client, t_rtsp_transport* transport, t_rtsp_edid *edid, t_rtsp_hdcp *hdcp);
-int rtsp_client_set_kill(t_rtsp_client* client);
-int rtsp_client_set_play(t_rtsp_client* client);
-int rtsp_client_play(t_rtsp_client* client, t_rtsp_rtp_format* fmt);
-int rtsp_client_set_teardown(t_rtsp_client* client);
-int rtsp_client_teardown(t_rtsp_client* client);
-int rtsp_client_update(t_rtsp_client* client, uint32_t event);
-int rtsp_client_hello(t_rtsp_client* client);
+int rtsp_client_setup(t_rtsp_client* client, t_rtsp_media* media, t_rtsp_transport* transport, t_rtsp_edid *edid, t_rtsp_hdcp *hdcp);
+int rtsp_client_play(t_rtsp_client* client, t_rtsp_rtp_format* fmt, char* mediaName);
 int rtsp_client_hdcp(t_rtsp_client* client);
-int rtsp_client_pause(t_rtsp_client* client);
+int rtsp_client_hello(t_rtsp_client* client);
+int rtsp_client_event(t_rtsp_client* client, uint32_t event);
+int rtsp_client_update(t_rtsp_client* client, uint32_t event, char* mediaName);
+int rtsp_client_pause(t_rtsp_client* client, char* mediaName);
+int rtsp_client_teardown(t_rtsp_client* client, char* mediaName);
+
+int rtsp_client_set_play(t_rtsp_client* client);
+int rtsp_client_set_teardown(t_rtsp_client* client);
+int rtsp_client_set_kill(t_rtsp_client* client);
+
 
 #endif /* RTSP_CLIENT_H_ */

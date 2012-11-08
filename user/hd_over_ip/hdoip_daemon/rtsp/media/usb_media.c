@@ -110,7 +110,7 @@ int usb_dosetup(t_rtsp_media *media, t_rtsp_usb* m UNUSED, void* rsp UNUSED)
 
     if (ret == RTSP_SUCCESS) {
 
-        strcpy(client->media->sessionid, common.session);
+        strcpy(media->sessionid, common.session);
 
         switch (media->state) {
             case RTSP_STATE_INIT:
@@ -141,7 +141,7 @@ int usb_doplay(t_rtsp_media *media, t_rtsp_usb* m, void* rsp UNUSED)
     if (!client) return RTSP_NULL_POINTER;
 
     // send USB PLAY
-    rtsp_request_usb_play(&client->con, client->uri, client->media->sessionid, m->mouse, m->keyboard, m->storage);
+    rtsp_request_usb_play(&client->con, client->uri, media->sessionid, m->mouse, m->keyboard, m->storage);
 
     // response
     rtsp_default_response_play((void*)&buf);
@@ -180,7 +180,7 @@ int usb_doteardown(t_rtsp_media *media, t_rtsp_usb *m UNUSED, void *rsp UNUSED)
     if (!client) return RTSP_NULL_POINTER;
 
     // send USB TEARDOWN
-    rtsp_request_usb_teardown(&client->con, client->uri, client->media->sessionid);
+    rtsp_request_usb_teardown(&client->con, client->uri, media->sessionid);
 
     // response
     rtsp_default_response_teardown((void*)&buf);
@@ -193,7 +193,7 @@ int usb_doteardown(t_rtsp_media *media, t_rtsp_usb *m UNUSED, void *rsp UNUSED)
         ret = RTSP_CLIENT_ERROR;
     }
 
-    rtsp_client_close(client);
+    rtsp_client_close(client, false);
 
     // TODO: correct handling of mouse and keyboard and storage teardown separate
     // also in rmsq teardown for device side
@@ -230,9 +230,9 @@ int usb_event(t_rtsp_media *media, uint32_t event)
             alive_ping = TICK_SEND_ALIVE;
             // send tick we are alive (until something like rtcp is used)
             if reg_test("mode-start", "vtb") {
-                rtsp_server_update(media, EVENT_TICK);
+                rtsp_server_update_media(media, EVENT_TICK);
             } else {
-               rtsp_client_update(client, EVENT_TICK);
+               rtsp_client_update(client, EVENT_TICK, media->name);
             }
         }
 
@@ -246,7 +246,7 @@ int usb_event(t_rtsp_media *media, uint32_t event)
             timer = 0;
 
             if reg_test("mode-start", "vtb") {
-                rtsp_listener_add_kill(&hdoipd.listener, media);
+                rtsp_listener_add_kill(&hdoipd.listener, media->creator);
             } else {
                 rtsp_client_set_kill(client);
             }

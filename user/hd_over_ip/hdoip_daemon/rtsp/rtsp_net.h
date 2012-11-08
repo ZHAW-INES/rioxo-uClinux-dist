@@ -24,7 +24,7 @@
 #include <netdb.h>
 #include <net/if_arp.h>
 #include <linux/sockios.h>
-#include <linux/if.h>
+//#include <linux/if.h>
 
 char *mac_ntoa(unsigned char *ptr);
 char* str_ntoa(uint32_t address);

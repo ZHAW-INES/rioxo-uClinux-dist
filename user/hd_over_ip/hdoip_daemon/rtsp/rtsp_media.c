@@ -20,7 +20,7 @@
 #include "rtsp_error.h"
 #include "string.h"
 
-int rtsp_media_check_request(const t_map_set *method, t_rtsp_media* media, void* msg UNUSED, t_rtsp_connection* rsp)
+int rtsp_media_check_request(const t_map_set *method, t_rtsp_media* media, void *msg UNUSED, t_rtsp_connection* rsp)
 {
     if (method == NULL || media == NULL || rsp == NULL)
       return RTSP_SERVER_ERROR;
@@ -72,6 +72,7 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
 {
     t_rtsp_media *media = _media;
     t_rtsp_server *server = (t_rtsp_server*)media->creator;
+    bool new_session = false;
 
     int ret = RTSP_SERVER_ERROR;
 
@@ -89,7 +90,7 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
         memcpy(media, _media, sizeof(t_rtsp_media));
         media->owner = _media;
         media->state = RTSP_STATE_INIT;
-        server->media = media;
+        rtsp_server_add_media(server, media);
 
         if (media->cookie_size) {
             media->cookie = malloc(media->cookie_size);
@@ -100,7 +101,13 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
             }
             memset(media->cookie, 0, media->cookie_size);
         }
-        rtsp_listener_create_sessionid(media->top, media->sessionid);
+        // only create a new sessionid if none exists yet for this connection
+
+        if (strlen(server->sessionid) <= 0) {
+            rtsp_listener_create_sessionid(media->top, server->sessionid);
+            new_session = true;
+        }
+        media->sessionid = server->sessionid;
     }
 
     if (media->setup) ret = media->setup(media, msg, rsp);
@@ -120,12 +127,15 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
 
     if (media != _media) {
         if (ret == RTSP_SUCCESS) {
-            rtsp_listener_add_session(media->top, media);
+            report(" ? RTSP Server [%d] added media (%s) for session (%s)", server->nr, media->name, server->sessionid);
+            if (new_session)
+                rtsp_listener_add_session(media->top, server->sessionid, server);
         } else {
+            report(" ? RTSP Server [%d] failed to create media (%s)", server->nr, _media->name);
             if (media->cookie_size) free(media->cookie);
             free(media);
         }
-        _media->creator = 0;
+        _media->creator = NULL;
     }
 
     // request properly handled
@@ -189,15 +199,13 @@ int rmsq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
     // needs to be a session
     if (!media->owner) return RTSP_CLIENT_ERROR;
 
-
-    if ((media->teardown) && !rtsp_media_sinit(media)) ret = media->teardown(media, msg, rsp);
+    if (media->teardown && !rtsp_media_sinit(media)) ret = media->teardown(media, msg, rsp);
     media->state = RTSP_STATE_INIT;
-    if(server) {
-    	server->media = 0;
-    }
     if (media->cookie_size) free(media->cookie);
-    rtsp_listener_remove_session(media->top, media);
-    free(media);
+
+    if (server != NULL)
+      rtsp_server_remove_media(server, media, true);
+
     return ret;
 }
 
@@ -261,12 +269,11 @@ int rmsr_teardown(t_rtsp_media* media, void* msg)
 
     if ((media->teardown) && !rtsp_media_sinit(media)) ret = media->teardown(media, msg, 0);
     media->state = RTSP_STATE_INIT;
-    if(server) {
-    	server->media = 0;
-    }
-
     if (media->cookie_size) free(media->cookie);
-    free(media);
+
+    if (server != NULL)
+        rtsp_server_remove_media(server, media->name, false);
+
     return ret;
 }
 
@@ -321,7 +328,7 @@ int rmcq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
     if ((media->teardown) && !rtsp_media_sinit(media)) ret = media->teardown(media, msg, rsp);
     media->state = RTSP_STATE_INIT;
 
-    ((t_rtsp_client*)media->creator)->task = E_RTSP_CLIENT_KILL;
+    rtsp_client_set_kill((t_rtsp_client*)media->creator);
 
     return ret;
 }
@@ -335,7 +342,7 @@ int rmcr_pause(t_rtsp_media* media, void* msg)
     int ret = RTSP_SUCCESS;
     if (media->state == RTSP_STATE_PLAYING) {
         if (media->pause) ret = media->pause(media, msg, 0);
-        if (!ret) media->state = RTSP_STATE_READY;
+        if (ret == RTSP_SUCCESS) media->state = RTSP_STATE_READY;
     }
     return ret;
 }
@@ -393,7 +400,7 @@ int rmcr_teardown(t_rtsp_media* media, void* msg)
 {
     int ret = RTSP_SUCCESS;
 
-    if ((media->teardown) && !rtsp_media_sinit(media)) ret = media->teardown(media, msg, 0);
+    if (media->teardown && !rtsp_media_sinit(media)) ret = media->teardown(media, msg, 0);
     media->state = RTSP_STATE_INIT;
     return ret;
 }
@@ -412,15 +419,16 @@ int rtsp_media_ready(t_rtsp_media* media)
 
 int rtsp_media_setup(t_rtsp_media* media)
 {
-    int ret = RTSP_NULL_POINTER;
-    if (media && media->creator) {
-        if (media->state != RTSP_STATE_PLAYING) {
-            if (media->dosetup) ret = media->dosetup(media, 0, 0);
-        } else {
-            ret = RTSP_WRONG_STATE;
-        }
-    }
-    return ret;
+    if (media == NULL || media->creator == NULL)
+        return RTSP_NULL_POINTER;
+
+    if (media->state == RTSP_STATE_PLAYING)
+      return RTSP_WRONG_STATE;
+
+    if (media->dosetup == NULL)
+      return RTSP_UNSUPPORTED_METHOD;
+
+    return media->dosetup(media, 0, 0);
 }
 
 int rtsp_media_play(t_rtsp_media* media)
@@ -431,17 +439,16 @@ int rtsp_media_play(t_rtsp_media* media)
     if (media && media->creator) {
         if (media->state == RTSP_STATE_READY) {
             if (media->doplay) ret = media->doplay(media, 0, 0);
-            //check if kill / teardown is set because of HDCP error
+            // TODO: does this really have to be done here?
+            // check if kill / teardown is set because of HDCP error
             if(client->task & E_RTSP_CLIENT_KILL) {
             	report(INFO "KILL CLIENT");
-            	rtsp_client_close(client);
+            	rtsp_client_close(client, false);
             }
             else if (client->task & E_RTSP_CLIENT_TEARDOWN) {
             	report(INFO "TEARDOWN CLIENT");
-            	rtsp_client_teardown(client);
+            	rtsp_client_teardown(client, media->name);
             }
-            //if(((t_rtsp_client*)media->creator)->task & E_RTSP_CLIENT_KILL) rtsp_client_close((t_rtsp_client*)media->creator);
-            //else if (((t_rtsp_client*)media->creator)->task & E_RTSP_CLIENT_KILL) rtsp_client_teardown((t_rtsp_client*)media->creator);
         } else {
             ret = RTSP_WRONG_STATE;
         }

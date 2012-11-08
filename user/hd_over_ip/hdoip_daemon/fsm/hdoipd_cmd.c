@@ -147,7 +147,7 @@ void hdoipd_cmd_pause(t_hoic_cmd UNUSED *cmd)
     if (!client)                        { report(ERROR "no client");      return; }
     if (media->state != RTSP_STATE_PLAYING)   { report(ERROR "wrong state");    return; }
 
-    rtsp_client_pause(client);
+    rtsp_client_pause(client, NULL);
 
     // response
     rtsp_default_response_setup((void*)&buf);
@@ -176,7 +176,7 @@ void hdoipd_cmd_pause_play(t_hoic_cmd UNUSED *cmd)
     fmt.rtptime = 0;
     fmt.value = reg_get_int("advcnt-min");
 
-    rtsp_client_play(client, &fmt);
+    rtsp_client_play(client, &fmt, NULL);
 }
 
 void hdoipd_ready(t_hoic_cmd UNUSED *cmd)

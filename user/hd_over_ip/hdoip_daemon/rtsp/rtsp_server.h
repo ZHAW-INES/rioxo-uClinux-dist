@@ -8,7 +8,7 @@
 #ifndef RTSP_SERVER_H_
 #define RTSP_SERVER_H_
 
-#include "map.h"
+#include "bstmap.h"
 #include "rtsp.h"
 #include "rtsp_net.h"
 #include "rtsp_error.h"
@@ -20,19 +20,30 @@ typedef struct {
     t_node*             idx;            // node containing this connection
     void*               owner;          // pointer to listener that creates server thread (t_rtsp_listener)
     t_rtsp_connection   con;            // TCP connection of this thread
-    bool				kill;           // flag to kill the actual server thread by rtsp_listener
-    t_rtsp_media*		media;          // associated media
+    bool                kill;           // flag to kill the actual server thread by rtsp_listener
+    t_bstmap*           media;          // associated media-controls
+    char                sessionid[20];  // Session string (ID)
+    bool                open;           // whether the server is open or not
 } t_rtsp_server;
 
 extern const t_map_set rtsp_srv_methods[];
 
+int rtsp_server_add_media(t_rtsp_server* handle, t_rtsp_media* media);
+t_rtsp_media* rtsp_server_get_media(t_rtsp_server* handle, char* name);
+void rtsp_server_remove_media(t_rtsp_server* handle, t_rtsp_media* media, bool remove_from_list);
+
 t_rtsp_server* rtsp_server_create(int fd, uint32_t addr);
+void rtsp_server_close(t_rtsp_server* handle);
+void rtsp_server_teardown(t_rtsp_server* handle);
+void rtsp_server_teardown_response(t_rtsp_server* handle);
+void rtsp_server_event(t_rtsp_server* handle, uint32_t event);
+void rtsp_server_update(t_rtsp_server* handle, uint32_t event);
+void rtsp_server_pause(t_rtsp_server* handle);
 
 int rtsp_server_thread(t_rtsp_server* handle);
 
-void rtsp_server_close(t_rtsp_media* media);
-void rtsp_server_teardown(t_rtsp_media* media);
-void rtsp_server_update(t_rtsp_media* media, uint32_t event);
-void rtsp_server_pause(t_rtsp_media* media);
+void rtsp_server_teardown_media(t_rtsp_media* media);
+void rtsp_server_update_media(t_rtsp_media* media, uint32_t event);
+void rtsp_server_pause_media(t_rtsp_media* media);
 
 #endif /* RTSP_SERVER_H_ */
