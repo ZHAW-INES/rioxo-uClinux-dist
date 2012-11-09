@@ -35,6 +35,8 @@
 #define eto_set_config_reduce_fps_0_OFF(p)      HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_REDUCE_FPS_0)
 #define eto_set_config_reduce_fps_1_ON(p)       HOI_WR32(p, ETO_CONFIG_SET_REG, ETO_CONFIG_REDUCE_FPS_1)
 #define eto_set_config_reduce_fps_1_OFF(p)      HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_REDUCE_FPS_1)
+#define eto_set_config_traffic_shaping_en(p)    HOI_WR32(p, ETO_CONFIG_SET_REG, ETO_CONFIG_TRAFFIC_SHAPING)
+#define eto_set_config_traffic_shaping_dis(p)   HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_TRAFFIC_SHAPING)
 
 #define eto_clr_status_cpu_idle(p)              eto_clr_status_reg(p, ETO_STATUS_CPU_IDLE)
 #define eto_clr_status_vid_idle(p)              eto_clr_status_reg(p, ETO_STATUS_VID_IDLE)
@@ -70,6 +72,8 @@
 #define eto_set_prio_cpu_scale(p, v)            HOI_REG_LD((p), ETO_CPU_PRIORITY_REG, ETO_PRIO_SCALE_MASK, ((v)<<24))
 #define eto_set_prio_aud_scale(p, v)            HOI_REG_LD((p), ETO_AUD_PRIORITY_REG, ETO_PRIO_SCALE_MASK, ((v)<<24))
 #define eto_set_prio_vid_scale(p, v)            HOI_REG_LD((p), ETO_VID_PRIORITY_REG, ETO_PRIO_SCALE_MASK, ((v)<<24))
+
+#define eto_set_frame_period_10ns(p, v)         HOI_WR32((p), ETO_FRAME_PERIOD_10NS, (v))
 
 /* macros get*/
 #define eto_get_config_reg(p) 			        HOI_RD32((p), ETO_CONFIG_SET_REG)

@@ -292,6 +292,7 @@ typedef struct {
     uint32_t            bandwidth;  //!< (wr) bandwidth
     t_video_timing      timing;     //!< (rd) timing of video
     uint32_t            advcnt;     //!< (rd) adv count when compression = true
+    uint32_t            enable_traffic_shaping;
 } t_hoi_msg_vsi;
 
 #define hoi_msg_vsi_init(p) hoi_msg_init(p, HOI_MSG_VSI, t_hoi_msg_vsi)

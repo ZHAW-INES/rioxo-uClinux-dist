@@ -32,7 +32,7 @@ label = {
 
     -- Button 
     button_submit = "Best&auml;tigen"; 
-    button_default = "Undo";
+    button_default = "Zur&uuml;cksetzen";
     button_save = "Speichern";
     button_dump = "Auslesen";
     button_edit = "Editieren";
@@ -167,6 +167,7 @@ label = {
     p_st_fps_divide = "Bildwiederholfrequenz reduzieren";
     p_st_eit_only = "(nur mit EIT Software Decoder)";
     p_st_auto_stream = "Auto Stream";
+    p_st_traffic_shaping = "Traffic shaping";
     p_st_force_hdcp = "HDCP erzwingen"; 
     p_st_multicast_en = "Multicast einschalten";
     p_st_multicast_group = "Multicastgruppe";

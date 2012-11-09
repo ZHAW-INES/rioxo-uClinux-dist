@@ -10,6 +10,7 @@
 
 #include "std.h"
 #include "stdrbf.h"
+#include "stdvid.h"
 #include "eto_hal.h"
 #include "eto_drv_cfg.h"
 
@@ -36,5 +37,6 @@ int eto_drv_stop_vid(t_eto* handle);
 int eto_drv_set_aud_buf(t_eto* handle, void* start_ptr, size_t size);
 int eto_drv_set_vid_buf(t_eto* handle, void* start_ptr, size_t size);
 void eto_drv_frame_rate_reduction(t_eto* handle, int reduction);
+void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, int enable);
 
 #endif /* ETO_DRV_H_ */

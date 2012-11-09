@@ -12,6 +12,9 @@ FILES	+= ../hdoip_core/driver/queue/queue.o
 INCLUDE += ../hdoip_core/hal/rbf
 FILES 	+= ../hdoip_core/hal/rbf/stdrbf.o
 
+INCLUDE += ../hdoip_core/hal/vid
+FILES   += ../hdoip_core/hal/vid/stdvid.o
+
 INCLUDE += ../hdoip_core/hal/eto
 FILES 	+= ../hdoip_core/hal/eto/eto_hal.o
 INCLUDE += ../hdoip_core/driver/eto

@@ -599,6 +599,11 @@ void task_set_bw(char* p)
     if (bw) hoi_drv_bw(bw, chroma);
 }
 
+void task_set_traffic_shaping(char* p)
+{
+    update_vector |= HOID_TSK_EXEC_RESTART_VTB;
+}
+
 void task_set_system_dns1(char* p)
 {
     if(!hdoipd.dhcp) {
@@ -776,6 +781,7 @@ void hdoipd_register_task()
     // if the same value is written as already stored the listener isn't called
     set_listener("bandwidth", task_set_bw);
     set_listener("chroma-bandwidth", task_set_bw);
+    set_listener("traffic-shaping", task_set_traffic_shaping);
     set_listener("system-ip", task_set_ip);
     set_listener("system-subnet", task_set_subnet);
     set_listener("system-gateway", task_set_gateway);

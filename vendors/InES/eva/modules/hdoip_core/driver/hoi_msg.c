@@ -314,6 +314,8 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 
     memcpy(&handle->vio.timing, &msg->timing, sizeof(t_video_timing));
 
+    eto_drv_set_frame_period(&handle->eto, &handle->vio.timing, msg->enable_traffic_shaping);
+
     // setup vio
     if (msg->compress) {
         vio_drv_encodex(&handle->vio, msg->bandwidth, msg->chroma, msg->advcnt, bdt_return_device(&handle->bdt));

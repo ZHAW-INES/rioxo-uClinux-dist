@@ -112,6 +112,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     char dst_mac[6];
     uint32_t bandwidth;
     uint32_t chroma;
+    uint32_t traffic_shaping;
 
     t_multicast_cookie* cookie = media->cookie;
 
@@ -190,6 +191,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     bandwidth = (uint32_t)reg_get_int("bandwidth");             // bandwidth in byte/s 
     chroma    = (uint32_t)reg_get_int("chroma-bandwidth");      // percent of chroma bandwidth (0 .. 100)
 
+    traffic_shaping = reg_test("traffic-shaping", "true");      // enables ethernet traffic shaping of video packets
 
     // use 4 ADV212 if 1080i and bandwidth >= 50Mbit/s
     if ((timing.width == 1920) && (timing.height == 540) && (bandwidth >= (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8))) {
@@ -212,7 +214,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // activate vsi
 #ifdef VID_IN_PATH
-        if (hoi_drv_vsi(fmt.compress, chroma, 0, bandwidth, &eth, &timing, &fmt.value)) {
+        if (hoi_drv_vsi(fmt.compress, chroma, 0, bandwidth, &eth, &timing, &fmt.value, traffic_shaping)) {
             return RSCP_REQUEST_ERROR;
         }
 #endif

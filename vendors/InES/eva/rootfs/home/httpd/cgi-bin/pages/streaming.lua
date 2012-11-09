@@ -82,6 +82,12 @@ function show(t)
             else 
                 t.auto_stream = 0;
             end
+
+            if(hdoip.pipe.getParam(hdoip.pipe.REG_TRAFFIC_SHAPING) == "true") then
+                t.traffic_shaping = 1;
+            else 
+                t.traffic_shaping = 0;
+            end
         end
 
         if(t.mode_vrb) then
@@ -221,6 +227,14 @@ function show(t)
             else
                hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "false")
                t.auto_stream = 0 
+            end
+
+            if(t.traffic_shaping ~= nil) then
+               hdoip.pipe.setParam(hdoip.pipe.REG_TRAFFIC_SHAPING, "true")
+               t.traffic_shaping = 1
+            else
+               hdoip.pipe.setParam(hdoip.pipe.REG_TRAFFIC_SHAPING, "false")
+               t.traffic_shaping = 0 
             end
             
             if((t.multicast_en ~= nil) and (t.multicast_en == "true")) then
@@ -375,10 +389,11 @@ function show(t)
         hdoip.html.DropdownBox4("fps_divide", label.n_none, label.n_1_2, label.n_1_3, label.n_1_4, t.fps_divide)
         hdoip.html.Text(label.p_st_eit_only);                                               hdoip.html.TableInsElement(2);
 
-
-
         hdoip.html.Text(label.p_st_auto_stream);                                            hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                        hdoip.html.TableInsElement(2);
+
+        hdoip.html.Text(label.p_st_traffic_shaping);                                        hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("traffic_shaping", 1, "", t.traffic_shaping)                hdoip.html.TableInsElement(2);
     end
 
     -- VRB specific fields

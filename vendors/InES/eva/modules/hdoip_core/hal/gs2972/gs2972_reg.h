@@ -186,7 +186,7 @@
 // HD and 3G Audio Core Registers
 #define GS2972_B_CFG_AUD                          (0x800)
 
-#define GS2972_B_CHANNEL_STAT_REGREN              (0x802)
+#define GS2972_B_CHANNEL_STAT_REGEN               (0x802)
 #define GS2972_B_PACKET_DET_STATUS                (0x803)
 #define GS2972_B_AES_EBU_ERR_STATUS               (0x804)
 #define GS2972_B_CASCADE                          (0x805)

@@ -169,6 +169,7 @@ label = {
     p_st_fps_divide = "Reduce refresh rate";
     p_st_eit_only = "(only with EIT software decoder)";
     p_st_auto_stream = "Auto stream";
+    p_st_traffic_shaping = "Traffic shaping";
     p_st_force_hdcp = "Force HDCP"; 
     p_st_multicast_en = "Multicast enable";
     p_st_multicast_group = "Multicast group";

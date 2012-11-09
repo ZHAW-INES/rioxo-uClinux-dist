@@ -233,7 +233,7 @@ int rscp_client_setup(t_rscp_client* client, t_rscp_transport* transport, t_rscp
     } else if (n == RSCP_RESPONSE_ERROR) {
         if (client->media->error) client->media->error(client->media, (void*)n, &client->con);
     } else {
-        perrno("internal failure (%d)", n);
+        perrno("client setup internal failure (%d)", n);
     }
 
     return n;
@@ -374,7 +374,7 @@ int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt)
     } else if (n == RSCP_RESPONSE_ERROR) {
         if (client->media->error) client->media->error(client->media, (void*)n, &client->con);
     } else {
-        perrno("internal failure (%d)", n);
+        perrno("client play internal failure (%d)", n);
     }
 
     return n;

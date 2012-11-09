@@ -206,7 +206,7 @@ HOI_READ(get_active_resolution, HOI_MSG_GET_ACTIVE_RESOLUTION);
 //------------------------------------------------------------------------------
 // capture/show image command
 
-int hoi_drv_vsi(uint32_t compress, uint32_t chroma, uint32_t encrypt, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt)
+int hoi_drv_vsi(uint32_t compress, uint32_t chroma, uint32_t encrypt, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt, int enable_traffic_shaping)
 {
     int ret;
     t_hoi_msg_vsi msg;
@@ -216,6 +216,7 @@ int hoi_drv_vsi(uint32_t compress, uint32_t chroma, uint32_t encrypt, int bandwi
     msg.chroma = chroma;
     msg.compress = compress;
     msg.encrypt = encrypt;
+    msg.enable_traffic_shaping = enable_traffic_shaping;
     if (advcnt) msg.advcnt = *advcnt;
     memcpy(&msg.eth, eth, sizeof(struct hdoip_eth_params));
     ret = hoi_msg(&msg);

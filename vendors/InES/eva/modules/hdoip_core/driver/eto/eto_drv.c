@@ -337,3 +337,24 @@ void eto_drv_frame_rate_reduction(t_eto* handle, int reduction)
                     eto_set_config_reduce_fps_1_OFF(handle->ptr);
     }
 }
+
+void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, int enable)
+{
+    uint32_t h;
+    uint32_t v;
+    uint32_t period_10ns;
+
+    h = (timing->width + timing->hfront + timing->hpulse + timing->hback);
+    v = (timing->height + timing->vfront + timing->vpulse + timing->vback);
+    period_10ns = (uint32_t)(((uint64_t)100000000*h*v)/timing->pfreq);
+
+    eto_set_frame_period_10ns(handle->ptr, period_10ns);
+
+    // enable or disable traffic shaping of video packets
+    if (enable) {
+        eto_set_config_traffic_shaping_en(handle->ptr);
+    } else {
+        eto_set_config_traffic_shaping_dis(handle->ptr);
+    }
+}
+
