@@ -66,6 +66,8 @@ void hdoipd_set_default()
     reg_set("serial-number", "00000000000000");
 
     reg_set("usb-mode", "off");
+    reg_set("edid-mode", "receiver");
+    reg_set("traffic-shaping", "true");
 
     reg_set(CFGTAG, "origin");
 }
