@@ -352,6 +352,10 @@ function UploadForm(t, script_path, label, accept)
     html_str = html_str .. "<input type=\"submit\" value=\"Upload\"></p>\n</form>\n"
 end
 
+function CarriageReturn()
+    html_str = html_str .. "<br>\n"
+end
+
 function Loadbar(time, time_restart)
     html_str = html_str .. '<script type="text/javascript">'
     html_str = html_str .. "var count = 0;"

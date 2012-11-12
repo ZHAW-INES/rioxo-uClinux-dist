@@ -41,7 +41,7 @@
 #define SDI_OUT_OFF                     (0x0000001A)
 
 // Mixed
-#define FIRMWARE_START                  (0x00000011)
+#define FIRMWARE_START                  (0x00000011)    //do not change this (value is used in webinterface)
 #define IDENTIFICATION_ON               (0x0000000E)    //do not change this (value is used in webinterface)
 #define IDENTIFICATION_OFF              (0x0000000F)    //do not change this (value is used in webinterface)
 #define CONFIGURE_VRB                   (0x00000013)

@@ -961,6 +961,15 @@ bool hdoipd_init(int drv)
     hoi_drv_get_reset_to_default(&reset_to_default);
     hoi_cfg_read(CFG_FILE, (bool) reset_to_default);
 
+    // delete temporary registers used for webpage
+    reg_del("temp1");
+    reg_del("temp2");
+    reg_del("temp3");
+    reg_del("temp4");
+    reg_del("temp5");
+    reg_del("temp6");
+    hoi_cfg_write(CFG_FILE);
+
     hdoipd_registry_update();
 
     hdoipd.dhcp = reg_test("system-dhcp", "true");
