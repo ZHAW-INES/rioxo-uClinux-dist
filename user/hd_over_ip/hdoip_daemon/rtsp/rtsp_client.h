@@ -15,9 +15,8 @@
 
 #include <pthread.h>
 
-#include "rtsp.h"
 #include "map.h"
-#include "rtsp_error.h"
+#include "rtsp.h"
 #include "rtsp_media.h"
 #include "rtsp_connection.h"
 #include "rtsp_default.h"

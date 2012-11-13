@@ -8,25 +8,7 @@
 #ifndef HDOIPD_CALLBACK_H_
 #define HDOIPD_CALLBACK_H_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-
-#include "hoi_drv_user.h"
-#include "hoi_image.h"
-#include "hoi_res.h"
-#include "hoi_cfg.h"
-#include "hdoipd_msg.h"
-#include "hdoipd_osd.h"
-#include "hdoipd_fsm.h"
-#include "hdoipd_task.h"
-#include "rtsp_include.h"
-
-#include "vrb_video.h"
-#include "vtb_video.h"
-#include "vrb_audio.h"
-#include "vtb_audio.h"
-#include "box_sys.h"
+#include "rtsp_media.h"
 
 int hdoipd_media_callback(t_rtsp_media* media, int (*f)(t_rtsp_media*, void*), void* d);
 

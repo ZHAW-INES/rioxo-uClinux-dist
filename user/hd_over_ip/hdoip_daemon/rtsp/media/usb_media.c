@@ -6,23 +6,23 @@
  */
 
 #include <stdint.h>
-#include "hoi_drv_user.h"
+
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
-#include "usb_media.h"
-#include "rtsp_string.h"
-#include "vrb_video.h"
-#include "rtsp_parse_header.h"
+#include "hoi_drv_user.h"
 #include "rtsp_client.h"
+#include "rtsp_parse_header.h"
 #include "rtsp_server.h"
+#include "rtsp_string.h"
+#include "usb_media.h"
+#include "vrb_video.h"
 
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout * 2)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
-//TODO: do not use global variables
-char        usb_host_ip[50];
-int         timer;
-int         alive_ping;
+static char usb_host_ip[50];
+static int timer;
+static int alive_ping;
 
 int usb_setup(t_rtsp_media UNUSED *media, t_rtsp_req_setup* m, t_rtsp_connection* rsp)
 {

@@ -8,7 +8,7 @@
 #ifndef USB_MEDIA_H_
 #define USB_MEDIA_H_
 
-#include "rtsp_include.h"
+#include "rtsp_media.h"
 
 extern t_rtsp_media usb_media;
 extern t_rtsp_usb   usb_list;

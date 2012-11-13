@@ -9,30 +9,31 @@
  *      Author: alda
  */
 
-#include <stdio.h>
+#include <pthread.h>
 #include <stdlib.h>
-#include <time.h>
 
+#include <net/if.h>
+#include <sys/ioctl.h>
+
+#include "box_sys.h"
+#include "hdoipd_callback.h"
+#include "hdoipd_fsm.h"
+#include "hdoipd_msg.h"
+#include "hdoipd_osd.h"
+#include "hdoipd_task.h"
+#include "hoi_cfg.h"
 #include "hoi_drv_user.h"
 #include "hoi_image.h"
 #include "hoi_res.h"
-#include "hoi_cfg.h"
-#include "hdoipd_callback.h"
-#include "hdoipd_msg.h"
-#include "hdoipd_osd.h"
-#include "hdoipd_fsm.h"
-#include "hdoipd_task.h"
-#include "rtsp_include.h"
+#include "rtsp_client.h"
+#include "rtsp_error.h"
 #include "rtsp_string.h"
-#include "edid.h"
 #include "usb.h"
 #include "version.h"
-
-#include "vrb_video.h"
-#include "vtb_video.h"
 #include "vrb_audio.h"
+#include "vrb_video.h"
 #include "vtb_audio.h"
-#include "box_sys.h"
+#include "vtb_video.h"
 #include "usb_media.h"
 
 const char* statestr(int state)

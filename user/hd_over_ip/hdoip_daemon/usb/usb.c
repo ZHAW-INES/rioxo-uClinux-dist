@@ -5,13 +5,16 @@
  *      Author: buan
  */
 
+#define _GNU_SOURCE	/* for getline() */
 #include <stdio.h>
+#include <stdlib.h>
+#include <linux/input.h>
+
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
+#include "rtsp_error.h"
 #include "usb.h"
 #include "usb_media.h"
-
-#include <linux/input.h>
 
 /** Load USB driver
  *
@@ -43,7 +46,7 @@ void usb_load_driver(char* mode)
  *  Device is been attached to USBIP and a message is sent via RTSP that an USB device is connected to host.
  *
  */
-void bind_usb_dev(char* s)
+static void bind_usb_dev(char* s)
 {
     char tmp[256];
 

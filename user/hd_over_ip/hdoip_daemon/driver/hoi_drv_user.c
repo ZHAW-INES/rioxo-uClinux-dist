@@ -6,25 +6,23 @@
  *      Author: alda
  */
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include "edid_merge.h"
 #include "hdoipd.h"
 #include "hoi_drv_user.h"
-#include "version.h"
-#include "edid_merge.h"
-
 #include "usb.h"
+#include "version.h"
 
-#include <netdb.h>
 extern int h_errno;
-
 
 int hoi_msg(void* param)
 {

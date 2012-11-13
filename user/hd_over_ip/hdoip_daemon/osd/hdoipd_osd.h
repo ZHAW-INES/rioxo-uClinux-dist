@@ -9,6 +9,8 @@
 #define HDOIPD_OSD_H_
 
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "hdoipd.h"
 
 #define OSD_BUFFER_LENGTH   256

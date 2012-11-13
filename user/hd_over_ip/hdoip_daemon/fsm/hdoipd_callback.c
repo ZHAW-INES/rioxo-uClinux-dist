@@ -5,17 +5,14 @@
  *      Author: alda
  */
 
+#include <string.h>
+#include <time.h>
+
+#include "hdoipd.h"
 #include "hdoipd_callback.h"
 
-
-typedef struct {
-    int (*f)(void* d);
-    void* d;
-    struct timespec ts;
-    int repeat;
-    struct timespec rts;
-} t_delayed_task;
-
+#include "vrb_audio.h"
+#include "vrb_video.h"
 
 bool strscmp(char **p, char *s)
 {
@@ -32,7 +29,6 @@ bool strscmp(char **p, char *s)
 
     return 0;
 }
-
 
 /** Callback each required media
  *

@@ -4,30 +4,31 @@
  *  Created on: 13.12.2010
  *      Author: alda
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "edid.h"
 #include "hdoipd.h"
-#include "hoi_drv_user.h"
-#include "hoi_image.h"
-#include "hoi_res.h"
-#include "hoi_cfg.h"
 #include "hdoipd_msg.h"
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "hdoipd_task.h"
-#include "rtsp_include.h"
-#include "vrb_video.h"
+#include "hoi_cfg.h"
+#include "hoi_drv_user.h"
+#include "hoi_image.h"
+#include "hoi_res.h"
+#include "rtsp_client.h"
+#include "rtsp_error.h"
+#include "rtsp_parse_header.h"
 #include "update.h"
-#include "edid.h"
 #include "vrb_audio.h"
-#include "hdoipd_task.h"
+#include "vrb_video.h"
 
 void hdoipd_cmd_canvas(t_hoic_canvas* cmd)
 {
     hdoipd_canvas(cmd->width, cmd->height, cmd->fps);
 }
-
 
 void hdoipd_load(t_hoic_load* cmd)
 {

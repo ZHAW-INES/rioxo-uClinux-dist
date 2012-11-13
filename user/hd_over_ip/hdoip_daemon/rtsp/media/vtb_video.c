@@ -5,20 +5,22 @@
  *      Author: alda
  */
 
-#include "hdoipd.h"
-#include "hdoipd_osd.h"
-#include "hoi_drv_user.h"
-#include "vtb_video.h"
-#include "hdoipd_fsm.h"
-#include "box_sys.h"
-#include "edid_merge.h"
-#include "rtsp_server.h"
-#include "hdcp.h"
-#include "multicast.h"
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include "box_sys.h"
+#include "edid_merge.h"
+#include "hdcp.h"
+#include "hdoipd.h"
+#include "hdoipd_fsm.h"
+#include "hdoipd_osd.h"
+#include "hoi_drv_user.h"
+#include "multicast.h"
+#include "rtsp_command.h"
+#include "rtsp_server.h"
+#include "vtb_video.h"
 
 #define TICK_TIMEOUT_MULTICAST          (hdoipd.eth_timeout * 2)
 #define TICK_TIMEOUT_UNICAST            (hdoipd.eth_timeout)

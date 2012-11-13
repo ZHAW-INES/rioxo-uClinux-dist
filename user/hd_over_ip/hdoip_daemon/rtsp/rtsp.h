@@ -8,13 +8,12 @@
 #ifndef RTSP_H_
 #define RTSP_H_
 
-#include <stdio.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "hoi_msg.h"
 
+#include "hoi_msg.h"
 
 //------------------------------------------------------------------------------
 // Constants
@@ -257,6 +256,5 @@ typedef union {
     t_rtsp_rsp_pause    rsp_pause;
     t_rtsp_rsp_teardown rsp_teardown;
 } u_rtsp_header;
-
 
 #endif /* RTSP_H_ */

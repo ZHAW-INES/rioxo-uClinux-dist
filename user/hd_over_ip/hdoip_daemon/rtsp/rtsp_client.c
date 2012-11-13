@@ -12,26 +12,26 @@
  *  Request: request from server (to client) initiated by server
  */
 
-#include <stdio.h>
 #include <pthread.h>
+#include <stdio.h>
+
+#include "hdcp.h"
+#include "hdoipd.h"
+#include "hoi_drv_user.h"
 #include "rtsp.h"
-#include "rtsp_media.h"
-#include "rtsp_net.h"
-#include "rtsp_string.h"
 #include "rtsp_client.h"
 #include "rtsp_command.h"
+#include "rtsp_error.h"
+#include "rtsp_media.h"
+#include "rtsp_net.h"
 #include "rtsp_parse_header.h"
-#include "hdoipd.h"
-#include "hdcp.h"
-#include "hoi_drv_user.h"
+#include "rtsp_string.h"
 
 #include "../hdcp/rsaes-oaep/rsaes.h"
 #include "../hdcp/protocol/protocol.h"
 
-
 void* rtsp_client_thread(void* _client);
 void* rtsp_client_req_thread(void* _client);
-
 
 /** Opens a new rtsp client connection
  *

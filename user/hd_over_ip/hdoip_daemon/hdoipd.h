@@ -8,18 +8,18 @@
 #ifndef HDOIPD_H_
 #define HDOIPD_H_
 
-#include <stdint.h>
+#include <pthread.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
-#include <pthread.h>
 
-#include "debug.h"
-#include "rtsp_include.h"
-#include "bstmap.h"
 #include "alive_check.h"
-#include "usb.h"
+#include "bstmap.h"
+#include "debug.h"
 #include "led_drv_instructions.h"
+#include "rtsp_listener.h"
+#include "usb.h"
 
 #define CFG_FILE                    "/mnt/config/hdoipd.cfg"
 #define CFG_RSP_TIMEOUT             15

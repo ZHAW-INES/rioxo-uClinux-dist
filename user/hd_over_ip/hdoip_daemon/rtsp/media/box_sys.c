@@ -4,15 +4,19 @@
  *  Created on: 14.12.2010
  *      Author: alda
  */
+
+#include <netdb.h>
 #include <stdint.h>
-#include "hoi_drv_user.h"
+
+#include "box_sys.h"
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
-#include "box_sys.h"
+#include "hoi_drv_user.h"
+#include "rtsp_command.h"
 #include "rtsp_string.h"
 #include "vrb_video.h"
 
-struct {
+static struct {
     uint32_t address;
 } box = {
     .address = 0

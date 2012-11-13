@@ -6,16 +6,20 @@
  * Created on: 28.04.2011
  * Author: itin
  */
-#include <debug.h>
+
+#include "debug.h"
 #include "hdcp.h"
-#include "rsaes-oaep/rsaes.h"
-#include "rsassa_pkcs1/rsassa.h"
-#include "aes128/aes_encrypt.h"
-#include "sha256/sha256.h"
-#include "protocol/protocol.h"
-#include "bcrypt/b_main.h"
 #include "hdoipd_fsm.h"
 #include "hoi_drv_user.h"
+#include "rtsp_command.h"
+#include "rtsp_error.h"
+
+#include "aes128/aes_encrypt.h"
+#include "bcrypt/b_main.h"
+#include "rsaes-oaep/rsaes.h"
+#include "rsassa_pkcs1/rsassa.h"
+#include "protocol/protocol.h"
+#include "sha256/sha256.h"
 
 /** State machine for session key exchange (server side)
  *  Responds to client requests. If successful, client and server share

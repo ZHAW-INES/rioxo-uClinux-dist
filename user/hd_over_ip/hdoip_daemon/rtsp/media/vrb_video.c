@@ -9,16 +9,18 @@
  *      Author: alda
  */
 
-#include "hoi_drv_user.h"
-#include "hdoipd.h"
 #include "box_sys.h"
-#include "vrb_video.h"
-#include "hdoipd_osd.h"
-#include "hdoipd_fsm.h"
 #include "edid.h"
 #include "hdcp.h"
-#include "rtsp_string.h"
+#include "hdoipd.h"
+#include "hdoipd_fsm.h"
+#include "hdoipd_osd.h"
+#include "hoi_drv_user.h"
 #include "multicast.h"
+#include "rtsp_client.h"
+#include "rtsp_error.h"
+#include "rtsp_string.h"
+#include "vrb_video.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout)

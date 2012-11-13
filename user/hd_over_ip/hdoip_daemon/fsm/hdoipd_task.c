@@ -4,18 +4,19 @@
  *  Created on: 07.12.2010
  *      Author: alda
  */
-#include "hoi_drv_user.h"
+
 #include "hdoipd.h"
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
-#include "multicast.h"
-#include "rtsp_listener.h"
 #include "hoi_cfg.h"
-#include "usb.h"
+#include "hoi_drv_user.h"
+#include "multicast.h"
+#include "rtsp_client.h"
+#include "rtsp_listener.h"
 #include "testimage.h"
-
-#include "vrb_video.h"
+#include "usb.h"
 #include "vrb_audio.h"
+#include "vrb_video.h"
 
 // local buffer
 static char buf[256];

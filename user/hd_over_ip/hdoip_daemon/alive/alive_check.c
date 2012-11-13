@@ -5,20 +5,21 @@
  *      Author: stth, buan
  */
 
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "alive_check.h"
-#include "multicast.h"
-#include "rtsp_net.h"
-#include "hdoipd.h"
-#include "rtsp_string.h"
 #include "box_sys.h"
-#include "hdoipd_fsm.h"
 #include "edid.h"
-#include "factory_edid.h"
 #include "edid_merge.h"
+#include "factory_edid.h"
+#include "hdoipd.h"
+#include "hdoipd_fsm.h"
 #include "hoi_drv_user.h"
+#include "multicast.h"
+#include "rtsp_client.h"
+#include "rtsp_net.h"
+#include "rtsp_string.h"
 
 int alive_check_client_open(t_alive_check *handle, bool enable, int interval, char *dest, uint16_t port, int broadcast, bool load_new_config)
 {

@@ -8,7 +8,7 @@
 #ifndef VTB_VIDEO_H_
 #define VTB_VIDEO_H_
 
-#include "rtsp_include.h"
+#include "rtsp_media.h"
 
 extern t_rtsp_media vtb_video;
 
