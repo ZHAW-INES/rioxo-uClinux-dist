@@ -8,6 +8,7 @@
  *  Every line of the RTSP message has its own parsing function.
  */
 
+#define _GNU_SOURCE	/* for strchrnul */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -368,7 +369,6 @@ int rtsp_ommit_header(t_rtsp_connection* con, int timeout)
 
 int rtsp_ommit_body(t_rtsp_connection* con, int timeout, size_t length)
 {
-    int n = RTSP_SUCCESS;
     char *buf;
     size_t read;
 

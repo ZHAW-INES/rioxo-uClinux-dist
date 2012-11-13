@@ -112,7 +112,7 @@ typedef struct {
     t_hdoip_ethernet    remote;
 } t_multicast_cookie;
 
-int rtsp_media_check_request(t_map_set* method, t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
+int rtsp_media_check_request(const t_map_set* method, t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 
 // rtsp media server
 int rmsq_options(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);

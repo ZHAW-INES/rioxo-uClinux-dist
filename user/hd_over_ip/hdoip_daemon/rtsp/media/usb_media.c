@@ -11,6 +11,7 @@
 #include "hdoipd_fsm.h"
 #include "hoi_drv_user.h"
 #include "rtsp_client.h"
+#include "rtsp_command.h"
 #include "rtsp_parse_header.h"
 #include "rtsp_server.h"
 #include "rtsp_string.h"
@@ -27,7 +28,7 @@ static int alive_ping;
 int usb_setup(t_rtsp_media UNUSED *media, t_rtsp_req_setup* m, t_rtsp_connection* rsp)
 {
     report(VRB_METHOD "usb_setup");
-    
+
     strncpy(usb_host_ip, m->transport.destination_str, 49);
 
     //TODO: set port in usbip

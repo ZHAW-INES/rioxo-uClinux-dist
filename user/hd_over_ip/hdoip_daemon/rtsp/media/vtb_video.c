@@ -41,8 +41,6 @@ int vtb_video_hdcp(t_rtsp_media* media, t_rtsp_req_hdcp* m, t_rtsp_connection* r
 
 int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection* rsp)
 {
-    int hdcp;
-
     t_multicast_cookie* cookie = media->cookie;
 
     report(VTB_METHOD "vtb_video_setup");
@@ -107,7 +105,7 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
 
 int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* rsp)
 {
-    int n, hdcp;
+    int n;
     t_video_timing timing;
     t_rtsp_rtp_format fmt;
     hdoip_eth_params eth;

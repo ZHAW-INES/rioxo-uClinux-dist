@@ -4,9 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <arpa/inet.h>
 #include <net/if.h>
+#include <netinet/in.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 
 #include "hdoipd.h"
@@ -211,7 +214,8 @@ int hoi_cfg_get_dns_server(char *dns1, char *dns2)
 
     char *line = 0;
     char *key = 0, *value = 0;
-    int  len=0, i=0;
+    int i = 0;
+    size_t len;
     FILE *fd;
 
     fd = fopen("/etc/resolv.conf", "r");
@@ -312,7 +316,7 @@ int hoi_cfg_get_default_gw(char *gw)
     struct sockaddr_in sin;
     FILE *fd;
     char *line = 0, *ifname, *value;
-    int  len=0;
+    size_t len = 0;
     uint32_t gw_ip;
 
     ifname = reg_get("system-ifname");

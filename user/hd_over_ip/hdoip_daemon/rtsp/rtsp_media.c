@@ -20,7 +20,7 @@
 #include "rtsp_error.h"
 #include "string.h"
 
-int rtsp_media_check_request(t_map_set *method, t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
+int rtsp_media_check_request(const t_map_set *method, t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 {
     if (method == NULL || media == NULL || rsp == NULL)
       return RTSP_SERVER_ERROR;
@@ -41,7 +41,7 @@ int rtsp_media_check_request(t_map_set *method, t_rtsp_media* media, void* msg, 
 
     // check if the media implementation supports this method
     int *impl = (int*)((char*)media + method->impl_offset);
-    if (impl == NULL || *impl == NULL) {
+    if (impl == NULL || *impl == 0) {
         report(" ? no implementation for method (%s) in media-control (%s)", method->name, media->name);
         rtsp_response_error(rsp, RTSP_STATUS_METHOD_NOT_ALLOWED, NULL);
         return RTSP_HANDLED;

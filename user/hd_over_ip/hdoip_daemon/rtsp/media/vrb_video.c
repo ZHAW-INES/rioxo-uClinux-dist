@@ -19,6 +19,7 @@
 #include "multicast.h"
 #include "rtsp_client.h"
 #include "rtsp_error.h"
+#include "rtsp_net.h"
 #include "rtsp_string.h"
 #include "vrb_video.h"
 
