@@ -20,7 +20,7 @@
 #include "rtsp_error.h"
 #include "string.h"
 
-int rtsp_media_check_request(const t_map_set *method, t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
+int rtsp_media_check_request(const t_map_set *method, t_rtsp_media* media, void* msg UNUSED, t_rtsp_connection* rsp)
 {
     if (method == NULL || media == NULL || rsp == NULL)
       return RTSP_SERVER_ERROR;
@@ -53,7 +53,7 @@ int rtsp_media_check_request(const t_map_set *method, t_rtsp_media* media, void*
 ///////////////////////////////////////////////////////////////////////////////
 // received a request as a server (can answer -> rsp != 0)
 
-int rmsq_options(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
+int rmsq_options(t_rtsp_media *media, void *msg UNUSED, t_rtsp_connection *rsp)
 {
     int ret;
     if ((ret = media->options(media, srv_method, rsp)) != 0)
@@ -278,7 +278,7 @@ int rmsr_pause(t_rtsp_media* media, void* msg)
 ///////////////////////////////////////////////////////////////////////////////
 // received a request as a client (can answer -> rsp != 0)
 
-int rmcq_options(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
+int rmcq_options(t_rtsp_media *media, void *msg UNUSED, t_rtsp_connection *rsp)
 {
     int ret;
     if ((ret = media->options(media, client_method, rsp)) != 0)

@@ -29,7 +29,7 @@ static struct {
     bool                multicast_en;
 } vrb;
 
-int vrb_audio_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection* rsp)
+int vrb_audio_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection* rsp UNUSED)
 {
     int n;
     t_rtsp_client* client = media->creator;
@@ -154,7 +154,7 @@ int vrb_audio_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UN
 }
 
 
-int vrb_audio_teardown(t_rtsp_media *media, t_rtsp_req_teardown UNUSED *m, t_rtsp_connection *rsp)
+int vrb_audio_teardown(t_rtsp_media *media, t_rtsp_req_teardown *m UNUSED, t_rtsp_connection *rsp UNUSED)
 {
     report(VRB_METHOD "vrb_audio_teardown");
 
@@ -238,14 +238,14 @@ void vrb_audio_pause(t_rtsp_media *media)
     hoi_drv_set_led_status(SDI_OUT_OFF);
 }
 
-int vrb_audio_ext_pause(t_rtsp_media* media, void* UNUSED m, t_rtsp_connection* rsp)
+int vrb_audio_ext_pause(t_rtsp_media* media, void *m UNUSED, t_rtsp_connection* rsp UNUSED)
 {
     vrb_audio_pause(media);
 
     return RTSP_SUCCESS;
 }
 
-int vrb_audio_update(t_rtsp_media *media, t_rtsp_req_update *m, t_rtsp_connection UNUSED *rsp)
+int vrb_audio_update(t_rtsp_media *media, t_rtsp_req_update *m, t_rtsp_connection *rsp UNUSED)
 {
     switch (m->event) {
 
@@ -287,7 +287,7 @@ int vrb_audio_ready(t_rtsp_media UNUSED *media)
     return RTSP_SUCCESS;
 }
 
-int vrb_audio_dosetup(t_rtsp_media *media, void* UNUSED m, void* UNUSED rsp)
+int vrb_audio_dosetup(t_rtsp_media *media, void *m UNUSED, void *rsp UNUSED)
 {
     int port;
     t_rtsp_transport transport;
@@ -307,7 +307,7 @@ int vrb_audio_dosetup(t_rtsp_media *media, void* UNUSED m, void* UNUSED rsp)
     return rtsp_client_setup(client, &transport, 0, &hdcp);
 }
 
-int vrb_audio_doplay(t_rtsp_media *media, void* UNUSED m, void* UNUSED rsp)
+int vrb_audio_doplay(t_rtsp_media *media, void *m UNUSED, void *rsp UNUSED)
 {
     t_rtsp_client *client = media->creator;
 

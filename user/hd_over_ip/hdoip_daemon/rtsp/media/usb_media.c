@@ -62,7 +62,7 @@ int usb_play(t_rtsp_media UNUSED *media, t_rtsp_req_play* m, t_rtsp_connection* 
     return RTSP_SUCCESS;
 }
 
-int usb_teardown(t_rtsp_media UNUSED *media, t_rtsp_req_teardown* m, t_rtsp_connection* rsp)
+int usb_teardown(t_rtsp_media *media UNUSED, t_rtsp_req_teardown* m UNUSED, t_rtsp_connection* rsp)
 {
     report(VRB_METHOD "usb_teardown");
 
@@ -78,7 +78,7 @@ int usb_teardown(t_rtsp_media UNUSED *media, t_rtsp_req_teardown* m, t_rtsp_conn
     return RTSP_SUCCESS;
 }
 
-int usb_dosetup(t_rtsp_media *media, t_rtsp_usb* UNUSED m, void* UNUSED rsp)
+int usb_dosetup(t_rtsp_media *media, t_rtsp_usb* m UNUSED, void* rsp UNUSED)
 {
     t_rtsp_client *client = media->creator;
     t_rtsp_transport transport;
@@ -130,7 +130,7 @@ int usb_dosetup(t_rtsp_media *media, t_rtsp_usb* UNUSED m, void* UNUSED rsp)
     return ret;
 }
 
-int usb_doplay(t_rtsp_media *media, t_rtsp_usb* m, void* UNUSED rsp)
+int usb_doplay(t_rtsp_media *media, t_rtsp_usb* m, void* rsp UNUSED)
 {
     t_rtsp_client *client = media->creator;
     u_rtsp_header buf;
@@ -169,7 +169,7 @@ int usb_doplay(t_rtsp_media *media, t_rtsp_usb* m, void* UNUSED rsp)
     return ret;
 }
 
-int usb_doteardown(t_rtsp_media *media, t_rtsp_usb* UNUSED m, void* UNUSED rsp)
+int usb_doteardown(t_rtsp_media *media, t_rtsp_usb *m UNUSED, void *rsp UNUSED)
 {
     t_rtsp_client *client = media->creator;
     u_rtsp_header buf;

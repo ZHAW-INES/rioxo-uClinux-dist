@@ -16,15 +16,11 @@
 #include "rtsp_server.h"
 #include "hdoipd.h"
 
-
-typedef void* (pf)(void*);
-
-
 /* listener_lock mutex for connection list
  *
  * @param handle listener struct
  */
-static void listener_lock(t_rtsp_listener* handle, const char* s)
+static void listener_lock(t_rtsp_listener* handle, const char* s MAYBE_UNUSED)
 {
     pthread_mutex_lock(&handle->mutex);
     report2("rtsp_listener:pthread_mutex_lock(%x:%d, %s)", handle, pthread_self(), s);
@@ -34,17 +30,19 @@ static void listener_lock(t_rtsp_listener* handle, const char* s)
  *
  * @param handle listener struct
  */
-static void listener_unlock(t_rtsp_listener* handle, const char* s)
+static void listener_unlock(t_rtsp_listener* handle, const char* s MAYBE_UNUSED)
 {
     report2("rtsp_listener:pthread_mutex_unlock(%x:%d, %s)", handle, pthread_self(), s);
     pthread_mutex_unlock(&handle->mutex);
 }
 
 
-void* rtsp_listener_run_server(t_rtsp_server* server)
+void* rtsp_listener_run_server(void *_server)
 {
-	t_rtsp_listener* listener = server->owner;
-    rtsp_server_thread(server);
+	t_rtsp_server *server = _server;
+	t_rtsp_listener *listener = server->owner;
+
+	rtsp_server_thread(server);
 
     // remove from list & delete server
     lock("rtsp_listener_run_server");
@@ -88,7 +86,7 @@ int rtsp_listener_start_server(t_rtsp_listener* handle, int fd, struct sockaddr_
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthreada(th, &attr, (pf*)rtsp_listener_run_server, con);
+    pthreada(th, &attr, rtsp_listener_run_server, con);
 
     return RTSP_SUCCESS;
 }
@@ -114,8 +112,9 @@ void rtsp_listener_close_server(t_rtsp_server* con, t_rtsp_listener *handle)
  * @param handle listener struct
  * @return rtsp error code
  */
-void* rtsp_listener_thread(t_rtsp_listener* handle)
+void* rtsp_listener_thread(void *_handle)
 {
+	t_rtsp_listener *handle = _handle;
     struct sockaddr_in this_addr;
     struct sockaddr_in remote_addr;
     int fd;
@@ -194,7 +193,7 @@ int rtsp_listener_start(t_rtsp_listener* handle, int port)
     report(NEW "RTSP Listener [%d]", handle->nr);
 
     pthread_mutex_init(&handle->mutex, NULL);
-    pthread(handle->th, (pf*)rtsp_listener_thread, handle);
+    pthread(handle->th, rtsp_listener_thread, handle);
 
     return RTSP_SUCCESS;
 }

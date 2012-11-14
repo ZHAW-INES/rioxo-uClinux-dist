@@ -1,13 +1,12 @@
 /*
- * map.h
- * TODO: use sorted list for faster search time
+ * rtsp_map.h
  *
  *  Created on: 19.11.2010
  *      Author: alda
  */
 
-#ifndef MAP_H_
-#define MAP_H_
+#ifndef RTSP_MAP_H_
+#define RTSP_MAP_H_
 
 #include <stdint.h>
 #include <stddef.h>
@@ -49,4 +48,4 @@ const t_map_rec* map_find_rec(const t_map_rec list[], char* str);
 int map_call_fnc(const t_map_fnc list[], char* str, void* handle, void* base);
 void* map_get_rec(const t_map_rec list[], char* str);
 
-#endif /* MAP_H_ */
+#endif /* RTSP_MAP_H_ */

@@ -298,10 +298,12 @@ void usb_try_to_connect_device(t_usb_devices* old_values)
 
         media = &usb_media;
         usb_clone = (t_rtsp_usb*) malloc(sizeof(t_rtsp_usb));
+	if (!usb_clone)
+		return;
 
-        sprintf(usb_clone->mouse,      "");
-        sprintf(usb_clone->keyboard,   "");
-        sprintf(usb_clone->storage,    "");
+        usb_clone->mouse[0] = '\0';
+        usb_clone->keyboard[0] = '\0';
+        usb_clone->storage[0] = '\0';
 
         // bind available devices to USBIP
         for (i=0; i<old_values->device_count; i++) {
@@ -454,9 +456,9 @@ void usb_device_handler(t_usb_devices* old_values)
                 // if new device
                 if (old_values->device_count < device_count) {
 
-                    sprintf(usb.mouse,      "");
-                    sprintf(usb.keyboard,   "");
-                    sprintf(usb.storage,    "");
+                    usb.mouse[0] = '\0';
+                    usb.keyboard[0] = '\0';
+                    usb.storage[0] = '\0';
 
                     // check if devices are already in list
                     for (i=0; i<device_count; i++) {
@@ -503,9 +505,9 @@ void usb_device_handler(t_usb_devices* old_values)
                 // if device is lost
                 if (old_values->device_count > device_count) {
 
-                    sprintf(usb.mouse,      "");
-                    sprintf(usb.keyboard,   "");
-                    sprintf(usb.storage,    "");
+                    usb.mouse[0] = '\0';
+                    usb.keyboard[0] = '\0';
+                    usb.storage[0] = '\0';
 
                    // check if devices is missing in list
                     for (i=0; i<device_count; i++) {

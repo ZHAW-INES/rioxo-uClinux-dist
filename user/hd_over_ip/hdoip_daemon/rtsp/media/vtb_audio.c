@@ -244,7 +244,7 @@ void vtb_audio_pause(t_rtsp_media *media)
     remove_client_from_vtb(MEDIA_IS_AUDIO, cookie->remote.address);
 }
 
-int vtb_audio_ext_pause(t_rtsp_media* media, void* UNUSED m, t_rtsp_connection* rsp)
+int vtb_audio_ext_pause(t_rtsp_media* media, void *m UNUSED, t_rtsp_connection* rsp)
 {
     vtb_audio_pause(media);
     rtsp_response_pause(rsp, media->sessionid);

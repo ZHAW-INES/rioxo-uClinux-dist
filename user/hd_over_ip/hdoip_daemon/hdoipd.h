@@ -302,13 +302,13 @@ static inline void get_call(char* n, char** k)
     } \
 }
 
-static inline void lock(const char* s)
+static inline void lock(const char *s MAYBE_UNUSED)
 {
     if (pthread_mutex_lock(&hdoipd.mutex)) perrno("hdoipd:pthread_mutex_lock() failed");
     report2("hdoipd:pthread_mutex_lock(%d, %s)", pthread_self(), s);
 }
 
-static inline void unlock(const char* s)
+static inline void unlock(const char *s MAYBE_UNUSED)
 {
     report2("hdoipd:pthread_mutex_unlock(%d, %s)", pthread_self(), s);
     if (pthread_mutex_unlock(&hdoipd.mutex)) perrno("hdoipd:pthread_mutex_unlock() failed");

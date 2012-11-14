@@ -70,7 +70,9 @@
 // #define VRB_METHOD  " M "
 #define VRB_METHOD  "------------------------------------------------------------- \n M "
 
-#define UNUSED __attribute__((__unused__))
+#define UNUSED		__attribute__((unused))
+#define MAYBE_UNUSED	__attribute__((unused))
+
 /*
 #define report(...) { \
     hdoip_report(&hdoipd.main_log, __VA_ARGS__); \

@@ -5,18 +5,10 @@
  *      Author: alda
  */
 
-/*
- * rtsp_table.c
- *
- *  Created on: 17.11.2010
- *      Author: alda
- */
-
-#include "rtsp_server.h"
-#include "rtsp_parse_header.h"
 #include "rtsp.h"
 #include "rtsp_media.h"
-
+#include "rtsp_parse_header.h"
+#include "rtsp_server.h"
 
 // OPTIONS attributes
 const t_map_fnc tab_request_options[] ={

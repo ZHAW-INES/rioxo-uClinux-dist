@@ -466,7 +466,7 @@ char* task_conv_rtsp_state(int state)
 }
 
 char *buf_ptr;
-void task_get_rtsp_sessions(char UNUSED *key, char* value, void* fd)
+void task_get_rtsp_sessions(char *key UNUSED, char* value, void* fd)
 {
     int *cnt = (int *) fd; 
     t_rtsp_media* media = (t_rtsp_media*) value;
@@ -600,82 +600,82 @@ void task_set_bw(char* p)
     if (bw) hoi_drv_bw(bw, chroma);
 }
 
-void task_set_system_dns1(char* p)
+void task_set_system_dns1(char *p UNUSED)
 {
     if(!hdoipd.dhcp) {
         update_vector |= HOID_TSK_UPD_SYS_DNS | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
     }
 }
 
-void task_set_system_dns2(char* p)
+void task_set_system_dns2(char *p UNUSED)
 {
     if(!hdoipd.dhcp) {
         update_vector |= HOID_TSK_UPD_SYS_DNS | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
     }
 }
 
-void task_set_ip(char* p)
+void task_set_ip(char *p UNUSED)
 {
     if(!hdoipd.dhcp) {
         update_vector |= HOID_TSK_UPD_SYS_IP | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
     }
 }
 
-void task_set_subnet(char* p)
+void task_set_subnet(char *p UNUSED)
 {
     if(!hdoipd.dhcp) {
         update_vector |= HOID_TSK_UPD_SYS_SUBNET | HOID_TSK_UPD_AMX;
     }
 }
 
-void task_set_gateway(char* p)
+void task_set_gateway(char *p UNUSED)
 {
     if(!hdoipd.dhcp) {
         update_vector |= HOID_TSK_UPD_SYS_GATEWAY | HOID_TSK_UPD_AMX;
     }
 }
 
-void task_set_mac(char* p)
+void task_set_mac(char *p UNUSED)
 {
 	update_vector |= HOID_TSK_UPD_SYS_MAC | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
 }
 
-void task_set_remote(char* p)
+void task_set_remote(char *p UNUSED)
 {
 	update_vector |= HOID_TSK_UPD_REMOTE_URI | HOID_TSK_EXEC_RESTART_VRB;
 }
 
-void task_set_hello(char* p)
+void task_set_hello(char *p UNUSED)
 {
 	update_vector |= HOID_TSK_UPD_HELLO_URI | HOID_TSK_EXEC_HELLO | HOID_TSK_UPD_ALIVE;
 }
 
-void task_set_mode_start(char* p)
+void task_set_mode_start(char *p UNUSED)
 {
 	update_vector |= HOID_TSK_UPD_MODE_START; //    | HOID_TSK_EXEC_RESTART;  restart not necessary because device must be rebooted after this change
 }
 
-void task_set_mode_media(char* p)
+void task_set_mode_media(char *p UNUSED)
 {
 	update_vector |= HOID_TSK_EXEC_RESTART_VRB;
 }
 
-void task_set_amx_update(char* p)
+void task_set_amx_update(char *p UNUSED)
 {
     update_vector |= HOID_TSK_UPD_AMX;
 }
 
-void task_set_auto_stream(char* p)
+void task_set_auto_stream(char *p UNUSED)
 {
     update_vector |= HOID_TSK_UPD_AUTO_STREAM | HOID_TSK_EXEC_RESTART_VRB;
 }
 
-void task_set_multicast_update(char* p)
+void task_set_multicast_update(char *p UNUSED)
 {
     update_vector |= HOID_TSK_UPD_MULTICAST | HOID_TSK_EXEC_RESTART_VTB;
 }
 
-void task_set_alive_update(char* p)
+void task_set_alive_update(char *p UNUSED)
 {
     update_vector |= HOID_TSK_UPD_ALIVE;
 }
@@ -697,12 +697,12 @@ void task_set_osd_time(char* p)
     }
 }
 
-void task_set_usb_mode(char* p)
+void task_set_usb_mode(char *p UNUSED)
 {
     update_vector |= HOID_TSK_UPD_USB_MODE;
 }
 
-void task_set_test_image(char* p)
+void task_set_test_image(char *p)
 {
     int a = atoi(p);
     if reg_test("mode-start", "vrb") {
@@ -724,27 +724,27 @@ void task_set_test_image(char* p)
     reg_set("test-image", "0");
 }
 
-void task_set_network_delay(char* p)
+void task_set_network_delay(char *p UNUSED)
 {
     update_vector |= HOID_TSK_EXEC_RESTART_VRB;
 }
 
-void task_set_av_delay(char* p)
+void task_set_av_delay(char *p UNUSED)
 {
     update_vector |= HOID_TSK_EXEC_RESTART_VRB;
 }
 
-void task_set_dhcp(char *p)
+void task_set_dhcp(char *p UNUSED)
 {
     update_vector |= HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX | HOID_TSK_UPD_DHCP;
 }
 
-void task_set_edid_mode(char *p)
+void task_set_edid_mode(char *p UNUSED)
 {
     rtsp_listener_teardown_all(&hdoipd.listener);
 }
 
-void task_set_fps_divide(char *p)
+void task_set_fps_divide(char *p UNUSED)
 {
     hoi_drv_set_fps_reduction(reg_get_int("fps_divide"));
 }

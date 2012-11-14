@@ -35,7 +35,7 @@ static struct {
     bool                multicast_en;
 } vrb;
 
-int vrb_video_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection* rsp)
+int vrb_video_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection* rsp UNUSED)
 {
     int n;
     t_rtsp_client* client = media->creator;
@@ -171,7 +171,7 @@ int vrb_video_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UN
     return RTSP_SUCCESS;
 }
 
-int vrb_video_teardown(t_rtsp_media *media, t_rtsp_rsp_teardown UNUSED *m, t_rtsp_connection *rsp)
+int vrb_video_teardown(t_rtsp_media *media, t_rtsp_rsp_teardown UNUSED *m, t_rtsp_connection *rsp UNUSED)
 {
     report(VRB_METHOD "vrb_video_teardown");
 
@@ -272,7 +272,7 @@ void vrb_video_pause(t_rtsp_media *media)
     hoi_drv_set_led_status(SDI_OUT_OFF);
 }
 
-int vrb_video_ext_pause(t_rtsp_media* media, void* UNUSED m, t_rtsp_connection* rsp)
+int vrb_video_ext_pause(t_rtsp_media* media, void *m UNUSED, t_rtsp_connection *rsp UNUSED)
 {
     vrb_video_pause(media);
 
@@ -324,7 +324,7 @@ int vrb_video_ready(t_rtsp_media UNUSED *media)
     return RTSP_SUCCESS;
 }
 
-int vrb_video_dosetup(t_rtsp_media *media, void* UNUSED m, void* UNUSED rsp)
+int vrb_video_dosetup(t_rtsp_media *media, void *m UNUSED, void *rsp UNUSED)
 {
     int port;
     t_rtsp_transport transport;
@@ -351,7 +351,7 @@ int vrb_video_dosetup(t_rtsp_media *media, void* UNUSED m, void* UNUSED rsp)
     return rtsp_client_setup(client, &transport, &edid, &hdcp);
 }
 
-int vrb_video_doplay(t_rtsp_media *media, void* UNUSED m, void* UNUSED rsp)
+int vrb_video_doplay(t_rtsp_media *media, void* m UNUSED, void *rsp UNUSED)
 {
     char *s;
     t_rtsp_rtp_format fmt;

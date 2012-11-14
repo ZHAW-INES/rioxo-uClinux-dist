@@ -8,6 +8,10 @@
 #include <netdb.h>
 #include <stdint.h>
 
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
 #include "box_sys.h"
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"

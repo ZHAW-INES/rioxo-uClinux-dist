@@ -12,13 +12,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <netinet/in.h>
-#include "rtsp_parse_header.h"
-#include "rtsp_error.h"
-#include "rtsp_string.h"
-#include "map.h"
-#include "hoi_msg.h"
+
 #include "hdoipd.h"
+#include "hoi_msg.h"
+#include "map.h"
+#include "rtsp_command.h"
+#include "rtsp_error.h"
+#include "rtsp_parse_header.h"
+#include "rtsp_string.h"
 
 #define next(x, l) \
 { \

@@ -287,7 +287,7 @@ void vtb_video_pause(t_rtsp_media *media)
     remove_client_from_vtb(MEDIA_IS_VIDEO, cookie->remote.address);
 }
 
-int vtb_video_ext_pause(t_rtsp_media* media, void* UNUSED m, t_rtsp_connection* rsp)
+int vtb_video_ext_pause(t_rtsp_media *media, void *m UNUSED, t_rtsp_connection *rsp)
 {
     vtb_video_pause(media);
     rtsp_response_pause(rsp, media->sessionid);
@@ -295,7 +295,7 @@ int vtb_video_ext_pause(t_rtsp_media* media, void* UNUSED m, t_rtsp_connection* 
     return RTSP_SUCCESS;
 }
 
-int vtb_video_update(t_rtsp_media *media, t_rtsp_req_update *m, t_rtsp_connection *rsp)
+int vtb_video_update(t_rtsp_media *media, t_rtsp_req_update *m, t_rtsp_connection *rsp UNUSED)
 {
     t_multicast_cookie* cookie = media->cookie;
 
