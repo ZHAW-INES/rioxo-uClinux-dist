@@ -15,14 +15,15 @@
 typedef int (mapfnc2)(void*, void*);
 
 typedef struct {
-    char*   name;         //!< function name
-    void*   fnc;          //!< function pointer
-    size_t  offset;       //!< data offset;
+	char	*name;		//!< function name
+	void	*fnc;		//!< function pointer
+	bool	is_mandatory;	//!< is the field mandatory?
+	size_t	offset;		//!< data offset;
 } t_map_fnc;
 
 typedef struct {
     char*   name;         //!< function name
-    void*   rec;          //!< record pointer
+    t_map_fnc	*rec;     //!< record pointer
     void*   fnc;          //!< function;
     bool    in_session;   //!< whether the method is only valid in a session
     int     states;       //!< states in which this method is valid
@@ -34,9 +35,9 @@ typedef struct {
     void*   rec;          //!< record pointer
 } t_map_rec;
 
-#define MAP_FNC_NULL { 0, 0, 0 }
-#define MAP_SET_NULL { 0, 0, 0, false, 0, 0 }
-#define MAP_REC_NULL { 0, 0 }
+#define MAP_FNC_NULL { NULL, NULL, false, 0 }
+#define MAP_SET_NULL { NULL, NULL, NULL, false, 0, 0 }
+#define MAP_REC_NULL { NULL, NULL }
 
 #define map_offset(x, y)            ((typeof(x))((uint8_t*)x + y))
 #define map_fncoff(f, x, y)         ((f)((uint8_t*)x + y))
