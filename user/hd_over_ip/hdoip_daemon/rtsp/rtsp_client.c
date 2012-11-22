@@ -471,7 +471,7 @@ void rtsp_client_deactivate(t_node* list)
     t_rtsp_client* client;
 
     while ((client = list_peek(list))) {
-        if (client->media->state != RTSP_STATE_INIT) {
+        if (!rtsp_media_sinit(client->media)) {
             // proper teradown
             rtsp_client_teardown(client);
         } else {
@@ -495,7 +495,7 @@ void rtsp_client_event(t_node* list, uint32_t event)
     while(client) {
         if(client->task & E_RTSP_CLIENT_KILL) {
             rtsp_client_close(client);
-        } else { 
+        } else {
             if(client->task & E_RTSP_CLIENT_TEARDOWN) {
                 rtsp_client_teardown(client);
             } else {

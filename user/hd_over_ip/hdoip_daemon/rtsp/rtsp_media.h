@@ -147,7 +147,7 @@ int rtsp_media_event(t_rtsp_media* media, uint32_t event);
 
 static inline bool rtsp_media_sinit(t_rtsp_media* media)
 {
-    return (media->state == RTSP_STATE_INIT);
+    return (media->state <= RTSP_STATE_INIT);
 }
 
 static inline bool rtsp_media_sready(t_rtsp_media* media)

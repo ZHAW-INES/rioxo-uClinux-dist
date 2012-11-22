@@ -46,7 +46,7 @@ void usb_load_driver(char* mode)
 void bind_usb_dev(char* s)
 {
     char tmp[256];
-    
+
     // bind device to usbip
     sprintf(tmp, "usbip bind -b %s", s);
     report(INFO "%s", tmp);
@@ -264,7 +264,7 @@ int usb_connect_device(t_rtsp_usb* usb)
     ret = RTSP_SUCCESS;
 
     // do usb setup
-    if (media->state == RTSP_STATE_INIT) {
+    if (rtsp_media_sinit(media)) {
         if (media->dosetup) {
             ret = media->dosetup(media, 0, 0);
         }
@@ -325,7 +325,7 @@ void usb_try_to_connect_device(t_usb_devices* old_values)
             ret = RTSP_SUCCESS;
 
             // do usb setup
-            if (media->state == RTSP_STATE_INIT) {
+            if (rtsp_media_sinit(media)) {
                 if (media->dosetup) {
                     ret = media->dosetup(media, 0, 0);
                 }
@@ -387,7 +387,7 @@ void usb_attach_device(t_usb_devices* old_values, char* ip, char* device, char* 
             } else {
                 report(INFO "connect unknown device");
             }
-        }        
+        }
     }
 }
 
@@ -545,7 +545,7 @@ void usb_device_handler(t_usb_devices* old_values)
                     }
 
                     usb_teardown_device();
-                }  
+                }
             }
 
             if (reg_test("usb-mode", "device")) {
@@ -571,7 +571,7 @@ void usb_device_handler(t_usb_devices* old_values)
                 }
                 old_values->device_queue_mouse = old_values->device_queue_mouse >> 1;
                 old_values->device_queue_keyboard = old_values->device_queue_keyboard >> 1;
-            }   
+            }
         }
     }
 }
