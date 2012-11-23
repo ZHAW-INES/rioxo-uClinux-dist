@@ -13,6 +13,7 @@
 #include "multicast.h"
 #include "rtsp_client.h"
 #include "rtsp_listener.h"
+#include "rtsp_media.h"
 #include "testimage.h"
 #include "usb.h"
 #include "vrb_audio.h"
@@ -540,7 +541,7 @@ void task_get_vrb_is_playing(char** p)
     }
 }
 
-int task_ready()
+int task_ready(void)
 {
     int state = hdoipd.state;
     if (hdoipd_state(HOID_VRB|HOID_VTB)) {
@@ -557,11 +558,11 @@ void task_restart(int state)
     }
 }
 
-void task_set_bw(char* p)
+void task_set_bw(char *p UNUSED)
 {
     t_video_timing timing;
     uint32_t advcnt_old;
-    uint32_t bw     = reg_get_int("bandwidth");             // bandwidth in byte/s 
+    uint32_t bw     = reg_get_int("bandwidth");             // bandwidth in byte/s
     uint32_t chroma = reg_get_int("chroma-bandwidth");      // percent of chroma bandwidth (0 .. 100)
     report("update bandwidth: %d Byte/s %d%% Chroma", bw, chroma);
     //bw = bw - bw / 20; // 5% overhead approx.
