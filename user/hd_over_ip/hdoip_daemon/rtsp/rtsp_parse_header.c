@@ -391,6 +391,26 @@ void rtsp_common_default(t_rtsp_header_common* common)
     common->session[0] = 0;
 }
 
+static int rtsp_parse_header_common(const char *attrstr, const char *line,
+                                    t_rtsp_header_common *common)
+{
+    int ret = 0;
+
+    if (!common)
+        return -1;
+
+    if (strcmp(attrstr, "Session") == 0)
+        strncpy(common->session, line, sizeof(common->session));
+    else if (strcmp(attrstr, "Content-Type") == 0)
+        strncpy(common->content_type, line, sizeof(common->content_type));
+    else if (strcmp(attrstr, "Content-Length") == 0)
+        common->content_length = atoi(line);
+    else
+        ret = -1;
+
+    return ret;
+}
+
 int rtsp_parse_header(t_rtsp_connection* con, const t_map_fnc attr[], void* base, t_rtsp_header_common* common, int timeout)
 {
     int n;
@@ -401,26 +421,19 @@ int rtsp_parse_header(t_rtsp_connection* con, const t_map_fnc attr[], void* base
 
     while ((n = rtsp_receive(con, &line, timeout, 0, &read)) == RTSP_SUCCESS) {
         // RTSP Header ends with empty line
-        if (*line == '\0') break;
+        if (!line || *line == '\0')
+            break;
 
         if ((attrstr = str_next_token(&line, "%:: ;"))) {
-            if (common) {
-                if (strcmp(attrstr, "Session") == 0) {
-                    strcpy(common->session, line);
-                } else if (strcmp(attrstr, "Content-Type") == 0) {
-                    strcpy(common->content_type, line);
-                } else if (strcmp(attrstr, "Content-Length") == 0) {
-                    common->content_length = atoi(line);
-                }
-            }
-            if (base && attr)
-            {
-              n = map_call_fnc(attr, attrstr, line, base);
-              if (n == RTSP_UNKNOWN_HEADER) {
-                  report(" ? unknown header: %s", attrstr);
-              } else if (n) {
-                  report(" ? parse header error: %s: %s", attrstr, line);
-              }
+            if (rtsp_parse_header_common(attrstr, line, common) == 0)
+                continue;   // got a common header
+
+            if (base && attr) {
+                n = map_call_fnc(attr, attrstr, line, base);
+                if (n == RTSP_UNKNOWN_HEADER)
+                    report(" ? unknown header: %s", attrstr);
+                else if (n)
+                    report(" ? parse header error: %s: %s", attrstr, line);
             }
         } else {
             report(" ? defect header-line: %s", line);
