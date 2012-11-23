@@ -341,7 +341,7 @@ int rtsp_client_hdcp(t_rtsp_client* client)
     /* write keys to HW and enable encryption*/
     hdcp_convert_sk_char_int(ks, riv, hdoipd.hdcp.keys);
     hdoipd.hdcp.ske_executed = HDCP_SKE_EXECUTED;
-    report(INFO "SESSION KEY EXCHANGE SUCCESSFUL!")
+    report(INFO "SESSION KEY EXCHANGE SUCCESSFUL!");
     return RTSP_SUCCESS;
 }
 

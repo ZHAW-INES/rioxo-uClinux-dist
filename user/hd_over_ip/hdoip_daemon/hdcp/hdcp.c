@@ -126,7 +126,7 @@ int hdcp_ske_s(t_rtsp_media* media, t_rtsp_req_hdcp* m, t_rtsp_connection* rsp)
 	        	/*for (i=0;i<6;i++){  //SECRET VALUES, SHOW ONLY TO DEBUG
 	        		report(INFO "THE KEYS: %08x",  hdoipd.hdcp.keys[i]);
 	        	}*/
-	        	report(INFO "SESSION KEY EXCHANGE SUCCESSFUL!")
+                report(INFO "SESSION KEY EXCHANGE SUCCESSFUL!");
 	        	hdoipd.hdcp.ske_executed = HDCP_SKE_EXECUTED;
 		    	media->hdcp_state = HDCP_SEND_KS;
 	            return RTSP_SUCCESS;

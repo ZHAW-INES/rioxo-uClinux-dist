@@ -218,7 +218,10 @@ int usb_event(t_rtsp_media *media, uint32_t event)
 {
     t_rtsp_client *client = media->creator;
 
-    if (!client) { report(ERROR "usb_event: no client") return RTSP_CLIENT_ERROR; }
+    if (!client) {
+        report(ERROR "usb_event: no client");
+        return RTSP_CLIENT_ERROR;
+    }
 
     if (event == EVENT_TICK) {
         if (alive_ping) {

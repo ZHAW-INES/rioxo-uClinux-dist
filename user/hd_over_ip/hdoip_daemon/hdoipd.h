@@ -213,21 +213,21 @@ extern t_hdoipd                 hdoipd;
 //------------------------------------------------------------------------------
 // report functions
 
-#define report(...) { \
+#define report(...) do { \
     hdoip_report(&hdoipd.main_log, __VA_ARGS__); \
-}
+} while (0)
 
-#define reportn(...) { \
+#define reportn(...) do { \
     hdoip_reportn(&hdoipd.main_log, __VA_ARGS__); \
-}
+} while (0)
 
-#define perrno(...) { \
+#define perrno(...) do { \
     hdoip_perrno(&hdoipd.main_log, __VA_ARGS__);\
-}
+} while (0)
 
-#define report_rtsp(...) {\
+#define report_rtsp(...) do { \
     hdoip_report(&hdoipd.rtsp_log, __VA_ARGS__); \
-}
+} while (0)
 
 //------------------------------------------------------------------------------
 //
@@ -277,30 +277,25 @@ static inline void get_call(char* n, char** k)
     if (f) f(k); else *k = reg_get(n);
 }
 
-
-//------------------------------------------------------------------------------
-//
-
-
 #define pthread(th, f, d) \
-{ \
+do { \
     int ret = pthread_create(&th, 0, f, d); \
     if (ret) { \
         report2(ERROR #f ".pthread_create: failed %d", ret); \
     } else { \
         report2(INFO #f ".pthread_create successful"); \
     } \
-}
+} while (0)
 
 #define pthreada(th, a, f, d) \
-{ \
+do { \
     int ret = pthread_create(&th, a, f, d); \
     if (ret) { \
         report2(ERROR #f ".pthread_create: failed %d", ret); \
     } else { \
         report2(INFO #f ".pthread_create successful"); \
     } \
-}
+} while (0)
 
 static inline void lock(const char *s MAYBE_UNUSED)
 {
@@ -313,6 +308,5 @@ static inline void unlock(const char *s MAYBE_UNUSED)
     report2("hdoipd:pthread_mutex_unlock(%d, %s)", pthread_self(), s);
     if (pthread_mutex_unlock(&hdoipd.mutex)) perrno("hdoipd:pthread_mutex_unlock() failed");
 }
-
 
 #endif /* HDOIPD_H_ */

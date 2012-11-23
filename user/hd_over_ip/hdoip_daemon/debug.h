@@ -100,7 +100,7 @@
 #ifdef REPORT_PTHREAD
     #define report2(...) report(__VA_ARGS__)
 #else
-    #define report2(...) {;}
+    #define report2(...) do { } while(0)
 #endif
 
 #endif /* DEBUG_H_ */

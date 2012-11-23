@@ -174,7 +174,10 @@ void rtsp_server_update(t_rtsp_media* media, uint32_t event)
     t_rtsp_rtp_format fmt;
     char *s;
 
-    if (!server) {report(ERROR "rtsp_server_update: no server") return;}
+    if (!server) {
+        report(ERROR "rtsp_server_update: no server");
+        return;
+    }
 
     char *uri = "rtsp://255.255.255.255:65536/";
     struct in_addr a1; a1.s_addr = server->con.address;
