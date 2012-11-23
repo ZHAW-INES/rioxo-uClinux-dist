@@ -381,18 +381,24 @@ int rtsp_ommit_body(t_rtsp_connection* con, int timeout, size_t length)
     return rtsp_receive(con, &buf, timeout, length, &read);
 }
 
+void rtsp_common_default(t_rtsp_header_common* common)
+{
+    if (!common)
+        return;
+
+    common->content_length = 0;
+    common->content_type[0] = 0;
+    common->session[0] = 0;
+}
+
 int rtsp_parse_header(t_rtsp_connection* con, const t_map_fnc attr[], void* base, t_rtsp_header_common* common, int timeout)
 {
     int n;
     char *line, *attrstr;
     size_t read;
 
-    if (common) {
-        common->session[0] = 0;
-        common->content_type[0] = 0;
-        common->content_length = 0;
-    }
-    
+    rtsp_common_default(common);
+
     while ((n = rtsp_receive(con, &line, timeout, 0, &read)) == RTSP_SUCCESS) {
         // RTSP Header ends with empty line
         if (*line == '\0') break;
@@ -422,13 +428,6 @@ int rtsp_parse_header(t_rtsp_connection* con, const t_map_fnc attr[], void* base
     }
 
     return n;
-}
-
-void rtsp_common_default(t_rtsp_header_common* common)
-{
-    common->content_length = 0;
-    common->content_type[0] = 0;
-    common->session[0] = 0;
 }
 
 int rtsp_parse_response(t_rtsp_connection* con, const t_map_fnc attr[], void* base, t_rtsp_header_common* common, int timeout)
