@@ -241,7 +241,7 @@ int rtsp_listener_add_kill(t_rtsp_listener* handle, t_rtsp_media* media)
 
 t_rtsp_media* rtsp_listener_get_media(t_rtsp_listener* handle, char* name)
 {
-    t_rtsp_media* ret = 0;
+    t_rtsp_media* ret = NULL;
     listener_lock(handle, "rtsp_listener_get_media");
         ret = (t_rtsp_media*)bstmap_get(handle->media, name);
     listener_unlock(handle, "rtsp_listener_get_media");
