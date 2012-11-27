@@ -17,6 +17,8 @@
 #include "hdoipd_fsm.h"
 #include "hoi_drv_user.h"
 #include "rtsp_command.h"
+#include "rtsp_error.h"
+#include "rtsp_parameter.h"
 #include "rtsp_string.h"
 #include "vrb_video.h"
 
@@ -26,7 +28,8 @@ static struct {
     .address = 0
 };
 
-int box_sys_hello(t_rtsp_media UNUSED *media, intptr_t UNUSED m, t_rtsp_connection* rsp)
+static int box_sys_hello(t_rtsp_media *media UNUSED, void *data UNUSED,
+                         t_rtsp_connection *rsp UNUSED)
 {
     if ((rsp->address == box.address) && box.address) {
         report(INFO "hello received from remote device");
@@ -41,8 +44,9 @@ int box_sys_hello(t_rtsp_media UNUSED *media, intptr_t UNUSED m, t_rtsp_connecti
     return 0;
 }
 
-int box_sys_options(t_rtsp_media UNUSED *media, t_map_set* methods, t_rtsp_connection* rsp)
+static int box_sys_options(t_rtsp_media *media UNUSED, void *data, t_rtsp_connection *rsp)
 {
+    t_map_set *methods = data;
     int index = 0;
     rtsp_response_line(rsp, RTSP_STATUS_OK, "OK");
     msgprintf(rsp, "Public: ");
@@ -56,7 +60,48 @@ int box_sys_options(t_rtsp_media UNUSED *media, t_map_set* methods, t_rtsp_conne
     rtsp_eoh(rsp); // for the "Public: " line
     rtsp_eoh(rsp); // to end the header
     rtsp_send(rsp);
-  
+
+    return 0;
+}
+
+static int box_sys_get_parameter(t_rtsp_media *media, void *data,
+                                 t_rtsp_connection *rsp)
+{
+    char *line;
+    int n;
+    size_t rem, sz;
+    t_rtsp_parameter *param;
+
+    rtsp_response_line(rsp, RTSP_STATUS_OK, "OK");
+    // End of header
+    rtsp_eoh(rsp);
+
+    rem = rsp->common.content_length;
+    sz = 0;
+
+    while (rem > 0) {
+        /* TODO: handle multiple lines properly in rtsp_receive */
+        n = rtsp_receive(rsp, &line, 2, rem, &sz);
+        if (n != RTSP_SUCCESS) {
+            report(">>> failed to read body: %d", n);
+            break;
+        }
+
+        rem -= sz;
+
+#ifdef REPORT_RTSP_PACKETS
+        report(">>> got line '%s' (%zu)", line, strlen(line));
+#endif
+        param = rtsp_parameter_lookup(line);
+        if (param != NULL && param->get != NULL) {
+            param->get(rsp);
+            // TODO: How to handle inexistent parameters? Best bet would be to
+            // just ignore the request
+        }
+    }
+
+    rtsp_send(rsp);
+
     return 0;
 }
 
@@ -93,9 +138,10 @@ int box_sys_set_remote(char* address)
 }
 
 t_rtsp_media box_sys = {
-    .name = "",
-    .owner = 0,
-    .cookie = 0,
-    .hello = (frtspm*)box_sys_hello,
-    .options = (frtspm*)box_sys_options
+    .name           = "",
+    .owner          = 0,
+    .cookie         = NULL,
+    .hello          = box_sys_hello,
+    .options        = box_sys_options,
+    .get_parameter  = box_sys_get_parameter,
 };

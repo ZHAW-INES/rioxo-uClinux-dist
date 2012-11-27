@@ -54,6 +54,7 @@ OBJS   +=   rtsp/rtsp_connection.o
 OBJS   +=   rtsp/rtsp_default.o
 OBJS   +=   rtsp/rtsp_listener.o
 OBJS   +=   rtsp/rtsp_media.o
+OBJS   +=   rtsp/rtsp_parameter.o
 OBJS   +=   rtsp/rtsp_parse_header.o
 OBJS   +=   rtsp/rtsp_parse_table.o
 OBJS   +=   rtsp/rtsp_server.o

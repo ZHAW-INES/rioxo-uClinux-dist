@@ -58,7 +58,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
     // receive request line
     while (1) {
 
-        n = rtsp_parse_request(&handle->con, srv_method, &method, &buf, &common);
+        n = rtsp_parse_request(&handle->con, rtsp_srv_methods, &method, &buf, &common);
 
         // request has already been handled (probably because an error occured)
         if (n == RTSP_HANDLED) continue;
@@ -87,6 +87,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
         n = rtsp_media_check_request(method, media, &buf, &handle->con);
         if (n == RTSP_HANDLED)
         {
+            report(" ? invalid request on method (%s) in media-control (%s)", method->name, media->name);
             rtsp_ommit_body(&handle->con, 0, common.content_length);
             continue;
         }
@@ -101,12 +102,13 @@ int rtsp_server_thread(t_rtsp_server* handle)
         lock("rtsp_server_thread");
 
         media->creator = handle;
+	memcpy(&handle->con.common, &common, sizeof(t_rtsp_header_common));
 
 #ifdef REPORT_RTSP
         report(" < RTSP Server [%d] %s", handle->nr, common.rq.method);
 #endif
         // process request (function responses for itself)
-        n = ((frtspm*)method->fnc)(media, &buf, &handle->con);
+        n = (method->fnc)(media, &buf, &handle->con);
         // media may be not valid anymore!
         if (n != RTSP_SUCCESS && n != RTSP_HANDLED) {
             rtsp_response_error(&handle->con, RTSP_STATUS_INTERNAL_SERVER_ERROR, NULL);

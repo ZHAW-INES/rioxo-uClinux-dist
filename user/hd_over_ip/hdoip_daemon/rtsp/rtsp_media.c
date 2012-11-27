@@ -56,10 +56,15 @@ int rtsp_media_check_request(const t_map_set *method, t_rtsp_media* media, void*
 int rmsq_options(t_rtsp_media *media, void *msg UNUSED, t_rtsp_connection *rsp)
 {
     int ret;
-    if ((ret = media->options(media, srv_method, rsp)) != 0)
+    if ((ret = media->options(media, (void *) rtsp_srv_methods, rsp)) != 0)
         return ret;
 
     return RTSP_SUCCESS;
+}
+
+int rmsq_get_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp)
+{
+    return media->get_parameter(media, NULL, rsp);
 }
 
 int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
@@ -281,7 +286,7 @@ int rmsr_pause(t_rtsp_media* media, void* msg)
 int rmcq_options(t_rtsp_media *media, void *msg UNUSED, t_rtsp_connection *rsp)
 {
     int ret;
-    if ((ret = media->options(media, client_method, rsp)) != 0)
+    if ((ret = media->options(media, (void *)rtsp_client_methods, rsp)) != 0)
         return ret;
 
     return RTSP_SUCCESS;

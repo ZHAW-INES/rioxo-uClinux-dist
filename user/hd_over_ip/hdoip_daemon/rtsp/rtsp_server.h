@@ -24,7 +24,7 @@ typedef struct {
     t_rtsp_media*		media;          // associated media
 } t_rtsp_server;
 
-extern const t_map_set srv_method[];
+extern const t_map_set rtsp_srv_methods[];
 
 t_rtsp_server* rtsp_server_create(int fd, uint32_t addr);
 

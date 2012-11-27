@@ -164,6 +164,10 @@ typedef struct {
 
 typedef struct {
     uint32_t            cseq;
+} t_rtsp_req_get_parameter;
+
+typedef struct {
+    uint32_t            cseq;
     t_rtsp_transport    transport;
     t_rtsp_edid         edid;
     t_rtsp_hdcp         hdcp;

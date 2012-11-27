@@ -596,7 +596,7 @@ void show_local_ip_address_on_osd()
     }
 
     osd_printf("\n\nSerial number:     %s", reg_get("serial-number"));
-    osd_printf("\nFW-Version:        %i.%i", ((VERSION_SOFTWARE >> 16) & 0xFFFF), (VERSION_SOFTWARE & 0xFFFF));
+    osd_printf("\nFW-Version:        %i.%i", VERSION_MAJOR, VERSION_MINOR);
 
     osd_printf("\n\n\nStream");
     osd_printf("\n------");

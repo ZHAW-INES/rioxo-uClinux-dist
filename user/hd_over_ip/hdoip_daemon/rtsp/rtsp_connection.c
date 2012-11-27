@@ -69,7 +69,7 @@ int rtsp_receive(t_rtsp_connection* con, char** line, int timeout, size_t length
     fd_set rfds;
     struct timeval tv;
 
-    *line = 0;
+    *line = NULL;
 
     if (readBytes == NULL)
         return false;
@@ -124,7 +124,7 @@ int rtsp_receive(t_rtsp_connection* con, char** line, int timeout, size_t length
 #ifdef REPORT_RTSP_PACKETS
     if (con->doc & RTSP_CON_DOC_RX) {
         struct in_addr addr = { .s_addr = con->address };
-        report_rtsp("[%15s] < %s", inet_ntoa(addr), *line);
+        report_rtsp("[%15s] < %s (%zu)", inet_ntoa(addr), *line, *readBytes);
     }
 #endif
 

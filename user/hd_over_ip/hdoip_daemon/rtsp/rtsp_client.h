@@ -39,7 +39,7 @@ typedef struct {
     t_node              *idx;           // pointer to the node in the client list (hdoipd.client)
 } t_rtsp_client;
 
-extern const t_map_set client_method[];
+extern const t_map_set rtsp_client_methods[];
 
 extern const t_map_fnc tab_response_hdcp[];
 extern const t_map_fnc tab_response_setup[];

@@ -53,7 +53,7 @@ typedef enum {
     RTSP_RESULT_SERVER_HDCP_ERROR
 } e_rtsp_media_result;
 
-typedef int (frtspm)(void* media, void* msg, void* rsp);
+typedef int (frtspm)(struct rtsp_media *, void *msg, struct rtsp_connection *);
 typedef int (frtspl)(void* media);
 typedef int (frtspe)(void* media, uint32_t event);
 
@@ -69,10 +69,10 @@ typedef struct t_rtsp_media_hdcp {
 }t_rtsp_media_hdcp;
 
 // Media session
-typedef struct t_rtsp_media {
+typedef struct rtsp_media {
     void*   creator;            // Pointer to client or server thread creates this media (t_rtsp_server / t_rtsp_client)
     void*   top;                // UNUSED
-    struct t_rtsp_media* owner; // Pointer to origin media (video, audio or box_sys)
+    struct rtsp_media* owner; // Pointer to origin media (video, audio or box_sys)
     t_node* children;           // UNUSED
     char*   name;               // "audio", "video" or "" (box_sys)
     char    sessionid[20];      // Session string (ID)
@@ -85,6 +85,7 @@ typedef struct t_rtsp_media {
     frtspm* options;
     frtspm* hdcp;
     frtspm* error;              // (media*, rtsp-code, connection)
+    frtspm* get_parameter;      // (c->s)
     frtspm* setup;              // (c->s) request or response
     frtspm* play;               // (c->s) request or response
     frtspm* pause;              // (c->s|s->c) rsp=0: response / else: request
@@ -116,6 +117,7 @@ int rtsp_media_check_request(const t_map_set* method, t_rtsp_media* media, void*
 
 // rtsp media server
 int rmsq_options(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
+int rmsq_get_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp);
 int rmsq_setup(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_play(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);

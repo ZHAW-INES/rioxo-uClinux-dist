@@ -12,6 +12,10 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+struct rtsp_media;
+struct rtsp_connection;
+
+typedef int (*f_rtspm)(struct rtsp_media *, void *, struct rtsp_connection *);
 typedef int (mapfnc2)(void*, void*);
 
 typedef struct {
@@ -23,8 +27,8 @@ typedef struct {
 
 typedef struct {
     char*   name;         //!< function name
-    t_map_fnc	*rec;     //!< record pointer
-    void*   fnc;          //!< function;
+    const t_map_fnc *rec; //!< record pointer
+    f_rtspm fnc;         //!< function;
     bool    in_session;   //!< whether the method is only valid in a session
     int     states;       //!< states in which this method is valid
     size_t  impl_offset;  //!< offset of the implementation in t_rtsp_media

@@ -9,18 +9,8 @@
 #define RTSP_PARSE_REQUEST_H_
 
 #include "rtsp.h"
-#include "rtsp_string.h"
 #include "rtsp_connection.h"
 #include "map.h"
-
-typedef struct {
-    char        line[100];
-    t_str_request_line rq;
-    t_str_uri   uri;
-    char        session[20];
-    char        content_type[50];
-    size_t      content_length;
-} t_rtsp_header_common;
 
 int rtsp_parse_ip(char* str, uint32_t* p);
 int rtsp_parse_timing(char* line, t_video_timing* timing);
