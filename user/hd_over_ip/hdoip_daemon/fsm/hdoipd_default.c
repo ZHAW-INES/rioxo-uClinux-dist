@@ -7,7 +7,8 @@
 #include "hdoipd.h"
 #include "hoi_cfg.h"
 
-#define CFGTAG "config-version"
+#define CFGTAG      "config-version"
+#define CFGVERSION  "v0.4"
 
 void hdoipd_set_default()
 {
@@ -141,6 +142,54 @@ static void update_0_2_to_0_3()
     reg_set(CFGTAG, "v0.3");
 }
 
+static void update_0_3_to_0_4()
+{
+    size_t length = 0;
+    char *p, *tmp;
+
+    // update remote-uri
+    p = reg_get("remote-uri");
+    if (p && strstr(p, "rscp://") == p)
+    {
+        length = strlen(p);
+        tmp = (char*)malloc(length + 1);
+        if (tmp)
+        {
+          length = sprintf(tmp, "%s://%s", RTSP_SCHEME, p + 7);
+          tmp[length] = '\0';
+          reg_set("remote-uri", tmp);
+
+          free(tmp);
+        }
+    }
+
+    // update hello-uri
+    p = reg_get("hello-uri");
+    if (p && strstr(p, "rscp://") == p)
+    {
+        length = strlen(p);
+        tmp = (char*)malloc(length + 1);
+        if (tmp)
+        {
+          length = sprintf(tmp, "%s://%s", RTSP_SCHEME, p + 7);
+          tmp[length] = '\0';
+          reg_set("hello-uri", tmp);
+
+          free(tmp);
+        }
+    }
+
+    // update rscp-server-port to rtsp-server-port
+    p = reg_get("rscp-server-port");
+    if (p)
+    {
+        reg_set("rtsp-server-port", p);
+        reg_del("rscp-server-port");
+    }
+
+    reg_set(CFGTAG, "v0.4");
+}
+
 /** upgrade config
  *
  * upgrades from one version to the next until the newest version is
@@ -158,30 +207,38 @@ void hdoipd_registry_update()
     }
 
     if (reg_test(CFGTAG, "origin")) {
-        reg_set(CFGTAG, "v0.3");
+        reg_set(CFGTAG, CFGVERSION);
         update = true;
     }
 
-    if (reg_test(CFGTAG, "v0.1")) {
-        update_0_1_to_0_2();
-        update = true;
-    }
+    if (!reg_test(CFGTAG, CFGVERSION))
+    {
+      if (reg_test(CFGTAG, "v0.1")) {
+          update_0_1_to_0_2();
+          update = true;
+      }
 
-    if (reg_test(CFGTAG, "v0.2")) {
-        update_0_2_to_0_3();
-        update = true;
-    }
+      if (reg_test(CFGTAG, "v0.2")) {
+          update_0_2_to_0_3();
+          update = true;
+      }
 
-    // ... further version upgrades
-    // if (reg_test(CFGTAG, "v0.1")) -> upgrade to 0.2 etc..
+      if (reg_test(CFGTAG, "v0.3")) {
+          update_0_3_to_0_4();
+          update = true;
+      }
 
-    // when update store the result
-    if (update) {
-        report(INFO "store updated config");
-        hoi_cfg_write(CFG_FILE);
-    }
+      // ... further version upgrades
+      // if (reg_test(CFGTAG, "v0.1")) -> upgrade to 0.2 etc..
 
-    if (!reg_test(CFGTAG, "v0.3")) {
-        report(INFO "unknown config version");
+      // when update store the result
+      if (update) {
+          report(INFO "store updated config");
+          hoi_cfg_write(CFG_FILE);
+      }
+
+      if (!reg_test(CFGTAG, CFGVERSION)) {
+          report(INFO "unknown config version");
+      }
     }
 }
