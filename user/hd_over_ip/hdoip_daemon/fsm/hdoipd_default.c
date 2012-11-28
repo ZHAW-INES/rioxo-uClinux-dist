@@ -43,6 +43,7 @@ void hdoipd_set_default()
     reg_set("video-port", "3400");
     reg_set("audio-port", "3402");
     reg_set("rtsp-server-port", "554");
+    reg_set("rtsp-timeout", "5");
 
     reg_set("hdcp-force", "false");
 

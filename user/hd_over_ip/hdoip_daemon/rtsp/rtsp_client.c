@@ -416,11 +416,16 @@ t_rtsp_client* rtsp_client_open(char* address, t_rtsp_media *media)
 {
     static int nr = 1;
     char buf[200];
-    int fd, port, ret = RTSP_SUCCESS;
+    int fd, port, res, ret = RTSP_SUCCESS;
+    long arg;
     t_str_uri uri;
     struct hostent* host;
     struct in_addr addr;
     struct sockaddr_in dest_addr;
+    fd_set myset;
+    struct timeval timeout;
+    int valopt;
+    socklen_t lon;
 
     if (media != NULL && media->creator != NULL) {
       report(ERROR "rtsp_client_open: media (%s) already belongs to a client", media->name);
@@ -477,16 +482,82 @@ t_rtsp_client* rtsp_client_open(char* address, t_rtsp_media *media)
     }
 
     if (ret == RTSP_SUCCESS) {
-        // setup own address
-        memset(&dest_addr, 0, sizeof(struct sockaddr_in));
-        dest_addr.sin_family = AF_INET;
-        dest_addr.sin_port = port;
-        dest_addr.sin_addr.s_addr = addr.s_addr;        // remote address
-
-        if (connect(fd, (struct sockaddr*)&dest_addr, sizeof(struct sockaddr_in)) == -1) {
+        // Set non-blocking
+        if ((arg = fcntl(fd, F_GETFL, NULL)) < 0) {
             close(fd);
-            perrno(ERROR "RTSP Client [%d]: connection refused", client->nr);
+            report(ERROR "RTSP Client [%d]: error getting socket's access mode: %s", client->nr, strerror(errno));
             ret = RTSP_CLIENT_ERROR;
+        }
+        else {
+            arg |= O_NONBLOCK;
+            if (fcntl(fd, F_SETFL, arg) < 0) {
+                close(fd);
+                report(ERROR "RTSP Client [%d]: error setting socket to non-blocking mode: %s", client->nr, strerror(errno));
+                ret = RTSP_CLIENT_ERROR;
+            }
+        }
+    }
+
+    if (ret == RTSP_SUCCESS)
+    {
+      // setup own address
+      memset(&dest_addr, 0, sizeof(struct sockaddr_in));
+      dest_addr.sin_family = AF_INET;
+      dest_addr.sin_port = port;
+      dest_addr.sin_addr.s_addr = addr.s_addr;        // remote address
+
+      if (connect(fd, (struct sockaddr*)&dest_addr, sizeof(struct sockaddr_in)) < 0) {
+          ret = RTSP_TIMEOUT;
+          if (errno == EINPROGRESS) {
+              timeout.tv_sec = reg_get_int("rtsp-timeout");
+              timeout.tv_usec = 0;
+              FD_ZERO(&myset);
+              FD_SET(fd, &myset);
+
+              res = select(fd + 1, NULL, &myset, NULL, &timeout);
+              if (res < 0 && errno != EINTR) {
+                  report(ERROR "RTSP Client [%d]: connection refused: %s", client->nr, strerror(errno));
+              }
+              else if (res > 0) {
+                  // socket selected for write
+                  lon = sizeof(int);
+                  if (getsockopt(fd, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon) < 0) {
+                      report(ERROR "RTSP Client [%d]: error in getsockopt: %s", client->nr, strerror(errno));
+                  }
+                  // check the returned value
+                  else if (valopt) {
+                      report(ERROR "RTSP Client [%d]: error in delayed connection (%d): %s", client->nr, valopt, strerror(valopt));
+                  }
+                  else
+                    ret = RTSP_SUCCESS;
+              }
+              else  {
+                  report(ERROR "RTSP Client [%d]: connection timed out", client->nr);
+              }
+          }
+
+          if (ret != RTSP_SUCCESS) {
+              close(fd);
+              ret = RTSP_CLIENT_ERROR;
+          }
+      }
+    }
+
+    if (ret == RTSP_SUCCESS)
+    {
+        // Set to blocking mode again...
+        if ((arg = fcntl(fd, F_GETFL, NULL)) < 0) {
+            close(fd);
+            report(ERROR "RTSP Client [%d]: error getting socket's access mode: %s", client->nr, strerror(errno));
+            ret = RTSP_CLIENT_ERROR;
+        }
+        else {
+            arg &= (~O_NONBLOCK);
+            if (fcntl(fd, F_SETFL, arg) < 0) {
+                close(fd);
+                report(ERROR "RTSP Client [%d]: error setting socket to blocking mode: %s", client->nr, strerror(errno));
+                ret = RTSP_CLIENT_ERROR;
+            }
         }
     }
 
