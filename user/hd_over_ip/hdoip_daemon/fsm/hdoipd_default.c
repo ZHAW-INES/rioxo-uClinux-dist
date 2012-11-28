@@ -28,8 +28,8 @@ void hdoipd_set_default()
     reg_set("mode-media", "video");
     reg_set("mode-sync", "streamsync");
     reg_set("sync-target", "video");
-    reg_set("remote-uri", "rtsp://192.168.1.201");
-    reg_set("hello-uri", "rtsp://192.168.1.201");
+    reg_set("remote-uri", RTSP_SCHEME "://192.168.1.201");
+    reg_set("hello-uri", RTSP_SCHEME "://192.168.1.201");
     reg_set("compress", "jp2k");
     reg_set("bandwidth", "10485760");
     reg_set("chroma-bandwidth", "100");

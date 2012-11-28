@@ -135,9 +135,9 @@ int rtsp_server_thread(t_rtsp_server* handle)
 void rtsp_server_teardown(t_rtsp_media* media)
 {
     t_rtsp_server* server = media->creator;
-    char *uri = "rtsp://255.255.255.255:65536/";
+    char *uri = RTSP_SCHEME "://255.255.255.255:65536/";
     struct in_addr a1; a1.s_addr = server->con.address;
-    sprintf(uri, "rtsp://%s/", inet_ntoa(a1));
+    sprintf(uri, "%s://%s/", RTSP_SCHEME, inet_ntoa(a1));
 
     if (server) {
         // a server connection is active for this media -> use it to send a teardown message
@@ -181,9 +181,9 @@ void rtsp_server_update(t_rtsp_media* media, uint32_t event)
         return;
     }
 
-    char *uri = "rtsp://255.255.255.255:65536/";
+    char *uri = RTSP_SCHEME "://255.255.255.255:65536/";
     struct in_addr a1; a1.s_addr = server->con.address;
-    sprintf(uri, "rtsp://%s/", inet_ntoa(a1));
+    sprintf(uri, "%s://%s/", RTSP_SCHEME, inet_ntoa(a1));
 
     s = reg_get("compress");
     if (strcmp(s, "jp2k") == 0) {
@@ -209,9 +209,9 @@ void rtsp_server_pause(t_rtsp_media* media)
 
     if (!server) {report("rtsp server pause: no server"); return;}
 
-    char *uri = "rtsp://255.255.255.255:65536/";
+    char *uri = RTSP_SCHEME "://255.255.255.255:65536";
     struct in_addr a1; a1.s_addr = server->con.address;
-    sprintf(uri, "rtsp://%s/", inet_ntoa(a1));
+    sprintf(uri, "%s://%s", RTSP_SCHEME, inet_ntoa(a1));
 
     if (server) {
         rtsp_request_pause(&server->con, uri, media->sessionid);

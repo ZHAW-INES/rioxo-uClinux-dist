@@ -197,7 +197,7 @@ int alive_check_server_update(t_alive_check *handle, bool enable, uint16_t port,
 // specific functions to check if vtb is ready
 
 /*
- * Because of DHCP needs some time to get ip address, 
+ * Because of DHCP needs some time to get ip address,
  * this init function is repeated until ip is available
  *
  */
@@ -255,7 +255,7 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
     int timeout;
     int ret;
     int i;
-    char hello_msg[msg_length+(edid_length*2)];    
+    char hello_msg[msg_length+(edid_length*2)];
     char client_ip[100];
     char edid_string[edid_length*2];
     char buff[2];
@@ -278,7 +278,7 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
                 sprintf(buff, "%02x", edid.edid[i]);
                 strcat(edid_string, buff);
             }
-        
+
             if (reg_test("system-dhcp", "true")) {
                 sprintf(hello_msg, "%s/%s/%s/","HELLO", "VRB", reg_get("system-hostname"));
             } else {
@@ -375,9 +375,9 @@ int alive_check_test_msg_vrb_alive(char *hello_msg, char *client_ip, uint8_t *ed
 {
     int i;
     char type[30];
-    char msg[30]; 
+    char msg[30];
     char buff[2];
-    
+
     strcpy(msg, ((char*) str_next_token(&hello_msg, "/")));
     strcpy(type, ((char*) str_next_token(&hello_msg, "/")));
     strcpy(client_ip, ((char*) str_next_token(&hello_msg, "/")));
@@ -395,13 +395,13 @@ int alive_check_test_msg_vrb_alive(char *hello_msg, char *client_ip, uint8_t *ed
     return ALIVE_CHECK_ERROR;
 }
 
-int alive_check_response_vrb_alive(char *client_ip) 
+int alive_check_response_vrb_alive(char *client_ip)
 {
     t_rtsp_client *client;
     char uri[40];
 
     if (client_ip) {
-        sprintf(uri, "%s://%s","rtsp", client_ip);
+        sprintf(uri, "%s://%s",RTSP_SCHEME, client_ip);
         client = rtsp_client_open(hdoipd.client, 0, uri);
         if (client) {
 #ifdef REPORT_ALIVE_HELLO
@@ -433,7 +433,7 @@ uint8_t return_next_byte(char* s)
 {
     uint8_t r = 0;
 
-    if ((s[0] >= '0') && (s[0] <= '9')) 
+    if ((s[0] >= '0') && (s[0] <= '9'))
         r = r + (s[0] - '0');
     else if ((s[0] >= 'a') && (s[0] <= 'f'))
         r = r + (s[0] - 'a' + 10);
