@@ -13,6 +13,7 @@ local REG_ST_VID_PORT_LABEL = "vid_port"
 local REG_ST_AUD_PORT_LABEL = "aud_port"
 local REG_ST_RTSP_PORT_LABEL = "rtsp_port"
 local REG_ST_HELLO_PORT_LABEL = "hello_port"
+local REG_ST_RTSP_TIMEOUT_LABEL = "rtsp_timeout"
 
 local MEDIA_SEL_AUD = "audio"
 local MEDIA_SEL_VID = "video"
@@ -51,7 +52,7 @@ function show(t)
             t.hdcp_force = 1
         else 
             t.hdcp_force = 0
-        end 
+        end
        
         if(t.mode_vtb) then 
             t.st_bw = hdoip.pipe.getParam(hdoip.pipe.REG_ST_BW)
@@ -90,6 +91,7 @@ function show(t)
             t.av_delay = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AV_DELAY)
 	        t.media_sel = hdoip.pipe.getParam(hdoip.pipe.REG_ST_MODE_MEDIA)
 	        t.osd_time = hdoip.pipe.getParam(hdoip.pipe.REG_OSD_TIME)
+          t.rtsp_timeout = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RTSP_TIMEOUT)
 
 	        if(string.find(t.media_sel, MEDIA_SEL_AUD) ~= nil) then
 	            t.cb_audio = 1
@@ -270,6 +272,16 @@ function show(t)
 	            hdoip.html.AddError(t, label.err_osd_time_not_number)
 	        end 
 
+          if(tonumber(t.rtsp_timeout) ~= nil) then
+              if ((tonumber(t.rtsp_timeout) > 60) or (tonumber(t.rtsp_timeout) < 1)) then
+                hdoip.html.AddError(t, label.err_rtsp_timeout_not_in_range)
+              else
+                  hdoip.pipe.setParam(hdoip.pipe.REG_ST_RTSP_TIMEOUT, t.rtsp_timeout)
+              end
+          else
+              hdoip.html.AddError(t, label.err_rtsp_timeout_not_number)
+          end
+
 	        t.media = ""
 	        if (t.cb_video ~= nil) then
 	            t.media = t.media .. "video"
@@ -398,6 +410,10 @@ function show(t)
         hdoip.html.Text(label.p_osd_time);                                                      hdoip.html.TableInsElement(1);
         hdoip.html.FormText(REG_ST_OSD_LABEL, t.osd_time, 4, 0); 
         hdoip.html.Text(label.u_s);                                                             hdoip.html.TableInsElement(2);
+        
+      hdoip.html.Text(label.p_st_rtsp_timeout);                                               hdoip.html.TableInsElement(1);
+      hdoip.html.FormText(REG_ST_RTSP_TIMEOUT_LABEL, t.rtsp_timeout, 4, 0);
+      hdoip.html.Text(label.u_s);                                                             hdoip.html.TableInsElement(2);
     end
 
     hdoip.html.TableBottom()

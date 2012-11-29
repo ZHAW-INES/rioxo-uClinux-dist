@@ -66,6 +66,8 @@ label = {
     err_av_delay_not_in_range = "Audio-video delay is not in range (-100 .. 100)";
     err_osd_time_not_number = "OSD time is not a number";
     err_osd_time_not_in_range = "OSD time is not in range (0 .. 100)";
+    err_rtsp_timeout_not_in_range = "RTSP timeout is not in range (0 .. 60)";
+    err_rtsp_timeout_not_number = "RTSP timeout is not a number";
 
     -- Page names
     page_streaming = "Stream configuration";
@@ -175,6 +177,7 @@ label = {
     p_st_unicast = "Unicast";
     p_st_multicast = "Multicast";
     p_osd_time = "OSD time";
+    p_st_rtsp_timeout = "RTSP timeout";
 
     -- Page reboot
     p_rb_desc = "The new setting will take effect only after a restart of the device.<br>Should the device be restarted?<br>";
