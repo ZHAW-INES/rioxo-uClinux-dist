@@ -38,10 +38,6 @@ static bool rtsp_receive_crlf(char **s, char *eol, size_t len, size_t *readBytes
     /* shortcut */
     if (*s == eol)
         return false;
-
-    if (len > 0)
-        report(">>> %s called with len %zu", __func__, len);
-
     if (readBytes == NULL)
         return false;
 
