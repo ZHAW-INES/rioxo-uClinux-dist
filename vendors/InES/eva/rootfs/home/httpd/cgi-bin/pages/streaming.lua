@@ -77,12 +77,6 @@ function show(t)
             if(tonumber(t.fps_divide) ~= nil) then
                 t.fps_divide = tonumber(t.fps_divide);
             end
-
-            if(hdoip.pipe.getParam(hdoip.pipe.REG_AUTO_STREAM) == "true") then
-                t.auto_stream = 1;
-            else 
-                t.auto_stream = 0;
-            end
         end
 
         if(t.mode_vrb) then
@@ -104,6 +98,12 @@ function show(t)
             else 
                 t.cb_video = 0
 	        end
+
+          if(hdoip.pipe.getParam(hdoip.pipe.REG_AUTO_STREAM) == "true") then
+              t.auto_stream = 1;
+          else 
+              t.auto_stream = 0;
+          end
         end
 
     else
@@ -216,14 +216,6 @@ function show(t)
             if(t.fps_divide ~= nil) then
                hdoip.pipe.setParam(hdoip.pipe.REG_FPS_DIVIDE, t.fps_divide)
             end
-
-            if(t.auto_stream ~= nil) then
-               hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "true")
-               t.auto_stream = 1
-            else
-               hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "false")
-               t.auto_stream = 0 
-            end
             
             if((t.multicast_en ~= nil) and (t.multicast_en == "true")) then
 	            hdoip.pipe.setParam(hdoip.pipe.REG_MULTICAST_EN, "true")
@@ -280,6 +272,14 @@ function show(t)
               end
           else
               hdoip.html.AddError(t, label.err_rtsp_timeout_not_number)
+          end
+
+          if(t.auto_stream ~= nil) then
+             hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "true")
+             t.auto_stream = 1
+          else
+             hdoip.pipe.setParam(hdoip.pipe.REG_AUTO_STREAM, "false")
+             t.auto_stream = 0 
           end
 
 	        t.media = ""
@@ -386,11 +386,6 @@ function show(t)
         hdoip.html.Text(label.p_st_fps_divide);                                             hdoip.html.TableInsElement(1);
         hdoip.html.DropdownBox4("fps_divide", label.n_none, label.n_1_2, label.n_1_3, label.n_1_4, t.fps_divide)
         hdoip.html.Text(label.p_st_eit_only);                                               hdoip.html.TableInsElement(2);
-
-
-
-        hdoip.html.Text(label.p_st_auto_stream);                                            hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                        hdoip.html.TableInsElement(2);
     end
 
     -- VRB specific fields
@@ -414,6 +409,9 @@ function show(t)
       hdoip.html.Text(label.p_st_rtsp_timeout);                                               hdoip.html.TableInsElement(1);
       hdoip.html.FormText(REG_ST_RTSP_TIMEOUT_LABEL, t.rtsp_timeout, 4, 0);
       hdoip.html.Text(label.u_s);                                                             hdoip.html.TableInsElement(2);
+
+      hdoip.html.Text(label.p_st_auto_stream);                                                hdoip.html.TableInsElement(1);
+      hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                            hdoip.html.TableInsElement(2);
     end
 
     hdoip.html.TableBottom()
