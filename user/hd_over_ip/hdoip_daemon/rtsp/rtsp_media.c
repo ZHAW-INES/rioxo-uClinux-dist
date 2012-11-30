@@ -64,6 +64,7 @@ int rmsq_options(t_rtsp_media *media, void *msg UNUSED, t_rtsp_connection *rsp)
 
 int rmsq_get_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp)
 {
+
     return media->get_parameter(media, NULL, rsp);
 }
 

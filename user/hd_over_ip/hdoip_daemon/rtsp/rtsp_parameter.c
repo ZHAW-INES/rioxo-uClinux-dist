@@ -22,7 +22,7 @@
 
 const struct rtsp_parameter rtsp_parameters[];
 
-static int rtsp_param_get_help(t_rtsp_connection *con)
+static int rtsp_param_get_help(t_rtsp_media *media UNUSED, t_rtsp_connection *con)
 {
     const struct rtsp_parameter *param;
     bool first;
@@ -54,7 +54,7 @@ static int rtsp_param_get_help(t_rtsp_connection *con)
     return 0;
 }
 
-static int rtsp_param_get_gw_version(t_rtsp_connection *con)
+static int rtsp_param_get_gw_version(t_rtsp_media *media UNUSED, t_rtsp_connection *con)
 {
     t_hoic_getversion cmd;
     struct tm *t;
@@ -68,24 +68,24 @@ static int rtsp_param_get_gw_version(t_rtsp_connection *con)
     return 0;
 }
 
-static int rtsp_param_get_serial(t_rtsp_connection *con)
+static int rtsp_param_get_serial(t_rtsp_media *media UNUSED, t_rtsp_connection *con)
 {
     msgprintf(con, RTSP_PARAM_SERIAL ": %s\r\n", reg_get("serial-number"));
     return 0;
 }
 
-static int rtsp_param_get_sw_version(t_rtsp_connection *con)
+static int rtsp_param_get_sw_version(t_rtsp_media *media UNUSED, t_rtsp_connection *con)
 {
     msgprintf(con, RTSP_PARAM_SW_VERSION ": %d.%d\r\n", VERSION_MAJOR, VERSION_MINOR);
     return 0;
 }
 
-static int rtsp_param_get_sopc_sysid(t_rtsp_connection *con)
+static int rtsp_param_get_sopc_sysid(t_rtsp_media *media UNUSED, t_rtsp_connection *con)
 {
     t_hoic_getversion cmd;
     struct tm *t;
     char tbuf[128];
-    
+
     hoi_drv_getversion(&cmd);
     t = localtime((time_t *) &cmd.sysid_date);
     strftime(tbuf, sizeof(tbuf), "%x %X", t);
@@ -95,21 +95,25 @@ static int rtsp_param_get_sopc_sysid(t_rtsp_connection *con)
 }
 
 const struct rtsp_parameter rtsp_parameters[] = {
-    { "Help",                   rtsp_param_get_help,        NULL },
-    { RTSP_PARAM_GW_VERSION,    rtsp_param_get_gw_version,  NULL },
-    { RTSP_PARAM_SERIAL,        rtsp_param_get_serial,      NULL },
-    { RTSP_PARAM_SW_VERSION,    rtsp_param_get_sw_version,  NULL },
-    { RTSP_PARAM_SOPC_SYSID,    rtsp_param_get_sopc_sysid,  NULL },
-    { NULL,                     NULL,                       NULL },
+    { "Help",                   false,	rtsp_param_get_help,        NULL },
+    { RTSP_PARAM_GW_VERSION,    false,	rtsp_param_get_gw_version,  NULL },
+    { RTSP_PARAM_SERIAL,        false,	rtsp_param_get_serial,      NULL },
+    { RTSP_PARAM_SW_VERSION,    false,	rtsp_param_get_sw_version,  NULL },
+    { RTSP_PARAM_SOPC_SYSID,    false,	rtsp_param_get_sopc_sysid,  NULL },
+    { NULL,                     false,	NULL,                       NULL },
 };
 
-t_rtsp_parameter *rtsp_parameter_lookup(const char *name)
+t_rtsp_parameter *rtsp_parameter_lookup(t_rtsp_media *media, const char *name)
 {
     t_rtsp_parameter *ret = NULL;
     t_rtsp_parameter *param;
 
     for (param = (t_rtsp_parameter *) rtsp_parameters; param->name != NULL; param++) {
         size_t len = strlen(param->name);
+
+	if (param->media_needed && media == NULL)
+            continue;
+
         if (strncmp(param->name, name, len) == 0) {
             ret = param;
             break;
