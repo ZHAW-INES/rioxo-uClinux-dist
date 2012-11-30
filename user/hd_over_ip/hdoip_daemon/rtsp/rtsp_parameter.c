@@ -17,6 +17,7 @@
 #include "version.h"
 
 #define RTSP_PARAM_GW_VERSION   "GatewareVersion"
+#define RTSP_PARAM_MAC_ADDR     "MacAddress"
 #define RTSP_PARAM_SERIAL       "SerialNumber"
 #define RTSP_PARAM_SW_VERSION   "SoftwareVersion"
 #define RTSP_PARAM_SOPC_SYSID   "SopcSysid"
@@ -80,6 +81,12 @@ static int rtsp_param_get_gw_version(t_rtsp_media *media UNUSED, t_rtsp_connecti
     return 0;
 }
 
+static int rtsp_param_get_mac_addr(t_rtsp_media *media UNUSED, t_rtsp_connection *con)
+{
+    msgprintf(con, RTSP_PARAM_MAC_ADDR ": %s\r\n", reg_get("system-mac"));
+    return 0;
+}
+
 static int rtsp_param_get_serial(t_rtsp_media *media UNUSED, t_rtsp_connection *con)
 {
     msgprintf(con, RTSP_PARAM_SERIAL ": %s\r\n", reg_get("serial-number"));
@@ -128,6 +135,7 @@ int rtsp_get_parameter(t_rtsp_media *media, t_rtsp_connection *con, const char *
 static const struct rtsp_parameter rtsp_parameters[] = {
     { "Help",                   false,	rtsp_param_get_help,        NULL },
     { RTSP_PARAM_GW_VERSION,    false,	rtsp_param_get_gw_version,  NULL },
+    { RTSP_PARAM_MAC_ADDR,      false,	rtsp_param_get_mac_addr,    NULL },
     { RTSP_PARAM_SERIAL,        false,	rtsp_param_get_serial,      NULL },
     { RTSP_PARAM_SW_VERSION,    false,	rtsp_param_get_sw_version,  NULL },
     { RTSP_PARAM_SOPC_SYSID,    false,	rtsp_param_get_sopc_sysid,  NULL },
