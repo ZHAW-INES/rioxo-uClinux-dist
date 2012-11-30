@@ -67,36 +67,9 @@ static int box_sys_options(t_rtsp_media *media UNUSED, void *data, t_rtsp_connec
 static int box_sys_get_parameter(t_rtsp_media *media, void *data,
                                  t_rtsp_connection *rsp)
 {
-    char *line;
-    int n;
-    size_t rem, sz;
-    int ret;
-
     rtsp_response_line(rsp, RTSP_STATUS_OK, "OK");
-    // End of header
-    rtsp_eoh(rsp);
-
-    rem = rsp->common.content_length;
-    sz = 0;
-
-    while (rem > 0) {
-        /* TODO: handle multiple lines properly in rtsp_receive */
-        n = rtsp_receive(rsp, &line, 2, rem, &sz);
-        if (n != RTSP_SUCCESS) {
-            report(">>> failed to read body: %d", n);
-            break;
-        }
-
-        rem -= sz;
-
-#ifdef REPORT_RTSP_PACKETS
-        report(">>> got line '%s' (%zu)", line, strlen(line));
-#endif
-        ret = rtsp_get_parameter(media, rsp, line);
-        if (ret != RTSP_SUCCESS)
-            report(ERROR "Failed to get parameter %s", line); // TODO: Anything else?
-    }
-
+    rtsp_eoh(rsp);  // End of header
+    rtsp_handle_get_parameter(media, rsp);
     rtsp_send(rsp);
 
     return 0;

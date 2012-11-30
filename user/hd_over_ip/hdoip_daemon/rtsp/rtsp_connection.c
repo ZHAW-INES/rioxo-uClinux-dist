@@ -30,27 +30,46 @@ void rtsp_coninit(t_rtsp_connection* m, int fd, uint32_t addr)
 }
 
 
-bool rtsp_receive_crlf(char** s, char* eol, size_t length, size_t* readBytes)
+static bool rtsp_receive_crlf(char **s, char *eol, size_t len, size_t *readBytes)
 {
-    char* p = *s;
+    char *p = *s;
+    size_t n = 0;
+
+    /* shortcut */
+    if (*s == eol)
+        return false;
+
+    if (len > 0)
+        report(">>> %s called with len %zu", __func__, len);
+
     if (readBytes == NULL)
         return false;
 
     *readBytes = 0;
-    for (; (length > 0 && *readBytes < length && p < eol) || (length == 0 && p < (eol - 1) && !(p[0] == '\r' && p[1] == '\n')); p++)
-        *readBytes = *readBytes + 1;
 
-    if (length > 0)
-    {
-        *s = p;
-        return (p <= eol && *readBytes >= length);
+    if (len == 0) {
+        /* Read as much as we can until \n or eol */
+        for ( ; p < eol && *p != '\n'; p++)
+            n++;
+    } else {
+        /* Read of fixed size (DOES ANYBODY EVER USE THIS?) */
+        for ( ; n < len && p < eol; p++)
+            n++;
     }
-    
-    if (length == 0 && p < (eol - 1)) {
-        p[0] = 0;
-        p[1] = 0;
+
+    *readBytes = n;
+
+    if (len == 0 && *p == '\n') {
+        /* omit \n and (optionally) \r */
+        *p = '\0';
+        p--;
+        if (p >= *s && *p == '\r')
+            *p = '\0';
         *s = p + 2;
         return true;
+    } else {
+        *s = p;
+        return (p <= eol && n >= len);
     }
 
     *s = eol;
