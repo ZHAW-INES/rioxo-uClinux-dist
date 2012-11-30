@@ -501,6 +501,7 @@ int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], con
     if ((n = rtsp_receive(con, &line, 0, 0, &read)) != RTSP_SUCCESS) {
         return n;
     }
+
     strcpy(common->line, line);
 
     // Request: (METHOD URI VERSION)

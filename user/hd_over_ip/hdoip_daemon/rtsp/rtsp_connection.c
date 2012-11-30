@@ -48,7 +48,7 @@ static bool rtsp_receive_crlf(char **s, char *eol, size_t len, size_t *readBytes
         for ( ; p < eol && *p != '\n'; p++)
             n++;
     } else {
-        /* Read of fixed size (DOES ANYBODY EVER USE THIS?) */
+        /* Read up to fixed size */
         for ( ; n < len && p < eol; p++)
             n++;
     }
@@ -56,6 +56,8 @@ static bool rtsp_receive_crlf(char **s, char *eol, size_t len, size_t *readBytes
     *readBytes = n;
 
     if (len == 0 && *p == '\n') {
+        /* count \n */
+        (*readBytes)++;
         /* omit \n and (optionally) \r */
         *p = '\0';
         p--;

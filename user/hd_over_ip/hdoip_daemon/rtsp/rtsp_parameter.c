@@ -113,11 +113,12 @@ static int rtsp_param_get_sopc_sysid(t_rtsp_media *media UNUSED, t_rtsp_connecti
     return 0;
 }
 
-int rtsp_get_parameter(t_rtsp_media *media, t_rtsp_connection *con, const char *name)
+static int rtsp_get_parameter(t_rtsp_media *media, t_rtsp_connection *con,
+                              const char *name)
 {
-    struct rtsp_parameter *param;
+    const struct rtsp_parameter *param;
 
-    for (param = (struct rtsp_parameter *) rtsp_parameters; param->name != NULL; param++) {
+    for (param = rtsp_parameters; param->name != NULL; param++) {
         size_t len = strlen(param->name);
 
         if (param->media_needed && media == NULL)
@@ -130,6 +131,49 @@ int rtsp_get_parameter(t_rtsp_media *media, t_rtsp_connection *con, const char *
     // just ignore the request
 
     return RTSP_UNSUPPORTED_PARAMETER;
+}
+
+int rtsp_handle_get_parameter(t_rtsp_media *media, t_rtsp_connection *con)
+{
+    char *line;
+    int n;
+    int ret;
+    size_t sz = 0;
+    ssize_t rem = con->common.content_length;
+
+    while (rem > 0) {
+        /* TODO: handle multiple lines properly in rtsp_receive */
+        n = rtsp_receive(con, &line, 0, 0, &sz);
+        if (n != RTSP_SUCCESS) {
+            report(ERROR "failed to read RTSP body: %d", n);
+            break;
+        }
+
+        rem -= sz;
+
+        /* The specified content-length was too short, we shouldn't handle the
+         * extracted line and discard the whole rest of the message */
+        if (rem < 0) {
+#if 0
+            char *buf;
+            size_t sz;
+
+            /* read rest of message (disregarding Content-Length) */
+            while (rtsp_receive(con, &buf, 0, 1, &sz) == 0)
+                /* empty */ ;
+#endif
+            break;
+        }
+
+        if (!line || *line == '\0')
+            break;
+
+        ret = rtsp_get_parameter(media, con, line);
+        if (ret != RTSP_SUCCESS)
+            report(ERROR "Failed to get parameter %s", line); // TODO: Anything else?
+    }
+
+    return 0;
 }
 
 static const struct rtsp_parameter rtsp_parameters[] = {
