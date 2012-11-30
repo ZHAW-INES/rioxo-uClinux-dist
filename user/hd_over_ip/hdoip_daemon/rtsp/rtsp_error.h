@@ -9,7 +9,7 @@
 #define RTSP_ERROR_H_
 
 typedef enum {
-    RTSP_ERRORNO =-1,           //!< general system error -> see errorno
+    RTSP_ERRORNO = -1,           //!< general system error -> see errorno
     RTSP_SUCCESS = 0,
     RTSP_CLOSE = 1,
     RTSP_PAUSE,
@@ -20,6 +20,7 @@ typedef enum {
     RTSP_RESPONSE_ERROR,
     RTSP_REQUEST_ERROR,
     RTSP_UNSUPPORTED_METHOD,
+    RTSP_UNSUPPORTED_PARAMETER,
     RTSP_UNKNOWN_HEADER,
     RTSP_NULL_POINTER,
     RTSP_TIMEOUT,

@@ -70,7 +70,7 @@ static int box_sys_get_parameter(t_rtsp_media *media, void *data,
     char *line;
     int n;
     size_t rem, sz;
-    t_rtsp_parameter *param;
+    int ret;
 
     rtsp_response_line(rsp, RTSP_STATUS_OK, "OK");
     // End of header
@@ -92,12 +92,9 @@ static int box_sys_get_parameter(t_rtsp_media *media, void *data,
 #ifdef REPORT_RTSP_PACKETS
         report(">>> got line '%s' (%zu)", line, strlen(line));
 #endif
-        param = rtsp_parameter_lookup(media, line);
-        if (param != NULL && param->get != NULL) {
-            param->get(media, rsp);
-            // TODO: How to handle inexistent parameters? Best bet would be to
-            // just ignore the request
-        }
+        ret = rtsp_get_parameter(media, rsp, line);
+        if (ret != RTSP_SUCCESS)
+            report(ERROR "Failed to get parameter %s", line); // TODO: Anything else?
     }
 
     rtsp_send(rsp);
