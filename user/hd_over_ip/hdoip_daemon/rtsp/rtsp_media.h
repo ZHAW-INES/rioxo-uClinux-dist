@@ -90,7 +90,6 @@ typedef struct rtsp_media {
     frtspm* play;               // (c->s) request or response
     frtspm* pause;              // (c->s|s->c) rsp=0: response / else: request
     frtspm* teardown;           // (c->s|s->c) rsp=0: response / else: request
-    frtspm* hello;              // (s->c)
     frtspm* update;             // (s->c) (events)
     frtspl* ready;              // local
     frtspm* dosetup;            // local
@@ -119,7 +118,6 @@ int rmsq_get_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp);
 int rmsq_setup(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_play(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
-int rmsq_hello(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_pause(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_update(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_hdcp(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);

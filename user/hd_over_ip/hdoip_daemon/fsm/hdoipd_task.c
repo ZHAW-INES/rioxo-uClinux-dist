@@ -30,7 +30,6 @@ enum {
 	HOID_TSK_UPD_SYS_MAC 		= 0x00000004,
 	HOID_TSK_UPD_SYS_DNS        = 0x00000008,
 	HOID_TSK_UPD_REMOTE_URI 	= 0x00000010,
-	HOID_TSK_UPD_HELLO_URI 		= 0x00000020,
 	HOID_TSK_UPD_MODE_START 	= 0x00000040,
 	HOID_TSK_UPD_AUTO_STREAM    = 0x00000080,
 	HOID_TSK_UPD_AMX            = 0x00000100,
@@ -41,7 +40,6 @@ enum {
 	HOID_TSK_EXEC_GOTO_READY	= 0x01000000,
 	HOID_TSK_EXEC_START			= 0x02000000,
 	HOID_TSK_EXEC_RESTART		= 0x03000000,
-	HOID_TSK_EXEC_HELLO			= 0x04000000,
 	HOID_TSK_EXEC_RESTART_VRB   = 0x10000000,
 	HOID_TSK_EXEC_RESTART_VTB   = 0x20000000
 };
@@ -405,11 +403,6 @@ void task_get_system_update(char** p)
 			report("Updating remote URI...");
 		}
 
-		/* hello URI  */
-		if(update_vector & HOID_TSK_UPD_HELLO_URI) {
-			report("Updating hello URI...");
-		}
-
 		/* AMX update */
 		if(update_vector & HOID_TSK_UPD_AMX) {
 		    report("Updating AMX...");
@@ -465,12 +458,6 @@ void task_get_system_update(char** p)
 				default 	  :
 								break;
 			}
-		}
-
-		/* send hello */
-		if(update_vector & HOID_TSK_EXEC_HELLO) {
-			report("send hello packets...");
-			hdoipd_hello();
 		}
 
 		update_vector = 0;
@@ -682,11 +669,6 @@ void task_set_remote(char *p UNUSED)
 	update_vector |= HOID_TSK_UPD_REMOTE_URI | HOID_TSK_EXEC_RESTART_VRB;
 }
 
-void task_set_hello(char *p UNUSED)
-{
-	update_vector |= HOID_TSK_UPD_HELLO_URI | HOID_TSK_EXEC_HELLO | HOID_TSK_UPD_ALIVE;
-}
-
 void task_set_mode_start(char *p UNUSED)
 {
 	update_vector |= HOID_TSK_UPD_MODE_START; //    | HOID_TSK_EXEC_RESTART;  restart not necessary because device must be rebooted after this change
@@ -827,7 +809,6 @@ void hdoipd_register_task()
     set_listener("mode-start", task_set_mode_start);
     set_listener("mode-media", task_set_mode_media);
     set_listener("remote-uri", task_set_remote);
-    set_listener("hello-uri", task_set_hello);
     set_listener("auto-stream", task_set_auto_stream);
     set_listener("amx-en", task_set_amx_update);
     set_listener("amx-hello-ip", task_set_amx_update);

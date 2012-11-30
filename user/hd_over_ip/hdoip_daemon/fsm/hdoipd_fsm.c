@@ -353,8 +353,12 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
     }
 
     // don't create client if it's already running
-    if (hdoipd.client == NULL)
-      hdoipd.client = rtsp_client_open(uri, &box_sys_vrb);
+    if (hdoipd.client == NULL) {
+        // new connection = new hdcp-key exchange
+        hdoipd.hdcp.ske_executed = 0;
+
+        hdoipd.client = rtsp_client_open(uri, &box_sys_vrb);
+    }
 
     if (hdoipd.client != NULL)
         rtsp_client_add_media(hdoipd.client, media);
@@ -411,6 +415,28 @@ void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps)
         }
 
     }
+}
+
+int hdoipd_start_vrb(bool force)
+{
+  if (!hdoipd_state(HOID_VRB))
+    return RTSP_CLIENT_ERROR;
+
+  // lock("hdoipd_start_vrb");
+  if ((hdoipd.client != NULL && hdoipd.client->open) || (hdoipd.task_commands & TASK_START_VRB)) {
+    // unlock("hdoipd_start_vrb");
+    return RTSP_CLIENT_ERROR;
+  }
+
+  if (!force && !hdoipd.auto_stream) {
+    // unlock("hdoipd_start_vrb");
+    return RTSP_CLIENT_ERROR;
+  }
+
+  hdoipd_set_task_start_vrb();
+  // unlock("hdoipd_start_vrb");
+
+  return RTSP_SUCCESS;
 }
 
 /** Restarts VRB when already in VRB state
@@ -911,30 +937,8 @@ void hdoipd_event(uint32_t event)
     unlock("hdoipd_event");
 }
 
-void hdoipd_hello()
-{
-    t_rtsp_client *client;
-    char *s;
-
-    s = reg_get("hello-uri");
-    if (s) {
-        client = rtsp_client_open(s, NULL);
-
-        if (client) {
-            report(INFO "say hello to %s", s);
-            rtsp_client_hello(client);
-            rtsp_client_close(client, true);
-        } else {
-            report(ERROR "could not say hello to %s", s);
-        }
-    }
-
-}
-
 void hdoipd_start()
 {
-    //hdoipd_hello();
-
     char *s = reg_get("mode-start");
     if (strcmp(s, "vtb") == 0) {
         hdoipd_goto_vtb();

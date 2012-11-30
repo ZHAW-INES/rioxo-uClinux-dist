@@ -43,7 +43,6 @@ void hdoipd_registry_update();
 void hdoipd_request(uint32_t* cmd, int rsp);
 void hdoipd_event(uint32_t event);
 void hdoipd_start();
-void hdoipd_hello();
 bool hdoipd_init(int drv);
 
 static inline int hdoipd_rsc(int state)

@@ -203,11 +203,6 @@ typedef struct {
 typedef struct {
     uint32_t            cseq;
     char                session[50];
-} t_rtsp_req_hello;
-
-typedef struct {
-    uint32_t            cseq;
-    char                session[50];
     uint32_t            event;
     t_rtsp_rtp_format   format;
 } t_rtsp_req_update;
@@ -258,7 +253,6 @@ typedef union {
     t_rtsp_req_hdcp     req_hdcp;
     t_rtsp_req_play     req_play;
     t_rtsp_req_teardown req_teardown;
-    t_rtsp_req_hello    req_hello;
     t_rtsp_req_update   req_update;
     t_rtsp_req_update   req_pause;
     t_rtsp_rsp_setup    rsp_setup;

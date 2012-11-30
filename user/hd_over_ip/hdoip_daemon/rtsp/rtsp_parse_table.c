@@ -114,13 +114,6 @@ const t_map_fnc tab_response_pause[] ={
         MAP_FNC_NULL
 };
 
-// HELLO attributes
-const t_map_fnc tab_request_hello[] ={
-	{ "CSeq",	rtsp_parse_ui32, 	true,	offsetof(t_rtsp_req_update, cseq) },
-	{ "Session",	rtsp_parse_str,		true,	offsetof(t_rtsp_req_update, session) },
-	MAP_FNC_NULL
-};
-
 // the methods
 const t_map_set rtsp_srv_methods[] = {
     { "OPTIONS",        tab_request_options,        rmsq_options,       false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, options)         },
@@ -130,7 +123,6 @@ const t_map_set rtsp_srv_methods[] = {
     { "PLAY",           tab_request_play,           rmsq_play,          true,   RTSP_STATE_READY | RTSP_STATE_PLAYING,  offsetof(t_rtsp_media, play)            },
     { "PAUSE",          tab_request_pause,          rmsq_pause,         true,   RTSP_STATE_PLAYING,                     offsetof(t_rtsp_media, pause)           },
     { "TEARDOWN",       tab_request_teardown,       rmsq_teardown,      true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, teardown)        },
-    { "HELLO",          tab_request_hello,          rmsq_hello,         false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, hello)           },
     { "UPDATE",         tab_request_update,         rmsq_update,        true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, update)          },
     MAP_SET_NULL
 };

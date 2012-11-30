@@ -28,21 +28,6 @@ static struct {
     .address = 0
 };
 
-int box_sys_hello(t_rtsp_media *media UNUSED, void *data UNUSED, t_rtsp_connection *rsp UNUSED)
-{
-    if ((rsp->address == box.address) && box.address) {
-        report(INFO "hello received from remote device");
-
-        // new connection = new hdcp-key exchange
-        hdoipd.hdcp.ske_executed = 0;
-
-        if(hdoipd.auto_stream) {
-            hdoipd_set_task_start_vrb();
-        }
-    }
-    return 0;
-}
-
 int box_sys_options(t_rtsp_media *media UNUSED, void *data, t_rtsp_connection *rsp)
 {
     t_map_set *methods = data;

@@ -59,7 +59,6 @@ int rtsp_client_close(t_rtsp_client* client, bool free);
 int rtsp_client_setup(t_rtsp_client* client, t_rtsp_media* media, t_rtsp_transport* transport, t_rtsp_edid *edid, t_rtsp_hdcp *hdcp);
 int rtsp_client_play(t_rtsp_client* client, t_rtsp_rtp_format* fmt, char* mediaName);
 int rtsp_client_hdcp(t_rtsp_client* client);
-int rtsp_client_hello(t_rtsp_client* client);
 int rtsp_client_get_parameter(t_rtsp_client* client);
 int rtsp_client_event(t_rtsp_client* client, uint32_t event);
 int rtsp_client_update(t_rtsp_client* client, uint32_t event, char* mediaName);

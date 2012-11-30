@@ -816,21 +816,6 @@ int rtsp_client_hdcp(t_rtsp_client* client)
     return RTSP_SUCCESS;
 }
 
-/** just say "hello" to the server
- *  the first message of an message-exchange
- *
- * */
-int rtsp_client_hello(t_rtsp_client* client)
-{
-#ifdef REPORT_RTSP_HELLO
-    report(" > RTSP Client [%d] HELLO", client->nr);
-#endif
-
-    rtsp_request_hello(&client->con, client->uri);
-
-    return RTSP_SUCCESS;
-}
-
 int rtsp_client_get_parameter(t_rtsp_client* client)
 {
   u_rtsp_header buf;

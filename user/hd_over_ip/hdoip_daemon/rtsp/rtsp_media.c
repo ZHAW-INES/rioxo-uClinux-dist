@@ -207,13 +207,6 @@ int rmsq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
     return ret;
 }
 
-int rmsq_hello(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
-{
-    int ret = RTSP_SUCCESS;
-    if (media->hello) ret = media->hello(media, msg, rsp);
-    return ret;
-}
-
 // call hdcp function
 int rmsq_hdcp(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 {

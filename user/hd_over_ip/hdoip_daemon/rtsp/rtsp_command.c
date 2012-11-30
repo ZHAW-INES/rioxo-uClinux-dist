@@ -398,13 +398,6 @@ void rtsp_response_pause(t_rtsp_connection* msg, char* session)
     rtsp_send(msg);
 }
 
-void rtsp_request_hello(t_rtsp_connection* msg, char* uri)
-{
-    rtsp_request_line(msg, "HELLO", uri, NULL);
-    rtsp_eoh(msg);
-    rtsp_send(msg);
-}
-
 void rtsp_request_get_parameter(t_rtsp_connection* msg, char* uri)
 {
     rtsp_request_line(msg, "GET_PARAMETER", uri, NULL);
