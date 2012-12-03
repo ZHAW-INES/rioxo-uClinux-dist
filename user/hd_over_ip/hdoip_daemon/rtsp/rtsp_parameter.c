@@ -123,8 +123,10 @@ static int rtsp_get_parameter(t_rtsp_media *media, t_rtsp_connection *con,
 
         if (param->media_needed && media == NULL)
             continue;
+        if (strlen(name) != len)
+            continue;
         if (strncmp(param->name, name, len) == 0 && param->get)
-		    return param->get(media, con);
+            return param->get(media, con);
     }
 
     // TODO: How to handle inexistent parameters? Best bet would be to
@@ -141,6 +143,10 @@ int rtsp_handle_get_parameter(t_rtsp_media *media, t_rtsp_connection *con)
     size_t sz = 0;
     ssize_t rem = con->common.content_length;
 
+    rtsp_response_line(con, RTSP_STATUS_OK, "OK");
+    msgprintf(con, "Content-Type: text/parameters\r\n");
+    rtsp_eoh(con);  // End of header
+
     while (rem > 0) {
         /* TODO: handle multiple lines properly in rtsp_receive */
         n = rtsp_receive(con, &line, 0, 0, &sz);
@@ -154,14 +160,14 @@ int rtsp_handle_get_parameter(t_rtsp_media *media, t_rtsp_connection *con)
         /* The specified content-length was too short, we shouldn't handle the
          * extracted line and discard the whole rest of the message */
         if (rem < 0) {
-#if 0
             char *buf;
             size_t sz;
+
+            report(ERROR "Provided Content-Length too short\n");
 
             /* read rest of message (disregarding Content-Length) */
             while (rtsp_receive(con, &buf, 0, 1, &sz) == 0)
                 /* empty */ ;
-#endif
             break;
         }
 

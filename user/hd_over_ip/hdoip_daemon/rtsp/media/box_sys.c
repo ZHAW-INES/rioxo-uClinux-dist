@@ -67,8 +67,6 @@ static int box_sys_options(t_rtsp_media *media UNUSED, void *data, t_rtsp_connec
 static int box_sys_get_parameter(t_rtsp_media *media, void *data,
                                  t_rtsp_connection *rsp)
 {
-    rtsp_response_line(rsp, RTSP_STATUS_OK, "OK");
-    rtsp_eoh(rsp);  // End of header
     rtsp_handle_get_parameter(media, rsp);
     rtsp_send(rsp);
 
