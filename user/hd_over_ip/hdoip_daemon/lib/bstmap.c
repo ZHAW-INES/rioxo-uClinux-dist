@@ -23,6 +23,14 @@ int cmp(t_keyvalue* a, t_keyvalue* b)
     return strcmp(a->key, b->key);
 }
 
+int bstmap_empty(t_bstmap* root)
+{
+  if (root == NULL || root->elem == NULL)
+    return 1;
+
+  return 0;
+}
+
 
 /** Stores copy of Key/Value in MAP (String)
  *
