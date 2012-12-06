@@ -12,6 +12,8 @@
 
 void rtsp_default_transport(t_rtsp_transport* t);
 
+void rtsp_default_response(t_rtsp_rsp_setup* p);
+void rtsp_default_response_session(t_rtsp_rsp_setup* p);
 void rtsp_default_response_setup(t_rtsp_rsp_setup* p);
 void rtsp_default_response_play(t_rtsp_rsp_play* p);
 void rtsp_default_response_pause(t_rtsp_rsp_pause* p);
