@@ -21,6 +21,8 @@
 #include <sys/socket.h>
 
 #include "box_sys.h"
+#include "box_sys_vrb.h"
+#include "box_sys_vtb.h"
 #include "hdoipd_callback.h"
 #include "hdoipd_fsm.h"
 #include "hdoipd_msg.h"
@@ -264,7 +266,7 @@ void hdoipd_goto_vtb()
 
                 rtsp_listener_add_media(&hdoipd.listener, &vtb_audio);
                 rtsp_listener_add_media(&hdoipd.listener, &vtb_video);
-                rtsp_listener_add_media(&hdoipd.listener, &box_sys);
+                rtsp_listener_add_media(&hdoipd.listener, &box_sys_vtb);
                 rtsp_listener_add_media(&hdoipd.listener, &usb_media);
                 hdoipd_set_state(HOID_VTB);
             }
@@ -292,7 +294,7 @@ int hdoipd_goto_vrb()
                 // set output uses slave timer
                 hoi_drv_timer(DRV_TMR_OUT);
 
-                rtsp_listener_add_media(&hdoipd.listener, &box_sys);
+                rtsp_listener_add_media(&hdoipd.listener, &box_sys_vrb);
                 rtsp_listener_add_media(&hdoipd.listener, &usb_media);
 
                 hdoipd_set_state(HOID_VRB);
@@ -352,7 +354,7 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
 
     // don't create client if it's already running
     if (hdoipd.client == NULL)
-      hdoipd.client = rtsp_client_open(uri, &box_sys);
+      hdoipd.client = rtsp_client_open(uri, &box_sys_vrb);
 
     if (hdoipd.client != NULL)
         rtsp_client_add_media(hdoipd.client, media);

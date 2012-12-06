@@ -142,6 +142,11 @@ typedef struct {
     uint8_t             edid[256];
 } t_rtsp_edid;
 
+typedef struct {
+  uint32_t            timeout;
+  int                 alive_ping;
+} t_rtsp_timeout;
+
 // hdcp status and port number
 typedef struct {
     uint32_t            hdcp_on; //on=1, off=0

@@ -17,6 +17,7 @@
 
 #include "hdcp.h"
 #include "hdoipd.h"
+#include "hdoipd_osd.h"
 #include "hoi_drv_user.h"
 #include "rtsp.h"
 #include "rtsp_client.h"
@@ -104,11 +105,11 @@ void remove_media(t_rtsp_client* handle, t_rtsp_media* media, bool remove_from_l
  */
 void teardown_media(t_rtsp_client* client, t_rtsp_media* media, u_rtsp_header* buf, bool remove_from_list)
 {
-  if (client == NULL || media == NULL)
+  if (client == NULL || media == NULL || media->name == NULL)
     return;
 
   #ifdef REPORT_RTSP_CLIENT
-  report(" i RTSP Client [%d] detach media (%s)", client->nr, media->name);
+  report(" i RTSP Client [%d] teardown media (%s)", client->nr, media->name);
 #endif
   rmcr_teardown(media, buf);
 
@@ -767,6 +768,30 @@ int rtsp_client_hello(t_rtsp_client* client)
     rtsp_request_hello(&client->con, client->uri);
 
     return RTSP_SUCCESS;
+}
+
+int rtsp_client_get_parameter(t_rtsp_client* client)
+{
+  u_rtsp_header buf;
+  int ret = RTSP_SUCCESS;
+
+  if (client == NULL)
+    return RTSP_NULL_POINTER;
+
+#ifdef REPORT_RTSP_HELLO
+  report(" > RTSP Client [%d] GET_PARAMETER", client->nr);
+#endif
+
+  rtsp_request_get_parameter(&client->con, client->uri);
+  rtsp_default_response((void*)&buf);
+  if ((ret = rtsp_parse_response(&client->con, tab_response_get_parameter, (void*)&buf, 0, CFG_RSP_TIMEOUT)) != RTSP_SUCCESS)
+  {
+    rtsp_client_set_kill(client);
+    osd_permanent(true);
+    osd_printf("vrb.video connection lost...\n");
+  }
+
+  return ret;
 }
 
 int rtsp_client_event(t_rtsp_client* client, uint32_t event)

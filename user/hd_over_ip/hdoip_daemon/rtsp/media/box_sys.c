@@ -28,8 +28,7 @@ static struct {
     .address = 0
 };
 
-static int box_sys_hello(t_rtsp_media *media UNUSED, void *data UNUSED,
-                         t_rtsp_connection *rsp UNUSED)
+int box_sys_hello(t_rtsp_media *media UNUSED, void *data UNUSED, t_rtsp_connection *rsp UNUSED)
 {
     if ((rsp->address == box.address) && box.address) {
         report(INFO "hello received from remote device");
@@ -44,7 +43,7 @@ static int box_sys_hello(t_rtsp_media *media UNUSED, void *data UNUSED,
     return 0;
 }
 
-static int box_sys_options(t_rtsp_media *media UNUSED, void *data, t_rtsp_connection *rsp)
+int box_sys_options(t_rtsp_media *media UNUSED, void *data, t_rtsp_connection *rsp)
 {
     t_map_set *methods = data;
     int index = 0;
@@ -64,8 +63,7 @@ static int box_sys_options(t_rtsp_media *media UNUSED, void *data, t_rtsp_connec
     return 0;
 }
 
-static int box_sys_get_parameter(t_rtsp_media *media, void *data,
-                                 t_rtsp_connection *rsp)
+int box_sys_get_parameter(t_rtsp_media *media, void *data, t_rtsp_connection *rsp)
 {
     rtsp_handle_get_parameter(media, rsp);
     rtsp_send(rsp);
@@ -104,12 +102,3 @@ int box_sys_set_remote(char* address)
 
     return 0;
 }
-
-t_rtsp_media box_sys = {
-    .name           = "",
-    .owner          = 0,
-    .cookie         = NULL,
-    .hello          = box_sys_hello,
-    .options        = box_sys_options,
-    .get_parameter  = box_sys_get_parameter,
-};

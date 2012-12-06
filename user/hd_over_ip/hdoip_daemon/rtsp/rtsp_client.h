@@ -39,6 +39,7 @@ typedef struct {
     t_bstmap            *media;         // associated media
     size_t              media_session_count; // number of media-controls with an active session
     bool                open;           // whether the client is open or not
+    t_rtsp_timeout      timeout;
 } t_rtsp_client;
 
 extern const t_map_set rtsp_client_methods[];
@@ -48,6 +49,7 @@ extern const t_map_fnc tab_response_setup[];
 extern const t_map_fnc tab_response_play[];
 extern const t_map_fnc tab_response_pause[];
 extern const t_map_fnc tab_response_teardown[];
+extern const t_map_fnc tab_response_get_parameter[];
 extern const t_map_fnc tab_request_update[];
 
 t_rtsp_client* rtsp_client_open(char* address, t_rtsp_media *media);
@@ -59,6 +61,7 @@ int rtsp_client_setup(t_rtsp_client* client, t_rtsp_media* media, t_rtsp_transpo
 int rtsp_client_play(t_rtsp_client* client, t_rtsp_rtp_format* fmt, char* mediaName);
 int rtsp_client_hdcp(t_rtsp_client* client);
 int rtsp_client_hello(t_rtsp_client* client);
+int rtsp_client_get_parameter(t_rtsp_client* client);
 int rtsp_client_event(t_rtsp_client* client, uint32_t event);
 int rtsp_client_update(t_rtsp_client* client, uint32_t event, char* mediaName);
 int rtsp_client_pause(t_rtsp_client* client, char* mediaName);

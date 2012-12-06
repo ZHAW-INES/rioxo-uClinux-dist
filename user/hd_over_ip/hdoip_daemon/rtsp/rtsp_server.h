@@ -25,6 +25,7 @@ typedef struct {
     size_t              media_session_count; // number of media-controls with an active session
     char                sessionid[20];  // Session string (ID)
     bool                open;           // whether the server is open or not
+    t_rtsp_timeout      timeout;
 } t_rtsp_server;
 
 extern const t_map_set rtsp_srv_methods[];
