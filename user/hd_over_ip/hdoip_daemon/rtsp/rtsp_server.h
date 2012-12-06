@@ -22,6 +22,7 @@ typedef struct {
     t_rtsp_connection   con;            // TCP connection of this thread
     bool                kill;           // flag to kill the actual server thread by rtsp_listener
     t_bstmap*           media;          // associated media-controls
+    size_t              media_session_count; // number of media-controls with an active session
     char                sessionid[20];  // Session string (ID)
     bool                open;           // whether the server is open or not
 } t_rtsp_server;

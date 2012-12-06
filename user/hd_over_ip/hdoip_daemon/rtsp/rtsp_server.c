@@ -26,7 +26,7 @@ typedef struct {
 void cleanup_media(t_rtsp_server* handle)
 {
   // if there are no more media-controls for this server we can clean it up
-  if (handle->media == NULL || bstmap_empty(handle->media)) {
+  if (handle->media == NULL || handle->media_session_count == 0) {
     if (handle->media != NULL) {
       bstmap_freep(&handle->media);
       handle->media = NULL;
@@ -51,6 +51,8 @@ int rtsp_server_add_media(t_rtsp_server* handle, t_rtsp_media* media)
     return RTSP_NULL_POINTER;
 
   report(" ? RTSP Server [%d] adding media (%s)", handle->nr, media->name);
+  if (media->sessionid != NULL)
+    handle->media_session_count++;
   bstmap_setp(&handle->media, media->name, media);
   return RTSP_SUCCESS;
 }
@@ -78,6 +80,8 @@ void rtsp_server_remove_media(t_rtsp_server* handle, t_rtsp_media* media, bool r
 
   report(INFO "RTSP Server [%d] removing media (%s)", handle->nr, media->name);
   if (remove_from_list) {
+    if (media->sessionid != NULL)
+      handle->media_session_count--;
     bstmap_removep(&handle->media, media->name);
     cleanup_media(handle);
   }
@@ -125,6 +129,7 @@ int traverse(t_rtsp_server* server, char* mediaName, void* data, traverse_handle
 
     bstmap_traverse(server->media, traverse_dispatcher, serverData);
     if (remove) {
+      server->media_session_count = 0;
       bstmap_freep(&server->media);
       server->media = NULL;
       cleanup_media(server);
@@ -140,6 +145,8 @@ int traverse(t_rtsp_server* server, char* mediaName, void* data, traverse_handle
 
     handler(server, media, data);
     if (remove) {
+      if (media->sessionid != NULL)
+        server->media_session_count++;
       bstmap_removep(&server->media, media->name);
       cleanup_media(server);
     }
@@ -286,16 +293,38 @@ int rtsp_server_thread(t_rtsp_server* handle)
     int n;
     t_rtsp_header_common common;
     const t_map_set* method;
-    t_rtsp_media *media;
+    t_rtsp_media *media = NULL, *media_box = NULL;
     u_rtsp_header buf;
+    bool media_new = true;
 
 #ifdef REPORT_RTSP_SERVER
     report(INFO "RTSP Server [%d] started", handle->nr);
 #endif
 
+    lock("rtsp_server_thread");
+
+    // getting box_sys_vtb media control for this server
+    media = rtsp_listener_get_media(handle->owner, "");
+    if (media != NULL)
+    {
+        media_box = malloc(sizeof(t_rtsp_media));
+        if (media_box != NULL)
+        {
+          memcpy(media_box, media, sizeof(t_rtsp_media));
+          media_box->top = handle->owner;
+          media_box->creator = handle;
+          media_box->owner = media;
+          media_box->state = RTSP_STATE_INIT;
+          rtsp_server_add_media(handle, media_box);
+        }
+
+        media = NULL;
+    }
+
+    unlock("rtsp_server_thread");
+
     // receive request line
     while (handle->open) {
-
         n = rtsp_parse_request(&handle->con, rtsp_srv_methods, &method, &buf, &common);
 
         // request has already been handled (probably because an error occured)
@@ -310,8 +339,9 @@ int rtsp_server_thread(t_rtsp_server* handle)
         }
 
         // find media
-        if ((media = rtsp_server_get_media(handle, common.uri.name)) == NULL)
-        {
+        media = rtsp_server_get_media(handle, common.uri.name);
+        media_new = media == NULL;
+        if (media_new) {
             // fall back to the general list of media-controls available
             media = rtsp_listener_get_media(handle->owner, common.uri.name);
         }
@@ -340,7 +370,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
 
         lock("rtsp_server_thread");
 
-        if (media->creator == NULL)
+        if (media_new && media->creator == NULL)
             media->creator = handle;
 
         memcpy(&handle->con.common, &common, sizeof(t_rtsp_header_common));
@@ -355,6 +385,9 @@ int rtsp_server_thread(t_rtsp_server* handle)
             report(" ? RTSP Server [%d] execute method \"%s\" error (%d) media (%s)", handle->nr, common.rq.method, n, media->name);
             rtsp_response_error(&handle->con, RTSP_STATUS_INTERNAL_SERVER_ERROR, NULL);
         }
+
+        if (media_new)
+          media->creator = NULL;
 
         unlock("rtsp_server_thread");
     }

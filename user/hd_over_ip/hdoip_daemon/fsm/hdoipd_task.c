@@ -70,7 +70,14 @@ char* task_conv_rtsp_state(int state)
 char *buf_ptr;
 void task_stream_printer(char UNUSED *key, char* value, void UNUSED *data)
 {
-  t_rtsp_media *media = (t_rtsp_media*)value;
+  t_rtsp_media *media = NULL;
+  if (value == NULL)
+    return;
+
+  media = (t_rtsp_media*)value;
+  if (media->name == NULL || strlen(media->name) == 0)
+    return;
+
   buf_ptr += sprintf(buf_ptr, "stream %02d {in} : %s (%s)\n", hdoipd.client->nr, task_conv_rtsp_state(media->result), media->name);
 }
 
@@ -480,7 +487,10 @@ void task_get_rtsp_medias(char *key UNUSED, char* value, void* fd)
     if (value == NULL || fd == NULL)
       return;
 
-    t_rtsp_media* media = (t_rtsp_media*) value;
+    t_rtsp_media* media = (t_rtsp_media*)value;
+    if (media->name == NULL || strlen(media->name) == 0)
+      return;
+
     buf_ptr += sprintf(buf_ptr, "stream %02d {out}: %s (%s)\n", *cnt, task_conv_rtsp_state(media->result), media->owner->name);
     *cnt += 1;
 }

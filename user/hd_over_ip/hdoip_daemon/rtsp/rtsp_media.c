@@ -64,20 +64,18 @@ int rmsq_options(t_rtsp_media *media, void *msg UNUSED, t_rtsp_connection *rsp)
 
 int rmsq_get_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp)
 {
-
     return media->get_parameter(media, NULL, rsp);
 }
 
 int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
 {
     t_rtsp_media *media = _media;
-    t_rtsp_server *server = (t_rtsp_server*)media->creator;
-    bool new_session = false;
-
-    int ret = RTSP_SERVER_ERROR;
-
     // creator is the rtsp_server who started this connection
     // we get the rtsp_listener from it
+    t_rtsp_server *server = (t_rtsp_server*)media->creator;
+    bool new_session = false;
+    int ret = RTSP_SERVER_ERROR;
+
 
     media->top = server->owner;
     // start new session?
@@ -90,6 +88,14 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
         memcpy(media, _media, sizeof(t_rtsp_media));
         media->owner = _media;
         media->state = RTSP_STATE_INIT;
+
+        // only create a new sessionid if none exists yet for this connection
+        if (strlen(server->sessionid) <= 0) {
+            rtsp_listener_create_sessionid(media->top, server->sessionid);
+            new_session = true;
+        }
+        media->sessionid = server->sessionid;
+
         rtsp_server_add_media(server, media);
 
         if (media->cookie_size) {
@@ -101,13 +107,6 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
             }
             memset(media->cookie, 0, media->cookie_size);
         }
-        // only create a new sessionid if none exists yet for this connection
-
-        if (strlen(server->sessionid) <= 0) {
-            rtsp_listener_create_sessionid(media->top, server->sessionid);
-            new_session = true;
-        }
-        media->sessionid = server->sessionid;
     }
 
     if (media->setup) ret = media->setup(media, msg, rsp);
@@ -135,7 +134,6 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
             if (media->cookie_size) free(media->cookie);
             free(media);
         }
-        _media->creator = NULL;
     }
 
     // request properly handled

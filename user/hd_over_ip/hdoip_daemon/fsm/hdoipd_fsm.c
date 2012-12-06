@@ -352,8 +352,9 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
 
     // don't create client if it's already running
     if (hdoipd.client == NULL)
-        hdoipd.client = rtsp_client_open(uri, media);
-    else
+      hdoipd.client = rtsp_client_open(uri, &box_sys);
+
+    if (hdoipd.client != NULL)
         rtsp_client_add_media(hdoipd.client, media);
 
     // try to start only when not usb

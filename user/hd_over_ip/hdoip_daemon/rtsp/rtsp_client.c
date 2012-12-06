@@ -51,11 +51,6 @@ int add_media(t_rtsp_client* handle, t_rtsp_media* media)
 
   report(" ? RTSP Client [%d] adding media (%s)", handle->nr, media->name);
   media->creator = handle;
-  if (handle->media != NULL && handle->media->elem != NULL) {
-    tmp = (t_rtsp_media*)handle->media->elem;
-    if (tmp->sessionid != NULL)
-      strcpy(media->sessionid, tmp->sessionid);
-  }
 
   bstmap_setp(&handle->media, media->name, media);
   return RTSP_SUCCESS;
@@ -434,44 +429,37 @@ t_rtsp_client* rtsp_client_open(char* address, t_rtsp_media *media)
     struct in_addr addr;
     struct sockaddr_in dest_addr;
 
-    if (media && rtsp_media_active(media)) return 0;
+    if (media != NULL && media->creator != NULL) {
+      report(ERROR "rtsp_client_open: media (%s) already belongs to a client", media->name);
+      return NULL;
+    }
 
     t_rtsp_client* client = malloc(sizeof(t_rtsp_client));
-    if (!client) {
-        report(ERROR "rtsp_client_open.malloc: out of memory");
-        return 0;
+    if (client == NULL) {
+        report(ERROR "rtsp_client_open(): out of memory");
+        return NULL;
     }
 
     memset(client, 0, sizeof(t_rtsp_client));
     client->task = 0;
 
-    if (media) {
-        if (media->creator) {
-            report(" ? RTSP Client: media (%s) already has a client", media->name);
-            ret = RTSP_CLIENT_ERROR;
-        }
-    }
-
-    if (ret == RTSP_SUCCESS) {
-        client->nr = nr++;
+    client->nr = nr++;
 #ifdef REPORT_RTSP_CLIENT
-        report(" + RTSP Client [%d] open %s", client->nr, address);
+    report(" + RTSP Client [%d] open %s", client->nr, address);
 #endif
 
-        memcpy(client->uri, address, strlen(address)+1);
-        memcpy(buf, address, strlen(address)+1);
+    memcpy(client->uri, address, strlen(address)+1);
+    memcpy(buf, address, strlen(address)+1);
 
-        if (!str_split_uri(&uri, buf)) {
-            report("uri error: rtsp://server[:port][/name][/control]");
-            ret = RTSP_CLIENT_ERROR;
-        }
+    if (!str_split_uri(&uri, buf)) {
+        report("uri error: rtsp://server[:port][/name][/control]");
+        ret = RTSP_CLIENT_ERROR;
     }
 
     if (ret == RTSP_SUCCESS) {
         host = gethostbyname(uri.server);
-
         if (!host) {
-            //herror("gethostbyname");
+            report(ERROR "rtsp_client_open(): unknown host in uri");
             ret = RTSP_CLIENT_ERROR;
         }
     }
@@ -533,6 +521,7 @@ t_rtsp_client* rtsp_client_open(char* address, t_rtsp_media *media)
         client = NULL;
         // tell media open failed
         if (media && media->error) media->error(media, 0, 0);
+        report("rtsp_client_open(): could not create client");
     }
 
     return client;
@@ -648,6 +637,7 @@ int rtsp_client_setup(t_rtsp_client* client, t_rtsp_media* media, t_rtsp_transpo
         {
           memset(media->sessionid, 0, length + 1);
           strcpy(media->sessionid, common.session);
+          client->media_session_count++;
         }
 
         rmcr_setup(media, (void*)&buf);
