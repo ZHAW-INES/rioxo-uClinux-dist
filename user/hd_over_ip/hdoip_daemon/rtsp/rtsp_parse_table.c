@@ -22,6 +22,11 @@ const t_map_fnc tab_request_get_parameter[] = {
 	MAP_FNC_NULL
 };
 
+const t_map_fnc tab_response_get_parameter[] = {
+    { "CSeq",   rtsp_parse_ui32,    true,   offsetof(t_rtsp_req_get_parameter, cseq) },
+    MAP_FNC_NULL
+};
+
 // SETUP attributes
 const t_map_fnc tab_request_setup[] = {
 	{ "CSeq",	rtsp_parse_ui32,	true,	offsetof(t_rtsp_req_setup, cseq) },
@@ -116,10 +121,10 @@ const t_map_fnc tab_request_hello[] ={
 	MAP_FNC_NULL
 };
 
-// the methodes
+// the methods
 const t_map_set rtsp_srv_methods[] = {
     { "OPTIONS",        tab_request_options,        rmsq_options,       false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, options)         },
-    { "GET_PARAMETER",	tab_request_get_parameter,  rmsq_get_parameter, false,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, get_parameter)   },
+    { "GET_PARAMETER",	tab_request_get_parameter,  rmsq_get_parameter, false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, get_parameter)   },
     { "SETUP",          tab_request_setup,          rmsq_setup,         false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, setup)           },
     { "HDCP",           tab_request_hdcp,           rmsq_hdcp,          true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, hdcp)            },
     { "PLAY",           tab_request_play,           rmsq_play,          true,   RTSP_STATE_READY | RTSP_STATE_PLAYING,  offsetof(t_rtsp_media, play)            },
@@ -130,7 +135,7 @@ const t_map_set rtsp_srv_methods[] = {
     MAP_SET_NULL
 };
 
-// the methodes
+// the methods
 const t_map_set rtsp_client_methods[] = {
     { "OPTIONS",        tab_request_options,        rmcq_options,       false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, options)   },
     { "UPDATE",         tab_request_update,         rmcq_update,        true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, update)    },
