@@ -378,6 +378,9 @@ int vrb_video_event(t_rtsp_media *media, uint32_t event)
 {
     t_rtsp_client *client = media->creator;
 
+    if (rtsp_media_sinit(media))
+        return RTSP_WRONG_STATE;
+
     switch (event) {
         case EVENT_TICK:
             if (vrb.alive_ping) {

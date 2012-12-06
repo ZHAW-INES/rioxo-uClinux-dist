@@ -459,13 +459,11 @@ int rtsp_media_event(t_rtsp_media* media, uint32_t event)
     int ret = RTSP_NULL_POINTER;
 
     if (media && media->creator) {
-        if (!rtsp_media_sinit(media)) {
-			if (media->event) ret = media->event(media, event);
-			switch (ret) {
-				case RTSP_PAUSE: media->state = RTSP_STATE_READY; ret = RTSP_SUCCESS; break;
-				case RTSP_CLOSE: media->state = RTSP_STATE_INIT; ret = RTSP_SUCCESS; break;
-			}
-    	}
+        if (media->event) ret = media->event(media, event);
+        switch (ret) {
+            case RTSP_PAUSE: media->state = RTSP_STATE_READY; ret = RTSP_SUCCESS; break;
+            case RTSP_CLOSE: media->state = RTSP_STATE_INIT; ret = RTSP_SUCCESS; break;
+        }
     }
     return ret;
 }
