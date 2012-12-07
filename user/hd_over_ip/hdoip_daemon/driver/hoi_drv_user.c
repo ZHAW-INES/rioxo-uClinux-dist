@@ -513,6 +513,7 @@ HOI_CMDSW(poll);
 HOI_CMDSW(loop);
 HOI_CMDSW(osdon);
 HOI_CMDSW(osdoff);
+HOI_CMDSW(osd_clr_border);
 HOI_CMDSW(hpdon);
 HOI_CMDSW(hpdoff);
 HOI_CMDSW(repair);

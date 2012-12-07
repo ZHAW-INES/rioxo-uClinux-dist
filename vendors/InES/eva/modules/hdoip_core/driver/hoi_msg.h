@@ -101,6 +101,7 @@
 #define HOI_MSG_CLR_OSD             (0x70000113)
 #define HOI_MSG_GET_ACTIVE_RESOLUTION (0x70000114)
 #define HOI_MSG_HDCP_BLACK_OUTPUT   (0x70000115)
+#define HOI_MSG_OSD_CLR_BORDER      (0x70000116)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
@@ -156,6 +157,7 @@ typedef struct {
 #define hoi_msg_loop_init(p) hoi_msg_init(p, HOI_MSG_LOOP, t_hoi_msg)
 #define hoi_msg_osdon_init(p) hoi_msg_init(p, HOI_MSG_OSDON, t_hoi_msg)
 #define hoi_msg_osdoff_init(p) hoi_msg_init(p, HOI_MSG_OSDOFF, t_hoi_msg)
+#define hoi_msg_osd_clr_border_init(p) hoi_msg_init(p, HOI_MSG_OSD_CLR_BORDER, t_hoi_msg)
 #define hoi_msg_poll_init(p) hoi_msg_init(p, HOI_MSG_POLL, t_hoi_msg)
 #define hoi_msg_repair_init(p) hoi_msg_init(p, HOI_MSG_REPAIR, t_hoi_msg)
 #define hoi_msg_hpdon_init(p) hoi_msg_init(p, HOI_MSG_HPDON, t_hoi_msg)

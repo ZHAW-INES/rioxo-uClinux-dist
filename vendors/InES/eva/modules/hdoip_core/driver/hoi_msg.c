@@ -891,6 +891,12 @@ int hoi_drv_msg_hdcp_black_output(t_hoi* handle)
     return SUCCESS;
 }
 
+int hoi_drv_osd_clr_border(t_hoi* handle)
+{
+    vio_drv_osd_clr_border(&handle->vio.osd);
+    return SUCCESS;
+}
+
 int hoi_drv_msg_wdg_enable(t_hoi* handle)
 {
     wdg_enable(handle->p_wdg);
@@ -1024,6 +1030,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         callsw(HOI_MSG_HDCP_BLACK_OUTPUT,   hoi_drv_msg_hdcp_black_output);
 
         call(HOI_MSG_WDG_INIT,              hoi_drv_msg_wdg_init);
+        callsw(HOI_MSG_OSD_CLR_BORDER,      hoi_drv_osd_clr_border);
         callsw(HOI_MSG_WDG_ENABLE,          hoi_drv_msg_wdg_enable);
         callsw(HOI_MSG_WDG_DISABLE,         hoi_drv_msg_wdg_disable);
         callsw(HOI_MSG_WDG_SERVICE,         hoi_drv_msg_wdg_service);

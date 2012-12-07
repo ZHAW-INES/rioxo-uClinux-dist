@@ -67,6 +67,7 @@ int hoi_drv_get_syncdelay(uint32_t* p);
 int hoi_drv_timer(uint32_t p);
 int hoi_drv_osdon();
 int hoi_drv_osdoff();
+int hoi_drv_osd_clr_border();
 int hoi_drv_hpdon();
 int hoi_drv_hpdoff();
 int hoi_drv_loop();
