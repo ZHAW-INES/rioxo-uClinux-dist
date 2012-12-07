@@ -24,6 +24,11 @@ typedef struct {
     uint8_t*        eol;
 } t_rtsp_buffer;
 
+static inline void rtsp_buffer_init(t_rtsp_buffer *buf)
+{
+    buf->sol = buf->eol = buf->buf;
+}
+
 typedef struct {
     char        line[100];
     t_str_request_line rq;
@@ -50,14 +55,22 @@ typedef struct rtsp_connection {
 /** Print message to buffer
  *
  * */
-#define msgprintf(c, ...) \
-do { \
-    t_rtsp_connection * _c_ = (c); \
-    t_rtsp_buffer* _m_ = &_c_->out; \
-    if (_m_->eol < (_m_->buf + RTSP_MSG_MAX_LENGTH)) { \
-        int n = snprintf(_m_->eol, RTSP_MSG_MAX_LENGTH - (_m_->eol - _m_->buf), __VA_ARGS__); \
-        _m_->eol += n; \
+
+#define rtsp_buffer_printf(_m_, ...)                        \
+do {                                                        \
+    if ((_m_)->eol < ((_m_)->buf + RTSP_MSG_MAX_LENGTH)) {  \
+        int n = snprintf((_m_)->eol,                        \
+                         RTSP_MSG_MAX_LENGTH - ((_m_)->eol - (_m_)->buf), \
+                         __VA_ARGS__);                      \
+        (_m_)->eol += n;                                    \
     } \
+} while (0)
+
+#define msgprintf(c, ...)                   \
+do {                                        \
+    t_rtsp_connection * _c_ = (c);          \
+    t_rtsp_buffer* _m_ = &((_c_)->out);     \
+    rtsp_buffer_printf(_m_, __VA_ARGS__);   \
 } while (0)
 
 void rtsp_coninit(t_rtsp_connection* m, int fd, uint32_t addr);
