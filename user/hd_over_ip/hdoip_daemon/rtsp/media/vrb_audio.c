@@ -326,27 +326,6 @@ int vrb_audio_event(t_rtsp_media *media, uint32_t event)
         return RTSP_WRONG_STATE;
 
     switch (event) {
-        case EVENT_TICK:
-            if (vrb.alive_ping) {
-                vrb.alive_ping--;
-            } else {
-                vrb.alive_ping = TICK_SEND_ALIVE;
-                // send tick we are alive (until something like rtcp is used)
-         //       if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
-                rtsp_client_update(client, EVENT_TICK, media->name);
-         //       }
-            }
-            if (vrb.timeout <= TICK_TIMEOUT) {
-                vrb.timeout++;
-            } else {
-                report(INFO "vrb_audio_event: timeout");
-                // timeout -> kill connection
-                vrb.timeout = 0;
-                rtsp_client_set_kill(client);
-                osd_printf("vrb.audio connection lost...\n");
-            }
-        break;
-
         case EVENT_VIDEO_SINK_OFF:
             // Note: after teardown call media/client is not anymore a valid struct
             rtsp_client_set_teardown(client);

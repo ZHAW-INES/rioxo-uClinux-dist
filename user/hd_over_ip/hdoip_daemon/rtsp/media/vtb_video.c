@@ -33,8 +33,7 @@ int vtb_video_hdcp(t_rtsp_media* media, t_rtsp_req_hdcp* m, t_rtsp_connection* r
 	t_multicast_cookie* cookie = media->cookie;
     ret = hdcp_ske_s(media, m, rsp);
 
-    cookie->timeout = 0;
-    cookie->alive_ping = 1;
+    ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
 
     return ret;
 }
@@ -82,8 +81,7 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
         hdoipd_set_vtb_state(VTB_VID_IDLE);
     }
 
-    cookie->timeout = 0;
-    cookie->alive_ping = 1;
+    ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
 
     //check if hdcp is forced by HDMI, user or client (over RTSP)
     if (reg_test("hdcp-force", "true") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
@@ -249,8 +247,7 @@ int vtb_video_teardown(t_rtsp_media* media, t_rtsp_req_teardown UNUSED *m, t_rts
         rtsp_response_teardown(rsp, media->sessionid);
     }
 
-    cookie->timeout = 0;
-    cookie->alive_ping = 1;
+    ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
 
     multicast_remove_edid(cookie->remote.address);
     remove_client_from_vtb(MEDIA_IS_VIDEO, cookie->remote.address);
@@ -302,7 +299,7 @@ int vtb_video_update(t_rtsp_media *media, t_rtsp_req_update *m, t_rtsp_connectio
     switch (m->event) {
         case EVENT_TICK:
             // reset timeout
-            cookie->timeout = 0;
+            ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
         break;
     }
 
@@ -336,38 +333,6 @@ int vtb_video_event(t_rtsp_media *media, uint32_t event)
                 osd_permanent(true);
                 osd_printf("vtb.video no input...\n");
 
-            }
-        break;
-        case EVENT_TICK:
-            if (cookie->alive_ping) {
-                cookie->alive_ping--;
-            } else {
-                cookie->alive_ping = TICK_SEND_ALIVE;
-                // send tick we are alive (until something like rtcp is used)
-          //      if (hdoipd_tstate(VTB_VIDEO)) { // only if video stream = active
-                rtsp_server_update_media(media, EVENT_TICK);
-          //      }
-            }
-
-            if (get_multicast_enable()) {
-                timeout = TICK_TIMEOUT_MULTICAST;
-            } else {
-                timeout = TICK_TIMEOUT_UNICAST;
-            }
-
-            if (cookie->timeout <= timeout) {
-                cookie->timeout++;
-
-            } else {
-                report(INFO "vtb_video_event: timeout");
-                // timeout -> kill connection
-                // server cannot kill itself -> add to kill list
-                // (will be executed after all events are processed)
-                cookie->timeout = 0;
-                rtsp_listener_add_kill(&hdoipd.listener, media->creator);
-                hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
-                osd_permanent(true);
-                osd_printf("vtb.video connection lost...\n");
             }
         break;
     }

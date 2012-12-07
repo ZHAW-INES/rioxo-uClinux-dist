@@ -434,8 +434,9 @@ t_rtsp_client* rtsp_client_open(char* address, t_rtsp_media *media)
 
     memset(client, 0, sizeof(t_rtsp_client));
     client->task = 0;
-
     client->nr = nr++;
+    client->timeout.alive_ping = 1;
+
 #ifdef REPORT_RTSP_CLIENT
     report(" + RTSP Client [%d] open %s", client->nr, address);
 #endif
@@ -784,7 +785,7 @@ int rtsp_client_get_parameter(t_rtsp_client* client)
 
   rtsp_request_get_parameter(&client->con, client->uri);
   rtsp_default_response((void*)&buf);
-  if ((ret = rtsp_parse_response(&client->con, tab_response_get_parameter, (void*)&buf, 0, CFG_RSP_TIMEOUT)) != RTSP_SUCCESS)
+  if ((ret = rtsp_parse_response(&client->con, tab_response_get_parameter, (void*)&buf, 0, hdoipd.eth_timeout)) != RTSP_SUCCESS)
   {
     rtsp_client_set_kill(client);
     osd_permanent(true);

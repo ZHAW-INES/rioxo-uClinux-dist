@@ -265,6 +265,7 @@ t_rtsp_server* rtsp_server_create(int fd, uint32_t addr)
         memset(server, 0, sizeof(t_rtsp_server));
         rtsp_coninit(&server->con, fd, addr);
         server->nr = nr++;
+        server->timeout.timeout = 0;
         server->kill = false;
         server->open = true;
 #ifdef REPORT_RTSP_SERVER

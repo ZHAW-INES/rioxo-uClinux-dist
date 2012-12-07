@@ -108,8 +108,6 @@ typedef struct {
 
 // Media cookie
 typedef struct {
-    uint32_t            timeout;
-    int                 alive_ping;
     t_hdoip_ethernet    remote;
 } t_multicast_cookie;
 

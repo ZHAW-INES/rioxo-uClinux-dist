@@ -23,12 +23,8 @@ int vtb_audio_hdcp(t_rtsp_media* media, t_rtsp_req_hdcp* m, t_rtsp_connection* r
 {
 	int ret;
 
-	t_multicast_cookie* cookie = media->cookie;
     ret = hdcp_ske_s(media, m, rsp);
-
-    cookie->timeout = 0;
-    cookie->alive_ping = 1;
-
+    ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
     return ret;
 }
 
@@ -88,9 +84,7 @@ int vtb_audio_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
     REPORT_RTX("TX", hdoipd.local, "->", cookie->remote, aud);
 
     media->result = RTSP_RESULT_READY;
-
-    cookie->timeout = 0;
-    cookie->alive_ping = 1;
+    ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
 
     return RTSP_SUCCESS;
 }
@@ -216,8 +210,7 @@ int vtb_audio_teardown(t_rtsp_media* media, t_rtsp_req_teardown UNUSED *m, t_rts
         rtsp_response_teardown(rsp, media->sessionid);
     }
 
-    cookie->timeout = 0;
-    cookie->alive_ping = 1;
+    ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
 
     remove_client_from_vtb(MEDIA_IS_AUDIO, cookie->remote.address);
 
@@ -259,7 +252,7 @@ int vtb_audio_update(t_rtsp_media UNUSED *media, t_rtsp_req_update *m, t_rtsp_co
     switch (m->event) {
         case EVENT_TICK:
             // reset timeout
-            cookie->timeout = 0;
+            ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
         break;
     }
 
@@ -286,34 +279,6 @@ int vtb_audio_event(t_rtsp_media *media, uint32_t event)
         case EVENT_AUDIO_IN0_OFF:
             if (rtsp_media_splaying(media)) {
                 rtsp_server_update_media(media, EVENT_AUDIO_IN0_OFF);
-                rtsp_listener_add_kill(&hdoipd.listener, media->creator);
-            }
-        break;
-        case EVENT_TICK:
-            if (cookie->alive_ping) {
-                cookie->alive_ping--;
-            } else {
-                cookie->alive_ping = TICK_SEND_ALIVE;
-                // send tick we are alive (until something like rtcp is used)
-       //         if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
-                rtsp_server_update_media(media, EVENT_TICK);
-       //         }
-            }
-
-            if (get_multicast_enable()) {
-                timeout = TICK_TIMEOUT_MULTICAST;
-            } else {
-                timeout = TICK_TIMEOUT_UNICAST;
-            }
-
-            if (cookie->timeout <= timeout) {
-                cookie->timeout++;
-            } else {
-                report(INFO "vtb_audio_event: timeout");
-                // timeout -> kill connection
-                // server cannot kill itself -> add to kill list
-                // (will be executed after all events are processed)
-                cookie->timeout = 0;
                 rtsp_listener_add_kill(&hdoipd.listener, media->creator);
             }
         break;
