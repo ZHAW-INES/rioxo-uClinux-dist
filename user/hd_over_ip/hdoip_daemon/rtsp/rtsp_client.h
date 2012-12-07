@@ -52,7 +52,6 @@ extern const t_map_fnc tab_request_update[];
 
 t_rtsp_client* rtsp_client_open(char* address, t_rtsp_media *media);
 int rtsp_client_add_media(t_rtsp_client* client, t_rtsp_media *media);
-int rtsp_client_deactivate(t_rtsp_client* client);
 int rtsp_client_close(t_rtsp_client* client, bool free);
 
 // client operation

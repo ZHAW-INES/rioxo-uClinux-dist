@@ -288,15 +288,6 @@ void request_teardown(t_rtsp_client* client, t_rtsp_media* media, void* data)
   teardown_media(client, media, (void*)&buf, false);
 }
 
-void request_deactivation(t_rtsp_client* client, t_rtsp_media* media, void* data)
-{
-  if (client == NULL || media == NULL)
-    return;
-
-  if (media->state > RTSP_STATE_INIT)
-    request_teardown(client, media, NULL);
-}
-
 /** checks if the received message is a request or a response
  *  if its a request, write to pipe 2, else to pipe 1
  *
@@ -542,11 +533,6 @@ int rtsp_client_add_media(t_rtsp_client* client, t_rtsp_media *media)
 
   add_media(client, media);
   return RTSP_SUCCESS;
-}
-
-int rtsp_client_deactivate(t_rtsp_client* client)
-{
-  return request(client, NULL, NULL, request_deactivation, true);
 }
 
 /** Closes and removes a rtsp client connection

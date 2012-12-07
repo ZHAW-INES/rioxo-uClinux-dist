@@ -43,8 +43,6 @@ void rtsp_server_pause(t_rtsp_server* handle);
 
 int rtsp_server_thread(t_rtsp_server* handle);
 
-void rtsp_server_teardown_media(t_rtsp_media* media);
 void rtsp_server_update_media(t_rtsp_media* media, uint32_t event);
-void rtsp_server_pause_media(t_rtsp_media* media);
 
 #endif /* RTSP_SERVER_H_ */

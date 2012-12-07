@@ -480,24 +480,6 @@ void rtsp_server_pause(t_rtsp_server* handle)
   traverse(handle, NULL, NULL, traverse_pause, false);
 }
 
-/**
- * Teardown the connection for the given media-control
- *
- * This method sends a TEARDOWN request to the client
- * and removes the media-control from the servers list
- * of active media-controls
- *
- * sa rtsp_request_teardown
- * sa rtsp_server_remove_media
- */
-void rtsp_server_teardown_media(t_rtsp_media* media)
-{
-  if (media == NULL || media->creator == NULL)
-    return;
-
-  traverse(media->creator, media->name, NULL, traverse_teardown, true);
-}
-
 void rtsp_server_update_media(t_rtsp_media* media, uint32_t event)
 {
   if (media == NULL || media->creator == NULL) {
@@ -506,14 +488,4 @@ void rtsp_server_update_media(t_rtsp_media* media, uint32_t event)
   }
 
   traverse(media->creator, media->name, &event, traverse_update, false);
-}
-
-void rtsp_server_pause_media(t_rtsp_media* media)
-{
-  if (media == NULL || media->creator == NULL) {
-    report(ERROR "rtsp server pause: no server");
-    return;
-  }
-
-  traverse(media->creator, media->name, NULL, traverse_pause, false);
 }
