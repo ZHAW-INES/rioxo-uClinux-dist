@@ -20,7 +20,7 @@ function rebooting_load_bar(t, t_load, t_restart)
     hdoip.html.Title("Firmware update")
     hdoip.html.Text("The firmware will update now and reboot after.")
     hdoip.html.Text("<br><b> do NOT turn off the device during this process</b>")
-    hdoip.html.Loadbar(t_load, t_restart)
+    hdoip.html.Loadbar(t_load, t_restart, 0)
     hdoip.html.Bottom(t)
 end
 

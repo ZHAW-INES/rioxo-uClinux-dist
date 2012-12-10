@@ -312,7 +312,9 @@ function Bottom(t)
     print(html_str)
 end
 
-
+function redirect(url)
+    html_str = html_str .. "<meta http-equiv=\"refresh\" content=\"2; url=".. url .."\">\n" 
+end
 
 function TableHeader(col_size)
     html_table = 1
@@ -356,7 +358,7 @@ function CarriageReturn()
     html_str = html_str .. "<br>\n"
 end
 
-function Loadbar(time, time_restart)
+function Loadbar(time, time_restart, load_default_ip)
     html_str = html_str .. '<script type="text/javascript">'
     html_str = html_str .. "var count = 0;"
     html_str = html_str .. "var count_restart = 0;"
@@ -387,7 +389,17 @@ function Loadbar(time, time_restart)
     html_str = html_str .. "        }"
     html_str = html_str .. "        else"
     html_str = html_str .. "        {"
-    html_str = html_str .. '            location.href="index.lua";'
+
+    if (load_default_ip ~= nil) then
+        if (load_default_ip == 0) then
+            html_str = html_str .. '    location.href="index.lua";'
+        else
+            html_str = html_str .. '    location.href="http://192.168.1.200";'
+        end
+    else
+        html_str = html_str .. '        location.href="index.lua";'
+    end
+
     html_str = html_str .. "        }"
     html_str = html_str .. "    }"
     html_str = html_str .. "}"

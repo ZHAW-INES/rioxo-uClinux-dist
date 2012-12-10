@@ -16,11 +16,12 @@ REG_SYS_SUB_LABEL = "sys_sub"
 REG_SYS_DHCP = "sys_dhcp"
 REG_MODE_START_LABEL = "sys_mode"
 
-function redirect(url) 
-    local str = "<meta http-equiv=\"refresh\" content=\"5; url=" .. url .. "\">\n"
-    hdoip.html.Header("Redirect to " .. url, 99, script_path, str) 
-    hdoip.html.Text("Redirect to " .. url .. " in 5 seconds") 
-    hdoip.html.Bottom("") 
+function redirect(t, url) 
+    hdoip.html.Header(t, "Redirect to " .. url, script_path) 
+    hdoip.html.Title(label.page_ethernet);  
+    hdoip.html.Text("Redirect to " .. url .. " in 2 seconds")
+    hdoip.html.redirect(url)
+    hdoip.html.Bottom(t) 
 end
 
 function reboot(t)
@@ -28,7 +29,7 @@ function reboot(t)
     hdoip.html.Title("Reboot")
     hdoip.html.Text("Please wait until device is rebooted.")
     hdoip.html.Text("<br>")
-    hdoip.html.Loadbar(0, 30)
+    hdoip.html.Loadbar(0, 33, 0)
     hdoip.html.Bottom(t)
     hdoip.pipe.reboot()
     os.exit(0)
@@ -126,7 +127,8 @@ function show(t)
             if(hdoip.network.checkIp(t.sys_ip0, t.sys_ip1, t.sys_ip2, t.sys_ip3) == 1) then   
 	            tmp0,tmp1,tmp2,tmp3 = hdoip.network.text2IpValues(hdoip.pipe.getParam(hdoip.pipe.REG_SYS_IP))
 	            if((tmp0 ~= t.sys_ip0) or (tmp1 ~= t.sys_ip1) or (tmp2 ~= t.sys_ip2) or (tmp3 ~= t.sys_ip3)) then
-	                new_ip = 0;
+	                new_ip = 1;
+                    -- TODO: page must be reloaded first before ip can be changed
 	                hdoip.pipe.setParam(hdoip.pipe.REG_SYS_IP, t.sys_ip0.."."..t.sys_ip1.."."..t.sys_ip2.."."..t.sys_ip3)      
 	            end
 	        else 
@@ -223,7 +225,7 @@ function show(t)
             hdoip.html.FormBottom(t)
             hdoip.html.Bottom(t)
         else
-            redirect("http://"..t.sys_ip0.."."..t.sys_ip1.."."..t.sys_ip2.."."..t.sys_ip3)
+            redirect(t, "http://"..t.sys_ip0.."."..t.sys_ip1.."."..t.sys_ip2.."."..t.sys_ip3)
         end
     end
 end
