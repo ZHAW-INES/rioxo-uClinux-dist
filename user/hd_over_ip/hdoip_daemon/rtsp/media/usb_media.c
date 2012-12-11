@@ -22,8 +22,6 @@
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
 static char usb_host_ip[50];
-static int timer;
-static int alive_ping;
 
 int usb_setup(t_rtsp_media UNUSED *media, t_rtsp_req_setup* m, t_rtsp_connection* rsp)
 {
@@ -204,61 +202,6 @@ int usb_doteardown(t_rtsp_media *media, t_rtsp_usb *m UNUSED, void *rsp UNUSED)
     return ret;
 }
 
-int usb_update(t_rtsp_media UNUSED *media, t_rtsp_req_update *m, t_rtsp_connection UNUSED *rsp)
-{
-    if (m->event == EVENT_TICK) {
-        // reset timeout
-        timer = 0;
-    }
-
-    return RTSP_SUCCESS;
-}
-
-int usb_event(t_rtsp_media *media, uint32_t event)
-{
-    t_rtsp_client *client = media->creator;
-
-    if (rtsp_media_sinit(media))
-        return RTSP_WRONG_STATE;
-
-    if (!client) {
-        report(ERROR "usb_event: no client");
-        return RTSP_CLIENT_ERROR;
-    }
-
-    if (event == EVENT_TICK) {
-        if (alive_ping) {
-            alive_ping--;
-        } else {
-            alive_ping = TICK_SEND_ALIVE;
-            // send tick we are alive (until something like rtcp is used)
-            if reg_test("mode-start", "vtb") {
-                rtsp_server_update_media(media, EVENT_TICK);
-            } else {
-               rtsp_client_update(client, EVENT_TICK, media->name);
-            }
-        }
-
-        if (timer <= TICK_TIMEOUT) {
-            timer++;
-        } else {
-           report(INFO "usb_event: timeout");
-            // timeout -> kill connection
-            // server cannot kill itself -> add to kill list
-            // (will be executed after all events are processed)
-            timer = 0;
-
-            if reg_test("mode-start", "vtb") {
-                rtsp_listener_add_kill(&hdoipd.listener, media->creator);
-            } else {
-                rtsp_client_set_kill(client);
-            }
-        }
-    }
-
-    return RTSP_SUCCESS;
-}
-
 
 t_rtsp_media usb_media = {
     .name = "usb",
@@ -269,7 +212,5 @@ t_rtsp_media usb_media = {
     .teardown = (frtspm*)usb_teardown,
     .dosetup = (frtspm*)usb_dosetup,
     .doplay = (frtspm*)usb_doplay,
-    .doteardown = (frtspm*)usb_doteardown,
-    .update = (frtspm*)usb_update,
-    .event = (frtspe*)usb_event
+    .doteardown = (frtspm*)usb_doteardown
 };
