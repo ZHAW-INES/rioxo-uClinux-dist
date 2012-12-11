@@ -21,14 +21,11 @@ void rtsp_coninit(t_rtsp_connection* m, int fd, uint32_t addr)
     m->fdw = fd;
     m->fdr = fd;
     m->sequence = 1;
-    m->in.eol = m->in.sol = m->in.buf;
-    m->out.eol = m->out.sol = m->out.buf;
-    m->in.buf[0] = 0;
-    m->out.buf[0] = 0;
+    rtsp_buffer_init(&m->in);
+    rtsp_buffer_init(&m->out);
     m->address = addr;
     m->doc = RTSP_CON_DOC_RX | RTSP_CON_DOC_TX;
 }
-
 
 static bool rtsp_receive_crlf(char **s, char *eol, size_t len, size_t *readBytes)
 {

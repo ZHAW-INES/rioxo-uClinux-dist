@@ -27,7 +27,21 @@ typedef struct {
 static inline void rtsp_buffer_init(t_rtsp_buffer *buf)
 {
     buf->sol = buf->eol = buf->buf;
+    buf->buf[0] = '\0';
 }
+
+/**
+ * Print message to buffer.
+ */
+#define rtsp_buffer_printf(_m_, ...)                        \
+do {                                                        \
+    if ((_m_)->eol < ((_m_)->buf + RTSP_MSG_MAX_LENGTH)) {  \
+        int n = snprintf((_m_)->eol,                        \
+                         RTSP_MSG_MAX_LENGTH - ((_m_)->eol - (_m_)->buf), \
+                         __VA_ARGS__);                      \
+        (_m_)->eol += n;                                    \
+    } \
+} while (0)
 
 typedef struct {
     char        line[100];
@@ -51,20 +65,6 @@ typedef struct rtsp_connection {
 } t_rtsp_connection;
 
 // TODO: send content if not enough size and retry snprintf?
-
-/** Print message to buffer
- *
- * */
-
-#define rtsp_buffer_printf(_m_, ...)                        \
-do {                                                        \
-    if ((_m_)->eol < ((_m_)->buf + RTSP_MSG_MAX_LENGTH)) {  \
-        int n = snprintf((_m_)->eol,                        \
-                         RTSP_MSG_MAX_LENGTH - ((_m_)->eol - (_m_)->buf), \
-                         __VA_ARGS__);                      \
-        (_m_)->eol += n;                                    \
-    } \
-} while (0)
 
 #define msgprintf(c, ...)                   \
 do {                                        \
