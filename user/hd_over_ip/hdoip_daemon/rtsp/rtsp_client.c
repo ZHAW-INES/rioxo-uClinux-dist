@@ -94,6 +94,7 @@ void remove_media(t_rtsp_client* handle, t_rtsp_media* media, bool remove_from_l
     bstmap_removep(&handle->media, media->name);
 
   media->creator = NULL;
+  media->state = RTSP_STATE_INIT;
 }
 
 /**
