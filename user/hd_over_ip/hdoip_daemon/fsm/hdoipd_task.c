@@ -335,6 +335,7 @@ void task_get_system_state(char** p)
 void task_get_system_update(char** p)
 {
 	int state;
+	bool streaming = false;
 	if(update_vector != 0) {
 
 		// -------------------------------------------------------------
@@ -350,6 +351,7 @@ void task_get_system_update(char** p)
 
 			if (hdoipd_state(HOID_VRB|HOID_VTB)) {
 				report("set device into ready state...");
+				streaming = vrb_video.state == RTSP_STATE_PLAYING || vrb_audio.state == RTSP_STATE_PLAYING;
 				hdoipd_goto_ready();
 	    	}
 		}
@@ -456,7 +458,7 @@ void task_get_system_update(char** p)
 								break;
 				case HOID_VRB : hdoipd_goto_vrb();
 			    				// start sending alive packets
-                                if(hdoipd.auto_stream) {
+                                if (hdoipd.auto_stream || streaming) {
                                     alive_check_start_vrb_alive();
                                 }
 								break;
