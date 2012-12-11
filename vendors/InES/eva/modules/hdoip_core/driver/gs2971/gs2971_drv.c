@@ -16,6 +16,7 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
 {
     handle->p_spi = spi_ptr;
     handle->p_i2c = i2c_ptr;
+    handle->video_mux_ptr = video_mux_ptr;
     handle->video_status = false;
     handle->no_phase_info = false;
     handle->delay_queue_input = 0;
@@ -46,8 +47,23 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     // do not reclock output signal to loopback
     clr_io_exp_rx_pin(handle->p_i2c, RX_RC_BYP);
 
+    // reset and initialize chip
+    gs2971_reset_and_init(handle);
+}
+
+void gs2971_reset_and_init(t_gs2971 *handle)
+{
+    uint32_t reset_reg, t;
+
+    reset_reg = bdt_get_reset_chip(handle->video_mux_ptr);
+
+    // Workaround to prevent that audio level is too high: hardware reset
+    HOI_WR32(handle->video_mux_ptr, MUX_RESET_CHIP_OFFSET, reset_reg & ~RESET_CHIP_1);
+    //wait for 2ms
+    t=jiffies+(HZ/500);
+    while (jiffies < t);    
     // clear reset pin
-    bdt_drv_clear_reset_0(video_mux_ptr);
+    bdt_drv_clear_reset_0(handle->video_mux_ptr);
 
     // set slew rate to sd-video (for loopback)
     gs2971_driver_set_slew_rate(handle, 270);
@@ -106,6 +122,7 @@ void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
 {
     bool pll_locked, video_status;
     uint16_t video_format = (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_RATE_SEL_READBACK_MASK) >> RASTER_STRUC_4_RATE_SEL_READBACK_SHIFT;
+    uint32_t timeout;
 
     pll_locked = (bool) read_io_exp_rx_pin(handle->p_i2c, RX_STAT_3);
 
@@ -132,6 +149,16 @@ void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
             handle->delay_queue_input++;
         }
         if (handle->delay_queue_input == (RECOGNIZE_INPUT_DELAY - 1)) {
+            // reinitialize chip
+            gs2971_reset_and_init(handle);
+            //wait until input is active again
+            timeout = jiffies + HZ;
+            while(!read_io_exp_rx_pin(handle->p_i2c, RX_STAT_3)) {
+                if (jiffies > timeout) {
+                    break;
+                }
+            }
+            // send event to daemon
             queue_put(event_queue, E_GS2971_VIDEO_ON);
             // enable loopback
             gs2971_driver_configure_loopback(handle, LOOP_ON);

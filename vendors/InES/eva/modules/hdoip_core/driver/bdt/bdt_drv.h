@@ -20,6 +20,9 @@
 #define INPUT_MUX_SDI                       0x00000001
 #define INPUT_MUX_HDMI                      0x00000002
 
+#define RESET_CHIP_1                        0x00000001
+#define RESET_CHIP_2                        0x00000002
+
 #define bdt_set_video_mux(p, v)             HOI_WR32((p), MUX_CONTROL_OFFSET, ((HOI_RD32((p), MUX_CONTROL_OFFSET) & 0xFFFFFFF0) | (v & 0x0000000F)))
 #define bdt_get_video_mux_status(p)         HOI_RD32((p), MUX_STATUS_OFFSET)
 
@@ -32,8 +35,8 @@
 #define bdt_clr_reset_button(p)             HOI_WR32((p), MUX_RESET_OFFSET, (0x0))
 
 #define bdt_get_reset_chip(p)               HOI_RD32((p), MUX_RESET_CHIP_OFFSET)
-#define bdt_set_reset_chip_0(p, v)          HOI_WR32((p), MUX_RESET_CHIP_OFFSET, ((v) | (1)))
-#define bdt_set_reset_chip_1(p, v)          HOI_WR32((p), MUX_RESET_CHIP_OFFSET, ((v) | (2)))
+#define bdt_set_reset_chip_0(p, v)          HOI_WR32((p), MUX_RESET_CHIP_OFFSET, ((v) | RESET_CHIP_1))
+#define bdt_set_reset_chip_1(p, v)          HOI_WR32((p), MUX_RESET_CHIP_OFFSET, ((v) | RESET_CHIP_2))
 
 //card list is in "hoi_msg.h"
 
