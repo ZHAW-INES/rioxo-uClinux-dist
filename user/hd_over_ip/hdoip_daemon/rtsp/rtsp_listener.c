@@ -355,7 +355,6 @@ void rtsp_listener_event(t_rtsp_listener* handle, uint32_t event)
 
 void rtsp_listener_close_all(t_rtsp_listener* handle)
 {
-    report(INFO "rtsp_listener_close_all()");
     listener_lock(handle, "rtsp_listener_teardown_all");
         bstmap_traverse_freep(&handle->sessions, rtsp_listener_traverse_remove, rtsp_server_close);
     listener_unlock(handle, "rtsp_listener_teardown_all");
@@ -369,7 +368,6 @@ void rtsp_listener_close_all(t_rtsp_listener* handle)
  */
 void rtsp_listener_teardown_all(t_rtsp_listener* handle)
 {
-    report(INFO "rtsp_listener_teardown_all()");
     listener_lock(handle, "rtsp_listener_teardown_all");
         bstmap_traverse_freep(&handle->sessions, rtsp_listener_traverse_remove, rtsp_server_teardown);
     listener_unlock(handle, "rtsp_listener_teardown_all");
@@ -377,7 +375,6 @@ void rtsp_listener_teardown_all(t_rtsp_listener* handle)
 
 void rtsp_listener_pause_all(t_rtsp_listener* handle)
 {
-    report(INFO "rtsp_listener_pause_all()");
     listener_lock(handle, "rtsp_listener_pause_all");
         bstmap_traverse(handle->sessions, rtsp_listener_traverse, rtsp_server_pause);
     listener_unlock(handle, "rtsp_listener_pause_all");
