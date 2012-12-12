@@ -325,10 +325,13 @@ struct t_listener_event {
 	t_rtsp_listener* handle;
 };
 
-void rtsp_listener_traverse_event(char UNUSED *key, char* value, void* _cookie)
+void rtsp_listener_traverse_event(void* elem, void* data)
 {
-	struct t_listener_event *cookie = _cookie;
-	t_rtsp_server* server = (t_rtsp_server*)value;
+	struct t_listener_event *cookie = data;
+	t_rtsp_server* server = (t_rtsp_server*)elem;
+
+	if (elem == NULL || data == NULL)
+	  return;
 
 	if (server && server->kill) {
 	    rtsp_listener_add_kill(cookie->handle, server);
@@ -344,7 +347,7 @@ void rtsp_listener_event(t_rtsp_listener* handle, uint32_t event)
     listener_lock(handle, "rtsp_listener_event");
         le.event = event;
         le.handle = handle;
-        bstmap_traverse(handle->sessions, rtsp_listener_traverse_event, &le);
+        list_traverse(handle->cons, rtsp_listener_traverse_event, &le);
         // event may add medias to the kill list
         while ((server = queue_get(handle->kills))) {
             if (server->sessionid != NULL && strlen(server->sessionid) > 0)
