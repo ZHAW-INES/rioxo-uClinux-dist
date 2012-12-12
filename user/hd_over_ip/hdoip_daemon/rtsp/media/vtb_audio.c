@@ -63,14 +63,14 @@ int vtb_audio_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
 
     if (!multicast_get_enabled() && hdoipd_tstate(VTB_AUDIO)) {
         report(ERROR "already streaming audio");
-        rtsp_response_error(rsp, RTSP_STATUS_INTERNAL_SERVER_ERROR, NULL);
+        rtsp_response_error(rsp, RTSP_STATUS_INTERNAL_SERVER_ERROR, "Already Streaming");
         return RTSP_REQUEST_ERROR;
     }
 
     // only set the EDID if it has been passed as a header value
     if (rtsp_server_handle_setup((t_rtsp_server*)media->creator, &(m->edid)) != 0) {
         report(ERROR "setting up audio input failed");
-        rtsp_response_error(rsp, RTSP_STATUS_INTERNAL_SERVER_ERROR, NULL);
+        rtsp_err_no_source(rsp);
         return RTSP_REQUEST_ERROR;
     }
 

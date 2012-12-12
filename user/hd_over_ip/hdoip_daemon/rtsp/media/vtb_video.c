@@ -76,7 +76,7 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
 
     if (!multicast_get_enabled() && hdoipd_tstate(VTB_VIDEO)) {
         report(ERROR "already streaming video");
-        rtsp_response_error(rsp, RTSP_STATUS_SERVICE_UNAVAILABLE, NULL);
+        rtsp_response_error(rsp, RTSP_STATUS_SERVICE_UNAVAILABLE, "Already Streaming");
         return RTSP_REQUEST_ERROR;
     }
 
@@ -84,7 +84,7 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
     // also takes care of multicast setup
     if (rtsp_server_handle_setup((t_rtsp_server*)media->creator, &(m->edid)) != 0) {
         report(ERROR "setting up video input failed");
-        rtsp_response_error(rsp, RTSP_STATUS_SERVICE_UNAVAILABLE, NULL);
+        rtsp_err_no_source(rsp);
         return RTSP_REQUEST_ERROR;
     }
 
