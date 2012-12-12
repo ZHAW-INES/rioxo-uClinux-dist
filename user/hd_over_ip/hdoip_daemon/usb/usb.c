@@ -261,7 +261,7 @@ int usb_connect_device(t_rtsp_usb* usb)
 
     // start connection for usb if it doesnt exists
     if (!media->creator) {
-        hdoipd_start_vrb_cb(media, 0);
+        hdoipd_init_vrb_cb(media, 0);
     }
 
     ret = RTSP_SUCCESS;
@@ -324,7 +324,7 @@ void usb_try_to_connect_device(t_usb_devices* old_values)
         if (strcmp(usb_clone->mouse, "") || strcmp(usb_clone->keyboard, "") || strcmp(usb_clone->storage, "")) {
             // start connection for usb if it doesnt exists
             if (!media->creator) {
-                hdoipd_start_vrb_cb(media, 0);
+                hdoipd_init_vrb_cb(media, 0);
             }
 
             ret = RTSP_SUCCESS;

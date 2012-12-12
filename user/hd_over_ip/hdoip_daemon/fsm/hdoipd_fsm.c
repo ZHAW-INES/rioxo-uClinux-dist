@@ -298,15 +298,6 @@ int hdoipd_goto_vrb()
                 rtsp_listener_add_media(&hdoipd.listener, &usb_media);
 
                 hdoipd_set_state(HOID_VRB);
-                // register remote for "hello"
-                //box_sys_set_remote(reg_get("remote-uri"));
-                // first thing to try is setup a new connection based on registry
-
-                //if(hdoipd.auto_stream) {
-                //    hdoipd_set_task_start_vrb();
-                //}
-                //hdoipd.alive_check.init_done = 0;
-                //alive_check_start_vrb_alive();
             }
         } else {
             report(INFO "already in state vrb");
@@ -328,8 +319,6 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
     int ret;
     char *uri;
 
-    report(CHANGE "vrb_setup(%s)", media->name);
-
     if (!hdoipd_state(HOID_VRB)) {
         report(ERROR "hdoipd_vrb_setup() only valid in state VRB");
         return -1;
@@ -337,7 +326,7 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
 
     // test if we are ready to start media
     if (rtsp_media_ready(media) != RTSP_SUCCESS) {
-        report(ERROR "hdoipd_vrb_setup() media-client not ready");
+        //report(ERROR "hdoipd_vrb_setup() media-client not ready");
         return -1;
     }
 
@@ -374,10 +363,12 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
                 report(ERROR "hdoipd_vrb_setup() rtsp_media_setup failed (%d)", ret);
                 rtsp_client_close(hdoipd.client, true);
                 hdoipd.client = NULL;
+                return -1;
             }
         } else {
             report(ERROR "hdoipd_vrb_setup() rtsp_client_open failed");
             osd_printf("VTB(%s) not found. Waiting for %s\n", media->name, uri);
+            return -1;
         }
     }
 
@@ -422,80 +413,73 @@ int hdoipd_start_vrb(bool force)
   if (!hdoipd_state(HOID_VRB))
     return RTSP_CLIENT_ERROR;
 
-  // lock("hdoipd_start_vrb");
-  if ((hdoipd.client != NULL && hdoipd.client->open) || (hdoipd.task_commands & TASK_START_VRB)) {
-    // unlock("hdoipd_start_vrb");
+  if ((hdoipd.client != NULL && hdoipd.client->open) || (hdoipd.task_commands & TASK_START_VRB))
     return RTSP_CLIENT_ERROR;
-  }
 
-  if (!force && !hdoipd.auto_stream) {
-    // unlock("hdoipd_start_vrb");
+  if (!force && !hdoipd.auto_stream)
     return RTSP_CLIENT_ERROR;
-  }
 
   hdoipd_set_task_start_vrb();
-  // unlock("hdoipd_start_vrb");
-
-  return RTSP_SUCCESS;
 }
 
 /** Restarts VRB when already in VRB state
  *
- * @return less than 0 on error, 0 on success and 1 when state not changed
+ * @return 0 on state change, other when state not changed
  */
-int hdoipd_start_vrb_cb(t_rtsp_media* media, void* d)
+int hdoipd_init_vrb_cb(t_rtsp_media* media, void* d)
 {
-    int ret = 0;
     uint32_t dev_id;
 
     // USB
-    if (strcmp(media->name, "usb") == 0)
-    	return hdoipd_vrb_setup(media, d);
+    if (strcmp(media->name, "usb") == 0) {
+        if (hdoipd_vrb_setup(media, d) < 0)
+            return 1;
+        return 0;
+    }
 
     // detect connected video card
     hoi_drv_get_device_id(&dev_id);
 
     // If SDI there is no event if a source is connected
-    if (dev_id == BDT_ID_SDI8_BOARD) {
+    if (dev_id == BDT_ID_SDI8_BOARD)
         hdoipd_set_rsc(RSC_VIDEO_SINK);
-    }
 
     if (rtsp_media_sinit(media)) {
-        if ((ret = hdoipd_vrb_setup(media, d)) != 0)
-            return ret;
-    } else if (rtsp_media_sready(media)) {
-        if ((ret = hdoipd_vrb_play(media, d)) != 0)
-            return ret;
-    } else
-        return 1;
+        if (hdoipd_vrb_setup(media, d) < 0)
+            return 1;
+    }
+    else if (rtsp_media_sready(media)) {
+        if (hdoipd_vrb_play(media, d) < 0)
+            return 1;
+    }
+    else
+      return 1;
 
     return 0;
 }
 
-int hdoipd_start_vrb(void *d)
+int hdoipd_init_vrb(void *d)
 {
-    int result = 0;
+    int failed = 0;
     report(CHANGE "attempt to start vrb");
-    if (hdoipd_state(HOID_VRB)) {
-        result = hdoipd_media_callback(d, hdoipd_init_vrb_cb, 0);
 
-        if (result != 0) {
+    if (hdoipd_state(HOID_VRB)) {
+        if ((failed = hdoipd_media_callback(d, hdoipd_init_vrb_cb, 0))) {
             report(ERROR "attempt to start vrb failed");
-            return result;
+            return failed;
         }
 
         usb_try_to_connect_device(&hdoipd.usb_devices);
-    } else {
-        report(ERROR "attempt to start vrb when not in state vrb");
     }
+    else
+      report(ERROR "attempt to start vrb when not in state vrb");
 
-    return result;
+    return 0;
 }
 
 void hdoipd_set_task_start_vrb(void)
 {
     // stop sending alive packets
-    alive_check_stop_vrb_alive();
     hdoipd.task_commands |= TASK_START_VRB;
     hdoipd.task_timeout = 1;
     hdoipd.task_repeat = 2;
@@ -508,16 +492,14 @@ void hdoipd_task(void)
         if(hdoipd.task_timeout) {
             hdoipd.task_timeout--;
         } else {
-            if(hdoipd_start_vrb(0)) {
-            	report(ERROR "task hdoipd_start_vrb() repeat (%d)",hdoipd.task_repeat);
-                if(hdoipd.task_repeat > 0) {
+            if(hdoipd_init_vrb(0)) {
+            	if(hdoipd.task_repeat > 0) {
                     hdoipd.task_timeout = 50;
                     hdoipd.task_repeat--;
                 } else {
                     hdoipd.task_commands &= ~TASK_START_VRB;
                 }
             } else {
-            	report(ERROR "task hdoipd_start_vrb() executed");
                 hdoipd.task_repeat = 0;
                 hdoipd.task_commands &= ~TASK_START_VRB;
             }
@@ -544,9 +526,7 @@ void hdoipd_fsm_vrb(uint32_t event)
         case E_ADV9889_CABLE_ON:
             // plug in the cable is a start point for the VRB to
             // work when video or embedded audio is desired ...
-            if(hdoipd.auto_stream) {
-                alive_check_start_vrb_alive();
-            }
+            hdoipd_start_vrb(false);
         break;
         case E_ADV9889_CABLE_OFF:
             rtsp_client_event(hdoipd.client, EVENT_VIDEO_SINK_OFF);

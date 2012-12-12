@@ -200,12 +200,8 @@ int vrb_audio_error(t_rtsp_media *media, intptr_t m, t_rtsp_connection* rsp)
                         break;
             case 408:   media->result = RTSP_RESULT_SERVER_HDCP_ERROR;
             			rtsp_client_set_teardown(client);
-	    				// start sending alive packets
-            	        if(hdoipd.auto_stream) {
-                            alive_check_start_vrb_alive();
-            	        }
                         break;
-            case 400:
+            case RTSP_STATUS_INTERNAL_SERVER_ERROR:
             default:    media->result = RTSP_RESULT_SERVER_ERROR;
                         break;
         }

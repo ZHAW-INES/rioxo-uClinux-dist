@@ -11,7 +11,7 @@
 #include "rtsp_connection.h"
 #include "map.h"
 
-#define rtsp_err_server(x)          rtsp_response_error(x, 400, "Server error")
+#define rtsp_err_server(x)          rtsp_response_error(x, RTSP_STATUS_INTERNAL_SERVER_ERROR, NULL)
 #define rtsp_err_busy(x)            rtsp_response_error(x, 404, "Busy")
 #define rtsp_err_no_vtb(x)          rtsp_response_error(x, 405, "Not a VTB")
 #define rtsp_err_retry(x)           rtsp_response_error(x, 300, "Please retry later")

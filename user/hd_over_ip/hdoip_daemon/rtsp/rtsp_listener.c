@@ -181,6 +181,13 @@ void* rtsp_listener_thread(void *_handle)
 int rtsp_listener_start(t_rtsp_listener* handle, int port)
 {
     static int nr = 1;
+
+    if (handle == NULL)
+      return RTSP_NULL_POINTER;
+
+    if (handle->run)
+      return RTSP_SUCCESS;
+
     handle->media = NULL;
     handle->sessions = NULL;
     handle->port = port;

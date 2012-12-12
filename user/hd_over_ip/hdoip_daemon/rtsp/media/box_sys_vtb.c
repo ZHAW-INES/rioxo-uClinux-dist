@@ -69,7 +69,6 @@ t_rtsp_media box_sys_vtb = {
     .name           = "",
     .owner          = 0,
     .cookie         = NULL,
-    .hello          = box_sys_hello,
     .options        = box_sys_options,
     .get_parameter  = box_sys_vtb_get_parameter,
     .event          = box_sys_vtb_event

@@ -195,14 +195,6 @@ int vrb_video_teardown(t_rtsp_media *media, t_rtsp_rsp_teardown UNUSED *m, t_rts
     // disable HDCP on AD9889
     hoi_drv_hdcp_adv9889dis();
 
-    // TODO: start sending alive packets should not be in media
-    // start sending hello frames to vtb
-    if(hdoipd_rsc(RSC_VIDEO_SINK)) {
-        if(hdoipd.auto_stream) {
-            alive_check_start_vrb_alive();
-        }
-    }
-
     hoi_drv_set_led_status(SDI_OUT_OFF);
 
     return RTSP_SUCCESS;
@@ -228,12 +220,8 @@ int vrb_video_error(t_rtsp_media *media, intptr_t m, t_rtsp_connection* rsp)
                         break;
             case 408:   media->result = RTSP_RESULT_SERVER_HDCP_ERROR;
                         rtsp_client_set_teardown(client);
-			    		// start sending alive packets
-                        if(hdoipd.auto_stream) {
-                            alive_check_start_vrb_alive();
-                        }
                         break;
-            case 400:
+            case RTSP_STATUS_INTERNAL_SERVER_ERROR:
             default:    media->result = RTSP_RESULT_SERVER_ERROR;
                         break;
         }

@@ -182,7 +182,7 @@ int vtb_audio_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_connec
     if ( ((nfo->audio_width[0]<8) || (nfo->audio_width[0]>32)) ||
          ((nfo->audio_fs[0]<32000) || (nfo->audio_fs[0]>192000)) ||
          ((nfo->audio_cnt[0]<1) || (nfo->audio_cnt[0]>8)) ) {
-          rtsp_response_error(rsp, RTSP_STATUS_SERVICE_UNAVAILABLE, "No Audio Input");
+          rtsp_err_def_source(rsp);
           return RTSP_REQUEST_ERROR;
     }
 

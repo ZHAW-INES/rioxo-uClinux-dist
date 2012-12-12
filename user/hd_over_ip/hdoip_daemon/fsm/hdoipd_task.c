@@ -427,15 +427,6 @@ void task_get_system_update(char** p)
 		    report("Updating multicast...");
         }
 
-        /* vrb alive check */
-        if(update_vector & HOID_TSK_UPD_ALIVE) {
-		    report("Updating alive check...");
-        //    is updated at same time with rtsp-port and this needs a restart of the device
-        //    alive_check_server_close(&hdoipd.alive_check);
-        //    hdoipd.alive_check.init_done = false;
-        //    alive_check_init_msg_vrb_alive();
-        }
-
 		// -------------------------------------------------------------
 		// System commands (after update)
 
@@ -450,10 +441,7 @@ void task_get_system_update(char** p)
 				case HOID_VTB : hdoipd_goto_vtb();
 								break;
 				case HOID_VRB : hdoipd_goto_vrb();
-			    				// start sending alive packets
-                                if (hdoipd.auto_stream || streaming) {
-                                    alive_check_start_vrb_alive();
-                                }
+				                hdoipd_start_vrb(streaming || hdoipd.auto_stream);
 								break;
 				default 	  :
 								break;
@@ -694,11 +682,6 @@ void task_set_multicast_update(char *p UNUSED)
     update_vector |= HOID_TSK_UPD_MULTICAST | HOID_TSK_EXEC_RESTART_VTB;
 }
 
-void task_set_alive_update(char *p UNUSED)
-{
-    update_vector |= HOID_TSK_UPD_ALIVE;
-}
-
 void task_set_led_instruction(char* p)
 {
     hoi_drv_set_led_status(atoi(p));
@@ -816,9 +799,9 @@ void hdoipd_register_task()
     set_listener("amx-hello-interval", task_set_amx_update);
     set_listener("multicast_en", task_set_multicast_update);
     set_listener("multicast_group", task_set_multicast_update);
-    set_listener("alive-check", task_set_alive_update);
-    set_listener("alive-check-interval", task_set_alive_update);
-    set_listener("alive-check-port", task_set_alive_update);
+    //set_listener("alive-check", task_set_alive_update);
+    //set_listener("alive-check-interval", task_set_alive_update);
+    //set_listener("alive-check-port", task_set_alive_update);
     set_listener("led_instruction", task_set_led_instruction);
     set_listener("osd-time", task_set_osd_time);
     set_listener("usb-mode", task_set_usb_mode);

@@ -33,8 +33,9 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void* d);
 int hdoipd_vrb_play(t_rtsp_media* media, void* d);
 void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps);
 
-int hdoipd_start_vrb_cb(t_rtsp_media* media, void* d);
-int hdoipd_start_vrb(void* d);
+int hdoipd_start_vrb(bool force);
+int hdoipd_init_vrb_cb(t_rtsp_media* media, void* d);
+int hdoipd_init_vrb(void* d);
 void hdoipd_task(void);
 void hdoipd_set_task_start_vrb(void);
 
