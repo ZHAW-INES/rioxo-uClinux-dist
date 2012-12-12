@@ -56,7 +56,6 @@ void rtsp_listener_create_sessionid(t_rtsp_listener* handle, char* id);
 void rtsp_listener_event(t_rtsp_listener* handle, uint32_t event);
 void rtsp_listener_close_all(t_rtsp_listener* handle);
 void rtsp_listener_teardown_all(t_rtsp_listener* handle);
-void rtsp_listener_pause_all(t_rtsp_listener* handle);
 void rtsp_listener_session_traverse(t_rtsp_listener* handle, void (*f)(char*, char*, void*), void* d);
 
 void rtsp_listener_close_connection(t_rtsp_listener* handle, uint32_t remote_address, bool teardown);

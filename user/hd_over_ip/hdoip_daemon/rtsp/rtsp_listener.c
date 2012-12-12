@@ -378,13 +378,6 @@ void rtsp_listener_teardown_all(t_rtsp_listener* handle)
     listener_unlock(handle, "rtsp_listener_teardown_all");
 }
 
-void rtsp_listener_pause_all(t_rtsp_listener* handle)
-{
-    listener_lock(handle, "rtsp_listener_pause_all");
-        bstmap_traverse(handle->sessions, rtsp_listener_traverse, rtsp_server_pause);
-    listener_unlock(handle, "rtsp_listener_pause_all");
-}
-
 void rtsp_listener_session_traverse(t_rtsp_listener* handle, void (*f)(char*, char*, void*), void* d)
 {
     listener_lock(handle, "rtsp_listener_session_traverse");
