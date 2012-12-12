@@ -239,7 +239,7 @@ int rtsp_listener_add_media(t_rtsp_listener* handle, t_rtsp_media* media)
 int rtsp_listener_add_kill(t_rtsp_listener* handle, t_rtsp_server* server)
 {
     if (handle == NULL || server == NULL)
-        return;
+        return RTSP_NULL_POINTER;
 
     queue_put(handle->kills, server);
     report(DEL "RTSP Listener [%d] add server (%d) to kill list", handle->nr, server->nr);
