@@ -450,9 +450,12 @@ void rtsp_listener_close_connection(t_rtsp_listener* handle, uint32_t remote_add
   server = (t_rtsp_server*)node->elem;
 
   // first teardown the media-controls if requested
-  // this will also remove any existing sessions
-  if (teardown)
+  if (teardown) {
+    // if the server has an active session we need to remove it
+    if (server->sessionid != NULL && strlen(server->sessionid) > 0)
+      rtsp_listener_remove_session(handle, server->sessionid);
     rtsp_server_teardown(server);
+  }
 
   // close the connection
   // this will also lead to the removal of the connection from the listener

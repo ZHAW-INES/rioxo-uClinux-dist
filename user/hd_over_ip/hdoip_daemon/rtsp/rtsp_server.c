@@ -115,9 +115,9 @@ void traverse_dispatcher(char *key, char* value, void* data)
   serverData->handler(server, media, serverData->data);
 }
 
-int traverse(t_rtsp_server* server, char* mediaName, void* data, traverse_handler handler, bool remove)
+int traverse(t_rtsp_server* server, char* mediaName, void* data, traverse_handler handler)
 {
-  t_server_data* serverData = NULL;
+  t_server_data serverData;
   t_rtsp_media* media = NULL;
   if (server == NULL || server->media == NULL || handler == NULL)
     return RTSP_NULL_POINTER;
@@ -127,20 +127,11 @@ int traverse(t_rtsp_server* server, char* mediaName, void* data, traverse_handle
 
   if (mediaName == NULL)
   {
-    serverData = (t_server_data*)malloc(sizeof(t_server_data));
-    serverData->server = server;
-    serverData->handler = handler;
-    serverData->data = data;
+    serverData.server = server;
+    serverData.handler = handler;
+    serverData.data = data;
 
-    bstmap_traverse(server->media, traverse_dispatcher, serverData);
-    if (remove) {
-      server->media_session_count = 0;
-      bstmap_freep(&server->media);
-      server->media = NULL;
-      cleanup_media(server);
-    }
-
-    free(serverData);
+    bstmap_traverse(server->media, traverse_dispatcher, &serverData);
   }
   else
   {
@@ -149,12 +140,6 @@ int traverse(t_rtsp_server* server, char* mediaName, void* data, traverse_handle
       return RTSP_NULL_POINTER;
 
     handler(server, media, data);
-    if (remove) {
-      if (media->sessionid != NULL)
-        server->media_session_count++;
-      bstmap_removep(&server->media, media->name);
-      cleanup_media(server);
-    }
   }
 
   return RTSP_SUCCESS;
@@ -247,6 +232,20 @@ void traverse_pause(t_rtsp_server* server, t_rtsp_media* media, void* data)
   rmsr_pause(media, 0);
 }
 
+void remove_media_all(t_rtsp_server* server, bool remove_session)
+{
+  if (server == NULL)
+    return;
+
+  server->media_session_count = 0;
+  if (remove_session)
+    cleanup_media(server);
+  else if (server->media != NULL) {
+    bstmap_freep(&server->media);
+    server->media = NULL;
+  }
+}
+
 /**
  * create a new server instance and initialize the connections
  * necessary for RTSP
@@ -333,7 +332,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
             if (n > RTSP_PAUSE) {
                 report(ERROR "RTSP Server [%d] failed to parse request (%d)", handle->nr, n);
             }
-        	break;
+          break;
         }
 
         // find media
@@ -408,7 +407,8 @@ void rtsp_server_close(t_rtsp_server* handle)
   }
 
   handle->open = false;
-  traverse(handle, NULL, NULL, traverse_remove, true);
+  traverse(handle, NULL, NULL, traverse_remove);
+  remove_media_all(handle, true);
 
   if (handle->con.fdr != -1) {
     // a server connection is active for this media -> shut it down
@@ -439,7 +439,9 @@ void rtsp_server_teardown(t_rtsp_server* handle)
   if (handle == NULL)
     return;
 
-  traverse(handle, NULL, NULL, traverse_teardown, true);
+  traverse(handle, NULL, NULL, traverse_teardown);
+  remove_media_all(handle, false);
+  memset(handle->sessionid, 0, sizeof(handle->sessionid));
 }
 
 void rtsp_server_event(t_rtsp_server* handle, uint32_t event)
@@ -447,7 +449,7 @@ void rtsp_server_event(t_rtsp_server* handle, uint32_t event)
   if (handle == NULL)
     return;
 
-  traverse(handle, NULL, &event, traverse_event, false);
+  traverse(handle, NULL, &event, traverse_event);
 }
 
 void rtsp_server_update(t_rtsp_server* handle, uint32_t event)
@@ -457,7 +459,7 @@ void rtsp_server_update(t_rtsp_server* handle, uint32_t event)
     return;
   }
 
-  traverse(handle, NULL, &event, traverse_update, false);
+  traverse(handle, NULL, &event, traverse_update);
 }
 
 void rtsp_server_pause(t_rtsp_server* handle)
@@ -467,7 +469,7 @@ void rtsp_server_pause(t_rtsp_server* handle)
     return;
   }
 
-  traverse(handle, NULL, NULL, traverse_pause, false);
+  traverse(handle, NULL, NULL, traverse_pause);
 }
 
 void rtsp_server_update_media(t_rtsp_media* media, uint32_t event)
@@ -477,7 +479,7 @@ void rtsp_server_update_media(t_rtsp_media* media, uint32_t event)
     return;
   }
 
-  traverse(media->creator, media->name, &event, traverse_update, false);
+  traverse(media->creator, media->name, &event, traverse_update);
 }
 
 int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
