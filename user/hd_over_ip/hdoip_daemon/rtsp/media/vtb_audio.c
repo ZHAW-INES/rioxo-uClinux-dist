@@ -295,7 +295,6 @@ int vtb_audio_event(t_rtsp_media *media, uint32_t event)
         case EVENT_AUDIO_IN0_OFF:
             if (rtsp_media_splaying(media)) {
                 rtsp_server_update_media(media, EVENT_AUDIO_IN0_OFF);
-                rtsp_listener_add_kill(&hdoipd.listener, media->creator);
             }
         break;
     }

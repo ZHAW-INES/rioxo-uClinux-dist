@@ -344,7 +344,6 @@ int vtb_video_event(t_rtsp_media *media, uint32_t event)
         	report(INFO "EVENT VIDEO IN OFF");
             if (rtsp_media_splaying(media)) {
                 rtsp_server_update_media(media, EVENT_VIDEO_IN_OFF);
-                rtsp_listener_add_kill(&hdoipd.listener, media->creator);
                 hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
                 osd_permanent(true);
                 osd_printf("vtb.video no input...\n");
