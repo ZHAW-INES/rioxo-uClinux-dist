@@ -63,6 +63,22 @@ int vtb_audio_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
         return RTSP_REQUEST_ERROR;
     }
 
+    if (!get_multicast_enable() && hdoipd_tstate(VTB_AUDIO)) {
+        report(ERROR "already streaming audio");
+        rtsp_response_error(rsp, RTSP_STATUS_INTERNAL_SERVER_ERROR, NULL);
+        return RTSP_REQUEST_ERROR;
+    }
+
+    // only set the EDID if it has been passed as a header value
+    if (m->edid.from_header)
+    {
+        if (rtsp_server_handle_setup((t_rtsp_server*)media->creator, m->edid.edid) != 0) {
+            report(ERROR "setting up audio input failed");
+            rtsp_response_error(rsp, RTSP_STATUS_INTERNAL_SERVER_ERROR, NULL);
+            return RTSP_REQUEST_ERROR;
+        }
+    }
+
     // reserve resource
     if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
         hdoipd_set_vtb_state(VTB_AUD_IDLE);
@@ -166,7 +182,7 @@ int vtb_audio_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_connec
     if ( ((nfo->audio_width[0]<8) || (nfo->audio_width[0]>32)) ||
          ((nfo->audio_fs[0]<32000) || (nfo->audio_fs[0]>192000)) ||
          ((nfo->audio_cnt[0]<1) || (nfo->audio_cnt[0]>8)) ) {
-          rtsp_err_def_source(rsp);
+          rtsp_response_error(rsp, RTSP_STATUS_SERVICE_UNAVAILABLE, "No Audio Input");
           return RTSP_REQUEST_ERROR;
     }
 

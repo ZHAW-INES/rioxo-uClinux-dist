@@ -5,9 +5,14 @@
  *      Author: alda
  */
 
+#include "edid.h"
+#include "edid_merge.h"
+#include "factory_edid.h"
 #include "hdoipd.h"
+#include "hdoipd_fsm.h"
 #include "hoi_drv_user.h"
 #include "map.h"
+#include "multicast.h"
 #include "rtsp_command.h"
 #include "rtsp_listener.h"
 #include "rtsp_net.h"
@@ -490,4 +495,95 @@ void rtsp_server_update_media(t_rtsp_media* media, uint32_t event)
   }
 
   traverse(media->creator, media->name, &event, traverse_update, false);
+}
+
+int rtsp_server_handle_setup(t_rtsp_server* handle, uint8_t *edid)
+{
+  int edid_length = 256;
+  int timeout;
+  int ret;
+  uint32_t active_res;
+  t_edid edid_old;
+  t_edid* edid_table = (t_edid*)edid;
+
+  // use default edid if requested
+  if (reg_test("edid-mode", "default")) {
+    report(INFO "rtsp_server_handle_setup(): using default edid");
+    memcpy(edid_table, factory_edid, edid_length);
+  }
+
+  set_multicast_enable(reg_test("multicast_en", "true"));
+  if (get_multicast_enable()) { // multicast
+    report(INFO "rtsp_server_handle_setup(): multicast");
+    /* TODO
+    // write client_ip to start list so that transmitter is able to start one connection after each other
+    add_client_to_start_list(client_ip);
+    multicast_add_edid((t_edid *)edid_table, client_ip);
+    // TODO: wait for other clients
+    */
+
+    return 0;
+  }
+
+  // unicast
+  if (!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
+    // read old edid
+    ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
+    if (ret != -1) {
+      edid_merge((t_edid *)edid_table, (t_edid *)edid_table); // modify edid
+
+      // write edid only when it has changed
+      // no previous E-EDID exists
+      if (ret == -2)
+        edid_write_function((t_edid *)edid_table, "unicast first edid");
+      // a previous E-EDID exists
+      else {
+        // check if edid has changed
+        if (multicast_compare_edid(&edid_old, (t_edid *)edid_table))
+          edid_write_function((t_edid *)edid_table, "unicast edid changed");
+      }
+    }
+    else
+      report(ERROR "Failed to read file: %s", EDID_PATH_VIDEO_IN);
+  }
+
+  // response only when not already unicast is streaming
+  if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) {
+    // wait up to 1.2s if video-in in active (and hpd is low after edid is written)
+    for (timeout = 0; timeout < 120; timeout++) {
+      if (hdoipd.drivers & DRV_ADV7441) {
+          hoi_drv_get_active_resolution(&active_res);
+
+          // no input
+          if (active_res == 1) {
+            report(INFO "video setup: no input found");
+            return -1;
+          }
+
+          // input is active
+          if (active_res == 2) {
+            hdoipd_set_rsc(RSC_VIDEO_IN);
+            hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
+            hdoipd_set_rsc(RSC_AUDIO0_IN);
+            hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
+            return 0;
+          }
+
+          // 10ms
+          usleep(10000);
+      }
+      else {
+          if (hdoipd_rsc(RSC_VIDEO_IN))
+            return 0;
+      }
+    }
+
+    if (timeout == 120) {
+      report(ERROR "video setup: timeout -> no active input");
+      return -1;
+    }
+  }
+
+  report(ERROR "video setup: unknown error");
+  return -1;
 }

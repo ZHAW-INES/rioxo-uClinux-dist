@@ -76,6 +76,22 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
         return RTSP_REQUEST_ERROR;
     }
 
+    if (!get_multicast_enable() && hdoipd_tstate(VTB_VIDEO)) {
+        report(ERROR "already streaming video");
+        rtsp_response_error(rsp, RTSP_STATUS_SERVICE_UNAVAILABLE, NULL);
+        return RTSP_REQUEST_ERROR;
+    }
+
+    // only set the EDID if it has been passed as a header value
+    if (m->edid.from_header)
+    {
+        if (rtsp_server_handle_setup((t_rtsp_server*)media->creator, m->edid.edid) != 0) {
+            report(ERROR "setting up video input and edid failed");
+            rtsp_response_error(rsp, RTSP_STATUS_SERVICE_UNAVAILABLE, NULL);
+            return RTSP_REQUEST_ERROR;
+        }
+    }
+
     if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // reserve resource
         hdoipd_set_vtb_state(VTB_VID_IDLE);
