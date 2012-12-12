@@ -65,6 +65,7 @@ int vrb_audio_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection*
         osd_permanent(true);
         osd_printf("encrypted audio output on SDI is not allowed\n");
         rtsp_client_set_teardown(client);
+        rtsp_client_set_kill(client);
         return RTSP_REQUEST_ERROR;
     }
 
@@ -316,17 +317,31 @@ int vrb_audio_doplay(t_rtsp_media *media, void *m UNUSED, void *rsp UNUSED)
 
 int vrb_audio_event(t_rtsp_media *media, uint32_t event)
 {
+    int ret;
     t_rtsp_client *client = media->creator;
 
-    if (rtsp_media_sinit(media))
-        return RTSP_WRONG_STATE;
-
     switch (event) {
+        case EVENT_VIDEO_SINK_ON:
+            if (!rtsp_media_sinit(media))
+                return RTSP_WRONG_STATE;
+
+            ret = rtsp_media_setup(media);
+            if (ret == RTSP_SUCCESS)
+              rtsp_media_play(media);
+            else {
+                report(ERROR "vrb_audio_event() rtsp_media_setup failed (%d)", ret);
+                rtsp_client_set_kill(client);
+                return ret;
+            }
+            break;
+
         case EVENT_VIDEO_SINK_OFF:
+            if (rtsp_media_sinit(media))
+                return RTSP_WRONG_STATE;
+
             // Note: after teardown call media/client is not anymore a valid struct
             rtsp_client_set_teardown(client);
-            client = 0;
-        break;
+            break;
     }
 
     return RTSP_SUCCESS;

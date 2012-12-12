@@ -852,11 +852,10 @@ int rtsp_client_event(t_rtsp_client* client, uint32_t event)
     return n;
   }
 
-  if (client->task & (E_RTSP_CLIENT_KILL | E_RTSP_CLIENT_TEARDOWN)) {
-    if (client->task & E_RTSP_CLIENT_TEARDOWN)
-        n = rtsp_client_teardown(client, NULL);
+  if (client->task & E_RTSP_CLIENT_TEARDOWN)
+    n = rtsp_client_teardown(client, NULL);
+  if (client->task & E_RTSP_CLIENT_KILL)
     n = rtsp_client_close(client, false);
-  }
   client->task = 0;
 
   return n;

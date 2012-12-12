@@ -526,10 +526,14 @@ void hdoipd_fsm_vrb(uint32_t event)
         case E_ADV9889_CABLE_ON:
             // plug in the cable is a start point for the VRB to
             // work when video or embedded audio is desired ...
-            hdoipd_start_vrb(false);
+            if (hdoipd.client != NULL && hdoipd.client->open)
+                rtsp_client_event(hdoipd.client, EVENT_VIDEO_SINK_ON);
+            else
+                hdoipd_start_vrb(false);
         break;
         case E_ADV9889_CABLE_OFF:
             rtsp_client_event(hdoipd.client, EVENT_VIDEO_SINK_OFF);
+            hdoipd.hdcp.ske_executed = 0;
         break;
         case E_ETI_VIDEO_OFF:
             rtsp_client_event(hdoipd.client, EVENT_VIDEO_STIN_OFF);

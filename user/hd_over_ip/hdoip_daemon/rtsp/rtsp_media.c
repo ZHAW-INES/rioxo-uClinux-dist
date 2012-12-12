@@ -432,13 +432,13 @@ int rtsp_media_play(t_rtsp_media* media)
             if (media->doplay) ret = media->doplay(media, 0, 0);
             // TODO: does this really have to be done here?
             // check if kill / teardown is set because of HDCP error
+            if (client->task & E_RTSP_CLIENT_TEARDOWN) {
+                report(INFO "TEARDOWN CLIENT");
+                rtsp_client_teardown(client, media->name);
+            }
             if(client->task & E_RTSP_CLIENT_KILL) {
             	report(INFO "KILL CLIENT");
             	rtsp_client_close(client, false);
-            }
-            else if (client->task & E_RTSP_CLIENT_TEARDOWN) {
-            	report(INFO "TEARDOWN CLIENT");
-            	rtsp_client_teardown(client, media->name);
             }
         } else {
             ret = RTSP_WRONG_STATE;
