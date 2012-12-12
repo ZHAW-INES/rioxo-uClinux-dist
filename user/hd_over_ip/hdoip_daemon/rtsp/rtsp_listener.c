@@ -309,7 +309,17 @@ void rtsp_listener_traverse(char UNUSED *key, char* value, void* f)
   ((ftra*)f)(server);
 }
 
-void rtsp_listener_traverse_remove(char UNUSED *key, char* value, void* f)
+void rtsp_listener_traverse_servers(void* elem, void* data)
+{
+  t_rtsp_server* server = NULL;
+  if (elem == NULL || data == NULL)
+    return;
+
+  server = (t_rtsp_server*)elem;
+  ((ftra*)data)(server);
+}
+
+void rtsp_listener_traverse_sessions(char *key UNUSED, char* value, void* f)
 {
   t_rtsp_server* server = NULL;
   if (value == NULL || f == NULL)
@@ -317,7 +327,6 @@ void rtsp_listener_traverse_remove(char UNUSED *key, char* value, void* f)
 
   server = (t_rtsp_server*)value;
   ((ftra*)f)(server);
-  memset(server->sessionid, 0, sizeof(server->sessionid));
 }
 
 struct t_listener_event {
@@ -364,7 +373,8 @@ void rtsp_listener_event(t_rtsp_listener* handle, uint32_t event)
 void rtsp_listener_close_all(t_rtsp_listener* handle)
 {
     listener_lock(handle, "rtsp_listener_close_all");
-        bstmap_traverse_freep(&handle->sessions, rtsp_listener_traverse_remove, rtsp_server_close);
+        // instances are removed from the list in rtsp_listener_run_server
+        list_traverse(handle->cons, rtsp_listener_traverse_servers, rtsp_server_close);
     listener_unlock(handle, "rtsp_listener_close_all");
 }
 
@@ -377,7 +387,7 @@ void rtsp_listener_close_all(t_rtsp_listener* handle)
 void rtsp_listener_teardown_all(t_rtsp_listener* handle)
 {
     listener_lock(handle, "rtsp_listener_teardown_all");
-        bstmap_traverse_freep(&handle->sessions, rtsp_listener_traverse_remove, rtsp_server_teardown);
+        bstmap_traverse_freep(&handle->sessions, rtsp_listener_traverse_sessions, rtsp_server_teardown);
     listener_unlock(handle, "rtsp_listener_teardown_all");
 }
 
