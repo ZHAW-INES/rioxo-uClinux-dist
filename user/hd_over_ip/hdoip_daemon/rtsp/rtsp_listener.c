@@ -360,9 +360,9 @@ void rtsp_listener_event(t_rtsp_listener* handle, uint32_t event)
 
 void rtsp_listener_close_all(t_rtsp_listener* handle)
 {
-    listener_lock(handle, "rtsp_listener_teardown_all");
+    listener_lock(handle, "rtsp_listener_close_all");
         bstmap_traverse_freep(&handle->sessions, rtsp_listener_traverse_remove, rtsp_server_close);
-    listener_unlock(handle, "rtsp_listener_teardown_all");
+    listener_unlock(handle, "rtsp_listener_close_all");
 }
 
 /** Teardown all connections
