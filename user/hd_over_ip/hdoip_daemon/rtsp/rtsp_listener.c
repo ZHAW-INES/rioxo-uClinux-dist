@@ -92,10 +92,8 @@ int rtsp_listener_start_server(t_rtsp_listener* handle, int fd, struct sockaddr_
 
 void rtsp_listener_close_server(t_rtsp_server* con, t_rtsp_listener *handle)
 {
-    bool valid = false;
     listener_lock(handle, "rtsp_listener_close_server");
         if (list_contains(handle->cons, con)) {
-            valid = true;
             if (shutdown(con->con.fdw, SHUT_RDWR) == -1) {
                 report(ERROR "close connection error: %s", strerror(errno));
             }
