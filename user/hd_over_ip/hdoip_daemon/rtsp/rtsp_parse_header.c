@@ -307,6 +307,7 @@ int rtsp_parse_str(char* line, char* p)
 
 int rtsp_parse_edid(char* line, t_rtsp_edid *edid)
 {
+    edid->from_header = true;
     edid->segment = nextbyte(&line[0]);
     for (int i=0;i<256;i++) {
         edid->edid[i] = nextbyte(&line[2*i+2]);

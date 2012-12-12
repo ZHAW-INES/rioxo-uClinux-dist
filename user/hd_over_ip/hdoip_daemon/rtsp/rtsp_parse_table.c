@@ -31,7 +31,7 @@ const t_map_fnc tab_response_get_parameter[] = {
 const t_map_fnc tab_request_setup[] = {
 	{ "CSeq",	rtsp_parse_ui32,	true,	offsetof(t_rtsp_req_setup, cseq) },
 	{ "Transport",	rtsp_parse_transport,	true,	offsetof(t_rtsp_req_setup, transport) },
-	{ "EDID-Segment",rtsp_parse_edid,	true,	offsetof(t_rtsp_req_setup, edid) },
+	{ "EDID-Segment",rtsp_parse_edid,	false,	offsetof(t_rtsp_req_setup, edid) },
     { "HDCP",	rtsp_parse_hdcp,	true,	offsetof(t_rtsp_req_setup, hdcp) },
 	MAP_FNC_NULL
 };

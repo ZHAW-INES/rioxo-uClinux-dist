@@ -140,6 +140,7 @@ typedef struct {
 typedef struct {
     uint8_t             segment;
     uint8_t             edid[256];
+    bool                from_header;
 } t_rtsp_edid;
 
 typedef struct {
