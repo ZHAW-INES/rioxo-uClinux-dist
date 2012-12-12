@@ -367,6 +367,7 @@ void* rtsp_client_req_thread(void* _client)
     //unlock("rtsp_client_req_thread-start");
 
     while (!(client->task & E_RTSP_CLIENT_KILL)) {
+        memset(&buf, 0, sizeof(u_rtsp_header));
         n = rtsp_parse_request(&client->con2, rtsp_client_methods, &method, (void*)&buf, &common);
 
         // connection closed...

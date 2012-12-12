@@ -326,6 +326,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
 
     // receive request line
     while (handle->open) {
+        memset(&buf, 0, sizeof(u_rtsp_header));
         n = rtsp_parse_request(&handle->con, rtsp_srv_methods, &method, &buf, &common);
 
         // request has already been handled (probably because an error occured)
