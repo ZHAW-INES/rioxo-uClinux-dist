@@ -309,8 +309,8 @@ int hdoipd_goto_vrb()
                 //alive_check_start_vrb_alive();
             }
         } else {
-            report(ERROR "already in state vrb");
-            return -1;
+            report(INFO "already in state vrb");
+            return 0;
         }
     } else {
         report(ERROR "ethernet down");
