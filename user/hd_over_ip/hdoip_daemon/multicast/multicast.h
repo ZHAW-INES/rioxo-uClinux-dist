@@ -37,11 +37,11 @@ void multicast_client_report();
 bool multicast_set_enabled(bool enable);
 bool multicast_get_enabled();
 
+void multicast_initialize();
 void multicast_handler();
-void multicast_connection_add(t_rtsp_server* server);
+int multicast_connection_add(t_rtsp_server* server);
 void multicast_edid_add(t_edid* new_edid, t_rtsp_server* server);
 void multicast_edid_remove(t_rtsp_server* server);
-int  multicast_edid_merge(t_edid* edid);
 bool multicast_edid_compare(t_edid* edid1, t_edid* edid2);
 void multicast_edid_report();
 

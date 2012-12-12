@@ -987,6 +987,8 @@ bool hdoipd_init(int drv)
     hdoipd.local.aud_port = htons(reg_get_int("audio-port"));
     hdoipd.ethernet_init = false;
 
+    multicast_initialize();
+
     // detect connected video card
     hoi_drv_get_device_id(&dev_id);
 

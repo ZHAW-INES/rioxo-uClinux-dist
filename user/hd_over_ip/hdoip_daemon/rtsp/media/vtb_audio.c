@@ -34,8 +34,6 @@ int vtb_audio_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
 
     report(VTB_METHOD "vtb_audio_setup");
 
-    multicast_set_enabled(reg_test("multicast_en", "true"));
-
     if (!hdoipd_state(HOID_VTB)) {
         report(" ? not in state vtb");
         rtsp_err_no_vtb(rsp);

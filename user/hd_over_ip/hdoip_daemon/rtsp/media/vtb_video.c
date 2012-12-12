@@ -44,8 +44,6 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
 
     report(VTB_METHOD "vtb_video_setup");
 
-    multicast_set_enabled(reg_test("multicast_en", "true"));
-
     media->result = RTSP_RESULT_READY;
 
     if (!hdoipd_state(HOID_VTB)) {
@@ -83,8 +81,9 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
     }
 
     // only set the EDID if it has been passed as a header value
+    // also takes care of multicast setup
     if (rtsp_server_handle_setup((t_rtsp_server*)media->creator, &(m->edid)) != 0) {
-        report(ERROR "setting up video input and edid failed");
+        report(ERROR "setting up video input failed");
         rtsp_response_error(rsp, RTSP_STATUS_SERVICE_UNAVAILABLE, NULL);
         return RTSP_REQUEST_ERROR;
     }

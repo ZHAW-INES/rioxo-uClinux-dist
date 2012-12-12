@@ -514,20 +514,23 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
 
   // use default edid if requested
   if (reg_test("edid-mode", "default")) {
-    report(INFO "rtsp_server_handle_setup(): using default edid");
     memcpy(edid_table, factory_edid, edid_length);
   }
   else
     memcpy(edid_table, edid->edid, edid_length);
 
   if (multicast_get_enabled()) { // multicast
-    report(INFO "rtsp_server_handle_setup(): multicast");
-    /* TODO
-    // write client_ip to start list so that transmitter is able to start one connection after each other
-    multicast_connection_add(handle);
-    multicast_edid_add((t_edid *)edid_table, handle);
-    // TODO: wait for other clients
-    */
+    // we only need to do the edid merging if ...
+    // we don't use the default edid and
+    // the client has provided an edid and
+    // the input is not SDI
+    if (!reg_test("edid-mode", "default") && edid->from_header && !hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
+        // add connection to start list
+        multicast_edid_add((t_edid *)edid_table, handle);
+        // this call will block until the multicast setup procedure has been finished
+        if (multicast_connection_add(handle) != 0)
+          return -1;
+    }
 
     return 0;
   }
