@@ -415,7 +415,7 @@ void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps)
 
 /** Restarts VRB when already in VRB state
  *
- * @return 0 on state change, other when state not changed
+ * @return less than 0 on error, 0 on success and 1 when state not changed
  */
 int hdoipd_start_vrb_cb(t_rtsp_media* media, void* d)
 {
@@ -423,10 +423,8 @@ int hdoipd_start_vrb_cb(t_rtsp_media* media, void* d)
     uint32_t dev_id;
 
     // USB
-    if (strcmp(media->name, "usb") == 0) {
-    	hdoipd_vrb_setup(media, d);
-        return 0;
-    }
+    if (strcmp(media->name, "usb") == 0)
+    	return hdoipd_vrb_setup(media, d);
 
     // detect connected video card
     hoi_drv_get_device_id(&dev_id);
@@ -437,31 +435,35 @@ int hdoipd_start_vrb_cb(t_rtsp_media* media, void* d)
     }
 
     if (rtsp_media_sinit(media)) {
-        if (hdoipd_vrb_setup(media, d) == -1) {
-            ret = 1;
-        }
+        if ((ret = hdoipd_vrb_setup(media, d)) != 0)
+            return ret;
     } else if (rtsp_media_sready(media)) {
-        if (hdoipd_vrb_play(media, d) == -1) {
-            ret = 1;
-        }
-    } else {
-        return 0;
-    }
-    return ret;
+        if ((ret = hdoipd_vrb_play(media, d)) != 0)
+            return ret;
+    } else
+        return 1;
+
+    return 0;
 }
 
 int hdoipd_start_vrb(void *d)
 {
-    int failed = 0;
+    int result = 0;
     report(CHANGE "attempt to start vrb");
     if (hdoipd_state(HOID_VRB)) {
-        failed = hdoipd_media_callback(d, hdoipd_start_vrb_cb, 0);
+        result = hdoipd_media_callback(d, hdoipd_init_vrb_cb, 0);
+
+        if (result != 0) {
+            report(ERROR "attempt to start vrb failed");
+            return result;
+        }
+
+        usb_try_to_connect_device(&hdoipd.usb_devices);
     } else {
         report(ERROR "attempt to start vrb when not in state vrb");
     }
-    usb_try_to_connect_device(&hdoipd.usb_devices);
-    if (failed) report(ERROR "attempt to start vrb failed");
-    return failed;
+
+    return result;
 }
 
 void hdoipd_set_task_start_vrb(void)
