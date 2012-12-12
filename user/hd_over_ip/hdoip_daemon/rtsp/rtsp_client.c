@@ -76,7 +76,7 @@ t_rtsp_media* get_media(t_rtsp_client* handle, char* name)
  * This method also checks whether this was the last active
  * media-control for the client.
  */
-void remove_media(t_rtsp_client* handle, t_rtsp_media* media, bool remove_from_list)
+void remove_media(t_rtsp_client* handle, t_rtsp_media* media)
 {
   if (handle == NULL || media == NULL || media->name == NULL)
     return;
@@ -84,16 +84,10 @@ void remove_media(t_rtsp_client* handle, t_rtsp_media* media, bool remove_from_l
   report(INFO "RTSP Client [%d] removing media (%s)", handle->nr, media->name);
 
   if (media->sessionid != NULL) {
-    if (strlen(media->sessionid) > 0)
-      handle->media_session_count--;
     free(media->sessionid);
     media->sessionid = NULL;
   }
 
-  if (remove_from_list)
-    bstmap_removep(&handle->media, media->name);
-
-  media->creator = NULL;
   media->state = RTSP_STATE_INIT;
 }
 
@@ -104,17 +98,17 @@ void remove_media(t_rtsp_client* handle, t_rtsp_media* media, bool remove_from_l
  * sa rmcr_teardown
  * sa remove_media
  */
-void teardown_media(t_rtsp_client* client, t_rtsp_media* media, u_rtsp_header* buf, bool remove_from_list)
+void teardown_media(t_rtsp_client* client, t_rtsp_media* media, u_rtsp_header* buf)
 {
   if (client == NULL || media == NULL || media->name == NULL)
     return;
 
-  #ifdef REPORT_RTSP_CLIENT
+#ifdef REPORT_RTSP_CLIENT
   report(" i RTSP Client [%d] teardown media (%s)", client->nr, media->name);
 #endif
   rmcr_teardown(media, buf);
 
-  remove_media(client, media, remove_from_list);
+  remove_media(client, media);
 }
 
 /**
@@ -124,10 +118,14 @@ void teardown_media(t_rtsp_client* client, t_rtsp_media* media, u_rtsp_header* b
  */
 void detach_media(char UNUSED *key, char* value, void* data)
 {
+  t_rtsp_media *media = NULL;
   if (value == NULL || data == NULL)
     return;
 
-  teardown_media((t_rtsp_client*)data, (t_rtsp_media*)value, NULL, false);
+  media = (t_rtsp_media*)value;
+
+  teardown_media((t_rtsp_client*)data, media, NULL);
+  media->creator = NULL;
 }
 
 /**
@@ -150,7 +148,7 @@ void request_dispatcher(char *key, char* value, void* data)
   clientData->handler(client, media, clientData->data);
 }
 
-int request(t_rtsp_client* client, char* mediaName, void* data, request_handler handler, bool remove)
+int request(t_rtsp_client* client, char* mediaName, void* data, request_handler handler)
 {
   t_client_data* clientData = NULL;
   t_rtsp_media* media = NULL;
@@ -165,12 +163,6 @@ int request(t_rtsp_client* client, char* mediaName, void* data, request_handler 
     clientData->data = data;
 
     bstmap_traverse(client->media, request_dispatcher, clientData);
-    if (remove) {
-      client->media_session_count = 0;
-      bstmap_freep(&client->media);
-      client->media = NULL;
-    }
-
     free(clientData);
   }
   else
@@ -180,8 +172,6 @@ int request(t_rtsp_client* client, char* mediaName, void* data, request_handler 
       return RTSP_NULL_POINTER;
 
     handler(client, media, data);
-    if (remove)
-      remove_media(client, media, true);
   }
 
   return RTSP_SUCCESS;
@@ -285,9 +275,8 @@ void request_teardown(t_rtsp_client* client, t_rtsp_media* media, void* data)
     rtsp_parse_response(&client->con, tab_response_teardown, (void*)&buf, 0, CFG_RSP_TIMEOUT);
   }
 
-  // call rmcr_teardown and remove the media from
-  // the client's list of active media-controls
-  teardown_media(client, media, (void*)&buf, false);
+  // call rmcr_teardown
+  teardown_media(client, media, (void*)&buf);
 }
 
 /** checks if the received message is a request or a response
@@ -587,7 +576,6 @@ t_rtsp_client* rtsp_client_open(char* address, t_rtsp_media *media)
         client = NULL;
         // tell media open failed
         if (media && media->error) media->error(media, 0, 0);
-        report("rtsp_client_open(): could not create client");
     }
 
     return client;
@@ -640,8 +628,8 @@ int rtsp_client_close(t_rtsp_client* client, bool freeClient)
     // detach client from media
     if (client->media != NULL) {
         bstmap_traverse(client->media, detach_media, client);
-        client->media_session_count = 0;
         bstmap_freep(&client->media);
+        client->media = NULL;
 
 #ifdef REPORT_RTSP_CLIENT
         report(" i RTSP Client [%d] waiting for handler to finish", client->nr);
@@ -698,7 +686,6 @@ int rtsp_client_setup(t_rtsp_client* client, t_rtsp_media* media, t_rtsp_transpo
         {
           memset(media->sessionid, 0, length + 1);
           strcpy(media->sessionid, common.session);
-          client->media_session_count++;
         }
 
         rmcr_setup(media, (void*)&buf);
@@ -713,7 +700,7 @@ int rtsp_client_setup(t_rtsp_client* client, t_rtsp_media* media, t_rtsp_transpo
 
 int rtsp_client_play(t_rtsp_client* client, t_rtsp_rtp_format* fmt, char* mediaName)
 {
-  return request(client, mediaName, fmt, request_play, false);
+  return request(client, mediaName, fmt, request_play);
 }
 
 /** HDCP session key exchange
@@ -874,17 +861,16 @@ int rtsp_client_event(t_rtsp_client* client, uint32_t event)
   if (client == NULL)
     return RTSP_NULL_POINTER;
 
-  if ((n = request(client, NULL, &event, request_event, false)) != RTSP_SUCCESS) {
+  if ((n = request(client, NULL, &event, request_event)) != RTSP_SUCCESS) {
     report(" ? rtsp_client_event(%d): failed (%d)", client->nr, n);
     client->task = 0;
     return n;
   }
 
-  if (client->task & E_RTSP_CLIENT_KILL) {
+  if (client->task & (E_RTSP_CLIENT_KILL | E_RTSP_CLIENT_TEARDOWN)) {
+    if (client->task & E_RTSP_CLIENT_TEARDOWN)
+        n = rtsp_client_teardown(client, NULL);
     n = rtsp_client_close(client, false);
-  }
-  else if (client->task & E_RTSP_CLIENT_TEARDOWN) {
-    n = rtsp_client_teardown(client, NULL);
   }
   client->task = 0;
 
@@ -893,23 +879,17 @@ int rtsp_client_event(t_rtsp_client* client, uint32_t event)
 
 int rtsp_client_update(t_rtsp_client* client, uint32_t event, char* mediaName)
 {
-  return request(client, mediaName, &event, request_update, false);
+  return request(client, mediaName, &event, request_update);
 }
 
 int rtsp_client_pause(t_rtsp_client* client, char* mediaName)
 {
-  return request(client, mediaName, NULL, request_pause, false);
+  return request(client, mediaName, NULL, request_pause);
 }
 
 int rtsp_client_teardown(t_rtsp_client* client, char* mediaName)
 {
-  int ret = request(client, mediaName, NULL, request_teardown, true);
-
-  // only auto-close if the list of media is empty
-  if (client->media_session_count == 0)
-    rtsp_client_close(client, false);
-
-  return ret;
+  return request(client, mediaName, NULL, request_teardown);
 }
 
 int rtsp_client_set_play(t_rtsp_client* client)

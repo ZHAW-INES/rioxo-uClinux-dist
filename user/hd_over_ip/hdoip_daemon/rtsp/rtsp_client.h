@@ -37,7 +37,6 @@ typedef struct {
     t_rtsp_connection   con1;           // Copy of con for receive (?)
     t_rtsp_connection   con2;           // Copy of con for write (?)
     t_bstmap            *media;         // associated media
-    size_t              media_session_count; // number of media-controls with an active session
     bool                open;           // whether the client is open or not
     t_rtsp_timeout      timeout;
 } t_rtsp_client;
