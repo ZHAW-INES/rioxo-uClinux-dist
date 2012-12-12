@@ -367,7 +367,7 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
             }
         } else {
             report(ERROR "hdoipd_vrb_setup() rtsp_client_open failed");
-            osd_printf("VTB(%s) not found. Waiting for %s\n", media->name, uri);
+            //osd_printf("VTB(%s) not found. Waiting for %s\n", media->name, uri);
             return -1;
         }
     }
