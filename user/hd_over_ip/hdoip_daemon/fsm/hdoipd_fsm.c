@@ -200,6 +200,7 @@ bool hdoipd_goto_ready()
         break;
         case HOID_VTB:
             rtsp_listener_teardown_all(&hdoipd.listener);
+            rtsp_listener_close_all(&hdoipd.listener);
             rtsp_listener_free_media(&hdoipd.listener);
             hdoipd_off(true);
         break;

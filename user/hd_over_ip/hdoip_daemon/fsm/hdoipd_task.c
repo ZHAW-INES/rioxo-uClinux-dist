@@ -744,6 +744,7 @@ void task_set_dhcp(char *p UNUSED)
 void task_set_edid_mode(char *p UNUSED)
 {
     rtsp_listener_teardown_all(&hdoipd.listener);
+    rtsp_listener_close_all(&hdoipd.listener);
 }
 
 void task_set_fps_divide(char *p UNUSED)

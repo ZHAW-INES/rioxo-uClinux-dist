@@ -225,6 +225,7 @@ void multicast_handler()
                         } else if (multicast_compare_edid(&edid, &edid_old)) {
                             // teardown all connections so that connection with new resolution can be started
                             rtsp_listener_teardown_all(&hdoipd.listener);
+                            rtsp_listener_close_all(&hdoipd.listener);
 
                             // clear start list
                             while (count_client_list(&multicast.client_list_start)) {
@@ -275,6 +276,7 @@ void multicast_handler()
                     if (multicast_compare_edid(&edid, &edid_old)) {
                         // teardown all connections so that connection with new resolution can be started
                         rtsp_listener_teardown_all(&hdoipd.listener);
+                        rtsp_listener_close_all(&hdoipd.listener);
                         edid_write_function(&edid, "multicast client lost");
                     }
                 }
