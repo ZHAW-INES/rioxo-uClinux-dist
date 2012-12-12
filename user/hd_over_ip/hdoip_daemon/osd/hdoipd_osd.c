@@ -102,9 +102,11 @@ void* hdoipd_osd_timer(void UNUSED *d)
         lock("hdoipd_tick_timer");
         // AMX handler
         alive_check_client_handler(&hdoipd.amx, reg_get("amx-hello-msg"));
-        // initialize alive check if socket not exists
-        alive_check_init_msg_vrb_alive();
-        alive_check_handle_msg_vrb_alive(&hdoipd.alive_check);
+
+        if (hdoipd_state(HOID_VRB)) {
+            // check if we should try to connect to the transmitter
+            hdoipd_start_vrb(false);
+        }
 
         // USB handler
         usb_device_handler(&hdoipd.usb_devices);
