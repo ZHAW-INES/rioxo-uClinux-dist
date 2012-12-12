@@ -497,22 +497,31 @@ void rtsp_server_update_media(t_rtsp_media* media, uint32_t event)
   traverse(media->creator, media->name, &event, traverse_update, false);
 }
 
-int rtsp_server_handle_setup(t_rtsp_server* handle, uint8_t *edid)
+int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
 {
   int edid_length = 256;
   int timeout;
   int ret;
   uint32_t active_res;
   t_edid edid_old;
-  t_edid* edid_table = (t_edid*)edid;
+  uint8_t edid_table[edid_length];
+
+  if (handle == NULL)
+    return -1;
+
+  set_multicast_enable(reg_test("multicast_en", "true"));
+
+  if (edid == NULL || !edid->from_header)
+      return 0;
 
   // use default edid if requested
   if (reg_test("edid-mode", "default")) {
     report(INFO "rtsp_server_handle_setup(): using default edid");
     memcpy(edid_table, factory_edid, edid_length);
   }
+  else
+    memcpy(edid_table, edid->edid, edid_length);
 
-  set_multicast_enable(reg_test("multicast_en", "true"));
   if (get_multicast_enable()) { // multicast
     report(INFO "rtsp_server_handle_setup(): multicast");
     /* TODO
