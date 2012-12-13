@@ -509,7 +509,7 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
   if (handle == NULL)
     return -1;
 
-  set_multicast_enable(reg_test("multicast_en", "true"));
+  multicast_set_enabled(reg_test("multicast_en", "true"));
 
   if (edid == NULL || !edid->from_header)
       return 0;
@@ -522,12 +522,12 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
   else
     memcpy(edid_table, edid->edid, edid_length);
 
-  if (get_multicast_enable()) { // multicast
+  if (multicast_get_enabled()) { // multicast
     report(INFO "rtsp_server_handle_setup(): multicast");
     /* TODO
     // write client_ip to start list so that transmitter is able to start one connection after each other
-    add_client_to_start_list(client_ip);
-    multicast_add_edid((t_edid *)edid_table, client_ip);
+    multicast_connection_add(handle);
+    multicast_edid_add((t_edid *)edid_table, handle);
     // TODO: wait for other clients
     */
 
@@ -548,7 +548,7 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
       // a previous E-EDID exists
       else {
         // check if edid has changed
-        if (multicast_compare_edid(&edid_old, (t_edid *)edid_table))
+        if (multicast_edid_compare(&edid_old, (t_edid *)edid_table))
           edid_write_function((t_edid *)edid_table, "unicast edid changed");
       }
     }

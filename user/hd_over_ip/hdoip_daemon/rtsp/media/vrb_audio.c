@@ -51,7 +51,7 @@ int vrb_audio_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection*
 
     if (vrb.multicast_en) {
         vrb.dst_ip = m->transport.destination;
-        join_multicast_group(vrb.dst_ip);
+        multicast_group_join(vrb.dst_ip);
     }
     else {
         vrb.dst_ip = hdoipd.local.address;
@@ -170,7 +170,7 @@ int vrb_audio_teardown(t_rtsp_media *media, t_rtsp_req_teardown *m UNUSED, t_rts
     }
 
     if (vrb.multicast_en) {
-        leave_multicast_group(vrb.dst_ip);
+        multicast_group_leave(vrb.dst_ip);
     }
 
     osd_printf("vrb.audio connection lost...\n");

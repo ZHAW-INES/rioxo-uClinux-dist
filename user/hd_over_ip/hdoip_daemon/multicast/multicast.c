@@ -14,7 +14,6 @@
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 
-
 static struct {
     bool                                group_joined;
     int                                 sock;
@@ -27,7 +26,6 @@ static struct {
     uint32_t                            number_of_clients;
 } multicast;
 
-
 void convert_ip_to_multicast_mac(uint32_t ip, char* mac)
 {
     mac[0] = 0x01;
@@ -38,7 +36,7 @@ void convert_ip_to_multicast_mac(uint32_t ip, char* mac)
     mac[5] = (ip & 0xFF000000) >> 24;
 }
 
-int join_multicast_group(uint32_t multicast_ip)
+int multicast_group_join(uint32_t multicast_ip)
 {
     struct  sockaddr_in  addr;
     struct  ip_mreq mreq;
@@ -83,7 +81,7 @@ int join_multicast_group(uint32_t multicast_ip)
     return MULTICAST_SUCCESS;
 }
 
-int leave_multicast_group(uint32_t multicast_ip)
+int multicast_group_leave(uint32_t multicast_ip)
 {
     struct ip_mreq mreq;
 
@@ -106,32 +104,32 @@ int leave_multicast_group(uint32_t multicast_ip)
     return MULTICAST_SUCCESS;
 }
 
-void add_client_to_vtb(int audio_video, uint32_t client_ip)
+void multicast_client_add(int audio_video, t_rtsp_server* server)
 {
     if (audio_video == MEDIA_IS_AUDIO) {
-        if(!search_client_in_list(client_ip, &multicast.client_list_audio)) {
-            add_client_to_list(client_ip, &multicast.client_list_audio, NULL);
+        if(!search_client_in_list(server->con.address, &multicast.client_list_audio)) {
+            add_client_to_list(server->con.address, &multicast.client_list_audio, NULL);
         }
     }
     if (audio_video == MEDIA_IS_VIDEO) {
-        if(!search_client_in_list(client_ip, &multicast.client_list_video)) {
-            add_client_to_list(client_ip, &multicast.client_list_video, NULL);
+        if(!search_client_in_list(server->con.address, &multicast.client_list_video)) {
+            add_client_to_list(server->con.address, &multicast.client_list_video, NULL);
         }
     }
 }
 
-void remove_client_from_vtb(int audio_video, uint32_t client_ip)
+void multicast_client_remove(int audio_video, t_rtsp_server* server)
 {
 
     if (audio_video == MEDIA_IS_AUDIO) {
-        remove_client_from_list(client_ip, &multicast.client_list_audio);
+        remove_client_from_list(server->con.address, &multicast.client_list_audio);
     }
     if (audio_video == MEDIA_IS_VIDEO) {
-        remove_client_from_list(client_ip, &multicast.client_list_video);
+        remove_client_from_list(server->con.address, &multicast.client_list_video);
     }
 }
 
-int check_client_availability(int audio_video)
+int multicast_client_check_availability(int audio_video)
 {
 
     if (audio_video == MEDIA_IS_AUDIO) {
@@ -151,7 +149,7 @@ int check_client_availability(int audio_video)
     return MULTICAST_ERROR;
 }
 
-void report_available_clients()
+void multicast_client_report()
 {
     report("\n --- client-count-video: %i ---", count_client_list(&multicast.client_list_video));
     report_client_list(&multicast.client_list_video);
@@ -161,37 +159,25 @@ void report_available_clients()
     report_client_list(&multicast.client_list_edid);
 }
 
-bool set_multicast_enable(bool enable)
+bool multicast_set_enabled(bool enable)
 {
     multicast.enable = enable;
     
     return multicast.enable;
 }
 
-bool get_multicast_enable()
+bool multicast_get_enabled()
 {
     return multicast.enable;
 }
 
-void add_client_to_start_list(char* client_ip_string)
+void multicast_connection_add(t_rtsp_server* server)
 {
-    uint32_t    client_ip;
-    struct      hostent* host;
-
-    // get ip address
-    host = gethostbyname(client_ip_string);
-    if (!host) {
-        report(ERROR "Cant put %s into start-list", client_ip_string);
-        return;
-    }
-
-    report(INFO "\nMulticast put %s into start-list", client_ip_string);
-
-    client_ip = *((uint32_t*)host->h_addr_list[0]);
+    //report(INFO "\nMulticast put %s into start-list", client_ip_string);
 
     // put client into start list if its not already there
-    if(!search_client_in_list(client_ip, &multicast.client_list_start)) {
-        add_client_to_list(client_ip, &multicast.client_list_start, NULL);
+    if(!search_client_in_list(server->con.address, &multicast.client_list_start)) {
+        add_client_to_list(server->con.address, &multicast.client_list_start, NULL);
         if (count_client_list(&multicast.client_list_start) == 1) {      // first connection = wait time "alive-check-interval" to capture other clients until start first connection
             if (multicast.start_timer < reg_get_int("alive-check-interval")) {
                 multicast.start_timer = reg_get_int("alive-check-interval");
@@ -218,11 +204,11 @@ void multicast_handler()
                 ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
                 if (ret != -1) {
 
-                    if (!multicast_merge_edid(&edid)) {
+                    if (!multicast_edid_merge(&edid)) {
 
                         if (ret == -2) {        // No previous E-EDID exists
                             edid_write_function(&edid, "multicast first edid");
-                        } else if (multicast_compare_edid(&edid, &edid_old)) {
+                        } else if (multicast_edid_compare(&edid, &edid_old)) {
                             // teardown all connections so that connection with new resolution can be started
                             rtsp_listener_teardown_all(&hdoipd.listener);
                             rtsp_listener_close_all(&hdoipd.listener);
@@ -272,8 +258,8 @@ void multicast_handler()
         if ((multicast.number_of_clients > number_of_clients) && (number_of_clients > 0)) {
             ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
             if (ret != -1) {
-                if (!multicast_merge_edid(&edid)) {
-                    if (multicast_compare_edid(&edid, &edid_old)) {
+                if (!multicast_edid_merge(&edid)) {
+                    if (multicast_edid_compare(&edid, &edid_old)) {
                         // teardown all connections so that connection with new resolution can be started
                         rtsp_listener_teardown_all(&hdoipd.listener);
                         rtsp_listener_close_all(&hdoipd.listener);
@@ -288,43 +274,32 @@ void multicast_handler()
     }
 }
 
-void multicast_add_edid(t_edid* new_edid, char* ip_string)
+void multicast_edid_add(t_edid* new_edid, t_rtsp_server* server)
 { 
     t_edid*     edid;
-    uint32_t    ip;
-    struct      hostent* host;
-
-    // get ip address
-    host = gethostbyname(ip_string);
-    if (!host) {
-        report(ERROR "Cant add edid from %s into start-list", ip_string);
-        return;
-    }
-
-    ip = *((uint32_t*)host->h_addr_list[0]);
 
     // add edid to list if its not already there
-    if(!search_client_in_list(ip, &multicast.client_list_edid)) {        
+    if(!search_client_in_list(server->con.address, &multicast.client_list_edid)) {
         if ((edid = (t_edid*) malloc(sizeof(t_edid))) == NULL) {
-            report(ERROR "Cant allocate memory for EDID of %s", ip_string);
+            report(ERROR "Cant allocate memory for EDID");
         } else {
             memcpy(edid, new_edid, sizeof(t_edid));
-            add_client_to_list(ip, &multicast.client_list_edid, edid);
+            add_client_to_list(server->con.address, &multicast.client_list_edid, edid);
         }
     }
 }
 
-void multicast_remove_edid(uint32_t client_ip)
+void multicast_edid_remove(t_rtsp_server* server)
 {
-    remove_client_from_list(client_ip, &multicast.client_list_edid);
+    remove_client_from_list(server->con.address, &multicast.client_list_edid);
 }
 
-int multicast_merge_edid(t_edid* edid)
+int multicast_edid_merge(t_edid* edid)
 {
     return merge_edid_list(&multicast.client_list_edid, edid);
 }
 
-bool multicast_compare_edid(t_edid* edid1, t_edid* edid2)
+bool multicast_edid_compare(t_edid* edid1, t_edid* edid2)
 {
     int i;
 
@@ -336,7 +311,7 @@ bool multicast_compare_edid(t_edid* edid1, t_edid* edid2)
     return false;
 }
 
-void report_edid_list()
+void multicast_edid_report()
 {
     report_client_list(&multicast.client_list_edid);
 }

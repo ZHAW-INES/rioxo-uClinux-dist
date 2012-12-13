@@ -112,7 +112,7 @@ void* hdoipd_osd_timer(void UNUSED *d)
         usb_device_handler(&hdoipd.usb_devices);
 
         // Multicast Handler
-        if (get_multicast_enable()) {
+        if (multicast_get_enabled()) {
             multicast_handler();
         }
 

@@ -39,7 +39,7 @@ static int box_sys_vtb_event(t_rtsp_media *media, uint32_t event)
   {
     case EVENT_TICK:
     {
-      if (get_multicast_enable()) {
+      if (multicast_get_enabled()) {
           timeout = TICK_TIMEOUT_MULTICAST;
       } else {
           timeout = TICK_TIMEOUT_UNICAST;

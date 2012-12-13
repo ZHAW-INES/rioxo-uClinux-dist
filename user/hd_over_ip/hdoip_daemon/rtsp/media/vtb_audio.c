@@ -34,7 +34,7 @@ int vtb_audio_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
 
     report(VTB_METHOD "vtb_audio_setup");
 
-    set_multicast_enable(reg_test("multicast_en", "true"));
+    multicast_set_enabled(reg_test("multicast_en", "true"));
 
     if (!hdoipd_state(HOID_VTB)) {
         report(" ? not in state vtb");
@@ -63,7 +63,7 @@ int vtb_audio_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
         return RTSP_REQUEST_ERROR;
     }
 
-    if (!get_multicast_enable() && hdoipd_tstate(VTB_AUDIO)) {
+    if (!multicast_get_enabled() && hdoipd_tstate(VTB_AUDIO)) {
         report(ERROR "already streaming audio");
         rtsp_response_error(rsp, RTSP_STATUS_INTERNAL_SERVER_ERROR, NULL);
         return RTSP_REQUEST_ERROR;
@@ -77,7 +77,7 @@ int vtb_audio_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
     }
 
     // reserve resource
-    if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
+    if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
         hdoipd_set_vtb_state(VTB_AUD_IDLE);
     }
 
@@ -90,7 +90,7 @@ int vtb_audio_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
     cookie->remote.address = rsp->address;
     cookie->remote.aud_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.aud_port, hdoipd.local.aud_port);
-    m->transport.multicast = get_multicast_enable();
+    m->transport.multicast = multicast_get_enabled();
 
     rtsp_response_setup(rsp, &m->transport, media->sessionid, media->name, &m->hdcp);
 
@@ -147,7 +147,7 @@ int vtb_audio_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_connec
     }
 
     // start ethernet output
-    if(get_multicast_enable()) {
+    if(multicast_get_enabled()) {
         eth.ipv4_dst_ip = inet_addr(reg_get("multicast_group"));
         convert_ip_to_multicast_mac(inet_addr(reg_get("multicast_group")), dst_mac);
         report(INFO "sending multicast to : %s", reg_get("multicast_group"));
@@ -186,7 +186,7 @@ int vtb_audio_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_connec
     // send timing
     rtsp_response_play(rsp, media->sessionid, &fmt, 0);
 
-    if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
+    if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
         // activate asi
 #ifdef AUD_IN_PATH
         uint8_t channel_select[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
@@ -197,7 +197,7 @@ int vtb_audio_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_connec
         hdoipd_set_vtb_state(VTB_AUDIO);
     }
 
-    add_client_to_vtb(MEDIA_IS_AUDIO, cookie->remote.address);
+    multicast_client_add(MEDIA_IS_AUDIO, (t_rtsp_server*)media->creator);
 
     return RTSP_SUCCESS;
 }
@@ -205,13 +205,14 @@ int vtb_audio_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_connec
 int vtb_audio_teardown(t_rtsp_media* media, t_rtsp_req_teardown UNUSED *m, t_rtsp_connection* rsp)
 {
     t_multicast_cookie* cookie = media->cookie;
+    t_rtsp_server* server = (t_rtsp_server*)media->creator;
 
     report(VTB_METHOD "vtb_audio_teardown");
 
     media->result = RTSP_RESULT_TEARDOWN;
 
     if (hdoipd_tstate(VTB_AUD_MASK)) {
-        if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+        if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
 #ifdef AUD_IN_PATH
             hdoipd_hw_reset(DRV_RST_AUD_IN);
 #endif
@@ -223,9 +224,9 @@ int vtb_audio_teardown(t_rtsp_media* media, t_rtsp_req_teardown UNUSED *m, t_rts
         rtsp_response_teardown(rsp, media->sessionid);
     }
 
-    ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
+    server->timeout.timeout = 0;
 
-    remove_client_from_vtb(MEDIA_IS_AUDIO, cookie->remote.address);
+    multicast_client_remove(MEDIA_IS_AUDIO, server);
 
     return RTSP_SUCCESS;
 }
@@ -239,7 +240,7 @@ void vtb_audio_pause(t_rtsp_media *media)
     media->result = RTSP_RESULT_PAUSE_Q;
 
     if (hdoipd_tstate(VTB_AUDIO)) {
-        if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+        if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
 #ifdef AUD_IN_PATH
             hdoipd_hw_reset(DRV_RST_AUD_IN);
 #endif
@@ -247,7 +248,7 @@ void vtb_audio_pause(t_rtsp_media *media)
         }
     }
 
-    remove_client_from_vtb(MEDIA_IS_AUDIO, cookie->remote.address);
+    multicast_client_remove(MEDIA_IS_AUDIO, (t_rtsp_server*)media->creator);
 }
 
 int vtb_audio_ext_pause(t_rtsp_media* media, void *m UNUSED, t_rtsp_connection* rsp)

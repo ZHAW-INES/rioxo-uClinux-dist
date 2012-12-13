@@ -22,25 +22,27 @@
 #define MEDIA_IS_VIDEO              1
 
 #include "edid.h"
-
+#include "rtsp_server.h"
 
 void convert_ip_to_multicast_mac(uint32_t ip, char* mac);
-int join_multicast_group(uint32_t multicast_ip);
-int leave_multicast_group(uint32_t multicast_ip);
 
-void add_client_to_vtb(int audio_video, uint32_t client_ip);
-void remove_client_from_vtb(int audio_video, uint32_t client_ip);
-int  check_client_availability(int audio_video);
-void report_available_clients();
-bool set_multicast_enable(bool enable);
-bool get_multicast_enable();
+int  multicast_group_join(uint32_t multicast_ip);
+int  multicast_group_leave(uint32_t multicast_ip);
 
-void add_client_to_start_list(char* client_ip_string);
+void multicast_client_add(int audio_video, t_rtsp_server* server);
+void multicast_client_remove(int audio_video, t_rtsp_server* server);
+int  multicast_client_check_availability(int audio_video);
+void multicast_client_report();
+
+bool multicast_set_enabled(bool enable);
+bool multicast_get_enabled();
+
 void multicast_handler();
-void multicast_add_edid(t_edid* new_edid, char* ip_string);
-void multicast_remove_edid(uint32_t client_ip);
-int multicast_merge_edid(t_edid* edid);
-bool multicast_compare_edid(t_edid* edid1, t_edid* edid2);
-void report_edid_list();
+void multicast_connection_add(t_rtsp_server* server);
+void multicast_edid_add(t_edid* new_edid, t_rtsp_server* server);
+void multicast_edid_remove(t_rtsp_server* server);
+int  multicast_edid_merge(t_edid* edid);
+bool multicast_edid_compare(t_edid* edid1, t_edid* edid2);
+void multicast_edid_report();
 
 #endif /* MULTICAST_H_ */

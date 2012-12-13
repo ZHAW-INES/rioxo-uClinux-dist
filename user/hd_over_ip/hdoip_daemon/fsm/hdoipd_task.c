@@ -231,8 +231,8 @@ void task_get_eth_status(char** p)
 
 void task_get_multicast_client(char ** p)
 {
-    report_available_clients();
-    sprintf(buf, "multicast enable: %i", (int) get_multicast_enable());
+    multicast_client_report();
+    sprintf(buf, "multicast enable: %i", (int) multicast_get_enabled());
     *p = buf;
 }
 

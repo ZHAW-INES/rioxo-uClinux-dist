@@ -44,7 +44,7 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
 
     report(VTB_METHOD "vtb_video_setup");
 
-    set_multicast_enable(reg_test("multicast_en", "true"));
+    multicast_set_enabled(reg_test("multicast_en", "true"));
 
     media->result = RTSP_RESULT_READY;
 
@@ -76,7 +76,7 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
         return RTSP_REQUEST_ERROR;
     }
 
-    if (!get_multicast_enable() && hdoipd_tstate(VTB_VIDEO)) {
+    if (!multicast_get_enabled() && hdoipd_tstate(VTB_VIDEO)) {
         report(ERROR "already streaming video");
         rtsp_response_error(rsp, RTSP_STATUS_SERVICE_UNAVAILABLE, NULL);
         return RTSP_REQUEST_ERROR;
@@ -89,7 +89,7 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
         return RTSP_REQUEST_ERROR;
     }
 
-    if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
+    if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // reserve resource
         hdoipd_set_vtb_state(VTB_VID_IDLE);
     }
@@ -105,7 +105,7 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
     cookie->remote.address = rsp->address;
     cookie->remote.vid_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.vid_port, hdoipd.local.vid_port);
-    m->transport.multicast = get_multicast_enable();
+    m->transport.multicast = multicast_get_enabled();
 
     rtsp_response_setup(rsp, &m->transport, media->sessionid, media->name, &m->hdcp); //respond message to setup message
 
@@ -165,7 +165,7 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
     // test for valid resolution
 
     // start ethernet output
-    if(get_multicast_enable()) {
+    if(multicast_get_enabled()) {
         eth.ipv4_dst_ip = inet_addr(reg_get("multicast_group"));
         convert_ip_to_multicast_mac(inet_addr(reg_get("multicast_group")), dst_mac);
         report(INFO "sending multicast to : %s", reg_get("multicast_group"));
@@ -220,7 +220,7 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
     // send timing
     rtsp_response_play(rsp, media->sessionid, &fmt, &timing);
 
-    if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
+    if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // activate vsi
 #ifdef VID_IN_PATH
         if (hoi_drv_vsi(fmt.compress, chroma, 0, bandwidth, &eth, &timing, &fmt.value)) {
@@ -231,7 +231,7 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
         hdoipd_set_vtb_state(VTB_VIDEO);
     }
 
-    add_client_to_vtb(MEDIA_IS_VIDEO, cookie->remote.address);
+    multicast_client_add(MEDIA_IS_VIDEO, (t_rtsp_server*)media->creator);
 
     osd_permanent(false);
 
@@ -242,13 +242,14 @@ int vtb_video_teardown(t_rtsp_media* media, t_rtsp_req_teardown UNUSED *m, t_rts
 {
 
     t_multicast_cookie* cookie = media->cookie;
+    t_rtsp_server* server = (t_rtsp_server*)media->creator;
 
     report(VTB_METHOD "vtb_video_teardown");
 
     media->result = RTSP_RESULT_TEARDOWN;
 
     if (hdoipd_tstate(VTB_VIDEO|VTB_VID_IDLE)) {
-        if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+        if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
 #ifdef VID_IN_PATH
             hdoipd_hw_reset(DRV_RST_VID_IN);
 #endif
@@ -260,10 +261,10 @@ int vtb_video_teardown(t_rtsp_media* media, t_rtsp_req_teardown UNUSED *m, t_rts
         rtsp_response_teardown(rsp, media->sessionid);
     }
 
-    ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
+    server->timeout.timeout = 0;
 
-    multicast_remove_edid(cookie->remote.address);
-    remove_client_from_vtb(MEDIA_IS_VIDEO, cookie->remote.address);
+    multicast_edid_remove(server);
+    multicast_client_remove(MEDIA_IS_VIDEO, server);
 
     hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
     osd_permanent(true);
@@ -281,7 +282,7 @@ void vtb_video_pause(t_rtsp_media *media)
     media->result = RTSP_RESULT_PAUSE_Q;
 
     if (hdoipd_tstate(VTB_VIDEO)) {
-        if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+        if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
 #ifdef VID_IN_PATH
             hdoipd_hw_reset(DRV_RST_VID_IN);
 #endif
@@ -294,7 +295,7 @@ void vtb_video_pause(t_rtsp_media *media)
         }
     }
 
-    remove_client_from_vtb(MEDIA_IS_VIDEO, cookie->remote.address);
+    multicast_client_remove(MEDIA_IS_VIDEO, (t_rtsp_server*)media->creator);
 }
 
 int vtb_video_ext_pause(t_rtsp_media *media, void *m UNUSED, t_rtsp_connection *rsp)

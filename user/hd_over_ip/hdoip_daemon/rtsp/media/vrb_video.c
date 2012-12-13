@@ -132,7 +132,7 @@ int vrb_video_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UN
 
     // join multicast group
     if (vrb.multicast_en) {
-        join_multicast_group(vrb.dst_ip);
+        multicast_group_join(vrb.dst_ip);
     }
 
     // set slave timer when not already synced
@@ -187,7 +187,7 @@ int vrb_video_teardown(t_rtsp_media *media, t_rtsp_rsp_teardown UNUSED *m, t_rts
     }
     
     if (vrb.multicast_en) {
-        leave_multicast_group(vrb.dst_ip);
+        multicast_group_leave(vrb.dst_ip);
     }
 
     osd_permanent(true);
