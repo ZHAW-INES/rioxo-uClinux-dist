@@ -30,7 +30,6 @@ typedef struct {
 } t_gs2971;
 
 void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *video_mux_ptr);
-void gs2971_reset_and_init(t_gs2971 *handle);
 void gs2971_handler(t_gs2971 *handle, t_queue *event_queue);
 void gs2971_driver_set_slew_rate(t_gs2971 *handle, int data_rate);
 void gs2971_driver_configure_loopback(t_gs2971 *handle, int enable);

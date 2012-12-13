@@ -47,21 +47,6 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     // do not reclock output signal to loopback
     clr_io_exp_rx_pin(handle->p_i2c, RX_RC_BYP);
 
-    // reset and initialize chip
-    gs2971_reset_and_init(handle);
-}
-
-void gs2971_reset_and_init(t_gs2971 *handle)
-{
-    uint32_t reset_reg, t;
-
-    reset_reg = bdt_get_reset_chip(handle->video_mux_ptr);
-
-    // Workaround to prevent that audio level is too high: hardware reset
-    HOI_WR32(handle->video_mux_ptr, MUX_RESET_CHIP_OFFSET, reset_reg & ~RESET_CHIP_1);
-    //wait for 2ms
-    t=jiffies+(HZ/500);
-    while (jiffies < t);    
     // clear reset pin
     bdt_drv_clear_reset_0(handle->video_mux_ptr);
 
@@ -79,17 +64,6 @@ void gs2971_reset_and_init(t_gs2971 *handle)
 
     // invert hsync and vsync timing (low active)
     spi_write_reg_16(handle->p_spi, GS2971_TIM_861_CFG, TIM_861_CFG_HSYNC_INVERT | TIM_861_CFG_VSYNC_INVERT);
-
-    // ------AUDIO-CONFIG------
-
-    // output always I2S-audio 24bit (SD)
-    spi_write_reg_16(handle->p_spi, GS2971_A_CFG_OUTPUT, A_CFG_OUTPUT_BIT_LENGTH_24 | A_CFG_OUTPUT_MODE_I2S);
-
-    // output always I2S-audio 24bit (HD/3G)
-    spi_write_reg_16(handle->p_spi, GS2971_B_CFG_AUD, B_CFG_AUD_DEFAULT_CHANNEL_SELECT | B_CFG_AUD_MODE_I2S | B_CFG_AUD_BIT_LENGTH_24);
-
-    // unmute audio channels 1-8 (HD/3G)
-    spi_write_reg_16(handle->p_spi, GS2971_B_CH_MUTE, B_CH_MUTE_OFF);
 }
 
 void gs2971_hd_3g_audio_handler(t_gs2971 *handle)
@@ -122,7 +96,6 @@ void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
 {
     bool pll_locked, video_status;
     uint16_t video_format = (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_RATE_SEL_READBACK_MASK) >> RASTER_STRUC_4_RATE_SEL_READBACK_SHIFT;
-    uint32_t timeout;
 
     pll_locked = (bool) read_io_exp_rx_pin(handle->p_i2c, RX_STAT_3);
 
@@ -149,15 +122,14 @@ void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
             handle->delay_queue_input++;
         }
         if (handle->delay_queue_input == (RECOGNIZE_INPUT_DELAY - 1)) {
-            // reinitialize chip
-            gs2971_reset_and_init(handle);
-            //wait until input is active again
-            timeout = jiffies + HZ;
-            while(!read_io_exp_rx_pin(handle->p_i2c, RX_STAT_3)) {
-                if (jiffies > timeout) {
-                    break;
-                }
-            }
+            // ------AUDIO-CONFIG------
+            // output always I2S-audio 24bit (SD)
+            spi_write_reg_16(handle->p_spi, GS2971_A_CFG_OUTPUT, A_CFG_OUTPUT_BIT_LENGTH_24 | A_CFG_OUTPUT_MODE_I2S);
+            // output always I2S-audio 24bit (HD/3G)
+            spi_write_reg_16(handle->p_spi, GS2971_B_CFG_AUD, B_CFG_AUD_DEFAULT_CHANNEL_SELECT | B_CFG_AUD_MODE_I2S | B_CFG_AUD_BIT_LENGTH_24);
+            // unmute audio channels 1-8 (HD/3G)
+            spi_write_reg_16(handle->p_spi, GS2971_B_CH_MUTE, B_CH_MUTE_OFF);
+
             // send event to daemon
             queue_put(event_queue, E_GS2971_VIDEO_ON);
             // enable loopback
