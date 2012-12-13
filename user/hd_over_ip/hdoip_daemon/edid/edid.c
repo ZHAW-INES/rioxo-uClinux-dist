@@ -301,3 +301,40 @@ void edid_report_vid_timing(t_edid *edid)
     }
 }
 
+int check_input_after_edid_changed()
+{
+  int timeout;
+  uint32_t active_res;
+
+  // wait up to 1.2s if video-in in active (and hpd is low after edid is written)
+  for (timeout = 0; timeout < 120; timeout++) {
+    if (hdoipd.drivers & DRV_ADV7441) {
+        hoi_drv_get_active_resolution(&active_res);
+
+        // no input
+        if (active_res == 1) {
+          report(INFO "video setup: no input found");
+          return -1;
+        }
+
+        // input is active
+        if (active_res == 2) {
+          hdoipd_set_rsc(RSC_VIDEO_IN);
+          hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
+          hdoipd_set_rsc(RSC_AUDIO0_IN);
+          hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
+          return 0;
+        }
+
+        // 10ms
+        usleep(10000);
+    }
+    else {
+        if (hdoipd_rsc(RSC_VIDEO_IN))
+          return 0;
+    }
+  }
+
+  report(ERROR "video setup: timeout -> no active input");
+  return -1;
+}

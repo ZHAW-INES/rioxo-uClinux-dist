@@ -257,4 +257,6 @@ int edid_read_file(t_edid* edid, char *file);
 int edid_compare(t_edid* edid1, t_edid* edid2);
 void edid_report_vid_timing(t_edid *edid);
 
+int check_input_after_edid_changed();
+
 #endif /* EDID_H_ */
