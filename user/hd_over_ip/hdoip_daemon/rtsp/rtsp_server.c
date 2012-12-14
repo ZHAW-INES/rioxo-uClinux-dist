@@ -189,15 +189,6 @@ void traverse_teardown(t_rtsp_server* server, t_rtsp_media* media, void* data)
   traverse_remove(server, media, NULL);
 }
 
-void traverse_teardown_response(t_rtsp_server* server, t_rtsp_media* media, void* data)
-{
-  if (server == NULL || media == NULL)
-    return;
-
-  // calls rtsp_server_remove_media()
-  rmsr_teardown(media, 0);
-}
-
 void traverse_event(t_rtsp_server* server, t_rtsp_media* media, void* data)
 {
   uint32_t event;
@@ -449,14 +440,6 @@ void rtsp_server_teardown(t_rtsp_server* handle)
     return;
 
   traverse(handle, NULL, NULL, traverse_teardown, true);
-}
-
-void rtsp_server_teardown_response(t_rtsp_server* handle)
-{
-  if (handle == NULL)
-    return;
-
-  traverse(handle, NULL, NULL, traverse_teardown_response, true);
 }
 
 void rtsp_server_event(t_rtsp_server* handle, uint32_t event)
