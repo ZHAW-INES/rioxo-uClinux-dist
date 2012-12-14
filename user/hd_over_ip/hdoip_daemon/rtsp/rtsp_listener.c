@@ -391,3 +391,65 @@ void rtsp_listener_session_traverse(t_rtsp_listener* handle, void (*f)(char*, ch
         bstmap_traverse(handle->sessions, f, d);
     listener_unlock(handle, "rtsp_listener_session_traverse");
 }
+
+/* find a connection based on the remote ip address
+ *
+ * @param connection node in the connection list
+ * @param data pointer to the remote ip address
+ * @return 0 if the node matches the remote ip address otherwise non-zero
+ */
+int find_connection_by_ip(void* connection, void* data)
+{
+  t_node* node = NULL;
+  t_rtsp_server* server = NULL;
+  uint32_t remote_address;
+
+  if (connection == NULL || data == NULL)
+    return -1;
+
+  node = (t_node*)connection;
+  if (node->elem == NULL)
+    return -1;
+
+  server = (t_rtsp_server*)node->elem;
+  remote_address = *(uint32_t*)data;
+
+  // check if the connection address matches the given remote address
+  if (server->con.address == remote_address)
+    return 0;
+
+  return -1;
+}
+
+/* Close the connection matching the given remote ip address
+ *
+ * @param handle listener instance
+ * @param remote_address remote ip address of the connection
+ * @param teardown whether or not to teardown any open sessions before closing the connection
+ */
+void rtsp_listener_close_connection(t_rtsp_listener* handle, uint32_t remote_address, bool teardown)
+{
+  t_node* node = NULL;
+  t_rtsp_server* server = NULL;
+
+  if (handle == NULL)
+    return;
+
+  listener_lock(handle, "rtsp_listener_close_connection");
+  // try to find the server matching the given remote address
+  node = list_find(handle->cons, (f_node_compare*)find_connection_by_ip, &remote_address);
+  if (node == NULL || node->elem == NULL)
+    return;
+
+  server = (t_rtsp_server*)node->elem;
+
+  // first teardown the media-controls if requested
+  // this will also remove any existing sessions
+  if (teardown)
+    rtsp_server_teardown(server);
+
+  // close the connection
+  // this will also lead to the removal of the connection from the listener
+  rtsp_server_close(server);
+  listener_unlock(handle, "rtsp_listener_close_connection");
+}
