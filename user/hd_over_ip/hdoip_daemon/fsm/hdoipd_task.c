@@ -33,7 +33,7 @@ enum {
 	HOID_TSK_UPD_MODE_START 	= 0x00000040,
 	HOID_TSK_UPD_AUTO_STREAM    = 0x00000080,
 	HOID_TSK_UPD_AMX            = 0x00000100,
-    HOID_TSK_UPD_ALIVE          = 0x00000200,
+    // empty                    = 0x00000200,
     HOID_TSK_UPD_MULTICAST      = 0x00000400,
 	HOID_TSK_UPD_DHCP           = 0x00000800,
 	HOID_TSK_UPD_USB_MODE       = 0x00001000,
@@ -800,9 +800,6 @@ void hdoipd_register_task()
     set_listener("amx-hello-interval", task_set_amx_update);
     set_listener("multicast_en", task_set_multicast_update);
     set_listener("multicast_group", task_set_multicast_update);
-    //set_listener("alive-check", task_set_alive_update);
-    //set_listener("alive-check-interval", task_set_alive_update);
-    //set_listener("alive-check-port", task_set_alive_update);
     set_listener("led_instruction", task_set_led_instruction);
     set_listener("osd-time", task_set_osd_time);
     set_listener("usb-mode", task_set_usb_mode);

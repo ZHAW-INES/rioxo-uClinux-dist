@@ -94,7 +94,7 @@ int multicast_group_join(uint32_t multicast_ip)
     // set interface address
     memset(&addr, 0, sizeof(struct sockaddr_in));
     addr.sin_family = AF_INET;
-    addr.sin_port = reg_get_int("alive-check-port");
+    addr.sin_port = 2002;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     // open UDP socket
@@ -287,10 +287,10 @@ int multicast_connection_add(t_rtsp_server* server)
         add_client_to_list(server->con.address, &multicast.client_list_start, NULL);
 
         // check if this is the first connection
-        // => wait time "alive-check-interval" to capture other clients before starting to stream
+        // => wait time "rtsp-timeout" to capture other clients before starting to stream
         if (count_client_list(&multicast.client_list_edid) == 1) {
-            if (multicast.start_timer < reg_get_int("alive-check-interval")) {
-                multicast.start_timer = reg_get_int("alive-check-interval");
+            if (multicast.start_timer < reg_get_int("rtsp-timeout")) {
+                multicast.start_timer = reg_get_int("rtsp-timeout");
             }
         }
         // we need to unlock here before we try to grab the lock that keeps us waiting until

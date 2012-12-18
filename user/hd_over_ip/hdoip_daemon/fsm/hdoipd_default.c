@@ -8,7 +8,7 @@
 #include "hoi_cfg.h"
 
 #define CFGTAG      "config-version"
-#define CFGVERSION  "v0.4"
+#define CFGVERSION  "v0.5"
 
 void hdoipd_set_default()
 {
@@ -58,9 +58,6 @@ void hdoipd_set_default()
 
     reg_set("multicast_en", "false");
     reg_set("multicast_group", "224.0.1.0");
-    reg_set("alive-check", "true");
-    reg_set("alive-check-interval", "5");
-    reg_set("alive-check-port", "554");
 
     reg_set("led_instruction", "0");
     reg_set("osd-time", "10");
@@ -190,6 +187,18 @@ static void update_0_3_to_0_4()
     reg_set(CFGTAG, "v0.4");
 }
 
+static void update_0_4_to_0_5()
+{
+    if (reg_get("alive-check") != NULL)
+        reg_del("alive-check");
+    if (reg_get("alive-check-interval") != NULL)
+        reg_del("alive-check-interval");
+    if (reg_get("alive-check-port") != NULL)
+        reg_del("alive-check-port");
+
+    reg_set(CFGTAG, "v0.5");
+}
+
 /** upgrade config
  *
  * upgrades from one version to the next until the newest version is
@@ -225,6 +234,11 @@ void hdoipd_registry_update()
 
       if (reg_test(CFGTAG, "v0.3")) {
           update_0_3_to_0_4();
+          update = true;
+      }
+
+      if (reg_test(CFGTAG, "v0.4")) {
+          update_0_4_to_0_5();
           update = true;
       }
 

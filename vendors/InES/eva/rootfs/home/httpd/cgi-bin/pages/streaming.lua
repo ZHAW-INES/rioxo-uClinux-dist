@@ -12,7 +12,6 @@ local REG_ST_OSD_LABEL = "osd_time"
 local REG_ST_VID_PORT_LABEL = "vid_port"
 local REG_ST_AUD_PORT_LABEL = "aud_port"
 local REG_ST_RTSP_PORT_LABEL = "rtsp_port"
-local REG_ST_HELLO_PORT_LABEL = "hello_port"
 local REG_ST_RTSP_TIMEOUT_LABEL = "rtsp_timeout"
 
 local MEDIA_SEL_AUD = "audio"
@@ -38,11 +37,9 @@ function show(t)
         t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
         t.aud_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_PORT)
         t.rtsp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RTSP_PORT)
-        t.hello_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT)
         t.edit_vid_port = 0
         t.edit_aud_port = 0
         t.edit_rtsp_port = 0
-        t.edit_hello_port = 0
 
         if(hdoip.pipe.getParam(hdoip.pipe.REG_FORCE_HDCP) == "true") then
             t.hdcp_force = 1
@@ -163,22 +160,6 @@ function show(t)
             end
         else
             t.rtsp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RTSP_PORT)
-        end
-
-        if(t.save_hello_port ~= nil) then 
-            if(tonumber(t.hello_port) ~= nil) then
-                t.hello_port = tonumber(t.hello_port)
-                if((t.hello_port >= 0) and (t.hello_port < 65536)) then
-                    hdoip.pipe.setParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT, t.hello_port)
-                    pages.restart.show(t)
-                else
-                    hdoip.html.AddError(t, label.err_hello_port_not_in_range)
-                end
-            else
-                hdoip.html.AddError(t, label.err_hello_port_not_number)
-            end
-        else
-            t.hello_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT)
         end
 
         if(t.mode_vtb) then
@@ -362,16 +343,6 @@ function show(t)
         hdoip.html.FormCheckbox("edit_rtsp_port", 1, label.button_edit, t.edit_rtsp_port)   hdoip.html.TableInsElement(1);
     end
 
-    hdoip.html.Text(label.p_st_hello_port);                                                 hdoip.html.TableInsElement(1);
-    if((t.edit_hello_port ~= nil) and (t.edit_hello_port == "1")) then
-        hdoip.html.FormText(REG_ST_HELLO_PORT_LABEL, t.hello_port, 5, 0);                   hdoip.html.TableInsElement(1);
-        hdoip.html.FormHidden("save_hello_port", 1)
-        hdoip.html.Text(label.u_decimal);                                                   hdoip.html.TableInsElement(1);
-    else
-        hdoip.html.Text(t.hello_port)                                                       hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("edit_hello_port", 1, label.button_edit, t.edit_hello_port) hdoip.html.TableInsElement(1);
-    end
-
     -- VTB specific fields
     if(t.mode_vtb) then
         hdoip.html.Text(label.p_st_datarate);                                               hdoip.html.TableInsElement(1);
@@ -388,10 +359,10 @@ function show(t)
 
     -- VRB specific fields
     if(t.mode_vrb) then
-        hdoip.html.Text(label.p_st_media_sel);                                                  hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("cb_video", 1, label.p_st_video.."<br>", t.cb_video)            hdoip.html.TableInsElement(2);
-        hdoip.html.Text("");                                                                    hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("cb_audio", 1, label.p_st_audio.."<br>", t.cb_audio)            hdoip.html.TableInsElement(2);
+      hdoip.html.Text(label.p_st_media_sel);                                                  hdoip.html.TableInsElement(1);
+      hdoip.html.FormCheckbox("cb_video", 1, label.p_st_video.."<br>", t.cb_video)            hdoip.html.TableInsElement(2);
+      hdoip.html.Text("");                                                                    hdoip.html.TableInsElement(1);
+      hdoip.html.FormCheckbox("cb_audio", 1, label.p_st_audio.."<br>", t.cb_audio)            hdoip.html.TableInsElement(2);
 	    hdoip.html.Text(label.p_st_net_delay);                                                  hdoip.html.TableInsElement(1);
 	    hdoip.html.FormText(REG_ST_NET_DELAY_LABEL, t.net_delay, 4, 0); 
 	    hdoip.html.Text(label.u_ms);                                                            hdoip.html.TableInsElement(2);
@@ -400,9 +371,9 @@ function show(t)
 	    hdoip.html.FormText(REG_ST_AV_DELAY_LABEL, t.av_delay, 4, 0); 
 	    hdoip.html.Text(label.u_ms);                                                            hdoip.html.TableInsElement(2);
 
-        hdoip.html.Text(label.p_osd_time);                                                      hdoip.html.TableInsElement(1);
-        hdoip.html.FormText(REG_ST_OSD_LABEL, t.osd_time, 4, 0); 
-        hdoip.html.Text(label.u_s);                                                             hdoip.html.TableInsElement(2);
+      hdoip.html.Text(label.p_osd_time);                                                      hdoip.html.TableInsElement(1);
+      hdoip.html.FormText(REG_ST_OSD_LABEL, t.osd_time, 4, 0); 
+      hdoip.html.Text(label.u_s);                                                             hdoip.html.TableInsElement(2);
         
       hdoip.html.Text(label.p_st_rtsp_timeout);                                               hdoip.html.TableInsElement(1);
       hdoip.html.FormText(REG_ST_RTSP_TIMEOUT_LABEL, t.rtsp_timeout, 4, 0);
