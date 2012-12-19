@@ -132,7 +132,7 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
         } else {
             report(" ? RTSP Server [%d] failed to create media (%s)", server->nr, _media->name);
             if (media->cookie_size) free(media->cookie);
-            free(media);
+            rtsp_server_remove_media(server, media, true);
         }
     }
 
