@@ -384,6 +384,11 @@ int rtsp_server_thread(t_rtsp_server* handle)
         unlock("rtsp_server_thread");
     }
 
+    lock("rtsp_server_thread");
+    traverse(handle, NULL, NULL, traverse_remove);
+    remove_media_all(handle, true);
+    unlock("rtsp_server_thread");
+
     handle->kill = true;
 
 #ifdef REPORT_RTSP_SERVER
