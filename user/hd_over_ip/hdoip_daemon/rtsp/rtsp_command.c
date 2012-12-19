@@ -103,7 +103,7 @@ void rtsp_response_error(t_rtsp_connection* msg, int code, char* reason)
             reason = "Unsupported Media Type";
             break;
           case RTSP_STATUS_INVALID_PARAMETER:
-            reason = "Invalid parameter";
+            reason = "Parameter Not Understood";
             break;
           case RTSP_STATUS_ILLEGAL_CONFERENCE_IDENTIFIER:
             reason = "Illegal Conference Identifier";

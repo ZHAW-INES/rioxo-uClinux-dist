@@ -5,15 +5,18 @@
  *      Author: klto
  */
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
 
 #include "hdoipd.h"
 #include "hdoipd_msg.h"
 #include "hoi_drv_user.h"
+#include "rtsp_command.h"
 #include "rtsp_connection.h"
 #include "rtsp_error.h"
 #include "rtsp_parameter.h"
+#include "rtsp_string.h"
 #include "version.h"
 
 #define RTSP_PARAM_GW_VERSION   "GatewareVersion"
@@ -21,11 +24,13 @@
 #define RTSP_PARAM_SERIAL       "SerialNumber"
 #define RTSP_PARAM_SW_VERSION   "SoftwareVersion"
 #define RTSP_PARAM_SOPC_SYSID   "SopcSysid"
+#define RTSP_PARAM_DUMMY        "Dummy"
 
 typedef int (f_rtsp_param_get)(t_rtsp_media *media, t_rtsp_buffer *buf);
 typedef int (f_rtsp_param_set)(t_rtsp_media *media, t_rtsp_buffer *buf,
-                               char *content, size_t n);
-
+                               char *val, size_t len);
+typedef int (f_rtsp_getset)(t_rtsp_media *media, t_rtsp_buffer *buf,
+                               char *line);
 struct rtsp_parameter {
     const char *name;       // name
     bool media_needed;      // whether a media is needed
@@ -34,6 +39,8 @@ struct rtsp_parameter {
 };
 
 static const struct rtsp_parameter rtsp_parameters[];
+
+static unsigned int dummy_val = 42;
 
 static int rtsp_param_get_help(t_rtsp_media *media UNUSED, t_rtsp_buffer *buf)
 {
@@ -99,6 +106,20 @@ static int rtsp_param_get_sw_version(t_rtsp_media *media UNUSED, t_rtsp_buffer *
     return 0;
 }
 
+static int rtsp_param_get_dummy(t_rtsp_media *media UNUSED, t_rtsp_buffer *buf)
+{
+    rtsp_buffer_printf(buf, RTSP_PARAM_DUMMY ": %d\r\n", dummy_val);
+    return 0;
+}
+
+static int rtsp_param_set_dummy(t_rtsp_media *media UNUSED, t_rtsp_buffer *buf,
+                                char *val, size_t len UNUSED)
+{
+    dummy_val = atoi(val);
+    rtsp_buffer_printf(buf, RTSP_PARAM_DUMMY ": %d\r\n", dummy_val);
+    return 0;
+}
+
 static int rtsp_param_get_sopc_sysid(t_rtsp_media *media UNUSED, t_rtsp_buffer *buf)
 {
     t_hoic_getversion cmd;
@@ -114,11 +135,9 @@ static int rtsp_param_get_sopc_sysid(t_rtsp_media *media UNUSED, t_rtsp_buffer *
 }
 
 static int rtsp_get_parameter(t_rtsp_media *media, t_rtsp_buffer *repbuf,
-                              const char *name)
+                              char *name)
 {
     const struct rtsp_parameter *param;
-
-    report(">>> GET_PARAMETER %s", name);
 
     for (param = rtsp_parameters; param->name != NULL; param++) {
         size_t len = strlen(param->name);
@@ -137,7 +156,47 @@ static int rtsp_get_parameter(t_rtsp_media *media, t_rtsp_buffer *repbuf,
     return RTSP_UNSUPPORTED_PARAMETER;
 }
 
-int rtsp_handle_get_parameter(t_rtsp_media *media, t_rtsp_connection *con)
+static int rtsp_set_parameter(t_rtsp_media *media, t_rtsp_buffer *repbuf,
+                              char *line)
+{
+    const struct rtsp_parameter *param;
+    size_t len = strlen(line);
+    char *val = NULL;
+    const char *name = line;
+
+    for (size_t i = 0; i < len; i++) {
+        if (line[i] == ':') {
+            line[i] = '\0';
+            i++;
+            while (line[i] != '\0' && isblank(line[i]))
+                    i++;
+            if (isprint(line[i]))
+                    val = &line[i];
+        }
+    }
+
+    for (param = rtsp_parameters; param->name != NULL; param++) {
+        size_t len = strlen(param->name);
+
+        if (param->media_needed && media == NULL)
+            continue;
+        if (strlen(name) != len)
+            continue;
+        if (strncmp(param->name, name, len) == 0) {
+            if (param->set) {
+                report(">>> SET_PARAMETER %s=%s (%zu)", name, val, strlen(val));
+                return param->set(media, repbuf, val, strlen(val));
+            } else {
+                return RTSP_READONLY_PARAMETER;
+            }
+        }
+    }
+
+    return RTSP_UNSUPPORTED_PARAMETER;
+}
+
+static int rtsp_handle_get_set_parameter(t_rtsp_media *media, t_rtsp_connection *con,
+                                         f_rtsp_getset *getset)
 {
     char *line;
     int n;
@@ -154,7 +213,6 @@ int rtsp_handle_get_parameter(t_rtsp_media *media, t_rtsp_connection *con)
     rtsp_buffer_init(repbuf);
 
     while (rem > 0) {
-        /* TODO: handle multiple lines properly in rtsp_receive */
         n = rtsp_receive(con, &line, 0, 0, &sz);
         if (n != RTSP_SUCCESS) {
             report(ERROR "failed to read RTSP body: %d", n);
@@ -180,27 +238,52 @@ int rtsp_handle_get_parameter(t_rtsp_media *media, t_rtsp_connection *con)
         if (!line || *line == '\0')
             break;
 
-        ret = rtsp_get_parameter(media, repbuf, line);
-        if (ret != RTSP_SUCCESS)
-            report(ERROR "Failed to get parameter %s", line); // TODO: Anything else?
+        ret = (*getset)(media, repbuf, line);
+        if (ret != RTSP_SUCCESS) {
+            report(ERROR "Failed to get parameter %s (rem=%zd)", line, rem); // TODO: Anything else?
+            while (rem > 0) {
+                n = rtsp_receive(con, &line, 0, 0, &sz);
+                if (n != RTSP_SUCCESS)
+                    break;
+                rem -= sz;
+            }
+            if (ret == RTSP_READONLY_PARAMETER)
+                rtsp_response_error(con, RTSP_STATUS_PARAMETER_IS_READ_ONLY, NULL);
+            else
+                rtsp_response_error(con, RTSP_STATUS_INVALID_PARAMETER, NULL);
+            goto err_out;
+        }
     }
 
-    content_length = (size_t) (repbuf->eol - repbuf->sol);
+    if (ret == RTSP_SUCCESS) {
+        content_length = (size_t) (repbuf->eol - repbuf->sol);
 
-    /* Actually construct and send the reply */
-    rtsp_response_line(con, RTSP_STATUS_OK, "OK");
-    if (content_length > 0) {
-	    msgprintf(con, "Content-Type: text/parameters\r\n");
-	    msgprintf(con, "Content-Length: %zu\r\n", content_length);
+        /* Actually construct and send the reply */
+        rtsp_response_line(con, RTSP_STATUS_OK, "OK");
+        if (content_length > 0) {
+            msgprintf(con, "Content-Type: text/parameters\r\n");
+            msgprintf(con, "Content-Length: %zu\r\n", content_length);
+        }
     }
+
     rtsp_eoh(con);  // End of header
 
     repbuf->eol = '\0';
     msgprintf(con, "%s", repbuf->buf);
 
+err_out:
     free(repbuf);
+    return RTSP_SUCCESS;
+}
 
-    return 0;
+int rtsp_handle_get_parameter(t_rtsp_media *media, t_rtsp_connection *con)
+{
+    return rtsp_handle_get_set_parameter(media, con, rtsp_get_parameter);
+}
+
+int rtsp_handle_set_parameter(t_rtsp_media *media, t_rtsp_connection *con)
+{
+    return rtsp_handle_get_set_parameter(media, con, rtsp_set_parameter);
 }
 
 static const struct rtsp_parameter rtsp_parameters[] = {
@@ -210,5 +293,6 @@ static const struct rtsp_parameter rtsp_parameters[] = {
     { RTSP_PARAM_SERIAL,        false,	rtsp_param_get_serial,      NULL },
     { RTSP_PARAM_SW_VERSION,    false,	rtsp_param_get_sw_version,  NULL },
     { RTSP_PARAM_SOPC_SYSID,    false,	rtsp_param_get_sopc_sysid,  NULL },
+    { RTSP_PARAM_DUMMY,         false,	rtsp_param_get_dummy,       rtsp_param_set_dummy },
     { NULL,                     false,	NULL,                       NULL },
 };

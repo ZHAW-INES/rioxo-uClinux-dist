@@ -67,6 +67,11 @@ int rmsq_get_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp)
     return media->get_parameter(media, NULL, rsp);
 }
 
+int rmsq_set_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp)
+{
+    return media->set_parameter(media, NULL, rsp);
+}
+
 int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
 {
     t_rtsp_media *media = _media;

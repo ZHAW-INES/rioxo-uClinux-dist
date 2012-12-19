@@ -48,9 +48,17 @@ int box_sys_options(t_rtsp_media *media UNUSED, void *data, t_rtsp_connection *r
     return 0;
 }
 
-int box_sys_get_parameter(t_rtsp_media *media, void *data, t_rtsp_connection *rsp)
+int box_sys_get_parameter(t_rtsp_media *media, void *data UNUSED, t_rtsp_connection *rsp)
 {
     rtsp_handle_get_parameter(media, rsp);
+    rtsp_send(rsp);
+
+    return 0;
+}
+
+int box_sys_set_parameter(t_rtsp_media *media, void *data UNUSED, t_rtsp_connection *rsp)
+{
+    rtsp_handle_set_parameter(media, rsp);
     rtsp_send(rsp);
 
     return 0;

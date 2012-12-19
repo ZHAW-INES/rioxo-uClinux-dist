@@ -86,6 +86,7 @@ typedef struct rtsp_media {
     frtspm* hdcp;
     frtspm* error;              // (media*, rtsp-code, connection)
     frtspm* get_parameter;      // (c->s)
+    frtspm* set_parameter;      // (c->s)
     frtspm* setup;              // (c->s) request or response
     frtspm* play;               // (c->s) request or response
     frtspm* pause;              // (c->s|s->c) rsp=0: response / else: request
@@ -115,6 +116,7 @@ int rtsp_media_check_request(const t_map_set* method, t_rtsp_media* media, void*
 // rtsp media server
 int rmsq_options(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_get_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp);
+int rmsq_set_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp);
 int rmsq_setup(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_play(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
@@ -124,8 +126,6 @@ int rmsq_hdcp(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 
 int rmsr_teardown(t_rtsp_media* media, void* msg);
 int rmsr_pause(t_rtsp_media* media, void* msg);
-
-
 
 // rtsp media client
 int rmcq_options(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
