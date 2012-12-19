@@ -299,16 +299,6 @@ void rtsp_listener_create_sessionid(t_rtsp_listener* handle, char* id)
 
 typedef void ftra(t_rtsp_server* media);
 
-void rtsp_listener_traverse(char UNUSED *key, char* value, void* f)
-{
-  t_rtsp_server* server = NULL;
-  if (value == NULL || f == NULL)
-    return;
-
-  server = (t_rtsp_server*)value;
-  ((ftra*)f)(server);
-}
-
 void rtsp_listener_traverse_servers(void* elem, void* data)
 {
   t_rtsp_server* server = NULL;
