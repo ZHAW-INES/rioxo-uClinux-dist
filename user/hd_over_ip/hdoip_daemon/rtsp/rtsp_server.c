@@ -324,10 +324,11 @@ int rtsp_server_thread(t_rtsp_server* handle)
 
         // connection closed...
         if (n) {
-            if (n > RTSP_PAUSE) {
+            if (n > RTSP_PAUSE)
                 report(ERROR "RTSP Server [%d] failed to parse request (%d)", handle->nr, n);
-            }
-          break;
+            else
+                report(INFO "RTSP Server [%d] closed by remote (%d)", handle->nr, n);
+            break;
         }
 
         // find media
