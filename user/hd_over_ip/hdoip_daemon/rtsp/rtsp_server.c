@@ -28,7 +28,7 @@ typedef struct {
   void *data;
 } t_server_data;
 
-void cleanup_media(t_rtsp_server* handle)
+void cleanup_media(t_rtsp_server* handle, bool remove_session)
 {
   // if there are no more media-controls for this server we can clean it up
   if (handle->media == NULL || handle->media_session_count == 0) {
@@ -37,7 +37,7 @@ void cleanup_media(t_rtsp_server* handle)
       handle->media = NULL;
     }
 
-    if (handle->owner != NULL && handle->sessionid != NULL && strlen(handle->sessionid) > 0) {
+    if (remove_session && handle->owner != NULL && handle->sessionid != NULL && strlen(handle->sessionid) > 0) {
       rtsp_listener_remove_session(handle->owner, handle->sessionid);
       memset(handle->sessionid, 0, sizeof(handle->sessionid));
     }
@@ -88,7 +88,7 @@ void rtsp_server_remove_media(t_rtsp_server* handle, t_rtsp_media* media, bool r
     if (media->sessionid != NULL)
       handle->media_session_count--;
     bstmap_removep(&handle->media, media->name);
-    cleanup_media(handle);
+    cleanup_media(handle, true);
   }
 
   media->creator = NULL;
@@ -238,12 +238,7 @@ void remove_media_all(t_rtsp_server* server, bool remove_session)
     return;
 
   server->media_session_count = 0;
-  if (remove_session)
-    cleanup_media(server);
-  else if (server->media != NULL) {
-    bstmap_freep(&server->media);
-    server->media = NULL;
-  }
+  cleanup_media(server, remove_session);
 }
 
 /**
