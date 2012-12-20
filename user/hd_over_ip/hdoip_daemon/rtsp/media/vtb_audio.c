@@ -257,20 +257,6 @@ int vtb_audio_ext_pause(t_rtsp_media* media, void *m UNUSED, t_rtsp_connection* 
     return RTSP_SUCCESS;
 }
 
-int vtb_audio_update(t_rtsp_media UNUSED *media, t_rtsp_req_update *m, t_rtsp_connection UNUSED *rsp)
-{
-    t_multicast_cookie* cookie = media->cookie;
-
-    switch (m->event) {
-        case EVENT_TICK:
-            // reset timeout
-            ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
-        break;
-    }
-
-    return RTSP_SUCCESS;
-}
-
 int vtb_audio_event(t_rtsp_media *media, uint32_t event)
 {
     t_multicast_cookie* cookie = media->cookie;
@@ -309,6 +295,5 @@ t_rtsp_media vtb_audio = {
     .play = (frtspm*)vtb_audio_play,
     .pause = (frtspm*)vtb_audio_ext_pause,
     .teardown = (frtspm*)vtb_audio_teardown,
-    .update = (frtspm*)vtb_audio_update,
     .event = (frtspe*)vtb_audio_event
 };

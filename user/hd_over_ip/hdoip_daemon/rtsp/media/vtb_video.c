@@ -305,20 +305,6 @@ int vtb_video_ext_pause(t_rtsp_media *media, void *m UNUSED, t_rtsp_connection *
     return RTSP_SUCCESS;
 }
 
-int vtb_video_update(t_rtsp_media *media, t_rtsp_req_update *m, t_rtsp_connection *rsp UNUSED)
-{
-    t_multicast_cookie* cookie = media->cookie;
-
-    switch (m->event) {
-        case EVENT_TICK:
-            // reset timeout
-            ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
-        break;
-    }
-
-    return RTSP_SUCCESS;
-}
-
 int vtb_video_event(t_rtsp_media *media, uint32_t event)
 {
     t_multicast_cookie* cookie = media->cookie;
@@ -362,6 +348,5 @@ t_rtsp_media vtb_video = {
     .play = (frtspm*)vtb_video_play,
     .pause = (frtspm*)vtb_video_ext_pause,
     .teardown = (frtspm*)vtb_video_teardown,
-    .update = (frtspm*)vtb_video_update,
     .event = (frtspe*)vtb_video_event
 };
