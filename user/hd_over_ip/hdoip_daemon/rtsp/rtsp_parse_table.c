@@ -30,6 +30,7 @@ const t_map_fnc tab_response_get_parameter[] = {
 // SET_PARAMETER attributes
 const t_map_fnc tab_request_set_parameter[] = {
     { "CSeq",   rtsp_parse_ui32,    true,   offsetof(t_rtsp_req_set_parameter, cseq) },
+    { "Session",rtsp_parse_str,     false,  offsetof(t_rtsp_req_set_parameter, session) },
     MAP_FNC_NULL
 };
 
