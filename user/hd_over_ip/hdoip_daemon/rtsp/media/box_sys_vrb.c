@@ -43,5 +43,6 @@ t_rtsp_media box_sys_vrb = {
     .cookie         = NULL,
     .options        = box_sys_options,
     .get_parameter  = box_sys_get_parameter,
+    .set_parameter  = box_sys_set_parameter,
     .event          = box_sys_vrb_event
 };
