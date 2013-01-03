@@ -398,9 +398,11 @@ void rtsp_response_pause(t_rtsp_connection* msg, char* session)
     rtsp_send(msg);
 }
 
-void rtsp_request_get_parameter(t_rtsp_connection* msg, char* uri)
+void rtsp_request_get_parameter(t_rtsp_connection* msg, char* uri, char* session)
 {
     rtsp_request_line(msg, "GET_PARAMETER", uri, NULL);
+    if (session != NULL)
+        rtsp_header_session(msg, session);
     rtsp_eoh(msg);
     rtsp_send(msg);
 }

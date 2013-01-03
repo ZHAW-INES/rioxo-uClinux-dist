@@ -279,6 +279,15 @@ void request_teardown(t_rtsp_client* client, t_rtsp_media* media, void* data)
   teardown_media(client, media, (void*)&buf);
 }
 
+void get_sessionid(t_rtsp_client* client, t_rtsp_media* media, void* data)
+{
+  if (client == NULL || media == NULL || data == NULL || media->sessionid == NULL)
+    return;
+
+  if (strlen(media->sessionid) > 0)
+    strcpy(data, media->sessionid);
+}
+
 /** checks if the received message is a request or a response
  *  if its a request, write to pipe 2, else to pipe 1
  *
@@ -816,10 +825,11 @@ int rtsp_client_hdcp(t_rtsp_client* client)
     return RTSP_SUCCESS;
 }
 
-int rtsp_client_get_parameter(t_rtsp_client* client)
+int rtsp_client_get_parameter(t_rtsp_client* client, char* mediaName)
 {
   u_rtsp_header buf;
   int ret = RTSP_SUCCESS;
+  char sessionid[50];
 
   if (client == NULL)
     return RTSP_NULL_POINTER;
@@ -828,7 +838,9 @@ int rtsp_client_get_parameter(t_rtsp_client* client)
   report(" > RTSP Client [%d] GET_PARAMETER", client->nr);
 #endif
 
-  rtsp_request_get_parameter(&client->con, client->uri);
+  request(client, mediaName, sessionid, get_sessionid);
+
+  rtsp_request_get_parameter(&client->con, client->uri, strlen(sessionid) > 0 ? sessionid : NULL);
   rtsp_default_response((void*)&buf);
   if ((ret = rtsp_parse_response(&client->con, tab_response_get_parameter, (void*)&buf, 0, hdoipd.eth_timeout)) != RTSP_SUCCESS)
   {

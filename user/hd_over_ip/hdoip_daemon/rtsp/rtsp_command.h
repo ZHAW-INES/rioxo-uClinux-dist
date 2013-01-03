@@ -34,7 +34,7 @@ void rtsp_request_play(t_rtsp_connection* msg, char* uri, char* session, char* m
 void rtsp_request_teardown(t_rtsp_connection* msg, char* uri, char* session, char* media);
 void rtsp_request_update(t_rtsp_connection* msg, char* uri, char* session, char* media, uint32_t event, t_rtsp_rtp_format* fmt);
 void rtsp_request_pause(t_rtsp_connection* msg, char* uri, char* session, char* media);
-void rtsp_request_get_parameter(t_rtsp_connection* msg, char* uri);
+void rtsp_request_get_parameter(t_rtsp_connection* msg, char* uri, char* session);
 void rtsp_request_hdcp(t_rtsp_connection* msg, char* uri, char* session, char* media, char* id, char* content);
 void rtsp_request_usb_setup(t_rtsp_connection* msg, char* uri, t_rtsp_transport* transport);
 void rtsp_request_usb_play(t_rtsp_connection* msg, char* uri, char* session, char* mouse_msg, char* keyboard_msg, char* storage_msg);

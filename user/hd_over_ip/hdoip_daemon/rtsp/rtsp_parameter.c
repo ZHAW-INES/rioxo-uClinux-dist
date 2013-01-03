@@ -200,7 +200,7 @@ static int rtsp_handle_get_set_parameter(t_rtsp_media *media, t_rtsp_connection 
 {
     char *line;
     int n;
-    int ret;
+    int ret = RTSP_SUCCESS;
     size_t sz = 0;
     ssize_t rem = con->common.content_length;
     t_rtsp_buffer *repbuf;
@@ -264,6 +264,9 @@ static int rtsp_handle_get_set_parameter(t_rtsp_media *media, t_rtsp_connection 
             msgprintf(con, "Content-Type: text/parameters\r\n");
             msgprintf(con, "Content-Length: %zu\r\n", content_length);
         }
+
+        if (strlen(con->common.session) > 0)
+            rtsp_header_session(con, con->common.session);
     }
 
     rtsp_eoh(con);  // End of header

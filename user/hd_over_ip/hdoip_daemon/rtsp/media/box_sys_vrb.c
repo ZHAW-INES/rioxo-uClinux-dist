@@ -29,7 +29,7 @@ static int box_sys_vrb_event(t_rtsp_media *media, uint32_t event)
         client->timeout.alive_ping--;
       else {
         client->timeout.alive_ping = TICK_SEND_ALIVE;
-        return rtsp_client_get_parameter(client);
+        return rtsp_client_get_parameter(client, NULL);
       }
       break;
   }

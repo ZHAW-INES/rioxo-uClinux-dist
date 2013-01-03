@@ -170,6 +170,7 @@ typedef struct {
 
 typedef struct {
     uint32_t            cseq;
+    char                session[50];
 } t_rtsp_req_get_parameter;
 
 typedef struct {

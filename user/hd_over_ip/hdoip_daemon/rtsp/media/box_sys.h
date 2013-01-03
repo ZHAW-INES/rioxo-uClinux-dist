@@ -13,7 +13,7 @@
 #include "rtsp_media.h"
 
 int box_sys_options(t_rtsp_media *media UNUSED, void *data, t_rtsp_connection *rsp);
-int box_sys_get_parameter(t_rtsp_media *media, void *data, t_rtsp_connection *rsp);
+int box_sys_get_parameter(t_rtsp_media *media, t_rtsp_req_get_parameter *data, t_rtsp_connection *rsp);
 int box_sys_set_parameter(t_rtsp_media *media, void *data, t_rtsp_connection *rsp);
 
 int box_sys_set_remote(char* address);
