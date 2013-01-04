@@ -387,6 +387,8 @@ void* rtsp_client_req_thread(void* _client)
 #ifdef REPORT_RTSP_RX
             report(" < RTSP Client [%d] %s", client->nr, common.rq.method);
 #endif
+            memcpy(&client->con.common, &common, sizeof(t_rtsp_header_common));
+
             // process request (function responses for itself)
             n = ((frtspm*)method->fnc)(media, (void*)&buf, &client->con);
             if (n != RTSP_SUCCESS) {
