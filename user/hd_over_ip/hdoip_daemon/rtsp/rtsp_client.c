@@ -311,7 +311,7 @@ void* rtsp_client_thread(void* _client)
                 if (*line == 0) break;
             } while ((n = rtsp_receive(&client->con1, &line, 0, 0, &read)) == RTSP_SUCCESS);
             if (n != RTSP_SUCCESS) {
-                report(ERROR "rtsp client filter receive error on request");
+                report(ERROR "rtsp client filter receive error on request (%d)", n);
                 break;
             }
 
