@@ -262,7 +262,7 @@ static int rtsp_handle_get_set_parameter(t_rtsp_media *media, t_rtsp_connection 
         rtsp_response_line(con, RTSP_STATUS_OK, "OK");
         if (content_length > 0) {
             msgprintf(con, "Content-Type: text/parameters\r\n");
-            msgprintf(con, "Content-Length: %zu\r\n", content_length);
+            rtsp_header_content_length(con, content_length);
         }
 
         if (strlen(con->common.session) > 0)

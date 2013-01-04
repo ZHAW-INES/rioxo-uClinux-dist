@@ -208,6 +208,11 @@ void rtsp_header_session(t_rtsp_connection* msg, char* s)
     msgprintf(msg, "Session: %s\r\n", s);
 }
 
+void rtsp_header_content_length(t_rtsp_connection* msg, size_t length)
+{
+    msgprintf(msg, "Content-Length: %zu\r\n", length);
+}
+
 void rtsp_event(t_rtsp_connection* msg, uint32_t event)
 {
     msgprintf(msg, "Event: %u\r\n", event);

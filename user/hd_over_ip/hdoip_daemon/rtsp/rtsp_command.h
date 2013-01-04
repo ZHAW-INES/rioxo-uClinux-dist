@@ -24,6 +24,7 @@ void rtsp_response_error(t_rtsp_connection* msg, int code, char* reason);
 void rtsp_request_line(t_rtsp_connection* msg, char* method, char* uri, char* media);
 void rtsp_request_cseq(t_rtsp_connection* msg, int s);
 void rtsp_header_session(t_rtsp_connection* msg, char* s);
+void rtsp_header_content_length(t_rtsp_connection* msg, size_t length);
 void rtsp_header_timing(t_rtsp_connection* msg, t_video_timing* timing);
 void rtsp_header_rtp_format(t_rtsp_connection* msg, t_rtsp_rtp_format* p);
 void rtsp_header_usb(t_rtsp_connection* msg, char* mouse, char* keyboard, char* storage);
