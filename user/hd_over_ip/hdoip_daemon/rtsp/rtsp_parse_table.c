@@ -112,8 +112,8 @@ const t_map_fnc tab_request_update[] ={
 
 // PAUSE attributes
 const t_map_fnc tab_request_pause[] ={
-        { "CSeq",	rtsp_parse_ui32,	true,	offsetof(t_rtsp_req_update, cseq) },
-        { "Session",	rtsp_parse_str,		true,	offsetof(t_rtsp_req_update, session) },
+        { "CSeq",	rtsp_parse_ui32,	true,	offsetof(t_rtsp_req_pause, cseq) },
+        { "Session",rtsp_parse_str,		true,	offsetof(t_rtsp_req_pause, session) },
         MAP_FNC_NULL
 };
 
