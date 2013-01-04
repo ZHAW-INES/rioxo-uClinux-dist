@@ -228,32 +228,6 @@ void request_event(t_rtsp_client* client, t_rtsp_media* media, void* data)
   }
 }
 
-void request_update(t_rtsp_client* client, t_rtsp_media* media, void* data)
-{
-  t_rtsp_rtp_format fmt;
-  uint32_t event;
-  char* s;
-
-  if (client == NULL || media == NULL || data == NULL)
-    return;
-
-  event = *((uint32_t*)data);
-  s = reg_get("compress");
-  if (strcmp(s, "jp2k") == 0) {
-      fmt.compress = FORMAT_JPEG2000;
-  } else {
-      fmt.compress = FORMAT_PLAIN;
-  }
-  hoi_drv_get_mtime(&fmt.rtptime);
-  fmt.value = reg_get_int("advcnt-min");
-
-#ifdef REPORT_RTSP_UPDATE
-  report(" > RTSP Client [%d] UPDATE", client->nr);
-#endif
-
-  rtsp_request_update(&client->con, client->uri, media->sessionid, media->name, event, &fmt);
-}
-
 void request_teardown(t_rtsp_client* client, t_rtsp_media* media, void* data)
 {
   u_rtsp_header buf;
@@ -874,11 +848,6 @@ int rtsp_client_event(t_rtsp_client* client, uint32_t event)
   client->task = 0;
 
   return n;
-}
-
-int rtsp_client_update(t_rtsp_client* client, uint32_t event, char* mediaName)
-{
-  return request(client, mediaName, &event, request_update);
 }
 
 int rtsp_client_pause(t_rtsp_client* client, char* mediaName)
