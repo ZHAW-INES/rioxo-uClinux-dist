@@ -476,7 +476,9 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
 
   multicast_set_enabled(reg_test("multicast_en", "true"));
 
-  if (edid == NULL || !edid->from_header)
+  // if no EDID has been provided and edid-mode is not set to use
+  // a default EDID, there's nothing to do here
+  if ((edid == NULL || !edid->from_header) && !reg_test("edid-mode", "default"))
       return 0;
 
   // use default edid if requested
@@ -491,7 +493,7 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
     // we don't use the default edid and
     // the client has provided an edid and
     // the input is not SDI
-    if (!reg_test("edid-mode", "default") && edid->from_header && !hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
+    if (!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
         // add connection to start list
         multicast_edid_add((t_edid *)edid_table, handle);
         // this call will block until the multicast setup procedure has been finished
