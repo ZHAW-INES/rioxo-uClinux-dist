@@ -38,8 +38,6 @@ t_rtsp_server* rtsp_server_create(int fd, uint32_t addr);
 void rtsp_server_close(t_rtsp_server* handle);
 void rtsp_server_teardown(t_rtsp_server* handle);
 void rtsp_server_event(t_rtsp_server* handle, uint32_t event);
-void rtsp_server_update(t_rtsp_server* handle, uint32_t event);
-void rtsp_server_pause(t_rtsp_server* handle);
 
 int rtsp_server_thread(t_rtsp_server* handle);
 

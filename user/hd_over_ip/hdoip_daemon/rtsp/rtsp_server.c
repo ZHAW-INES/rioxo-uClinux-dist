@@ -454,26 +454,6 @@ void rtsp_server_event(t_rtsp_server* handle, uint32_t event)
   traverse(handle, NULL, &event, traverse_event);
 }
 
-void rtsp_server_update(t_rtsp_server* handle, uint32_t event)
-{
-  if (handle == NULL) {
-    report(ERROR "rtsp_server_update: no server");
-    return;
-  }
-
-  traverse(handle, NULL, &event, traverse_update);
-}
-
-void rtsp_server_pause(t_rtsp_server* handle)
-{
-  if (handle == NULL) {
-    report("rtsp server pause: no server");
-    return;
-  }
-
-  traverse(handle, NULL, NULL, traverse_pause);
-}
-
 void rtsp_server_update_media(t_rtsp_media* media, uint32_t event)
 {
   if (media == NULL || media->creator == NULL) {
