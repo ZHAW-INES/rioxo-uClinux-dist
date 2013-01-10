@@ -811,7 +811,7 @@ int rtsp_client_get_parameter(t_rtsp_client* client, char* mediaName)
   if (client == NULL)
     return RTSP_NULL_POINTER;
 
-#ifdef REPORT_RTSP_HELLO
+#ifdef REPORT_RTSP_GET_PARAMETER
   report(" > RTSP Client [%d] GET_PARAMETER", client->nr);
 #endif
 
