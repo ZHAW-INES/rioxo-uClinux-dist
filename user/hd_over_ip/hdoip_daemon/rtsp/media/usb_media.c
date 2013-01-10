@@ -17,6 +17,7 @@
 #include "rtsp_string.h"
 #include "usb_media.h"
 #include "vrb_video.h"
+#include "box_sys.h"
 
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout * 2)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
@@ -207,6 +208,7 @@ t_rtsp_media usb_media = {
     .name = "usb",
     .owner = 0,
     .cookie = 0,
+    .options = (frtspm*)box_sys_options,
     .setup = (frtspm*)usb_setup,
     .play = (frtspm*)usb_play,
     .teardown = (frtspm*)usb_teardown,

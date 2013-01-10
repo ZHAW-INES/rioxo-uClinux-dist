@@ -400,6 +400,7 @@ t_rtsp_media vrb_video = {
     .name = "video",
     .owner = 0,
     .cookie = 0,
+    .options = (frtspm*)box_sys_options,
     .setup = (frtspm*)vrb_video_setup,
     .play = (frtspm*)vrb_video_play,
     .pause = (frtspm*)vrb_video_ext_pause,

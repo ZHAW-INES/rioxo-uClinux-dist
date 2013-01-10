@@ -289,6 +289,7 @@ t_rtsp_media vtb_audio = {
     .name = "audio",
     .owner = 0,
     .cookie = 0,
+    .options = (frtspm*)box_sys_options,
     .hdcp = (frtspm*)vtb_audio_hdcp,
     .cookie_size = sizeof(t_multicast_cookie),
     .setup = (frtspm*)vtb_audio_setup,

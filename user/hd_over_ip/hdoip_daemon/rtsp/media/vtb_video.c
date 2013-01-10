@@ -342,6 +342,7 @@ t_rtsp_media vtb_video = {
     .name = "video",
     .owner = 0,
     .cookie = 0,
+    .options = (frtspm*)box_sys_options,
     .hdcp = (frtspm*)vtb_video_hdcp,
     .cookie_size = sizeof(t_multicast_cookie),
     .setup = (frtspm*)vtb_video_setup,

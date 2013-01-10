@@ -351,6 +351,7 @@ t_rtsp_media vrb_audio = {
     .name = "audio",
     .owner = 0,
     .cookie = 0,
+    .options = (frtspm*)box_sys_options,
     .setup = (frtspm*)vrb_audio_setup,
     .play = (frtspm*)vrb_audio_play,
     .pause = (frtspm*)vrb_audio_ext_pause,
