@@ -42,6 +42,7 @@ void hoi_drv_init(t_hoi* handle)
     handle->p_video_mux     = ioremap(BASE_VIDEO_MUX,   0xffffffff);
     handle->p_spi_tx        = ioremap(BASE_SPI_TX,      0xffffffff);
     handle->p_spi_rx        = ioremap(BASE_SPI_RX,      0xffffffff);
+    handle->p_fec_tx        = ioremap(BASE_FEC_TX,      0xffffffff);
 
 
     // init

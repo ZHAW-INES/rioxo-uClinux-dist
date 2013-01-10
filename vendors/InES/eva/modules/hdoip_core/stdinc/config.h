@@ -47,6 +47,7 @@
 #define BASE_VIDEO_MUX      (na_acb_video_mux)
 #define BASE_SPI_TX         (na_spi_tx)
 #define BASE_SPI_RX         (na_spi_rx)
+#define BASE_FEC_TX         (na_acb_fec)
 
 // Register area sizes
 #define TSE_MAC_SIZE        0x400

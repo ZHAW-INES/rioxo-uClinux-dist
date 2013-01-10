@@ -639,7 +639,7 @@ int adv7441a_get_hdcp_status(t_adv7441a* handle)
 {
     int i, ret;
     uint32_t time;
-
+/*
     for(i=0;i<100;i++) {
         time = jiffies;
         while ((time + HZ/100) >= jiffies); // wait ~1000ms until bit is valid
@@ -649,8 +649,8 @@ int adv7441a_get_hdcp_status(t_adv7441a* handle)
             break;
         }
     }
-
-    return ret;
+*/
+    return 0; //ret;
 }
 
 

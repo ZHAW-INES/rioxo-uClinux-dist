@@ -70,11 +70,31 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
 
 int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
 {
+    t_rbf_dsc dsc;
+
     // ringbuffer
     eti_drv_set_vid_buf(&handle->eti, msg->vid_rx_buf, msg->vid_rx_len - MAX_FRAME_LENGTH);
     eti_drv_set_aud_buf(&handle->eti, msg->aud_rx_buf, msg->aud_rx_len - MAX_FRAME_LENGTH);
     eto_drv_set_vid_buf(&handle->eto, msg->vid_tx_buf, msg->vid_tx_len - MAX_FRAME_LENGTH);
     eto_drv_set_aud_buf(&handle->eto, msg->aud_tx_buf, msg->aud_tx_len - MAX_FRAME_LENGTH);
+
+    // test of FEC interrface blocks
+    // set audio descriptors
+    rbf_dsc(&dsc, msg->aud_tx_buf, msg->aud_tx_len - MAX_FRAME_LENGTH);
+    HOI_WR32(handle->p_fec_tx, 0x00, dsc.start>>2);
+    HOI_WR32(handle->p_fec_tx, 0x04, dsc.stop>>2);
+    HOI_WR32(handle->p_fec_tx, 0x08, dsc.read>>2);
+    HOI_WR32(handle->p_fec_tx, 0x0C, dsc.write>>2);
+
+    // set video descriptors
+    rbf_dsc(&dsc, msg->vid_tx_buf, msg->vid_tx_len - MAX_FRAME_LENGTH);
+    HOI_WR32(handle->p_fec_tx, 0x10, dsc.start>>2);
+    HOI_WR32(handle->p_fec_tx, 0x14, dsc.stop>>2);
+    HOI_WR32(handle->p_fec_tx, 0x18, dsc.read>>2);
+    HOI_WR32(handle->p_fec_tx, 0x1C, dsc.write>>2);
+
+    // set burst size
+    HOI_WR32(handle->p_fec_tx, 0x20, 0x08);
 
     vsi_drv_flush_buf(&handle->vsi);
     vso_drv_flush_buf(&handle->vso);
@@ -283,6 +303,36 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 
     // activate ethernet output
     eto_drv_start_vid(&handle->eto);
+
+
+// fec test
+//dst mac
+HOI_WR8(handle->p_fec_tx, 36, msg->eth.dst_mac[1]);
+HOI_WR8(handle->p_fec_tx, 37, msg->eth.dst_mac[0]);
+HOI_WR8(handle->p_fec_tx, 40, msg->eth.dst_mac[5]);
+HOI_WR8(handle->p_fec_tx, 41, msg->eth.dst_mac[4]);
+HOI_WR8(handle->p_fec_tx, 42, msg->eth.dst_mac[3]);
+HOI_WR8(handle->p_fec_tx, 43, msg->eth.dst_mac[2]);
+//src mac
+HOI_WR8(handle->p_fec_tx, 44, msg->eth.src_mac[3]);
+HOI_WR8(handle->p_fec_tx, 45, msg->eth.src_mac[2]);
+HOI_WR8(handle->p_fec_tx, 46, msg->eth.src_mac[1]);
+HOI_WR8(handle->p_fec_tx, 47, msg->eth.src_mac[0]);
+HOI_WR8(handle->p_fec_tx, 48, msg->eth.src_mac[5]);
+HOI_WR8(handle->p_fec_tx, 49, msg->eth.src_mac[4]);
+//tll/tos
+HOI_WR32(handle->p_fec_tx, 52, (msg->eth.ipv4_ttl<<8) | msg->eth.ipv4_tos);
+//src ip
+HOI_WR32(handle->p_fec_tx, 56, swap32(msg->eth.ipv4_src_ip));
+// dst ip
+HOI_WR32(handle->p_fec_tx, 60, swap32(msg->eth.ipv4_dst_ip));
+//src port
+HOI_WR32(handle->p_fec_tx, 64, swap16(msg->eth.udp_src_port));
+//dst port
+HOI_WR32(handle->p_fec_tx, 68, swap16(msg->eth.udp_dst_port));
+
+
+
 
     // setup vsi
     vsi_drv_go(&handle->vsi, &msg->eth);
