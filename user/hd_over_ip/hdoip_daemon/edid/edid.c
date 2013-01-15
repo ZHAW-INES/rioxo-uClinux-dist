@@ -306,16 +306,10 @@ int check_input_after_edid_changed()
   int timeout;
   uint32_t active_res;
 
-  // wait up to 1.2s if video-in in active (and hpd is low after edid is written)
-  for (timeout = 0; timeout < 120; timeout++) {
+  // wait up to 1.5s if video-in is active (and hpd is low after edid is written)
+  for (timeout = 0; timeout < 150; timeout++) {
     if (hdoipd.drivers & DRV_ADV7441) {
         hoi_drv_get_active_resolution(&active_res);
-
-        // no input
-        if (active_res == 1) {
-          report(INFO "video setup: no input found");
-          return -1;
-        }
 
         // input is active
         if (active_res == 2) {
