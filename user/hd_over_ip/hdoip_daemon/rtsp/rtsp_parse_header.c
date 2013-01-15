@@ -561,8 +561,8 @@ int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], con
     }
     
 #ifdef REPORT_RTSP
-    report("rtsp request of method %s to URI %s (media \"%s\"; control \"%s\")",
-          common->rq.method, common->rq.uri, common->uri.name, common->uri.control != NULL ? common->uri.control : "0");
+    report("rtsp request of method %s to URI %s (media \"%s\"; control %d)",
+           common->rq.method, common->rq.uri, common->uri.name, common->uri.control);
 #endif
 
     return RTSP_SUCCESS;

@@ -32,7 +32,7 @@ typedef struct {
     char*   server;
     char*   port;
     char*   name;
-    char*   control;
+    int32_t control;
 } t_str_uri;
 
 

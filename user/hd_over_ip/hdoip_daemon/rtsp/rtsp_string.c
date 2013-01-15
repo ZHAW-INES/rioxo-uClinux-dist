@@ -81,12 +81,14 @@ bool str_starts_with(char** line, const char* str)
 
 bool str_split_uri(t_str_uri* uri, char* s)
 {
+    char *control = NULL, *end = NULL;
+
     if (strcmp(s, "*") == 0) {
         uri->scheme = "*";
         uri->server = NULL;
         uri->port = NULL;
         uri->name = "";
-        uri->control = NULL;
+        uri->control = 0;
         return true;
     }
     
@@ -95,7 +97,23 @@ bool str_split_uri(t_str_uri* uri, char* s)
     uri->server = str_next_token(&s, "/%0");
     uri->port = str_split_token(uri->server, ":");
     uri->name = str_next_token(&s, "/%0");
-    uri->control = str_next_token(&s, "%0");
+    control = str_next_token(&s, "/%0");
+    uri->control = 0;
+
+    if (control != NULL && strlen(control) > 0) {
+        // the media must be non-empty if there's a control
+        if (strlen(uri->name) <= 0)
+            return false;
+
+        // control must be a valid integer
+        uri->control = (int32_t)strtol(control, &end, 0);
+        if (end != NULL && *end != '\0')
+            return false;
+
+        // currently 0 is the only acceptable control value
+        if (uri->control != 0)
+            return false;
+    }
 
     return (uri->scheme && uri->server && uri->name);
 }
