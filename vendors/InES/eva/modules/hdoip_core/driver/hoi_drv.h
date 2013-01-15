@@ -66,6 +66,7 @@ typedef struct {
     void                *p_spi_rx;
     void                *p_si598;
     void                *p_fec_tx;
+    void                *p_fec_ip_tx;
 
     t_i2c               i2c_tx;
     t_i2c               i2c_rx;

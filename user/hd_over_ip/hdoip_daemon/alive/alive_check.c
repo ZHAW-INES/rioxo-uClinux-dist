@@ -348,9 +348,9 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
                                         alive_check_response_vrb_alive(client_ip);
                                         break;
                                     }
-                                    if (active_res == 1) {                      // no input
-                                        break;
-                                    }
+                              //      if (active_res == 1) {                      // no input
+                              //          break;
+                              //      }
                                     usleep(10000);   // 10ms
                                 } else {
                                     if (hdoipd_rsc(RSC_VIDEO_IN)) {

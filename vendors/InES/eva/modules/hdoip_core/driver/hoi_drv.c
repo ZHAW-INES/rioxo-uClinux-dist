@@ -43,7 +43,7 @@ void hoi_drv_init(t_hoi* handle)
     handle->p_spi_tx        = ioremap(BASE_SPI_TX,      0xffffffff);
     handle->p_spi_rx        = ioremap(BASE_SPI_RX,      0xffffffff);
     handle->p_fec_tx        = ioremap(BASE_FEC_TX,      0xffffffff);
-
+    handle->p_fec_ip_tx     = ioremap(BASE_FEC_IP_TX,   0xffffffff);
 
     // init
     handle->event = queue_init(100);

@@ -12,6 +12,7 @@
 #include "adv7441a_drv.h"
 #include "gs2971_drv.h"
 #include "sdi_edid.h"
+#include "fec_tx_drv.h"
 
 // demo workaround:
 #include <linux/types.h>
@@ -301,6 +302,9 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 {
     vsi_drv_flush_buf(&handle->vsi);
 
+    // activate fec tx block;
+    init_fec_ip_tx(handle->p_fec_ip_tx);
+
     // activate ethernet output
     eto_drv_start_vid(&handle->eto);
 
@@ -496,6 +500,37 @@ int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
 
     // activate ethernet output
     eto_drv_start_aud(&handle->eto);
+
+
+
+
+// fec test
+//dst mac
+HOI_WR8(handle->p_fec_tx, 72, msg->eth.dst_mac[1]);
+HOI_WR8(handle->p_fec_tx, 73, msg->eth.dst_mac[0]);
+HOI_WR8(handle->p_fec_tx, 76, msg->eth.dst_mac[5]);
+HOI_WR8(handle->p_fec_tx, 77, msg->eth.dst_mac[4]);
+HOI_WR8(handle->p_fec_tx, 78, msg->eth.dst_mac[3]);
+HOI_WR8(handle->p_fec_tx, 79, msg->eth.dst_mac[2]);
+//src mac
+HOI_WR8(handle->p_fec_tx, 80, msg->eth.src_mac[3]);
+HOI_WR8(handle->p_fec_tx, 81, msg->eth.src_mac[2]);
+HOI_WR8(handle->p_fec_tx, 82, msg->eth.src_mac[1]);
+HOI_WR8(handle->p_fec_tx, 83, msg->eth.src_mac[0]);
+HOI_WR8(handle->p_fec_tx, 84, msg->eth.src_mac[5]);
+HOI_WR8(handle->p_fec_tx, 85, msg->eth.src_mac[4]);
+//tll/tos
+HOI_WR32(handle->p_fec_tx, 88, (msg->eth.ipv4_ttl<<8) | msg->eth.ipv4_tos);
+//src ip
+HOI_WR32(handle->p_fec_tx, 92, swap32(msg->eth.ipv4_src_ip));
+// dst ip
+HOI_WR32(handle->p_fec_tx, 96, swap32(msg->eth.ipv4_dst_ip));
+//src port
+HOI_WR32(handle->p_fec_tx, 100, swap16(msg->eth.udp_src_port));
+//dst port
+HOI_WR32(handle->p_fec_tx, 104, swap16(msg->eth.udp_dst_port));
+
+
 
     // setup asi
     aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;

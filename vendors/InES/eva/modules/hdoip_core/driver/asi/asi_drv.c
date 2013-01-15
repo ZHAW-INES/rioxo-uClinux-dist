@@ -175,7 +175,7 @@ int asi_drv_get_eth_params(t_asi* handle, struct hdoip_eth_params* eth_params)
 int asi_drv_set_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params) 
 {
     uint32_t steps_per_sec, tmp;
-    uint16_t payload_words, ip_length, udp_length, frame_size, time_per_word;
+    uint16_t payload_words, frame_size, time_per_word;
     uint8_t sample_len, ch;
 
 
@@ -199,9 +199,7 @@ int asi_drv_set_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params)
     payload_words = (payload_words / sample_len ) * sample_len; /* round */
 
     /* calculate header length fields */
-    frame_size = (payload_words + ASI_DRV_ETH_HEADER_LEN + ASI_DRV_IPV4_HEADER_LEN + ASI_DRV_UDP_HEADER_LEN + ASI_DRV_RTP_HEADER_LEN + ASI_DRV_AES_HEADER_LEN - 1) * 4;
-    ip_length  = (payload_words + ASI_DRV_IPV4_HEADER_LEN + ASI_DRV_UDP_HEADER_LEN + ASI_DRV_RTP_HEADER_LEN + ASI_DRV_AES_HEADER_LEN) * 4;
-    udp_length = (payload_words + ASI_DRV_UDP_HEADER_LEN + ASI_DRV_RTP_HEADER_LEN + ASI_DRV_AES_HEADER_LEN); 
+    frame_size = (payload_words + ASI_DRV_RTP_HEADER_LEN + ASI_DRV_AES_HEADER_LEN) * 4;
 
     /* calculate time per word */
     tmp = aud_params->fs * ch;
@@ -219,8 +217,6 @@ int asi_drv_set_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params)
 
     /* write parameter to registers */
     asi_set_frame_size(handle->p_asi, frame_size);
-    asi_set_ip_length(handle->p_asi, ip_length);
-    asi_set_udp_word_length(handle->p_asi, udp_length);
     asi_set_payload_words(handle->p_asi, payload_words);
     asi_set_time_per_word(handle->p_asi, time_per_word);
     asi_set_aud_params(handle->p_asi, aud_params);

@@ -48,7 +48,7 @@
 #define BASE_SPI_TX         (na_spi_tx)
 #define BASE_SPI_RX         (na_spi_rx)
 #define BASE_FEC_TX         (na_acb_fec)
-
+#define BASE_FEC_IP_TX      (na_fec_tx)
 // Register area sizes
 #define TSE_MAC_SIZE        0x400
 
