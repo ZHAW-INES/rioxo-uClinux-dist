@@ -493,14 +493,21 @@ int rtsp_parse_response(t_rtsp_connection* con, const t_map_fnc attr[], void* ba
 int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], const t_map_set** method, void* req, t_rtsp_header_common* common)
 {
     char* line;
-    int n;
+    int n = RTSP_SUCCESS;
     size_t read;
 
     rtsp_common_default(common);
     
-    // receive request line
-    if ((n = rtsp_receive(con, &line, 0, 0, &read)) != RTSP_SUCCESS) {
-        return n;
+    // receive request line and skip any empty (\r\n) lines
+    while (n == RTSP_SUCCESS) {
+      if ((n = rtsp_receive(con, &line, 0, 0, &read)) != RTSP_SUCCESS) {
+          return n;
+      }
+
+      // stop receiving lines as soon as we got a non-empty line
+      // N.B. \r\n is considered an empty line
+      if (line != NULL && *line != '\0')
+        break;
     }
 
     strcpy(common->line, line);
