@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 
 #include "box_sys.h"
+#include "box_sys_vtb.h"
 #include "edid_merge.h"
 #include "hdcp.h"
 #include "hdoipd.h"
@@ -257,7 +258,7 @@ int vtb_video_teardown(t_rtsp_media* media, t_rtsp_req_teardown UNUSED *m, t_rts
     }
 
     if (rsp) {
-        rtsp_response_teardown(rsp, media->sessionid);
+        rtsp_response_teardown(rsp);
     }
 
     server->timeout.timeout = 0;
@@ -343,6 +344,7 @@ t_rtsp_media vtb_video = {
     .owner = 0,
     .cookie = 0,
     .options = (frtspm*)box_sys_options,
+    .get_parameter = (frtspm*)box_sys_vtb_get_parameter,
     .hdcp = (frtspm*)vtb_video_hdcp,
     .cookie_size = sizeof(t_multicast_cookie),
     .setup = (frtspm*)vtb_video_setup,

@@ -457,29 +457,21 @@ void task_get_system_update(char** p)
 	*p = buf;
 }
 
-void task_get_rtsp_medias(char *key UNUSED, char* value, void* fd)
+void task_get_rtsp_sessions(char *key, char* value, void* fd)
 {
+    t_rtsp_media* media = NULL;
     int *cnt = (int *) fd;
 
-    if (value == NULL || fd == NULL)
-      return;
+    if (key == NULL || value == NULL || fd == NULL)
+        return;
 
-    t_rtsp_media* media = (t_rtsp_media*)value;
-    if (media->name == NULL || strlen(media->name) == 0)
+    t_rtsp_server* server = (t_rtsp_server*)value;
+    if ((media = rtsp_server_get_media_by_session(server, key)) == NULL ||
+        media->name == NULL || strlen(media->name) == 0)
       return;
 
     buf_ptr += sprintf(buf_ptr, "stream %02d {out}: %s (%s)\n", *cnt, task_conv_rtsp_state(media->result), media->owner->name);
     *cnt += 1;
-}
-
-void task_get_rtsp_sessions(char *key UNUSED, char* value, void* fd)
-{
-    if (value == NULL || fd == NULL)
-        return;
-
-    t_rtsp_server* server = (t_rtsp_server*) value;
-    if (server->media != NULL)
-      bstmap_traverse(server->media, task_get_rtsp_medias, fd);
 }
 
 void task_get_rtsp_state(char** s)

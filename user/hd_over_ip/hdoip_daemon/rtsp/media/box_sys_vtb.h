@@ -12,4 +12,6 @@
 
 extern t_rtsp_media box_sys_vtb;
 
+int box_sys_vtb_get_parameter(t_rtsp_media *media, void *data, t_rtsp_connection *rsp);
+
 #endif /* BOX_SYS_VTB_H_ */

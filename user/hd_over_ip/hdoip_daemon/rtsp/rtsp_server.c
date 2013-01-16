@@ -28,18 +28,18 @@ typedef struct {
   void *data;
 } t_server_data;
 
-void cleanup_media(t_rtsp_server* handle, bool remove_session)
+void cleanup_media(t_rtsp_server* handle)
 {
   // if there are no more media-controls for this server we can clean it up
-  if (handle->media == NULL || handle->media_session_count == 0) {
+  if (handle->media_session_count == 0) {
     if (handle->media != NULL) {
       bstmap_freep(&handle->media);
       handle->media = NULL;
     }
 
-    if (remove_session && handle->owner != NULL && handle->sessionid != NULL && strlen(handle->sessionid) > 0) {
-      rtsp_listener_remove_session(handle->owner, handle->sessionid);
-      memset(handle->sessionid, 0, sizeof(handle->sessionid));
+    if (handle->sessions != NULL) {
+      bstmap_freep(&handle->sessions);
+      handle->sessions = NULL;
     }
   }
 }
@@ -56,8 +56,10 @@ int rtsp_server_add_media(t_rtsp_server* handle, t_rtsp_media* media)
     return RTSP_NULL_POINTER;
 
   report(" ? RTSP Server [%d] adding media (%s)", handle->nr, media->name);
-  if (media->sessionid != NULL)
+  if (strlen(media->sessionid) > 0) {
     handle->media_session_count++;
+    bstmap_setp(&handle->sessions, media->sessionid, media);
+  }
   bstmap_setp(&handle->media, media->name, media);
   return RTSP_SUCCESS;
 }
@@ -66,12 +68,24 @@ int rtsp_server_add_media(t_rtsp_server* handle, t_rtsp_media* media)
  * Retrieves the media-control matching the given name from the
  * server's list of active media-controls if available
  */
-t_rtsp_media* rtsp_server_get_media(t_rtsp_server* handle, char* name)
+t_rtsp_media* rtsp_server_get_media_by_name(t_rtsp_server* handle, char* name)
 {
   if (handle == NULL || name == NULL)
     return NULL;
 
   return (t_rtsp_media*)bstmap_get(handle->media, name);
+}
+
+/**
+ * Retrieves the media-control matching the given sessionid from the
+ * server's list of active media-controls if available
+ */
+t_rtsp_media* rtsp_server_get_media_by_session(t_rtsp_server* handle, char* sessionid)
+{
+  if (handle == NULL || sessionid == NULL)
+    return NULL;
+
+  return (t_rtsp_media*)bstmap_get(handle->sessions, sessionid);
 }
 
 /**
@@ -85,10 +99,12 @@ void rtsp_server_remove_media(t_rtsp_server* handle, t_rtsp_media* media, bool r
 
   report(INFO "RTSP Server [%d] removing media (%s)", handle->nr, media->name);
   if (remove_from_list) {
-    if (media->sessionid != NULL)
+    if (strlen(media->sessionid) > 0) {
       handle->media_session_count--;
+      bstmap_removep(&handle->sessions, media->sessionid);
+      rtsp_listener_remove_session(media->top, media->sessionid);
+    }
     bstmap_removep(&handle->media, media->name);
-    cleanup_media(handle, true);
   }
 
   media->creator = NULL;
@@ -135,7 +151,7 @@ int traverse(t_rtsp_server* server, char* mediaName, void* data, traverse_handle
   }
   else
   {
-    media = rtsp_server_get_media(server, mediaName);
+    media = rtsp_server_get_media_by_name(server, mediaName);
     if (media == NULL)
       return RTSP_NULL_POINTER;
 
@@ -169,7 +185,7 @@ void traverse_teardown(t_rtsp_server* server, t_rtsp_media* media, void* data)
   sprintf(uri, "%s://%s", RTSP_SCHEME, inet_ntoa(a1));
 
   // a server connection is active for this media -> use it to send a teardown message
-  rtsp_request_teardown(&server->con, uri, media->sessionid, media->name);
+  rtsp_request_teardown(&server->con, uri, media->sessionid);
 
   traverse_remove(server, media, NULL);
 }
@@ -216,29 +232,13 @@ void traverse_update(t_rtsp_server* server, t_rtsp_media* media, void* data)
   rtsp_request_update(&server->con, uri, media->sessionid, media->name, event, &fmt);
 }
 
-void traverse_pause(t_rtsp_server* server, t_rtsp_media* media, void* data)
-{
-  char *uri = RTSP_SCHEME "://255.255.255.255:65536";
-  struct in_addr a1;
-
-  if (server == NULL || media == NULL)
-    return;
-
-  a1.s_addr = server->con.address;
-  sprintf(uri, "%s://%s", RTSP_SCHEME, inet_ntoa(a1));
-
-  rtsp_request_pause(&server->con, uri, media->sessionid, media->name);
-
-  rmsr_pause(media, 0);
-}
-
-void remove_media_all(t_rtsp_server* server, bool remove_session)
+void remove_media_all(t_rtsp_server* server)
 {
   if (server == NULL)
     return;
 
   server->media_session_count = 0;
-  cleanup_media(server, remove_session);
+  cleanup_media(server);
 }
 
 /**
@@ -277,7 +277,7 @@ t_rtsp_server* rtsp_server_create(int fd, uint32_t addr)
  *  - { Optional Body }
  *
  * sa rtsp_parse_request
- * sa rtsp_server_get_media
+ * sa rtsp_server_get_media_by_name
  */
 int rtsp_server_thread(t_rtsp_server* handle)
 {
@@ -333,7 +333,23 @@ int rtsp_server_thread(t_rtsp_server* handle)
         }
 
         // find media
-        media = rtsp_server_get_media(handle, common.uri.name);
+        if (strlen(common.session) > 0)
+        {
+            // if there is a sessionid, use it to find the proper media
+            media = rtsp_server_get_media_by_session(handle, common.session);
+            // if there's no media for this sessionid, return an error
+            if (media == NULL) {
+                report(" ? RTSP Server [%d] no matching session (%s) found", handle->nr, common.session);
+                rtsp_ommit_body(&handle->con, 0, common.content_length);
+                rtsp_response_error(&handle->con, RTSP_STATUS_SESSION_NOT_FOUND, NULL);
+                continue;
+            }
+        }
+        else {
+            // get the media by name
+            media = rtsp_server_get_media_by_name(handle, common.uri.name);
+        }
+
         media_new = media == NULL;
         if (media_new) {
             // fall back to the general list of media-controls available
@@ -388,7 +404,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
 
     lock("rtsp_server_thread");
     traverse(handle, NULL, NULL, traverse_remove);
-    remove_media_all(handle, true);
+    remove_media_all(handle);
     unlock("rtsp_server_thread");
 
     handle->kill = true;
@@ -410,7 +426,7 @@ void rtsp_server_close(t_rtsp_server* handle)
 
   handle->open = false;
   traverse(handle, NULL, NULL, traverse_remove);
-  remove_media_all(handle, true);
+  remove_media_all(handle);
 
   if (handle->con.fdr != -1) {
     // a server connection is active for this media -> shut it down
@@ -442,8 +458,7 @@ void rtsp_server_teardown(t_rtsp_server* handle)
     return;
 
   traverse(handle, NULL, NULL, traverse_teardown);
-  remove_media_all(handle, false);
-  memset(handle->sessionid, 0, sizeof(handle->sessionid));
+  remove_media_all(handle);
 }
 
 void rtsp_server_event(t_rtsp_server* handle, uint32_t event)

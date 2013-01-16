@@ -18,6 +18,7 @@
 #include "usb_media.h"
 #include "vrb_video.h"
 #include "box_sys.h"
+#include "box_sys_vtb.h"
 
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout * 2)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
@@ -69,7 +70,7 @@ int usb_teardown(t_rtsp_media *media UNUSED, t_rtsp_req_teardown* m UNUSED, t_rt
     usb_detach_device(1);
     
     if (rsp) {
-        rtsp_response_usb_teardown(rsp, media->sessionid);
+        rtsp_response_usb_teardown(rsp);
     }
 
     media->result = RTSP_RESULT_TEARDOWN;
@@ -209,6 +210,7 @@ t_rtsp_media usb_media = {
     .owner = 0,
     .cookie = 0,
     .options = (frtspm*)box_sys_options,
+    .get_parameter = (frtspm*)box_sys_vtb_get_parameter,
     .setup = (frtspm*)usb_setup,
     .play = (frtspm*)usb_play,
     .teardown = (frtspm*)usb_teardown,

@@ -83,11 +83,7 @@ void remove_media(t_rtsp_client* handle, t_rtsp_media* media)
 
   report(INFO "RTSP Client [%d] removing media (%s)", handle->nr, media->name);
 
-  if (media->sessionid != NULL) {
-    free(media->sessionid);
-    media->sessionid = NULL;
-  }
-
+  memset(media->sessionid, 0, sizeof(media->sessionid));
   media->state = RTSP_STATE_INIT;
 }
 
@@ -190,7 +186,7 @@ void request_play(t_rtsp_client* client, t_rtsp_media* media, void* data)
   report(" > RTSP Client [%d] PLAY", client->nr);
 #endif
 
-  rtsp_request_play(&client->con, client->uri, media->sessionid, media->name, fmt);
+  rtsp_request_play(&client->con, client->uri, media->sessionid, fmt);
 
   rtsp_default_response_play((void*)&buf);
 
@@ -211,7 +207,7 @@ void request_pause(t_rtsp_client* client, t_rtsp_media* media, void UNUSED *data
   if (client == NULL || media == NULL)
     return;
 
-  rtsp_request_pause(&client->con, client->uri, media->sessionid, media->name);
+  rtsp_request_pause(&client->con, client->uri, media->sessionid);
 }
 
 void request_event(t_rtsp_client* client, t_rtsp_media* media, void* data)
@@ -239,9 +235,9 @@ void request_teardown(t_rtsp_client* client, t_rtsp_media* media, void* data)
   report(" > RTSP Client [%d] TEARDOWN (%s)", client->nr, media->name);
 #endif
 
-  if (media->sessionid != NULL && strlen(media->sessionid) > 0) {
+  if (strlen(media->sessionid) > 0) {
     // request teardown
-    rtsp_request_teardown(&client->con, client->uri, media->sessionid, media->name);
+    rtsp_request_teardown(&client->con, client->uri, media->sessionid);
 
     rtsp_default_response_teardown((void*)&buf);
 
@@ -255,7 +251,7 @@ void request_teardown(t_rtsp_client* client, t_rtsp_media* media, void* data)
 
 void get_sessionid(t_rtsp_client* client, t_rtsp_media* media, void* data)
 {
-  if (client == NULL || media == NULL || data == NULL || media->sessionid == NULL)
+  if (client == NULL || media == NULL || data == NULL)
     return;
 
   if (strlen(media->sessionid) > 0)
@@ -666,13 +662,8 @@ int rtsp_client_setup(t_rtsp_client* client, t_rtsp_media* media, t_rtsp_transpo
     n = rtsp_parse_response(&client->con, tab_response_setup, (void*)&buf, &common, CFG_RSP_TIMEOUT);
 
     if (n == RTSP_SUCCESS) {
-        size_t length = strlen(common.session);
-        media->sessionid = (char*)malloc(length + 1);
-        if (media->sessionid != NULL)
-        {
-          memset(media->sessionid, 0, length + 1);
-          strcpy(media->sessionid, common.session);
-        }
+        memset(media->sessionid, 0, sizeof(media->sessionid));
+        strcpy(media->sessionid, common.session);
 
         rmcr_setup(media, (void*)&buf);
     } else if (n == RTSP_RESPONSE_ERROR) {
@@ -719,7 +710,7 @@ int rtsp_client_hdcp(t_rtsp_client* client)
     report(INFO "Ask server to start session key exchange");
 
     /* send start hdcp */
-    rtsp_request_hdcp(&client->con, client->uri, media->sessionid, media->name, id[0], content);
+    rtsp_request_hdcp(&client->con, client->uri, media->sessionid, id[0], content);
     rtsp_default_response_hdcp((void*)&buf);
     // response
     n = rtsp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
@@ -735,7 +726,7 @@ int rtsp_client_hdcp(t_rtsp_client* client)
     else hdoipd.hdcp.certrx[0]='0';
 
     /* send certificate */
-    rtsp_request_hdcp(&client->con, client->uri, media->sessionid, media->name, id[3], hdoipd.hdcp.certrx);
+    rtsp_request_hdcp(&client->con, client->uri, media->sessionid, id[3], hdoipd.hdcp.certrx);
     rtsp_default_response_hdcp((void*)&buf);
     // response
     n = rtsp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
@@ -751,7 +742,7 @@ int rtsp_client_hdcp(t_rtsp_client* client)
 
     /* send rrx  */
     hdcp_generate_random_nr(media->hdcp_var.rrx);
-    rtsp_request_hdcp(&client->con, client->uri, media->sessionid, media->name, id[6], media->hdcp_var.rrx);
+    rtsp_request_hdcp(&client->con, client->uri, media->sessionid, id[6], media->hdcp_var.rrx);
     rtsp_default_response_hdcp((void*)&buf);
     /* response (only acknowledge, therefore ignore content) */
     n = rtsp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
@@ -762,7 +753,7 @@ int rtsp_client_hdcp(t_rtsp_client* client)
     report(INFO "rtx: %s", media->hdcp_var.rtx);
     hdcp_calculate_h(media->hdcp_var.rtx, &media->hdcp_var.repeater, H, media->hdcp_var.km, media->hdcp_var.kd);
     report(INFO "H: %s", H);
-    rtsp_request_hdcp(&client->con, client->uri, media->sessionid, media->name, id[7], H);
+    rtsp_request_hdcp(&client->con, client->uri, media->sessionid, id[7], H);
     rtsp_default_response_hdcp((void*)&buf);
     // response LC_init
     n = rtsp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
@@ -777,7 +768,7 @@ int rtsp_client_hdcp(t_rtsp_client* client)
     report(INFO "rrx: %s", media->hdcp_var.rrx);
     hdcp_calculate_l(media->hdcp_var.rn, media->hdcp_var.rrx, media->hdcp_var.kd, L);
     report(INFO "L: %s", L);
-    rtsp_request_hdcp(&client->con, client->uri, media->sessionid, media->name, id[10], L);
+    rtsp_request_hdcp(&client->con, client->uri, media->sessionid, id[10], L);
     // response contains encrypted session key
     n = rtsp_parse_response(&client->con, tab_response_hdcp, (void*)&buf, &common, CFG_RSP_TIMEOUT);
 
@@ -806,7 +797,7 @@ int rtsp_client_get_parameter(t_rtsp_client* client, char* mediaName)
 {
   u_rtsp_header buf;
   int ret = RTSP_SUCCESS;
-  char sessionid[50];
+  char sessionid[20];
 
   if (client == NULL)
     return RTSP_NULL_POINTER;

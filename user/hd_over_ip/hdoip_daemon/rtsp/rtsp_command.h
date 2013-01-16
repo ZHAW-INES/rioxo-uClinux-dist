@@ -31,13 +31,13 @@ void rtsp_header_usb(t_rtsp_connection* msg, char* mouse, char* keyboard, char* 
 void rtsp_eoh(t_rtsp_connection* msg);
 
 void rtsp_request_setup(t_rtsp_connection* msg, char* uri, char* media, t_rtsp_transport* transport, t_rtsp_edid *edid, t_rtsp_hdcp* hdcp);
-void rtsp_request_play(t_rtsp_connection* msg, char* uri, char* session, char* media, t_rtsp_rtp_format* fmt);
-void rtsp_request_teardown(t_rtsp_connection* msg, char* uri, char* session, char* media);
+void rtsp_request_play(t_rtsp_connection* msg, char* uri, char* session, t_rtsp_rtp_format* fmt);
+void rtsp_request_teardown(t_rtsp_connection* msg, char* uri, char* session);
 void rtsp_request_update(t_rtsp_connection* msg, char* uri, char* session, char* media, uint32_t event, t_rtsp_rtp_format* fmt);
-void rtsp_request_pause(t_rtsp_connection* msg, char* uri, char* session, char* media);
+void rtsp_request_pause(t_rtsp_connection* msg, char* uri, char* session);
 void rtsp_request_get_parameter(t_rtsp_connection* msg, char* uri, char* session);
-void rtsp_request_set_parameter(t_rtsp_connection* msg, char* uri, char* session, char* media, char* name, char* value);
-void rtsp_request_hdcp(t_rtsp_connection* msg, char* uri, char* session, char* media, char* id, char* content);
+void rtsp_request_set_parameter(t_rtsp_connection* msg, char* uri, char* session, char* name, char* value);
+void rtsp_request_hdcp(t_rtsp_connection* msg, char* uri, char* session, char* id, char* content);
 void rtsp_request_usb_setup(t_rtsp_connection* msg, char* uri, t_rtsp_transport* transport);
 void rtsp_request_usb_play(t_rtsp_connection* msg, char* uri, char* session, char* mouse_msg, char* keyboard_msg, char* storage_msg);
 void rtsp_request_usb_teardown(t_rtsp_connection* msg, char* uri, char* session);
@@ -45,10 +45,10 @@ void rtsp_request_usb_teardown(t_rtsp_connection* msg, char* uri, char* session)
 void rtsp_response_pause(t_rtsp_connection* msg, char* session);
 void rtsp_response_setup(t_rtsp_connection* msg, t_rtsp_transport* transport, char* session, char* media, t_rtsp_hdcp* hdcp);
 void rtsp_response_play(t_rtsp_connection* msg, char* session, t_rtsp_rtp_format* fmt, t_video_timing* timing);
-void rtsp_response_teardown(t_rtsp_connection* msg, char* session);
+void rtsp_response_teardown(t_rtsp_connection* msg);
 void rtsp_response_hdcp(t_rtsp_connection* msg, char* session, char* id, char* content);
 void rtsp_response_usb_setup(t_rtsp_connection* msg, t_rtsp_transport* transport, char* session);
 void rtsp_response_usb_play(t_rtsp_connection* msg, char* session);
-void rtsp_response_usb_teardown(t_rtsp_connection* msg, char* session);
+void rtsp_response_usb_teardown(t_rtsp_connection* msg);
 
 #endif /* RTSP_COMMAND_H_ */

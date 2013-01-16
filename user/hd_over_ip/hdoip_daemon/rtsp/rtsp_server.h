@@ -22,8 +22,8 @@ typedef struct {
     t_rtsp_connection   con;            // TCP connection of this thread
     bool                kill;           // flag to kill the actual server thread by rtsp_listener
     t_bstmap*           media;          // associated media-controls
+    t_bstmap*           sessions;       // sessions and their media-control
     size_t              media_session_count; // number of media-controls with an active session
-    char                sessionid[20];  // Session string (ID)
     bool                open;           // whether the server is open or not
     t_rtsp_timeout      timeout;
 } t_rtsp_server;
@@ -31,7 +31,8 @@ typedef struct {
 extern const t_map_set rtsp_srv_methods[];
 
 int rtsp_server_add_media(t_rtsp_server* handle, t_rtsp_media* media);
-t_rtsp_media* rtsp_server_get_media(t_rtsp_server* handle, char* name);
+t_rtsp_media* rtsp_server_get_media_by_name(t_rtsp_server* handle, char* name);
+t_rtsp_media* rtsp_server_get_media_by_session(t_rtsp_server* handle, char* sessionid);
 void rtsp_server_remove_media(t_rtsp_server* handle, t_rtsp_media* media, bool remove_from_list);
 
 t_rtsp_server* rtsp_server_create(int fd, uint32_t addr);

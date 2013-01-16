@@ -75,7 +75,7 @@ typedef struct rtsp_media {
     struct rtsp_media* owner; // Pointer to origin media (video, audio or box_sys)
     t_node* children;           // UNUSED
     char*   name;               // "audio", "video" or "" (box_sys)
-    char*   sessionid;          // Session string (ID)
+    char    sessionid[20];      // Session string (ID)
     int     state;              // Media state (INIT, READY, PLAYING)
     int		hdcp_state;			// HDCP state
     t_rtsp_media_hdcp hdcp_var; // HDCP variables (state, keys, etc.)

@@ -50,9 +50,6 @@ int box_sys_options(t_rtsp_media *media UNUSED, void *data, t_rtsp_connection *r
 
 int box_sys_get_parameter(t_rtsp_media *media, t_rtsp_req_get_parameter *data, t_rtsp_connection *rsp)
 {
-    // if the request contains a sessionid, copy it to the response
-    if (data != NULL && rsp != NULL && strlen(data->session) > 0)
-        strcpy(data->session, rsp->common.session);
     rtsp_handle_get_parameter(media, rsp);
     rtsp_send(rsp);
 

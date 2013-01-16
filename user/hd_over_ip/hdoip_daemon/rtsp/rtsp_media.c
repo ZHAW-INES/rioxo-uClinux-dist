@@ -26,7 +26,7 @@ int rtsp_media_check_request(const t_map_set *method, t_rtsp_media* media, void 
       return RTSP_SERVER_ERROR;
 
     // check if the request must be part of a session
-    if (method->in_session && !media->owner) {
+    if (method->in_session && media->owner == NULL) {
         report(" ? method (%s) is only valid in a session", method->name);
         rtsp_response_error(rsp, RTSP_STATUS_SESSION_NOT_FOUND, NULL);
         return RTSP_HANDLED;
@@ -78,9 +78,7 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
     // creator is the rtsp_server who started this connection
     // we get the rtsp_listener from it
     t_rtsp_server *server = (t_rtsp_server*)media->creator;
-    bool new_session = false;
     int ret = RTSP_SERVER_ERROR;
-
 
     media->top = server->owner;
     // start new session?
@@ -94,13 +92,8 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
         media->owner = _media;
         media->state = RTSP_STATE_INIT;
 
-        // only create a new sessionid if none exists yet for this connection
-        if (strlen(server->sessionid) <= 0) {
-            rtsp_listener_create_sessionid(media->top, server->sessionid);
-            new_session = true;
-        }
-        media->sessionid = server->sessionid;
-
+        // always create a new sessionid
+        rtsp_listener_create_sessionid(media->top, media->sessionid);
         rtsp_server_add_media(server, media);
 
         if (media->cookie_size) {
@@ -114,6 +107,7 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
         }
     }
 
+    report(INFO "rmsq_setup(): calling media's SETUP implementation");
     if (media->setup) ret = media->setup(media, msg, rsp);
 
     if (ret == RTSP_SUCCESS) {
@@ -131,9 +125,8 @@ int rmsq_setup(t_rtsp_media* _media, void* msg, t_rtsp_connection* rsp)
 
     if (media != _media) {
         if (ret == RTSP_SUCCESS) {
-            report(" ? RTSP Server [%d] added media (%s) for session (%s)", server->nr, media->name, server->sessionid);
-            if (new_session)
-                rtsp_listener_add_session(media->top, server->sessionid, server);
+            report(" ? RTSP Server [%d] added media (%s) for session (%s)", server->nr, media->name, media->sessionid);
+            rtsp_listener_add_session(media->top, media->sessionid, server);
         } else {
             report(" ? RTSP Server [%d] failed to create media (%s)", server->nr, _media->name);
             if (media->cookie_size) free(media->cookie);
