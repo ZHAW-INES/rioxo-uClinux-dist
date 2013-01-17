@@ -503,7 +503,8 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
   else
     memcpy(edid_table, edid->edid, edid_length);
 
-  if (multicast_get_enabled()) { // multicast
+  // multicast, only run this for non default EDID
+  if (multicast_get_enabled() && !reg_test("edid-mode", "default")) {
     // we only need to do the edid merging if ...
     // we don't use the default edid and
     // the client has provided an edid and
@@ -529,12 +530,12 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
       // write edid only when it has changed
       // no previous E-EDID exists
       if (ret == -2)
-        edid_write_function((t_edid *)edid_table, "unicast first edid");
+        edid_write_function((t_edid *)edid_table, multicast_get_enabled() ? "multicast first edid" : "unicast first edid");
       // a previous E-EDID exists
       else {
         // check if edid has changed
         if (multicast_edid_compare(&edid_old, (t_edid *)edid_table))
-          edid_write_function((t_edid *)edid_table, "unicast edid changed");
+          edid_write_function((t_edid *)edid_table, multicast_get_enabled() ? "unicast edid changed" : "unicast edid changed");
       }
     }
     else
