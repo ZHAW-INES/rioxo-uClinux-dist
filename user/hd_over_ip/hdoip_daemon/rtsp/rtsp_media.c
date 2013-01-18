@@ -226,19 +226,6 @@ int rmsq_pause(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
     return ret;
 }
 
-// rtsp media server request
-int rmsq_update(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
-{
-    int ret = RTSP_SUCCESS;
-    if (media->update) ret = media->update(media, msg, rsp);
-    switch (ret) {
-    	case RTSP_PAUSE: media->state = RTSP_STATE_READY; ret = RTSP_SUCCESS; break;
-    	case RTSP_CLOSE: media->state = RTSP_STATE_INIT; ret = RTSP_SUCCESS; break;
-    }
-    return ret;
-}
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // received a response as a server (can not answer -> rsp = 0)
 

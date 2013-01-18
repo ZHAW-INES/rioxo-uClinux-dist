@@ -133,7 +133,6 @@ const t_map_set rtsp_srv_methods[] = {
     { "PLAY",           tab_request_play,           rmsq_play,          true,   RTSP_STATE_READY | RTSP_STATE_PLAYING,  offsetof(t_rtsp_media, play)            },
     { "PAUSE",          tab_request_pause,          rmsq_pause,         true,   RTSP_STATE_PLAYING,                     offsetof(t_rtsp_media, pause)           },
     { "TEARDOWN",       tab_request_teardown,       rmsq_teardown,      true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, teardown)        },
-    { "UPDATE",         tab_request_update,         rmsq_update,        true,   RTSP_STATE_ALL,                         offsetof(t_rtsp_media, update)          },
     MAP_SET_NULL
 };
 
