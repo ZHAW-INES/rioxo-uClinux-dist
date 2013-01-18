@@ -123,7 +123,6 @@ int rmsq_teardown(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_pause(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 int rmsq_hdcp(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
 
-int rmsr_teardown(t_rtsp_media* media, void* msg);
 int rmsr_pause(t_rtsp_media* media, void* msg);
 
 // rtsp media client

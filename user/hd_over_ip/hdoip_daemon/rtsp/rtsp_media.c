@@ -229,30 +229,6 @@ int rmsq_pause(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp)
 ///////////////////////////////////////////////////////////////////////////////
 // received a response as a server (can not answer -> rsp = 0)
 
-/** Teardown server
- *
- * Note: the listener(owner) is locked when this function is called
- * Sessions are removed by the caller
- *
- */
-int rmsr_teardown(t_rtsp_media* media, void* msg)
-{
-    int ret = RTSP_SUCCESS;
-
-    t_rtsp_server *server = (t_rtsp_server*)media->creator;
-    // needs to be a session
-    if (!media->owner) return RTSP_CLIENT_ERROR;
-
-    if ((media->teardown) && !rtsp_media_sinit(media)) ret = media->teardown(media, msg, 0);
-    media->state = RTSP_STATE_INIT;
-    if (media->cookie_size) free(media->cookie);
-
-    if (server != NULL)
-        rtsp_server_remove_media(server, media->name, false);
-
-    return ret;
-}
-
 int rmsr_pause(t_rtsp_media* media, void* msg)
 {
     int ret = RTSP_SUCCESS;
