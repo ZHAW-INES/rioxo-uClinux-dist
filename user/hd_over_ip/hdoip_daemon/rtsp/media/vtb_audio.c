@@ -87,7 +87,15 @@ int vtb_audio_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
     }
 
     cookie->remote.address = rsp->address;
+    // parse "client_port" or "port" in the "Transport" header
+    // if neither is present, fall back to the local port
     cookie->remote.aud_port = PORT_RANGE_START(m->transport.client_port);
+    if (cookie->remote.aud_port <= 0) {
+        cookie->remote.aud_port = PORT_RANGE_START(m->transport.port);
+        if (cookie->remote.aud_port <= 0) {
+            cookie->remote.aud_port = PORT_RANGE_START(hdoipd.local.aud_port);
+        }
+    }
     m->transport.server_port = PORT_RANGE(hdoipd.local.aud_port, hdoipd.local.aud_port);
     m->transport.multicast = multicast_get_enabled();
 

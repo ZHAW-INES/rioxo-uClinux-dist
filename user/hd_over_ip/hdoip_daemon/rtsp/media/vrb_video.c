@@ -140,6 +140,12 @@ int vrb_video_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UN
         hoi_drv_set_stime(m->format.rtptime+PROCESSING_DELAY_CORRECTION-21000); //TODO: set slave timer correctly
     }
 
+    if (m->format.compress == FORMAT_UNKNOWN)
+        m->format.compress = FORMAT_JPEG2000;
+    // the driver expects 0 = plain, > 0 = compressed
+    if (m->format.compress > 0)
+      m->format.compress -= 1;
+
     if (m->format.compress) {
         compress |= DRV_CODEC_JP2;
     }

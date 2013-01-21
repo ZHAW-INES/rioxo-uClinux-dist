@@ -102,8 +102,9 @@ typedef enum {
 
 // transport format values
 typedef enum {
-    FORMAT_PLAIN = 0,
-    FORMAT_JPEG2000
+    FORMAT_UNKNOWN = 0,
+    FORMAT_PLAIN = 1,
+    FORMAT_JPEG2000 = 2,
 } e_rtsp_rtp_format;
 
 

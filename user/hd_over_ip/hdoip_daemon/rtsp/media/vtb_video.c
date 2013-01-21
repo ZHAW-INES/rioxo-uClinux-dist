@@ -103,7 +103,15 @@ int vtb_video_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection*
     }
 
     cookie->remote.address = rsp->address;
+    // parse "client_port" or "port" in the "Transport" header
+    // if neither is present, fall back to the local port
     cookie->remote.vid_port = PORT_RANGE_START(m->transport.client_port);
+    if (cookie->remote.vid_port <= 0) {
+        cookie->remote.vid_port = PORT_RANGE_START(m->transport.port);
+        if (cookie->remote.vid_port <= 0) {
+            cookie->remote.vid_port = PORT_RANGE_START(hdoipd.local.vid_port);
+        }
+    }
     m->transport.server_port = PORT_RANGE(hdoipd.local.vid_port, hdoipd.local.vid_port);
     m->transport.multicast = multicast_get_enabled();
 
@@ -186,8 +194,11 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
     eth.udp_dst_port = cookie->remote.vid_port;
     eth.udp_src_port = hdoipd.local.vid_port;
 
-    // start vsi
+    // check video compression
     fmt.compress = m->format.compress;
+    if (fmt.compress == FORMAT_UNKNOWN)
+        fmt.compress = FORMAT_JPEG2000;
+
     fmt.value = reg_get_int("advcnt-min");
 
     // probe config
@@ -223,7 +234,8 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
     if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // activate vsi
 #ifdef VID_IN_PATH
-        if (hoi_drv_vsi(fmt.compress, chroma, 0, bandwidth, &eth, &timing, &fmt.value)) {
+        // the driver expects 0 = plain, > 0 = compressed
+        if (hoi_drv_vsi(fmt.compress - 1, chroma, 0, bandwidth, &eth, &timing, &fmt.value)) {
             return RTSP_REQUEST_ERROR;
         }
 #endif
