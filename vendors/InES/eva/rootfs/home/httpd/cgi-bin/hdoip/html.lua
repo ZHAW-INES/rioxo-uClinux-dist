@@ -229,8 +229,8 @@ function FormBottom(t)
 end
 
 function Header(t, title, script_path, addon)
-    local menu_item_cnt = 9
-    local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_usb; [3] = label.tab_edid; [4] = label.tab_status; [5] = label.tab_firmware; [6] = label.tab_default; [7] = label.tab_settings; [8] = label.tab_test;}
+    local menu_item_cnt = 10
+    local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_usb; [3] = label.tab_edid; [4] = label.tab_fec; [5] = label.tab_status;  [6] = label.tab_firmware; [7] = label.tab_default; [8] = label.tab_settings; [9] = label.tab_test;}
     local dev_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_HOST_NAME)
     local dev_caption = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DEV_CAPTION)
 
@@ -417,6 +417,31 @@ function Loadbar(time, time_restart, load_default_ip)
     html_str = html_str .. "</script>"
 end
 
+function DropdownBox3(name, label1, label2, label3, selected)
+    if(tonumber(selected) ~= nil) then
+        selected = tonumber(selected)
+    end
+    html_str = html_str .. "<select name=\""..name.."\" size=1>\n"
+    html_str = html_str .. "<option value=0"
+    if((selected ~= nil) and (selected == 0))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label1.." </option>\n"
+
+    html_str = html_str .. "<option value=1"
+    if((selected ~= nil) and (selected == 1))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label2.." </option>\n"
+
+    html_str = html_str .. "<option value=2"
+    if((selected ~= nil) and (selected == 2))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label3.." </option>\n"
+    html_str = html_str .. "</select>\n"
+end
+
 function DropdownBox4(name, label1, label2, label3, label4, selected)
     if(tonumber(selected) ~= nil) then
         selected = tonumber(selected)
@@ -448,4 +473,69 @@ function DropdownBox4(name, label1, label2, label3, label4, selected)
     html_str = html_str .. "</select>\n"
 end
 
+function DropdownBox10(name, label1, label2, label3, label4, label5, label6, label7, label8, label9, label10, selected)
+    if(tonumber(selected) ~= nil) then
+        selected = tonumber(selected)
+    end
+    html_str = html_str .. "<select name=\""..name.."\" size=1>\n"
+    html_str = html_str .. "<option value=0"
+    if((selected ~= nil) and (selected == 0))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label1.." </option>\n"
 
+    html_str = html_str .. "<option value=1"
+    if((selected ~= nil) and (selected == 1))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label2.." </option>\n"
+
+    html_str = html_str .. "<option value=2"
+    if((selected ~= nil) and (selected == 2))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label3.." </option>\n"
+
+    html_str = html_str .. "<option value=3"
+    if((selected ~= nil) and (selected == 3))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label4.." </option>\n"
+
+    html_str = html_str .. "<option value=4"
+    if((selected ~= nil) and (selected == 4))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label5.." </option>\n"
+
+    html_str = html_str .. "<option value=5"
+    if((selected ~= nil) and (selected == 5))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label6.." </option>\n"
+
+    html_str = html_str .. "<option value=6"
+    if((selected ~= nil) and (selected == 6))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label7.." </option>\n"
+
+    html_str = html_str .. "<option value=7"
+    if((selected ~= nil) and (selected == 7))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label8.." </option>\n"
+
+    html_str = html_str .. "<option value=8"
+    if((selected ~= nil) and (selected == 8))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label9.." </option>\n"
+
+    html_str = html_str .. "<option value=9"
+    if((selected ~= nil) and (selected == 9))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label10.." </option>\n"
+    html_str = html_str .. "</select>\n"
+end

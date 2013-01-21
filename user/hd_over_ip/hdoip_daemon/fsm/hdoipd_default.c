@@ -68,6 +68,7 @@ void hdoipd_set_default()
     reg_set("usb-mode", "off");
     reg_set("edid-mode", "receiver");
     reg_set("traffic-shaping", "true");
+    reg_set("fec_setting", "0442004420");     
 
     reg_set(CFGTAG, "origin");
 }

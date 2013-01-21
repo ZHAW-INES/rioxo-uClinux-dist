@@ -75,6 +75,7 @@ label = {
     page_firmware = "Firmware";
     page_status = "Status";
     page_usb = "USB";
+    page_fec = "Fehlerkorrektur";
     page_test = "Test";
     page_edid = "EDID - Extended display identification data";
     page_default = "Fabrikeinstellungen wiederherstellen";
@@ -88,6 +89,7 @@ label = {
     tab_default = "Zur&uuml;cksetzen";
     tab_settings = "Einstellungen";
     tab_usb = "USB";
+    tab_fec = "FEC";
     tab_test = "Test";
     tab_edid = "EDID";
 
@@ -118,6 +120,19 @@ label = {
     p_usb_device = "Device (dieses Ger&auml;t ist mit einem PC verbunden)";
     p_usb_off = "Deaktiviert";
     p_usb_label_device = "Angeschlossenes Ger&auml;t";
+
+    -- Page FEC
+    p_fec_transmitter_only = "Nur beim Sender verf&uuml;gbar";
+    p_fec_video = "Video";
+    p_fec_audio = "Audio";
+    p_fec_enable = "Aktivieren";
+    p_fec_interleave = "Interleaving";
+    p_fec_interleave_off = "Aus";
+    p_fec_interleave_style1 = "SMPTE 2022-1 Anhang B";
+    p_fec_interleave_style2 = "SMPTE 2022-1 Anhang C";
+    p_fec_column_only = "Nur Spalten";
+    p_fec_l = "L (Zeilen)";
+    p_fec_d = "D (Spalten)";
 
     -- Page TEST
     p_usb_image = "Testbilder";

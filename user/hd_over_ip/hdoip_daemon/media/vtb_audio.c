@@ -100,6 +100,8 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     t_rscp_rtp_format fmt;
     hdoip_eth_params eth;
     char dst_mac[6];
+    t_fec_setting fec;
+    char *fec_setting;
 
     t_multicast_cookie* cookie = media->cookie;
 
@@ -175,6 +177,19 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
           return RSCP_REQUEST_ERROR;
     }
 
+    // fec settings (convert from ascii to integer)
+    fec_setting = reg_get("fec_setting");
+    fec.video_enable = fec_setting[0] - 48;
+    fec.video_l = fec_setting[1] - 48 + 1;
+    fec.video_d = fec_setting[2] - 48 + 1;
+    fec.video_interleaving = fec_setting[3] - 48;
+    fec.video_col_only = fec_setting[4] - 48;
+    fec.audio_enable =fec_setting[5] - 48;
+    fec.audio_l = fec_setting[6] - 48 + 1;
+    fec.audio_d = fec_setting[7] - 48 + 1;
+    fec.audio_interleaving = fec_setting[8] - 48;
+    fec.audio_col_only = fec_setting[9] - 48;
+
     // send timing
     rscp_response_play(rsp, media->sessionid, &fmt, 0);
 
@@ -182,7 +197,7 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
         // activate asi
 #ifdef AUD_IN_PATH
         uint8_t channel_select[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
-        hoi_drv_asi(0, &eth, nfo->audio_fs[0], nfo->audio_width[0], nfo->audio_cnt[0], channel_select);
+        hoi_drv_asi(0, &eth, nfo->audio_fs[0], nfo->audio_width[0], nfo->audio_cnt[0], channel_select, &fec);
         report(INFO "\naudio streaming started(fs = %d Hz, bitwidth = %d Bit)", nfo->audio_fs[0], nfo->audio_width[0]);
 #endif
         // We are streaming Audio now...

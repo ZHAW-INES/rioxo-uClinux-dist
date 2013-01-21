@@ -71,31 +71,14 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
 
 int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
 {
-    t_rbf_dsc dsc;
-
     // ringbuffer
     eti_drv_set_vid_buf(&handle->eti, msg->vid_rx_buf, msg->vid_rx_len - MAX_FRAME_LENGTH);
     eti_drv_set_aud_buf(&handle->eti, msg->aud_rx_buf, msg->aud_rx_len - MAX_FRAME_LENGTH);
     eto_drv_set_vid_buf(&handle->eto, msg->vid_tx_buf, msg->vid_tx_len - MAX_FRAME_LENGTH);
     eto_drv_set_aud_buf(&handle->eto, msg->aud_tx_buf, msg->aud_tx_len - MAX_FRAME_LENGTH);
 
-    // test of FEC interrface blocks
-    // set audio descriptors
-    rbf_dsc(&dsc, msg->aud_tx_buf, msg->aud_tx_len - MAX_FRAME_LENGTH);
-    HOI_WR32(handle->p_fec_tx, 0x00, dsc.start>>2);
-    HOI_WR32(handle->p_fec_tx, 0x04, dsc.stop>>2);
-    HOI_WR32(handle->p_fec_tx, 0x08, dsc.read>>2);
-    HOI_WR32(handle->p_fec_tx, 0x0C, dsc.write>>2);
-
-    // set video descriptors
-    rbf_dsc(&dsc, msg->vid_tx_buf, msg->vid_tx_len - MAX_FRAME_LENGTH);
-    HOI_WR32(handle->p_fec_tx, 0x10, dsc.start>>2);
-    HOI_WR32(handle->p_fec_tx, 0x14, dsc.stop>>2);
-    HOI_WR32(handle->p_fec_tx, 0x18, dsc.read>>2);
-    HOI_WR32(handle->p_fec_tx, 0x1C, dsc.write>>2);
-
-    // set burst size
-    HOI_WR32(handle->p_fec_tx, 0x20, 0x08);
+    // set descriptors and burst size in fec block
+    fec_drv_set_descriptors(handle->p_fec_tx, msg->vid_tx_buf, msg->aud_tx_buf, msg->vid_tx_len, msg->aud_tx_len, 0x08);
 
     vsi_drv_flush_buf(&handle->vsi);
     vso_drv_flush_buf(&handle->vso);
@@ -302,41 +285,15 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 {
     vsi_drv_flush_buf(&handle->vsi);
 
-    // activate fec tx block;
-    init_fec_ip_tx(handle->p_fec_ip_tx);
+    // start fec tx block;
+    start_fec_ip_tx(handle->p_fec_ip_tx, msg->fec.video_enable, msg->fec.video_l, msg->fec.video_d, msg->fec.video_interleaving, msg->fec.video_col_only, 
+                                         msg->fec.audio_enable, msg->fec.audio_l, msg->fec.audio_d, msg->fec.audio_interleaving, msg->fec.audio_col_only);
 
     // activate ethernet output
     eto_drv_start_vid(&handle->eto);
 
-
-// fec test
-//dst mac
-HOI_WR8(handle->p_fec_tx, 36, msg->eth.dst_mac[1]);
-HOI_WR8(handle->p_fec_tx, 37, msg->eth.dst_mac[0]);
-HOI_WR8(handle->p_fec_tx, 40, msg->eth.dst_mac[5]);
-HOI_WR8(handle->p_fec_tx, 41, msg->eth.dst_mac[4]);
-HOI_WR8(handle->p_fec_tx, 42, msg->eth.dst_mac[3]);
-HOI_WR8(handle->p_fec_tx, 43, msg->eth.dst_mac[2]);
-//src mac
-HOI_WR8(handle->p_fec_tx, 44, msg->eth.src_mac[3]);
-HOI_WR8(handle->p_fec_tx, 45, msg->eth.src_mac[2]);
-HOI_WR8(handle->p_fec_tx, 46, msg->eth.src_mac[1]);
-HOI_WR8(handle->p_fec_tx, 47, msg->eth.src_mac[0]);
-HOI_WR8(handle->p_fec_tx, 48, msg->eth.src_mac[5]);
-HOI_WR8(handle->p_fec_tx, 49, msg->eth.src_mac[4]);
-//tll/tos
-HOI_WR32(handle->p_fec_tx, 52, (msg->eth.ipv4_ttl<<8) | msg->eth.ipv4_tos);
-//src ip
-HOI_WR32(handle->p_fec_tx, 56, swap32(msg->eth.ipv4_src_ip));
-// dst ip
-HOI_WR32(handle->p_fec_tx, 60, swap32(msg->eth.ipv4_dst_ip));
-//src port
-HOI_WR32(handle->p_fec_tx, 64, swap16(msg->eth.udp_src_port));
-//dst port
-HOI_WR32(handle->p_fec_tx, 68, swap16(msg->eth.udp_dst_port));
-
-
-
+    // set parameters for packet generation in fec block
+    fec_drv_set_video_eth_params(handle->p_fec_tx, &msg->eth);
 
     // setup vsi
     vsi_drv_go(&handle->vsi, &msg->eth);
@@ -498,39 +455,14 @@ int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
 
     asi_drv_flush_buf(&handle->asi);
 
+    // start fec tx block;
+    start_fec_ip_tx(handle->p_fec_ip_tx, msg->fec.video_enable, msg->fec.video_l, msg->fec.video_d, msg->fec.video_interleaving, msg->fec.video_col_only, 
+                                         msg->fec.audio_enable, msg->fec.audio_l, msg->fec.audio_d, msg->fec.audio_interleaving, msg->fec.audio_col_only);
     // activate ethernet output
     eto_drv_start_aud(&handle->eto);
 
-
-
-
-// fec test
-//dst mac
-HOI_WR8(handle->p_fec_tx, 72, msg->eth.dst_mac[1]);
-HOI_WR8(handle->p_fec_tx, 73, msg->eth.dst_mac[0]);
-HOI_WR8(handle->p_fec_tx, 76, msg->eth.dst_mac[5]);
-HOI_WR8(handle->p_fec_tx, 77, msg->eth.dst_mac[4]);
-HOI_WR8(handle->p_fec_tx, 78, msg->eth.dst_mac[3]);
-HOI_WR8(handle->p_fec_tx, 79, msg->eth.dst_mac[2]);
-//src mac
-HOI_WR8(handle->p_fec_tx, 80, msg->eth.src_mac[3]);
-HOI_WR8(handle->p_fec_tx, 81, msg->eth.src_mac[2]);
-HOI_WR8(handle->p_fec_tx, 82, msg->eth.src_mac[1]);
-HOI_WR8(handle->p_fec_tx, 83, msg->eth.src_mac[0]);
-HOI_WR8(handle->p_fec_tx, 84, msg->eth.src_mac[5]);
-HOI_WR8(handle->p_fec_tx, 85, msg->eth.src_mac[4]);
-//tll/tos
-HOI_WR32(handle->p_fec_tx, 88, (msg->eth.ipv4_ttl<<8) | msg->eth.ipv4_tos);
-//src ip
-HOI_WR32(handle->p_fec_tx, 92, swap32(msg->eth.ipv4_src_ip));
-// dst ip
-HOI_WR32(handle->p_fec_tx, 96, swap32(msg->eth.ipv4_dst_ip));
-//src port
-HOI_WR32(handle->p_fec_tx, 100, swap16(msg->eth.udp_src_port));
-//dst port
-HOI_WR32(handle->p_fec_tx, 104, swap16(msg->eth.udp_dst_port));
-
-
+    // set parameters for packet generation in fec block
+    fec_drv_set_audio_eth_params(handle->p_fec_tx, &msg->eth);
 
     // setup asi
     aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
@@ -1036,6 +968,14 @@ int hoi_drv_msg_clear_osd(t_hoi* handle)
     return SUCCESS;
 }
 
+int hoi_drv_msg_set_fec_tx_params(t_hoi* handle, t_hoi_msg_fec_tx* msg)
+{
+    change_setting_fec_ip_tx(handle->p_fec_ip_tx, msg->fec.video_enable, msg->fec.video_l, msg->fec.video_d, msg->fec.video_interleaving, msg->fec.video_col_only, 
+                                                  msg->fec.audio_enable, msg->fec.audio_l, msg->fec.audio_d, msg->fec.audio_interleaving, msg->fec.audio_col_only);
+    return SUCCESS;
+}
+
+
 //------------------------------------------------------------------------------
 // message
 
@@ -1120,23 +1060,24 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         callsw(HOI_MSG_WDG_DISABLE,         hoi_drv_msg_wdg_disable);
         callsw(HOI_MSG_WDG_SERVICE,         hoi_drv_msg_wdg_service);
 
-        callsw(HOI_MSG_HDCP_ENVIDEO_ETI, hoi_drv_msg_hdcp_video_en_eti);
-        callsw(HOI_MSG_HDCP_ENVIDEO_ETO, hoi_drv_msg_hdcp_video_en_eto);
-        callsw(HOI_MSG_HDCP_ENAUDIO_ETI, hoi_drv_msg_hdcp_audio_en_eti);
-        callsw(HOI_MSG_HDCP_ENAUDIO_ETO, hoi_drv_msg_hdcp_audio_en_eto);
+        callsw(HOI_MSG_HDCP_ENVIDEO_ETI,    hoi_drv_msg_hdcp_video_en_eti);
+        callsw(HOI_MSG_HDCP_ENVIDEO_ETO,    hoi_drv_msg_hdcp_video_en_eto);
+        callsw(HOI_MSG_HDCP_ENAUDIO_ETI,    hoi_drv_msg_hdcp_audio_en_eti);
+        callsw(HOI_MSG_HDCP_ENAUDIO_ETO,    hoi_drv_msg_hdcp_audio_en_eto);
 
-        callsw(HOI_MSG_HDCP_DISVIDEO_ETI, hoi_drv_msg_hdcp_video_dis_eti);
-        callsw(HOI_MSG_HDCP_DISVIDEO_ETO, hoi_drv_msg_hdcp_video_dis_eto);
-        callsw(HOI_MSG_HDCP_DISAUDIO_ETI, hoi_drv_msg_hdcp_audio_dis_eti);
-        callsw(HOI_MSG_HDCP_DISAUDIO_ETO, hoi_drv_msg_hdcp_audio_dis_eto);
+        callsw(HOI_MSG_HDCP_DISVIDEO_ETI,   hoi_drv_msg_hdcp_video_dis_eti);
+        callsw(HOI_MSG_HDCP_DISVIDEO_ETO,   hoi_drv_msg_hdcp_video_dis_eto);
+        callsw(HOI_MSG_HDCP_DISAUDIO_ETI,   hoi_drv_msg_hdcp_audio_dis_eti);
+        callsw(HOI_MSG_HDCP_DISAUDIO_ETO,   hoi_drv_msg_hdcp_audio_dis_eto);
 
-        callsw(HOI_MSG_HDCP_ENAD9889, hoi_drv_msg_hdcp_ADV9889_en);
-        callsw(HOI_MSG_HDCP_DISAD9889, hoi_drv_msg_hdcp_ADV9889_dis);
+        callsw(HOI_MSG_HDCP_ENAD9889,       hoi_drv_msg_hdcp_ADV9889_en);
+        callsw(HOI_MSG_HDCP_DISAD9889,      hoi_drv_msg_hdcp_ADV9889_dis);
 
-        callsw(HOI_MSG_POLL,    hoi_drv_msg_poll);
-        callsw(HOI_MSG_CLR_OSD, hoi_drv_msg_clear_osd);
+        callsw(HOI_MSG_POLL,                hoi_drv_msg_poll);
+        callsw(HOI_MSG_CLR_OSD,             hoi_drv_msg_clear_osd);
 
-        call(HOI_MSG_DEBUG_READ_RAM,      hoi_drv_msg_read_ram);
+        call(HOI_MSG_FEC_TX,                hoi_drv_msg_set_fec_tx_params);
+        call(HOI_MSG_DEBUG_READ_RAM,        hoi_drv_msg_read_ram);
 
         default: ret = ERR_HOI_CMD_NOT_SUPPORTED; break;
     }

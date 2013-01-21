@@ -753,6 +753,28 @@ void task_set_fps_divide(char *p)
     hoi_drv_set_fps_reduction(reg_get_int("fps_divide"));
 }
 
+void task_set_fec_setting (char *p)
+{
+    char *fec_setting;
+    t_fec_setting fec;
+
+    fec_setting = reg_get("fec_setting");
+
+    // convert from ascii to integer
+    fec.video_enable = fec_setting[0] - 48;
+    fec.video_l = fec_setting[1] - 48 + 1;
+    fec.video_d = fec_setting[2] - 48 + 1;
+    fec.video_interleaving = fec_setting[3] - 48;
+    fec.video_col_only = fec_setting[4] - 48;
+    fec.audio_enable =fec_setting[5] - 48;
+    fec.audio_l = fec_setting[6] - 48 + 1;
+    fec.audio_d = fec_setting[7] - 48 + 1;
+    fec.audio_interleaving = fec_setting[8] - 48;
+    fec.audio_col_only = fec_setting[9] - 48;
+
+    hoi_drv_set_fec_tx_params(&fec);
+}
+
 void hdoipd_register_task()
 {
     get_listener("system-state", task_get_system_state);
@@ -811,6 +833,7 @@ void hdoipd_register_task()
     set_listener("usb-mode", task_set_usb_mode);
     set_listener("test-image", task_set_test_image);
     set_listener("edid-mode", task_set_edid_mode);
-    set_listener("fps_divide", task_set_fps_divide);;
+    set_listener("fps_divide", task_set_fps_divide);
+    set_listener("fec_setting", task_set_fec_setting);
 }
 

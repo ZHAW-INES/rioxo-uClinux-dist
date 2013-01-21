@@ -75,6 +75,7 @@ label = {
     page_firmware = "Firmware";
     page_status = "Status";
     page_usb = "USB";
+    page_fec = "Forward Error Correction";
     page_test = "Test";
     page_edid = "EDID - Extended display identification data";
     page_default = "Factory defaults";
@@ -89,6 +90,7 @@ label = {
     tab_settings = "Settings";
     tab_login = "Login";
     tab_usb = "USB";
+    tab_fec = "FEC";
     tab_test = "Test";
     tab_edid = "EDID";
 
@@ -119,6 +121,19 @@ label = {
     p_usb_device = "Device (PC is connected to this unit)";
     p_usb_off = "Disabled";
     p_usb_label_device = "Connected Device";
+
+    -- Page FEC
+    p_fec_transmitter_only = "only available on transmitter";
+    p_fec_video = "Video";
+    p_fec_audio = "Audio";
+    p_fec_enable = "Enable";
+    p_fec_interleave = "Interleaving";
+    p_fec_interleave_off = "Off";
+    p_fec_interleave_style1 = "SMPTE 2022-1 Annex B";
+    p_fec_interleave_style2 = "SMPTE 2022-1 Annex C";
+    p_fec_column_only = "Column only";
+    p_fec_l = "L (rows)";
+    p_fec_d = "D (columns)";
 
     -- Page TEST
     p_usb_image = "Test Images";

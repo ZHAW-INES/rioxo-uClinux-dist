@@ -113,6 +113,8 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     uint32_t bandwidth;
     uint32_t chroma;
     uint32_t traffic_shaping;
+    t_fec_setting fec;
+    char *fec_setting;
 
     t_multicast_cookie* cookie = media->cookie;
 
@@ -208,13 +210,26 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
         bandwidth = (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8);
     }
 
+    // fec settings (convert from ascii to integer)
+    fec_setting = reg_get("fec_setting");
+    fec.video_enable = fec_setting[0] - 48;
+    fec.video_l = fec_setting[1] - 48 + 1;
+    fec.video_d = fec_setting[2] - 48 + 1;
+    fec.video_interleaving = fec_setting[3] - 48;
+    fec.video_col_only = fec_setting[4] - 48;
+    fec.audio_enable =fec_setting[5] - 48;
+    fec.audio_l = fec_setting[6] - 48 + 1;
+    fec.audio_d = fec_setting[7] - 48 + 1;
+    fec.audio_interleaving = fec_setting[8] - 48;
+    fec.audio_col_only = fec_setting[9] - 48;
+
     // send timing
     rscp_response_play(rsp, media->sessionid, &fmt, &timing);
 
     if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // activate vsi
 #ifdef VID_IN_PATH
-        if (hoi_drv_vsi(fmt.compress, chroma, 0, bandwidth, &eth, &timing, &fmt.value, traffic_shaping)) {
+        if (hoi_drv_vsi(fmt.compress, chroma, 0, bandwidth, &eth, &timing, &fmt.value, traffic_shaping, &fec)) {
             return RSCP_REQUEST_ERROR;
         }
 #endif

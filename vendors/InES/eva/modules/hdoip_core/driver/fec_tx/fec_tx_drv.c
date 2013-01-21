@@ -36,73 +36,139 @@
 
 #include <fec_tx_drv.h>
 #include <fec_tx_hal.h>
+#include <fec_tx_struct.h>
 
 
 // turn diagnostic messages on and off
 #define AUK_RTP_TX_API_DIAG(...)    printk(__VA_ARGS__)
 
 
-void init_fec_ip_tx(void* p_fec_ip_tx)
+void fec_drv_set_video_eth_params(void *p, hdoip_eth_params *eth)
+{
+    //video dst mac
+    fec_tx_write_vid_dst_mac_0(p, eth->dst_mac[0]);
+    fec_tx_write_vid_dst_mac_1(p, eth->dst_mac[1]);
+    fec_tx_write_vid_dst_mac_2(p, eth->dst_mac[2]);
+    fec_tx_write_vid_dst_mac_3(p, eth->dst_mac[3]);
+    fec_tx_write_vid_dst_mac_4(p, eth->dst_mac[4]);
+    fec_tx_write_vid_dst_mac_5(p, eth->dst_mac[5]);
+
+    //video src mac
+    fec_tx_write_vid_src_mac_0(p, eth->src_mac[0]);
+    fec_tx_write_vid_src_mac_1(p, eth->src_mac[1]);
+    fec_tx_write_vid_src_mac_2(p, eth->src_mac[2]);
+    fec_tx_write_vid_src_mac_3(p, eth->src_mac[3]);
+    fec_tx_write_vid_src_mac_4(p, eth->src_mac[4]);
+    fec_tx_write_vid_src_mac_5(p, eth->src_mac[5]);
+
+    //video tll/tos
+    fec_tx_write_vid_ttl_tos(p, eth->ipv4_ttl, eth->ipv4_tos);
+    //video src ip
+    fec_tx_write_vid_src_ip(p, eth->ipv4_src_ip);
+    //video dst ip
+    fec_tx_write_vid_dst_ip(p, eth->ipv4_dst_ip);
+    //video src port
+    fec_tx_write_vid_src_port(p, eth->udp_src_port);
+    //video dst port
+    fec_tx_write_vid_dst_port(p, eth->udp_dst_port);
+}
+
+void fec_drv_set_audio_eth_params(void *p, hdoip_eth_params *eth)
+{
+    //audio dst mac
+    fec_tx_write_aud_dst_mac_0(p, eth->dst_mac[0]);
+    fec_tx_write_aud_dst_mac_1(p, eth->dst_mac[1]);
+    fec_tx_write_aud_dst_mac_2(p, eth->dst_mac[2]);
+    fec_tx_write_aud_dst_mac_3(p, eth->dst_mac[3]);
+    fec_tx_write_aud_dst_mac_4(p, eth->dst_mac[4]);
+    fec_tx_write_aud_dst_mac_5(p, eth->dst_mac[5]);
+    //audio src mac
+    fec_tx_write_aud_src_mac_0(p, eth->src_mac[0]);
+    fec_tx_write_aud_src_mac_1(p, eth->src_mac[1]);
+    fec_tx_write_aud_src_mac_2(p, eth->src_mac[2]);
+    fec_tx_write_aud_src_mac_3(p, eth->src_mac[3]);
+    fec_tx_write_aud_src_mac_4(p, eth->src_mac[4]);
+    fec_tx_write_aud_src_mac_5(p, eth->src_mac[5]);
+    //audio tll/tos
+    fec_tx_write_aud_ttl_tos(p, eth->ipv4_ttl, eth->ipv4_tos);
+    //audio src ip
+    fec_tx_write_aud_src_ip(p, eth->ipv4_src_ip);
+    //audio dst ip
+    fec_tx_write_aud_dst_ip(p, eth->ipv4_dst_ip);
+    //audio src port
+    fec_tx_write_aud_src_port(p, eth->udp_src_port);
+    //audio dst port
+    fec_tx_write_aud_dst_port(p, eth->udp_dst_port);
+}
+
+void fec_drv_set_descriptors(void *p, void *vid_tx_buf, void *aud_tx_buf, size_t vid_tx_len, size_t aud_tx_len, uint32_t burst_size)
+{
+    t_rbf_dsc dsc;
+
+    // set video descriptors
+    rbf_dsc(&dsc, vid_tx_buf, vid_tx_len - MAX_FRAME_LENGTH);
+    fec_tx_write_video_descriptors(p, dsc);
+
+    // set audio descriptors
+    rbf_dsc(&dsc, aud_tx_buf, aud_tx_len - MAX_FRAME_LENGTH);
+    fec_tx_write_audio_descriptors(p, dsc);
+
+    // set burst size
+    fec_tx_write_burst_size(p, burst_size);
+}
+
+void start_fec_ip_tx(void* p_fec_ip_tx, int enable_vid, int d_vid, int l_vid, int interleave_vid, int single_mode_vid, int enable_aud, int d_aud, int l_aud, int interleave_aud, int single_mode_aud)
+{
+    alt_avalon_rtp_tx_dev p;
+
+    p.base = p_fec_ip_tx;
+
+    // set up fec tx block
+    change_setting_fec_ip_tx(p_fec_ip_tx, enable_vid, d_vid, l_vid, interleave_vid, single_mode_vid, enable_aud, d_aud, l_aud, interleave_aud, single_mode_aud);
+
+    // check if fec block is running already
+    if (!alt_avalon_rtp_tx_is_enabled(&p)) {
+        alt_avalon_rtp_tx_enable(&p);
+    }
+}
+
+void change_setting_fec_ip_tx(void* p_fec_ip_tx, int enable_vid, int d_vid, int l_vid, int interleave_vid, int single_mode_vid, int enable_aud, int d_aud, int l_aud, int interleave_aud, int single_mode_aud)
 {
     alt_avalon_rtp_tx_dev p;
     alt_avalon_rtp_tx_fec_settings fec_settings_channel_0;
     alt_avalon_rtp_tx_fec_settings fec_settings_channel_1;
-    alt_avalon_rtp_tx_design_parameters design_parameters;
-
-    fec_settings_channel_0.EnableFEC = 1;
-    fec_settings_channel_0.L = 5;
-    fec_settings_channel_0.D = 5;
-    fec_settings_channel_0.ColFECOnly = 0;
-    fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_off;
-
-    fec_settings_channel_1.EnableFEC = 1;
-    fec_settings_channel_1.L = 5;
-    fec_settings_channel_1.D = 5;
-    fec_settings_channel_1.ColFECOnly = 0;
-    fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_off;
 
     p.base = p_fec_ip_tx;
 
+    // settings for video channel
+    fec_settings_channel_0.EnableFEC = enable_vid;
+    fec_settings_channel_0.L = l_vid;
+    fec_settings_channel_0.D = d_vid;
+    fec_settings_channel_0.ColFECOnly = single_mode_vid;
 
+    switch (interleave_vid) {
+        case 1:     fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_a;  break;
+        case 2:     fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_b;  break;
+        default:    fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_off;
+    }
 
-    // get design parameters
-    alt_avalon_rtp_tx_get_parameters(&p, &design_parameters);
+    // settings for audio channel
+    fec_settings_channel_1.EnableFEC = enable_aud;
+    fec_settings_channel_1.L = l_aud;
+    fec_settings_channel_1.D = d_aud;
+    fec_settings_channel_1.ColFECOnly = single_mode_aud;
 
-    printk("\n EN %x", fec_settings_channel_0.EnableFEC);
-    printk("\n L %x", fec_settings_channel_0.L);
-    printk("\n D %x", fec_settings_channel_0.D);
-    printk("\n COL ONLY %x", fec_settings_channel_0.ColFECOnly);
+    switch (interleave_aud) {
+        case 1:     fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_a;  break;
+        case 2:     fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_b;  break;
+        default:    fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_off;
+    }
 
-
-
-    // configure channel 0
+    // configure channel 0 (video)
     alt_avalon_rtp_tx_set_fec_config(&p, 0x00, &fec_settings_channel_0);
 
-    // configure channel 1
+    // configure channel 1 (audio)
     alt_avalon_rtp_tx_set_fec_config(&p, 0x01, &fec_settings_channel_1);
-
-    // enable fec tx block
-    alt_avalon_rtp_tx_enable(&p);
-
-    printk("\n on %x", alt_avalon_rtp_tx_is_enabled(&p));
-
-//    printk("\n on %x", alt_avalon_rtp_tx_is_enabled(&p));
-
-
-//    alt_avalon_rtp_tx_get_fec_config(&p, 0x00, &fec_settings_channel_0);
-//    printk("\n\n\nchannel 0");
-//    printk("\n EN %x", fec_settings_channel_0.EnableFEC);
-//    printk("\n L %x", fec_settings_channel_0.L);
-//    printk("\n D %x", fec_settings_channel_0.D);
-//    printk("\n COL ONLY %x", fec_settings_channel_0.ColFECOnly);
-
-//    alt_avalon_rtp_tx_get_fec_config(&p, 0x01, &fec_settings_channel_0);
-//    printk("\n\n\nchannel 1");
-//    printk("\n EN %x", fec_settings_channel_0.EnableFEC);
-//    printk("\n L %x", fec_settings_channel_0.L);
-//    printk("\n D %x", fec_settings_channel_0.D);
-//    printk("\n COL ONLY %x", fec_settings_channel_0.ColFECOnly);
-
 }
 
 /* Get the parameters of a design */
@@ -173,7 +239,7 @@ int alt_avalon_rtp_tx_is_enabled(alt_avalon_rtp_tx_dev* pDev)
 
 
 /* Setup the FEC parameters for a single channel */
-void alt_avalon_rtp_tx_set_fec_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Channel, const alt_avalon_rtp_tx_fec_settings* pSettings)
+void alt_avalon_rtp_tx_set_fec_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Channel, alt_avalon_rtp_tx_fec_settings* pSettings)
 {
    uint32_t data;
 
@@ -283,7 +349,7 @@ void alt_avalon_rtp_tx_get_fec_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Chan
 
 
 /*Setup the encapsulation parameters for a single channel */
-void alt_avalon_rtp_tx_set_encap_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Channel, const alt_avalon_rtp_tx_encap_settings* pSettings)
+void alt_avalon_rtp_tx_set_encap_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Channel, alt_avalon_rtp_tx_encap_settings* pSettings)
 {
    uint32_t data;
    uint32_t fec_settings;
@@ -368,7 +434,7 @@ void alt_avalon_rtp_tx_get_encap_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Ch
 
 
 /* Configures burst error generation */
-void alt_avalon_rtp_tx_set_burst_error_config(alt_avalon_rtp_tx_dev* pDev, const alt_avalon_rtp_tx_burst_error_settings* pSettings)
+void alt_avalon_rtp_tx_set_burst_error_config(alt_avalon_rtp_tx_dev* pDev, alt_avalon_rtp_tx_burst_error_settings* pSettings)
 {
    uint32_t data;
 

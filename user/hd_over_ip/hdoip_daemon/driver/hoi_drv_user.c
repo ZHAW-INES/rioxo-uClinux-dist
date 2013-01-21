@@ -206,7 +206,7 @@ HOI_READ(get_active_resolution, HOI_MSG_GET_ACTIVE_RESOLUTION);
 //------------------------------------------------------------------------------
 // capture/show image command
 
-int hoi_drv_vsi(uint32_t compress, uint32_t chroma, uint32_t encrypt, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt, int enable_traffic_shaping)
+int hoi_drv_vsi(uint32_t compress, uint32_t chroma, uint32_t encrypt, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt, int enable_traffic_shaping, t_fec_setting* fec)
 {
     int ret;
     t_hoi_msg_vsi msg;
@@ -216,6 +216,7 @@ int hoi_drv_vsi(uint32_t compress, uint32_t chroma, uint32_t encrypt, int bandwi
     msg.chroma = chroma;
     msg.compress = compress;
     msg.encrypt = encrypt;
+    memcpy(&msg.fec, fec, sizeof(t_fec_setting));
     msg.enable_traffic_shaping = enable_traffic_shaping;
     if (advcnt) msg.advcnt = *advcnt;
     memcpy(&msg.eth, eth, sizeof(struct hdoip_eth_params));
@@ -243,7 +244,7 @@ int hoi_drv_vso(uint32_t compress, uint32_t encrypt, t_video_timing* timing, uin
 }
 
 
-int hoi_drv_asi(uint32_t cfg, hdoip_eth_params* eth, uint32_t fs, uint32_t width, uint32_t cnt, uint8_t* sel)
+int hoi_drv_asi(uint32_t cfg, hdoip_eth_params* eth, uint32_t fs, uint32_t width, uint32_t cnt, uint8_t* sel, t_fec_setting* fec)
 {
     int ret;
     t_hoi_msg_asi msg;
@@ -254,6 +255,7 @@ int hoi_drv_asi(uint32_t cfg, hdoip_eth_params* eth, uint32_t fs, uint32_t width
     msg.channel_cnt = cnt;
     msg.fs = fs;
     msg.width = width;
+    memcpy(&msg.fec, fec, sizeof(t_fec_setting));
     memcpy(&msg.eth, eth, sizeof(hdoip_eth_params));
     ret = hoi_msg(&msg);
 
@@ -328,6 +330,17 @@ int hoi_drv_debug(void)
     return ret;
 }
 
+int hoi_drv_set_fec_tx_params(t_fec_setting* fec)
+{
+    int ret;
+    t_hoi_msg_fec_tx msg;
+
+    hoi_msg_fec_tx_init(&msg);
+    memcpy(&msg.fec, fec, sizeof(t_fec_setting));
+    ret = hoi_msg(&msg);
+
+    return ret;
+}
 
 int hoi_drv_set_timing(t_video_timing* timing)
 {

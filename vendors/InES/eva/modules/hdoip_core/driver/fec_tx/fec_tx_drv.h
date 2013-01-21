@@ -38,6 +38,7 @@
 #define __ALT_AVALON_RTP_TX_API_H__
 
 #include "std.h"
+#include "stdeth.h"
 
 typedef struct
 {
@@ -113,8 +114,20 @@ typedef struct
    uint32_t DataQueueLevel;
 } alt_avalon_rtp_tx_debug_values;
 
-/* Initialize the IP*/
-void init_fec_ip_tx(void* p_fec_ip_tx);
+/* set eth parameters for eth, ip and udp header */
+void fec_drv_set_video_eth_params(void *p, hdoip_eth_params *eth);
+
+/* set eth parameters for eth, ip and udp header */
+void fec_drv_set_audio_eth_params(void *p, hdoip_eth_params *eth);
+
+/* set ringbuffer descriptors and burst size for dma access */
+void fec_drv_set_descriptors(void *p, void *vid_tx_buf, void *aud_tx_buf, size_t vid_tx_len, size_t aud_tx_len, uint32_t burst_size);
+
+/* start the IP */
+void start_fec_ip_tx(void* p_fec_ip_tx, int enable_vid, int d_vid, int l_vid, int interleave_vid, int single_mode_vid, int enable_aud, int d_aud, int l_aud, int interleave_aud, int single_mode_aud);
+
+/* change settings */
+void change_setting_fec_ip_tx(void* p_fec_ip_tx, int enable_vid, int d_vid, int l_vid, int interleave_vid, int single_mode_vid, int enable_aud, int d_aud, int l_aud, int interleave_aud, int single_mode_aud);
 
 /* Get the parameters of a design */
 void alt_avalon_rtp_tx_get_parameters(alt_avalon_rtp_tx_dev* pDev, alt_avalon_rtp_tx_design_parameters* pParams);
@@ -129,19 +142,19 @@ void alt_avalon_rtp_tx_disable(alt_avalon_rtp_tx_dev* pDev);
 int alt_avalon_rtp_tx_is_enabled(alt_avalon_rtp_tx_dev* pDev);
 
 /* Setup the FEC parameters for a single channel */
-void alt_avalon_rtp_tx_set_fec_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Channel, const alt_avalon_rtp_tx_fec_settings* pSettings);
+void alt_avalon_rtp_tx_set_fec_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Channel, alt_avalon_rtp_tx_fec_settings* pSettings);
 
 /* Get the FEC parameters for a single channel */
 void alt_avalon_rtp_tx_get_fec_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Channel, alt_avalon_rtp_tx_fec_settings* pSettings);
 
 /* Setup the encapsulation parameters for a single channel */
-void alt_avalon_rtp_tx_set_encap_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Channel, const alt_avalon_rtp_tx_encap_settings* pSettings);
+void alt_avalon_rtp_tx_set_encap_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Channel, alt_avalon_rtp_tx_encap_settings* pSettings);
 
 /* Get the encapsulation parameters for a single channel */
 void alt_avalon_rtp_tx_get_encap_config(alt_avalon_rtp_tx_dev* pDev, uint32_t Channel, alt_avalon_rtp_tx_encap_settings* pSettings);
 
 /* Configures burst error generation */
-void alt_avalon_rtp_tx_set_burst_error_config(alt_avalon_rtp_tx_dev* pDev, const alt_avalon_rtp_tx_burst_error_settings* pSettings);
+void alt_avalon_rtp_tx_set_burst_error_config(alt_avalon_rtp_tx_dev* pDev, alt_avalon_rtp_tx_burst_error_settings* pSettings);
 
 /* Gets burst error generation settings*/
 void alt_avalon_rtp_tx_get_burst_error_config(alt_avalon_rtp_tx_dev* pDev, alt_avalon_rtp_tx_burst_error_settings* pSettings);

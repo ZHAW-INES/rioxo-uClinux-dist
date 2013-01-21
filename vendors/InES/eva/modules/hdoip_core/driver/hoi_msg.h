@@ -14,6 +14,7 @@
 #include "../hal/vid/stdvid.h"
 #include "../hal/eth/stdeth.h"
 #include "../stdinc/event.h"
+#include "../driver/fec_tx/fec_tx_struct.h"
 
 // linux message
 #define HDOIP_IOCTL_MAGIC           ('h')
@@ -102,6 +103,7 @@
 #define HOI_MSG_GET_ACTIVE_RESOLUTION (0x70000114)
 #define HOI_MSG_HDCP_BLACK_OUTPUT   (0x70000115)
 #define HOI_MSG_OSD_CLR_BORDER      (0x70000116)
+#define HOI_MSG_FEC_TX              (0x70000117)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
@@ -288,6 +290,7 @@ typedef struct {
 typedef struct {
     hoi_msg_extends;
     hdoip_eth_params    eth;        //!< (wr) ethernet parameter
+    t_fec_setting       fec;        //!< (wr) fec parameters
     uint32_t            compress;   //!< (wr) use jpeg2000 compressor
     uint32_t            chroma;     //!< (wr) percent of chroma bandwidth
     uint32_t            encrypt;    //!< (wr) encryption key or '0'
@@ -315,6 +318,7 @@ typedef struct {
 typedef struct {
     hoi_msg_extends;
     uint32_t            cfg;
+    t_fec_setting       fec;            //!< (wr) fec parameters
     hdoip_eth_params    eth;            //!< (wr) ethernet parameter
     uint32_t            fs;             //!< (wr) sampel frequency in Hz
     uint32_t            width;          //!< (wr) sampel bit width
@@ -361,6 +365,16 @@ typedef struct {
 } t_hoi_msg_bandwidth;
 
 #define hoi_msg_bandwidth_init(p) hoi_msg_init(p, HOI_MSG_BW, t_hoi_msg_bandwidth)
+
+//------------------------------------------------------------------------------
+// write command for fec tx parameters
+
+typedef struct {
+    hoi_msg_extends;
+    t_fec_setting       fec;
+} t_hoi_msg_fec_tx;
+
+#define hoi_msg_fec_tx_init(p) hoi_msg_init(p, HOI_MSG_FEC_TX, t_hoi_msg_fec_tx)
 
 //------------------------------------------------------------------------------
 // capture/show image command
