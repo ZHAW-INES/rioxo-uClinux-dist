@@ -297,7 +297,7 @@ int vtb_audio_event(t_rscp_media *media, uint32_t event)
         case EVENT_AUDIO_IN0_OFF:
             if (rscp_media_splaying(media)) {
                 rscp_server_update(media, EVENT_AUDIO_IN0_OFF);
-                rscp_listener_add_kill(&hdoipd.listener, media);
+       //         rscp_listener_add_kill(&hdoipd.listener, media);
             }
         break;
         case EVENT_TICK:

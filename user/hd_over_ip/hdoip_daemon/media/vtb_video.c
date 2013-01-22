@@ -345,7 +345,7 @@ int vtb_video_event(t_rscp_media *media, uint32_t event)
         	report(INFO "EVENT VIDEO IN OFF");
             if (rscp_media_splaying(media)) {
                 rscp_server_update(media, EVENT_VIDEO_IN_OFF);
-                rscp_listener_add_kill(&hdoipd.listener, media);
+ //               rscp_listener_add_kill(&hdoipd.listener, media);
                 hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
                 osd_permanent(true);
                 osd_printf("vtb.video no input...\n");
