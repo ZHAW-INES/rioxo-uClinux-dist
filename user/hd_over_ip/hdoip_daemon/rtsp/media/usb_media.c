@@ -29,10 +29,10 @@ int usb_setup(t_rtsp_media UNUSED *media, t_rtsp_req_setup* m, t_rtsp_connection
 {
     report(VRB_METHOD "usb_setup");
 
-    strncpy(usb_host_ip, m->transport.destination_str, 49);
+    strncpy(usb_host_ip, m->transport.destination_str, 50);
 
     //TODO: set port in usbip
-    m->transport.port = htons(3240);
+    m->transport.port = htons(3242);
 
     rtsp_response_usb_setup(rsp, &m->transport, media->sessionid);
 

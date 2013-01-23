@@ -209,8 +209,9 @@ int rtsp_parse_transport(char* line, t_rtsp_transport* p)
         else if (str_starts_with(&token, "client_port=")) rtsp_parse_port(token, &p->client_port);
         else if (str_starts_with(&token, "server_port=")) rtsp_parse_port(token, &p->server_port);
         else if (str_starts_with(&token, "destination=")) {
-          rtsp_parse_ip(token, &p->destination);
+          memset(p->destination_str, 0, 50);
           strncpy(p->destination_str, token, 49);
+          rtsp_parse_ip(token, &p->destination);
         }
     }
 
@@ -250,7 +251,7 @@ int rtsp_parse_transport_protocol(char *line, t_rtsp_transport* p)
     token = pos + 1;
     pos = strchrnul(token, '/');
     if (pos == NULL)
-        return RTSP_PARSE_ERROR;
+        return RTSP_SUCCESS;
 
     length = pos - token;
     if (strncmp(token, "AVP", length) == 0)
