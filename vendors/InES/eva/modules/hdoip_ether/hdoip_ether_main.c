@@ -559,9 +559,6 @@ again:
 	/* Get the frame length (first byte) */
 	len = ioread32(rx_buf);
 
-	len -= RX_TIMESTAMP_LENGTH;
-	rx_buf = rx_buf + (RX_TIMESTAMP_LENGTH / sizeof(u32));
-
 #if 0
 	if (len > dev->mtu)
 		pr_warning("%s: Frame size larger than MTU: %u\n", dev->name, len);
@@ -595,7 +592,7 @@ again:
 
 out:
 	/* Update the descriptors (with wrap around) */
-	rx_desc.read += len + FRAME_SIZE_LENGTH + RX_TIMESTAMP_LENGTH;
+	rx_desc.read += len + FRAME_SIZE_LENGTH;
 	if (rx_desc.read > rx_desc.stop)
 		rx_desc.read = rx_desc.start;
 

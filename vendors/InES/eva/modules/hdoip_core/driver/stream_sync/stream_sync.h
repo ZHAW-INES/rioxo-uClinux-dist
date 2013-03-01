@@ -82,7 +82,7 @@ static inline uint32_t stream_sync_am_get_cnt(t_arith_mean* am)
     return am->cnt;
 }
 
-void stream_sync_init(t_sync_means* sm, uint32_t size_means, uint32_t size_rises, void*  ptr_aso, void*  ptr_vso, void* ptr_tmr, uint32_t dead_time, uint32_t kp, uint32_t ki, uint32_t inc_ppm);
+void stream_sync_init(t_sync_means* sm, uint32_t size_means, uint32_t size_rises, void* ptr_stat, void* ptr_tmr, uint32_t dead_time, uint32_t kp, uint32_t ki, uint32_t inc_ppm);
 void stream_sync(t_sync_means* sm);
 t_arith_mean* stream_sync_am_init(uint32_t size);
 void stream_sync_am_put(t_arith_mean* am, int32_t v);

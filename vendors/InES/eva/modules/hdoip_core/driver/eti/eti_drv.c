@@ -34,6 +34,8 @@ int eti_drv_stop(t_eti* handle)
 int eti_drv_start_aud(t_eti* handle)
 {
     eti_set_aud_filter_mask(handle->ptr, ETI_AUD_FILTER_MASK);
+    eti_set_aud_fec_col_filter_mask(handle->ptr, ETI_AUD_FEC_C_FILTER_MASK);
+    eti_set_aud_fec_row_filter_mask(handle->ptr, ETI_AUD_FEC_R_FILTER_MASK);
 
     return ERR_ETI_SUCCESS;
 }
@@ -46,6 +48,9 @@ int eti_drv_start_aud(t_eti* handle)
 int eti_drv_stop_aud(t_eti* handle)
 {
     eti_set_aud_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_aud_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_aud_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+
     return ERR_ETI_SUCCESS;
 }
 
@@ -58,7 +63,9 @@ int eti_drv_start_vid(t_eti* handle)
 {
     uint32_t tmp_ip;
     eti_set_vid_filter_mask(handle->ptr, ETI_VID_FILTER_MASK);
-    
+    eti_set_vid_fec_col_filter_mask(handle->ptr, ETI_VID_FEC_C_FILTER_MASK);
+    eti_set_vid_fec_row_filter_mask(handle->ptr, ETI_VID_FEC_R_FILTER_MASK);
+
     tmp_ip = eti_get_vid_src_ip(handle->ptr);
     REPORT(INFO, "[ETI] video ip : %pI4", &tmp_ip);
     tmp_ip = eti_get_aud_src_ip(handle->ptr);
@@ -77,6 +84,9 @@ int eti_drv_start_vid(t_eti* handle)
 int eti_drv_stop_vid(t_eti* handle)
 {
     eti_set_vid_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_vid_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_vid_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+
     return ERR_ETI_SUCCESS;
 }
 
@@ -283,8 +293,15 @@ int eti_drv_init(t_eti* handle, void* ptr)
 	eti_set_config_video_enc_dis(handle->ptr);
 
 	eti_set_cpu_filter_mask(handle->ptr, ETI_CPU_FILTER_MASK);
-	eti_set_vid_filter_mask(handle->ptr, ETI_VID_FILTER_MASK);
-	eti_set_aud_filter_mask(handle->ptr, ETI_AUD_FILTER_MASK);
+
+
+	eti_set_vid_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_vid_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_vid_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_aud_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_aud_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_aud_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+
 
     REPORT(INFO, "config reg : %08x", eti_get_config_reg(handle->ptr));
     REPORT(INFO, "status reg : %08x", eti_get_status_reg(handle->ptr));

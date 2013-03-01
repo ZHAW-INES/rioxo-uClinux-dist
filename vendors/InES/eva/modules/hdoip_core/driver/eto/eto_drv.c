@@ -338,15 +338,27 @@ void eto_drv_frame_rate_reduction(t_eto* handle, int reduction)
     }
 }
 
-void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, int enable)
+void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, t_fec_setting* fec, int enable)
 {
     uint32_t h;
     uint32_t v;
     uint32_t period_10ns;
 
+    uint32_t l = fec->video_l;
+    uint32_t d = fec->video_d;
+
     h = (timing->width + timing->hfront + timing->hpulse + timing->hback);
     v = (timing->height + timing->vfront + timing->vpulse + timing->vback);
     period_10ns = (uint32_t)(((uint64_t)100000000*h*v)/timing->pfreq);
+
+    if (fec->video_enable) {
+        if (fec->video_col_only) {
+            period_10ns = period_10ns * d / (1 + d);
+        } else {
+            period_10ns = period_10ns * l * d / (l + d + (l * d));
+        }
+    }
+
     // period_10ns must not be longer than real refresh rate of video.
     // There can be a measurement error of 1% and it still works
     period_10ns -= period_10ns / 100;

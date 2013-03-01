@@ -50,8 +50,14 @@
 #define ETI_CPU_PACKET_CNT_REG      144
 #define ETI_INV_PACKET_CNT_REG      148
 
-#define ETI_FRAME_PERIOD            156
-#define ETI_FRAME_GAP               160
+#define ETI_AUD_FEC_COL_FILTER_MASK_REG     168
+#define ETI_AUD_FEC_ROW_FILTER_MASK_REG     172
+#define ETI_VID_FEC_COL_FILTER_MASK_REG     176
+#define ETI_VID_FEC_ROW_FILTER_MASK_REG     180
+
+
+
+
 /** bit indexes 
  *
  */

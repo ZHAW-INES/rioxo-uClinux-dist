@@ -48,6 +48,10 @@
 #define eti_set_cpu_filter_mask(p, v)		HOI_WR32((p), ETI_CPU_FILTER_MASK_REG, (v))
 #define eti_set_vid_filter_mask(p, v)		HOI_WR32((p), ETI_VID_FILTER_MASK_REG, (v))
 #define eti_set_aud_filter_mask(p, v)		HOI_WR32((p), ETI_AUD_FILTER_MASK_REG, (v))
+#define eti_set_aud_fec_col_filter_mask(p, v)   HOI_WR32((p), ETI_AUD_FEC_COL_FILTER_MASK_REG, (v))
+#define eti_set_aud_fec_row_filter_mask(p, v)   HOI_WR32((p), ETI_AUD_FEC_ROW_FILTER_MASK_REG, (v))
+#define eti_set_vid_fec_col_filter_mask(p, v)   HOI_WR32((p), ETI_VID_FEC_COL_FILTER_MASK_REG, (v))
+#define eti_set_vid_fec_row_filter_mask(p, v)   HOI_WR32((p), ETI_VID_FEC_ROW_FILTER_MASK_REG, (v))
 
 #define eti_set_device_ip(p, v)			    HOI_WR32((p), ETI_DEVICE_IP_REG, swap32(v))
 #define eti_set_vid_src_ip(p, v)		    HOI_WR32((p), ETI_VID_SRC_IP_REG, swap32(v))

@@ -36,6 +36,7 @@
 #include "bdt_drv.h"
 #include "spi_drv.h"
 #include "si598.h"
+#include "fec_rx_struct.h"
 
 #define HANDLER_TIMER_INTERVAL      (HZ/20)
 
@@ -66,7 +67,9 @@ typedef struct {
     void                *p_spi_rx;
     void                *p_si598;
     void                *p_fec_tx;
+    void                *p_fec_rx;
     void                *p_fec_ip_tx;
+    void                *p_fec_ip_rx;
 
     t_i2c               i2c_tx;
     t_i2c               i2c_rx;
@@ -94,6 +97,7 @@ typedef struct {
     t_sync_means        sync;
     t_bdt               bdt;
     t_si598             si598;
+    t_fec_rx            fec_rx;
 
     t_queue             *event;
     wait_queue_head_t   eq;

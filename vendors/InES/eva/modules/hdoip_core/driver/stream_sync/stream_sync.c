@@ -134,8 +134,8 @@ void stream_sync(t_sync_means* sm) {
     #endif
 
     if (sm->running) {
-        while (sta_has_more(ptr_act)){
 
+        while (sta_has_more(ptr_act)){
             // mean of the values in the statistic fifo
             timestamp = sta_get_delay(ptr_act);
 
@@ -267,20 +267,19 @@ t_arith_mean* stream_sync_am_reset(t_arith_mean* am) {
  * @param sm pointer to the stream synchronization struct
  * @param size_means size of the ringbuffer for the mean difference between rx_timestamp-tx_timestamp
  * @param size_rises size of the ringbuffer for the mean rises between the mean differences
- * @param ptr_aso pointer to the audio(ASO)
- * @param ptr_vso pointer to the video(VSO)
+ * @param ptr_stat pointer to the statistic registers
  * @param ptr_tmr pointer to the timer
  * @param dead_time dead-time of the stream synchronization, PI controller starts after 'dead_time' samples
  * @param kp proportional gain for the PI controller, f uint32_t size_means,ormat: <32-TMR_INC_FRACTION_WIDTH>.<TMR_INC_FRACTION_WIDTH>
  * @param ki integral gain for the PI controller, format: <32-TMR_INC_FRACTION_WIDTH>.<TMR_INC_FRACTION_WIDTH>
  * @param inc_ppm tolerance for the increment value (1 +/- inc_ppm), format: <32-TMR_INC_FRACTION_WIDTH>.<TMR_INC_FRACTION_WIDTH>
  */
-void stream_sync_init(t_sync_means* sm, uint32_t size_means, uint32_t size_rises, void*  ptr_aso, void*  ptr_vso, void* ptr_tmr, uint32_t dead_time, uint32_t kp, uint32_t ki, uint32_t inc_ppm) {
+void stream_sync_init(t_sync_means* sm, uint32_t size_means, uint32_t size_rises, void* ptr_stat, void* ptr_tmr, uint32_t dead_time, uint32_t kp, uint32_t ki, uint32_t inc_ppm) {
     sm->means = stream_sync_am_init(size_means);
     sm->rises = stream_sync_am_init(size_rises);
-    sm->ptr_aso = ptr_aso + STATISTIC_REG_OFFSET_AUD;
-    sm->ptr_vso = ptr_vso + STATISTIC_REG_OFFSET_VID;
-    sm->ptr_act = ptr_vso + STATISTIC_REG_OFFSET_VID;                   // Default: timestamp source is video
+    sm->ptr_aso = ptr_stat + STATISTIC_REG_OFFSET_AUD;
+    sm->ptr_vso = ptr_stat + STATISTIC_REG_OFFSET_VID;
+    sm->ptr_act = ptr_stat + STATISTIC_REG_OFFSET_VID;                   // Default: timestamp source is video
 
     sm->ptr_tmr = ptr_tmr;
  // tmr_init(ptr_tmr);

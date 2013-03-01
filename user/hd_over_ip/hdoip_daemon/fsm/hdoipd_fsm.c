@@ -921,10 +921,16 @@ void hdoipd_start()
 
 }
 
+// TODO: this works only for receiver
+
 //#define VID_SIZE        ((3*1920*1080)+4)
-#define VID_SIZE        (3*1024*1024)
-#define AUD_RX_SIZE     (512*1024)
-#define AUD_TX_SIZE     (512*1024)
+//#define VID_SIZE        (3*1024*1024)
+//#define AUD_RX_SIZE     (512*1024)
+//#define AUD_TX_SIZE     (512*1024)
+
+#define VID_SIZE        (4)
+#define AUD_RX_SIZE     (4)
+#define AUD_TX_SIZE     (4)
 
 bool hdoipd_init(int drv)
 {

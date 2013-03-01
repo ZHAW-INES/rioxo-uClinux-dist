@@ -43,7 +43,9 @@ void hoi_drv_init(t_hoi* handle)
     handle->p_spi_tx        = ioremap(BASE_SPI_TX,      0xffffffff);
     handle->p_spi_rx        = ioremap(BASE_SPI_RX,      0xffffffff);
     handle->p_fec_tx        = ioremap(BASE_FEC_TX,      0xffffffff);
+    handle->p_fec_rx        = ioremap(BASE_FEC_RX,      0xffffffff);
     handle->p_fec_ip_tx     = ioremap(BASE_FEC_IP_TX,   0xffffffff);
+    handle->p_fec_ip_rx     = ioremap(BASE_FEC_IP_RX,   0xffffffff);
 
     // init
     handle->event = queue_init(100);
@@ -79,7 +81,7 @@ void hoi_drv_init(t_hoi* handle)
     aso_drv_init(&handle->aso, handle->p_aso);
     vio_drv_setup_osd(&handle->vio, (t_osd_font*)&vid_font_8x13, bdt_return_device(&handle->bdt));
     vrp_drv_init(&handle->vrp, &handle->vio, handle->p_vrp);
-    stream_sync_init(&handle->sync, SIZE_MEANS, SIZE_RISES, handle->p_aso, handle->p_vso, handle->p_tmr, DEAD_TIME, P_GAIN, I_GAIN, INC_PPM);
+    stream_sync_init(&handle->sync, SIZE_MEANS, SIZE_RISES, handle->p_esi, handle->p_tmr, DEAD_TIME, P_GAIN, I_GAIN, INC_PPM);
 
     if (bdt_return_device(&handle->bdt) == BDT_ID_SDI8_BOARD) {
         si598_clock_control_init(&handle->si598, &handle->i2c_tag_vid, handle->p_vio);

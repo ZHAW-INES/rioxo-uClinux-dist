@@ -53,8 +53,12 @@ label = {
     err_gateway_not_valid = "Netz&uuml;bergang ist nicht g&uuml;ltig";
     err_aud_port_not_in_range = "Audio Port ist nicht im G&uuml;ltigkeitsbereich (0 .. 65535)";
     err_aud_port_not_number = "Audio Port ist keine Nummer";
+    err_aud_port_not_even = "Audio Port muss eine Gerade Zahl sein";
     err_vid_port_not_in_range = "Video Port ist nicht im G&uuml;ltigkeitsbereich (0 .. 65535)";
     err_vid_port_not_number = "Video Port ist keine Nummer";
+    err_vid_port_not_even = "Video Port muss eine Gerade Zahl sein";
+    err_aud_port_cross_vid_port = "Audio Port darf nicht im Bereich (video port - 4) .. (video port + 4) sein";
+    err_vid_port_cross_aud_port = "Video Port darf nicht im Bereich (audio port - 4) .. (audio port + 4) sein";
     err_rscp_port_not_in_range = "RSCP Port ist nicht im G&uuml;ltigkeitsbereich (0 .. 65535)";
     err_hello_port_not_in_range = "HELLO Port ist nicht im G&uuml;ltigkeitsbereich (0 .. 65535)";
     err_rscp_port_not_number = "RSCP Port ist keine Nummer";
@@ -133,6 +137,7 @@ label = {
     p_fec_column_only = "Nur Spalten";
     p_fec_l = "L (Zeilen)";
     p_fec_d = "D (Spalten)";
+    p_fec_overhead = "Overhead";
 
     -- Page TEST
     p_usb_image = "Testbilder";

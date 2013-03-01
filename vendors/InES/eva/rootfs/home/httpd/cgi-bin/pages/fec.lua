@@ -22,9 +22,7 @@ function show(t)
         t.fec_audio_d = string.sub(temp_reg, 8, 8)
         t.fec_audio_interleave = string.sub(temp_reg, 9, 9)
         t.fec_audio_column_only = string.sub(temp_reg, 10, 10)
-
     else
-
         if(t.fec_video_en == nil) then
             t.fec_video_en = 0
         end
@@ -46,6 +44,23 @@ function show(t)
 
         hdoip.pipe.getParam(hdoip.pipe.REG_FEC_SETTING)
     end
+
+    if (tonumber(t.fec_video_column_only) == 1) then
+        overhead_video = 1 / (tonumber(t.fec_video_d) + 1) * 100
+    else
+        numerator_video = (tonumber(t.fec_video_l) + 1) + (tonumber(t.fec_video_d) + 1)
+        denominator_video = (tonumber(t.fec_video_l) + 1) * (tonumber(t.fec_video_d) + 1)
+        overhead_video = numerator_video / denominator_video * 100
+    end
+
+    if (tonumber(t.fec_audio_column_only) == 1) then
+        overhead_audio = 1 / (tonumber(t.fec_audio_d) + 1) * 100
+    else
+        numerator_audio = (tonumber(t.fec_audio_l) + 1) + (tonumber(t.fec_audio_d) + 1)
+        denominator_audio = (tonumber(t.fec_audio_l) + 1) * (tonumber(t.fec_audio_d) + 1)
+        overhead_audio = numerator_audio / denominator_audio * 100
+    end
+
 
     hdoip.html.Header(t, label.page_name .. label.page_fec, script_path)
     hdoip.html.FormHeader(script_path, main_form)
@@ -80,6 +95,12 @@ function show(t)
         hdoip.html.FormCheckbox("fec_video_column_only", 1, "", tonumber(t.fec_video_column_only))                                                                          hdoip.html.TableInsElement(1);
         hdoip.html.Text(label.p_fec_column_only);                                                                                                                           hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("fec_audio_column_only", 1, "", tonumber(t.fec_audio_column_only))                                                                          hdoip.html.TableInsElement(1);
+
+        hdoip.html.Text(label.p_fec_overhead);                                                                                                                              hdoip.html.TableInsElement(1);
+        hdoip.html.Text(math.floor(overhead_video + 0.5) .. " %");                                                                                                          hdoip.html.TableInsElement(1);
+        hdoip.html.Text(label.p_fec_overhead);                                                                                                                              hdoip.html.TableInsElement(1);
+        hdoip.html.Text(math.floor(overhead_audio + 0.5) .. " %");                                                                                                          hdoip.html.TableInsElement(1);
+
     else
         hdoip.html.Text(label.p_fec_transmitter_only)                                                                                                                       hdoip.html.TableInsElement(4);
     end

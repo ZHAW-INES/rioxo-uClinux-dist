@@ -171,7 +171,7 @@ int vtb_video_play(t_rscp_media* media, t_rscp_req_play* m, t_rscp_connection* r
     eth.ipv4_src_ip = hdoipd.local.address;
     eth.ipv4_tos = 0;
     eth.ipv4_ttl = 30;
-    eth.packet_size = 1500-44;
+    eth.packet_size = 1500-52;
     eth.rtp_ssrc = 0;
     for(n=0;n<6;n++) eth.src_mac[n] = hdoipd.local.mac[n];
     for(n=0;n<6;n++) eth.dst_mac[n] = dst_mac[n];

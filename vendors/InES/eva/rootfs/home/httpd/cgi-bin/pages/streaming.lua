@@ -129,13 +129,23 @@ function show(t)
             t.hdcp_force_str = "false"
         end 
         hdoip.pipe.setParam(hdoip.pipe.REG_FORCE_HDCP, t.hdcp_force_str)
- 
+
         if(t.save_aud_port ~= nil) then 
             if(tonumber(t.aud_port) ~= nil) then
                 t.aud_port = tonumber(t.aud_port)
                 if((t.aud_port >= 0) and (t.aud_port < 65536)) then
-                    hdoip.pipe.setParam(hdoip.pipe.REG_TEMP1, t.aud_port)
-                    pages.restart.show(t)
+                    if ((t.aud_port % 2) == 0) then
+                        t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
+                        t.vid_port = tonumber(t.vid_port)
+                        if (((t.aud_port - t.vid_port) >= 6) or ((t.vid_port - t.aud_port) >= 6))  then
+                            hdoip.pipe.setParam(hdoip.pipe.REG_TEMP1, t.aud_port)
+                            pages.restart.show(t)
+                        else
+                            hdoip.html.AddError(t, label.err_aud_port_cross_vid_port)
+                        end
+                    else
+                        hdoip.html.AddError(t, label.err_aud_port_not_even)
+                    end
                 else
                     hdoip.html.AddError(t, label.err_aud_port_not_in_range)
                 end
@@ -151,8 +161,18 @@ function show(t)
             if(tonumber(t.vid_port) ~= nil) then
                 t.vid_port = tonumber(t.vid_port)
                 if((t.vid_port >= 0) and (t.vid_port < 65536)) then
-                    hdoip.pipe.setParam(hdoip.pipe.REG_TEMP2, t.vid_port)
-                    pages.restart.show(t)
+                    if ((t.vid_port % 2) == 0) then
+                        t.aud_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_PORT)
+                        t.aud_port = tonumber(t.aud_port)
+                        if (((t.aud_port - t.vid_port) >= 6) or ((t.vid_port - t.aud_port) >= 6)) then
+                            hdoip.pipe.setParam(hdoip.pipe.REG_TEMP2, t.vid_port)
+                            pages.restart.show(t)
+                        else
+                            hdoip.html.AddError(t, label.err_vid_port_cross_aud_port)
+                        end
+                    else
+                        hdoip.html.AddError(t, label.err_vid_port_not_even)
+                    end
                 else
                     hdoip.html.AddError(t, label.err_vid_port_not_in_range)
                 end

@@ -4,10 +4,16 @@
 #include "hoi_burst.h"
 
 /* ETI configuration */
-#define ETI_CPU_FILTER_MASK		(0x00000808)
-#define ETI_VID_FILTER_MASK		(0x000004D6)
-#define ETI_AUD_FILTER_MASK 	(0x000004E6)
-#define ETI_DIS_FILTER_MASK     (0xFFFFFFFF)
+#define ETI_CPU_FILTER_MASK         (0x00000808)
+#define ETI_VID_FILTER_MASK         (0x000004D6)
+#define ETI_AUD_FILTER_MASK         (0x000004E6)
+
+#define ETI_AUD_FEC_C_FILTER_MASK   (0x000084C6)
+#define ETI_AUD_FEC_R_FILTER_MASK   (0x000044C6)
+#define ETI_VID_FEC_C_FILTER_MASK   (0x000024C6)
+#define ETI_VID_FEC_R_FILTER_MASK   (0x000014C6)
+
+#define ETI_DIS_FILTER_MASK         (0xFFFFFFFF)
 
 /* status bit declaration */
 #define ETI_DRV_RUNNING         (0x00000001)

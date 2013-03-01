@@ -12,8 +12,9 @@
 #define I_GAIN                      (0x00000001)
 #define INC_PPM                     (0x00000064)
 
-#define STATISTIC_REG_OFFSET_VID    (0x00000080)
-#define STATISTIC_REG_OFFSET_AUD    (0x00000060)
+// TODO: set correct offset for audio
+#define STATISTIC_REG_OFFSET_VID    (0x00000100)
+#define STATISTIC_REG_OFFSET_AUD    (0x00000100)
 
 #define SYNC_SOURCE_AUDIO           (0x00050000)
 #define SYNC_SOURCE_VIDEO           (0x00060000)

@@ -13,6 +13,7 @@
 #include "gs2971_drv.h"
 #include "sdi_edid.h"
 #include "fec_tx_drv.h"
+#include "fec_rx_drv.h"
 
 // demo workaround:
 #include <linux/types.h>
@@ -222,6 +223,8 @@ int hoi_drv_msg_ethstat(t_hoi* handle, t_hoi_msg_ethstat* msg)
     msg->rx_inv_cnt = eti_get_inv_packet_cnt(handle->p_esi);
     msg->debug = eti_get_debug_reg(handle->p_esi);
 
+    fec_rx_statistics(handle->p_fec_ip_rx, &handle->fec_rx);
+
     msg->tx_cpu_cnt = eto_get_cpu_packet_cnt(handle->p_eso);
     msg->tx_aud_cnt = eto_get_aud_packet_cnt(handle->p_eso);
     msg->tx_vid_cnt = eto_get_vid_packet_cnt(handle->p_eso);
@@ -325,7 +328,7 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 
     memcpy(&handle->vio.timing, &msg->timing, sizeof(t_video_timing));
 
-    eto_drv_set_frame_period(&handle->eto, &handle->vio.timing, msg->enable_traffic_shaping);
+    eto_drv_set_frame_period(&handle->eto, &handle->vio.timing, &msg->fec, msg->enable_traffic_shaping);
 
     // setup vio
     if (msg->compress) {
@@ -346,6 +349,8 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     int delay, scomm5, vid, vsd;
     uint32_t ien;
 
+    init_fec_rx_ip(handle->p_fec_ip_rx);
+
     // setup vio
     if (msg->compress & DRV_CODEC) {
         n = vio_drv_decodex(&handle->vio, &msg->timing, msg->advcnt, bdt_return_device(&handle->bdt));
@@ -359,6 +364,7 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
 
     // sync...
     vso_drv_stop(&handle->vso);
+    fec_rx_disable_video_out(handle->p_fec_rx);
 
     // if sdi, set output data rate
     if (handle->drivers & DRV_GS2972) {
@@ -385,6 +391,9 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     // switch of all nios2-irq
     ien = __builtin_rdctl(3);
     __builtin_wrctl(3, 0);
+
+    // enable fec rx output interface
+    fec_rx_enable_video_out(handle->p_fec_rx);
 
     if ((n = vso_drv_start(&handle->vso))) {
         __builtin_wrctl(3, ien);
@@ -482,6 +491,8 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
 
     // sync...
     aso_drv_stop(&handle->aso);
+    fec_rx_disable_audio_emb_out(handle->p_fec_rx);
+    fec_rx_disable_audio_int_out(handle->p_fec_rx); 
 
     // setup aso ()
     aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
@@ -502,6 +513,10 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
     if (delay < msg->delay_ms) {
         delay = msg->delay_ms;
     }
+
+    // enable fec rx output interface
+    fec_rx_enable_audio_emb_out(handle->p_fec_rx);
+    fec_rx_enable_audio_int_out(handle->p_fec_rx); 
 
     aso_drv_update(&handle->aso, &aud_params, delay);
     aso_drv_start(&handle->aso);
