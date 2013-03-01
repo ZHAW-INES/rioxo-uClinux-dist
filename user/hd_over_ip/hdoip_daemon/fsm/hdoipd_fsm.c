@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <asm-nios2/nios2.h>
 
 #include "hoi_drv_user.h"
 #include "hoi_image.h"
@@ -921,16 +922,9 @@ void hdoipd_start()
 
 }
 
-// TODO: this works only for receiver
-
-//#define VID_SIZE        ((3*1920*1080)+4)
-//#define VID_SIZE        (3*1024*1024)
-//#define AUD_RX_SIZE     (512*1024)
-//#define AUD_TX_SIZE     (512*1024)
-
-#define VID_SIZE        (4)
-#define AUD_RX_SIZE     (4)
-#define AUD_TX_SIZE     (4)
+#define VID_SIZE        (3*1024*1024)
+#define AUD_RX_SIZE     (512*1024)
+#define AUD_TX_SIZE     (512*1024)
 
 bool hdoipd_init(int drv)
 {
@@ -954,10 +948,11 @@ bool hdoipd_init(int drv)
     hdoipd.hdcp.ske_executed = 0;
     hdoipd.hdcp.enc_state = 0;
 
-    // allocate resource
-    void* vid = malloc(VID_SIZE);
-    void* aud_rx = malloc(AUD_RX_SIZE);
-    void* aud_tx = malloc(AUD_TX_SIZE);
+    // set ringbuffer addresses
+    // TODO: Audio backchannel (aud_tx) uses the same address as fec rx!
+    void* vid = (void*) (na_ddr2_1_end);
+    void* aud_rx = (void*) (vid + VID_SIZE);
+    void* aud_tx = (void*) (aud_rx + AUD_RX_SIZE);
 
     hdoipd_set_default();
 
