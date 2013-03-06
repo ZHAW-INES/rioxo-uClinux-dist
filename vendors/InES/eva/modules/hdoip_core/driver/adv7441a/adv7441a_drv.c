@@ -5,6 +5,7 @@ static t_adv7441a *adv7441a_handle; /* needed for adv7441a_proc_video_in() */
 /* Register => value conversion arrays */
 const __u32 adv7441a_audio_fs_conv[] = {44100, 0 ,48000, 32000, 0, 0, 0, 0, 88200, 0, 96000, 0, 176000, 0, 192000, 0};
 const __u32 adv7441a_audio_bit_conv[2][8] = {{0, 16, 18, 0, 19, 20, 17, 0},{0, 20, 22, 0, 23, 24, 21, 0}};
+const __u16 adv7441a_audio_chmap_conv[9] = {0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF};
 
 static int adv7441a_drv_aud_pll_reset(t_adv7441a* handle)
 {
@@ -403,6 +404,7 @@ int adv7441a_get_audio_timing(t_adv7441a* handle)
 {
 	uint8_t tmp;
 	uint8_t tmp_bit_width, tmp_mute, tmp_channel_cnt;
+	uint16_t tmp_ch_map;
 	uint32_t tmp_fs;
 
 	tmp = adv7441a_hdmi_map_read(handle,ADV7441A_REG_CHANNEL_STATUS_DATA_3);
@@ -416,6 +418,7 @@ int adv7441a_get_audio_timing(t_adv7441a* handle)
 
 	tmp = adv7441a_hdmi_map_read(handle,ADV7441A_REG_CHANNEL_STATUS_DATA_2);
 	tmp_channel_cnt = ((tmp>>4) & 0x0F) + 1;
+	tmp_ch_map = adv7441a_audio_chmap_conv[tmp_channel_cnt];
 
 	// default value for audio word size
 	if(tmp_bit_width == 0) {
@@ -432,7 +435,7 @@ int adv7441a_get_audio_timing(t_adv7441a* handle)
     } else { // capture parameter
         handle->aud_st.bit_width = tmp_bit_width;
         handle->aud_st.mute = tmp_mute;
-        handle->aud_st.channel_cnt = tmp_channel_cnt;
+        handle->aud_st.ch_map = tmp_ch_map;
         handle->aud_st.fs = tmp_fs;
 
 	    return ERR_ADV7441A_SUCCESS;
@@ -803,15 +806,15 @@ int adv7441a_irq2_handler(t_adv7441a* handle, t_queue* event_queue)
  * @param fs     correct sampling rate
  * @return error code
  */
-int adv7441a_audio_fs_change(t_adv7441a* handle, uint32_t fs, uint32_t ch_cnt)
+int adv7441a_audio_fs_change(t_adv7441a* handle, uint32_t fs, uint16_t ch_map)
 {
     if((adv7441a_get_audio_timing(handle) == ERR_ADV7441A_SUCCESS) || ((handle->status & ADV7441A_STATUS_AUDIO) == 0)) {
         handle->aud_st.fs = fs;
-        handle->aud_st.channel_cnt = ch_cnt;
+        handle->aud_st.ch_map = ch_map;
         REPORT(INFO, "[HDMI IN] audio sampling rate has changed (audio unmuted)\n");
         REPORT(INFO, "[HDMI IN] Audio fs = %d Hz", handle->aud_st.fs);
         REPORT(INFO, "[HDMI IN] Audio width = %d Bit", handle->aud_st.bit_width);
-        REPORT(INFO, "[HDMI IN] Audio count = %d", handle->aud_st.channel_cnt);
+        REPORT(INFO, "[HDMI IN] Audio ch map = %d", handle->aud_st.ch_map);
         REPORT(INFO, "[HDMI IN] Audio mute = %d\n", handle->aud_st.mute);
 
         adv7441a_audio_unmute(handle);
@@ -853,7 +856,7 @@ int adv7441a_proc_video_in(char *buf, char **start, off_t offset, int count, int
 	if(adv7441a_handle->status & ADV7441A_STATUS_AUDIO) {
 		len += sprintf(buf+len,"\n[%03d] ADV7441A HDMI audio fs          : %d\n",cnt++,adv7441a_handle->aud_st.fs);
 		len += sprintf(buf+len,"[%03d] ADV7441A HDMI audio bit         : %d\n",cnt++,adv7441a_handle->aud_st.bit_width);
-		len += sprintf(buf+len,"[%03d] ADV7441A HDMI audio channel cnt : %d\n",cnt++,adv7441a_handle->aud_st.channel_cnt);
+		len += sprintf(buf+len,"[%03d] ADV7441A HDMI audio channel map : %d\n",cnt++,adv7441a_handle->aud_st.ch_map);
 		len += sprintf(buf+len,"[%03d] ADV7441A HDMI audio muted       : %d\n",cnt++,adv7441a_handle->aud_st.mute);
 	}
 

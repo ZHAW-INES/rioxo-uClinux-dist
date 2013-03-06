@@ -625,7 +625,7 @@ void show_local_ip_address_on_osd()
 
     if (vtb) {
         if (fs != 0) {
-            osd_printf("\nAudio:             %i Hz  %i Bit  %i channel", info->audio_fs[0], info->audio_width[0], info->audio_cnt[0]);
+            osd_printf("\nAudio Embedded:    %i Hz  %i Bit  %i channel", 1, 2, 0); // TODO: (info->aud_params)[0].fs[0], info->aud_params.sample_width[0], info->aud_params.ch_map[0]);
         } else {
             osd_printf("\nAudio:             (no audio)");
         }

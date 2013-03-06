@@ -1,37 +1,5 @@
 #include "stdaud.h"
-
-/* converts container format to amount of bits
- *
- * @param container audio container format
- * @return amount of bits per sample
- */
-uint8_t aud_container_to_bits(uint32_t container)
-{
-    switch(container) {
-        case AUD_I2S_8BIT : return 8;
-        case AUD_I2S_16BIT: return 16;
-        case AUD_I2S_24BIT: return 24;
-        case AUD_I2S_32BIT: return 32;
-        default: return 0;  /* unknow container */
-    }
-}
-
-/* converts amount of bits to audio container format
- *
- * @param bits amount of bits per sample
- * @return audio container format
- */
-uint32_t aud_bits_to_container(uint8_t bits)
-{
-    switch(bits) {
-        case 8:  return AUD_I2S_8BIT;
-        case 16: return AUD_I2S_16BIT;
-        case 24: return AUD_I2S_24BIT;
-        case 32: return AUD_I2S_32BIT;
-        default: return 0;  /* unknow amount of bits */
-    }
-}
-
+#include "std.h"
 
 /* Align the amount of channels and bits per sample to 32 bit words
  *
@@ -81,13 +49,11 @@ uint8_t aud_get_sample_length(uint8_t bits, uint8_t channels)
  *
  * @param aud_params pointer to the audio parameter struct
  */
-void aud_report_params(struct hdoip_aud_params* aud_params) 
+void aud_report_params(struct hdoip_aud_params* aud_params)
 {
-
-    REPORT(INFO, "Channel left count  : %d", aud_params->ch_cnt_left);
-    REPORT(INFO, "Channel right count : %d", aud_params->ch_cnt_right);
+    REPORT(INFO, "Channel map         : 0x%01X", aud_params->ch_map);
     REPORT(INFO, "Sampling frequency  : %d Hz", aud_params->fs);
-    REPORT(INFO, "Bits / sample       : %d bit", aud_params->sample_width);    
+    REPORT(INFO, "Bits / sample       : %d bit\n", aud_params->sample_width);
 
 }
 

@@ -9,6 +9,7 @@
 // System frequency
 #define SFREQ               (100000000)
 #define SPERIOD             (10) /* in ns */
+#define AUD_GEN_FREQ        (2*SFREQ)
 // Video pll base frequency
 #define BFREQ               (75000000)
 // ADV Frequency

@@ -80,4 +80,6 @@
 #define ERR_HDCP                                (0xeC000000)
 #define ERR_HDCP_SUCCESS                        (ERR_HDCP+1)
 
+#define ERR_GENERAL								(0x00000001)
+
 #endif /* ERR_H_ */

@@ -22,27 +22,21 @@
 #define ASI_DRV_ETH_HEADER_LEN          (5)     /* in 32 bit words */
 #define ASI_DRV_IPV4_HEADER_LEN         (5)     /* in 32 bit words */
 #define ASI_DRV_UDP_HEADER_LEN          (2)     /* in 32 bit words */
-#define ASI_DRV_RTP_HEADER_LEN          (4)     /* in 32 bit words */
-#define ASI_DRV_AES_HEADER_LEN          (2)     /* in 32 bit words */
+#define ASI_DRV_RTP_HEADER_LEN          (3)     /* in 32 bit words */
 
 /* status bits */
-#define ASI_DRV_STATUS_ACTIV            (0x00000001)
-#define ASI_DRV_STATUS_ETH_PARAMS_SET   (0x00000002)
-#define ASI_DRV_STATUS_AUD_PARAMS_SET   (0x00000004)
-#define ASI_DRV_STATUS_RBF_ERROR        (0x00000008)
+#define ASI_DRV_STREAM_STATUS_ACTIV             (0x00000001)
+#define ASI_DRV_STREAM_STATUS_ETH_PARAMS_SET    (0x00000002)
+#define ASI_DRV_STREAM_STATUS_AUD_PARAMS_SET    (0x00000004)
+
+#define ASI_DRV_STATUS_RBF_ERROR                (0x00000001)
 
 typedef struct {
     uint32_t                    status;
-    uint32_t                    fs;
-    uint32_t                    ch_cnt;
-    uint32_t                    ch_cnt_old;
-    uint32_t                    sampling_rate;
-    uint32_t                    sampling_rate_old;
+    uint32_t                    stream_status[AUD_STREAM_CNT];
     void*                       p_asi;
-    struct hdoip_eth_params     eth_params;
-    uint32_t                    audio_event_queue;
-    bool                        stop_queue;
-    uint32_t                    stop_counter;
+    uint32_t                    detected_fs[AUD_STREAM_CNT];
+    uint16_t                    detected_ch_map[AUD_STREAM_CNT];
 } t_asi;
 
 

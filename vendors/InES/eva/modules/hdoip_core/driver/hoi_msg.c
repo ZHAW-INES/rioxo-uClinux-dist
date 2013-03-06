@@ -29,6 +29,7 @@
 #include "wdg_hal.h"
 #include "hdcp_hal.h"
 #include "sdi_edid.h"
+#include "../hal/aud/stdaud.h"
 //------------------------------------------------------------------------------
 // Load driver
 
@@ -474,12 +475,7 @@ int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
     fec_drv_set_audio_eth_params(handle->p_fec_tx, &msg->eth);
 
     // setup asi
-    aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
-    aud_params.ch_cnt_right = msg->channel_cnt - aud_params.ch_cnt_left;
-    aud_params.fs = msg->fs;
-    aud_params.sample_width = msg->width;
-    asi_drv_update(&handle->asi, &msg->eth, &aud_params);
-    asi_drv_start(&handle->asi);
+    asi_drv_update(&handle->asi, msg->stream_nr, &msg->eth, &msg->aud); // this also stops and restarts stream
 
     return SUCCESS;
 }
@@ -495,8 +491,8 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
     fec_rx_disable_audio_int_out(handle->p_fec_rx); 
 
     // setup aso ()
-    aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
-    aud_params.ch_cnt_right = msg->channel_cnt - aud_params.ch_cnt_left;
+ //   aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
+ //   aud_params.ch_cnt_right = msg->channel_cnt - aud_params.ch_cnt_left;
     aud_params.fs = msg->fs;
     aud_params.sample_width = msg->width;
 
@@ -603,11 +599,11 @@ int hoi_drv_msg_led(t_hoi* handle, t_hoi_msg_param* msg)
 
 int hoi_drv_msg_new_audio(t_hoi* handle, t_hoi_msg_param* msg)
 {
-	int ch_cnt;
+    uint16_t ch_map;
 
     if (handle->drivers & DRV_ADV7441) {
-        ch_cnt = asi_drv_get_ch_cnt(&handle->asi);
-        adv7441a_audio_fs_change(&handle->adv7441a, msg->value, ch_cnt);
+        ch_map = asi_drv_get_detected_ch_map(&handle->asi, AUD_STREAM_NR_EMBEDDED);
+        adv7441a_audio_fs_change(&handle->adv7441a, msg->value, ch_map);
     }
     if (handle->drivers & DRV_GS2971) {
         gs2971_get_audio_config(&handle->gs2971);
@@ -750,20 +746,20 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
 
     // read audio input timing (from video board) [ch: 0..15]
     if (handle->drivers & DRV_ADV7441) {
-        msg->audio_fs[0] = handle->adv7441a.aud_st.fs;
-        msg->audio_width[0] = handle->adv7441a.aud_st.bit_width;
-        msg->audio_cnt[0] = handle->adv7441a.aud_st.channel_cnt;
+        // TODO: perhaps replace t_adv7441a_aud_st with hdoip_aud_params
+        msg->aud_params[AUD_STREAM_NR_EMBEDDED].fs = handle->adv7441a.aud_st.fs;
+        msg->aud_params[AUD_STREAM_NR_EMBEDDED].sample_width = handle->adv7441a.aud_st.bit_width;
+        msg->aud_params[AUD_STREAM_NR_EMBEDDED].ch_map = handle->adv7441a.aud_st.ch_map;
     }
     if (handle->drivers & DRV_GS2971) {
-        msg->audio_fs[0] = handle->gs2971.aud_st.fs;
-        msg->audio_width[0] = handle->gs2971.aud_st.bit_width;
-        msg->audio_cnt[0] = handle->gs2971.aud_st.channel_cnt;
+        msg->aud_params[AUD_STREAM_NR_EMBEDDED].fs = handle->gs2971.aud_st.fs;
+        msg->aud_params[AUD_STREAM_NR_EMBEDDED].sample_width = handle->gs2971.aud_st.bit_width;
+        msg->aud_params[AUD_STREAM_NR_EMBEDDED].ch_map = handle->gs2971.aud_st.ch_map;
     }
-
-    // read audio input timing (from audio board) [ch: 16..31]
-    msg->audio_fs[1] = 0;
-    msg->audio_width[1] = 0;
-    msg->audio_cnt[1] = 0;
+    // read audio input timing (from audio board)
+    msg->aud_params[AUD_STREAM_NR_IF_BOARD].fs = 0;
+    msg->aud_params[AUD_STREAM_NR_IF_BOARD].sample_width = 0;
+    msg->aud_params[AUD_STREAM_NR_IF_BOARD].ch_map = 0;
     return SUCCESS;
 }
 
@@ -817,7 +813,7 @@ int hoi_drv_msg_get_stime(t_hoi* handle, t_hoi_msg_param* msg)
 
 int hoi_drv_msg_get_fs(t_hoi* handle, t_hoi_msg_param* msg)
 {
-    msg->value = asi_drv_get_fs(&handle->asi);
+    msg->value = asi_drv_get_detected_fs(&handle->asi, AUD_STREAM_NR_EMBEDDED);
     return SUCCESS;
 }
 

@@ -291,14 +291,14 @@ int gs2971_get_video_timing(t_gs2971 *handle, t_video_timing *measured_timing)
 int gs2971_get_audio_config(t_gs2971 *handle)
 {
     handle->aud_st.fs = 48000;
-    handle->aud_st.channel_cnt = 8;
+    handle->aud_st.ch_map = 0x00FF; /* constant 8 channels */
     handle->aud_st.bit_width = 24;
     handle->aud_st.mute= 0;
 
     REPORT(INFO, "[SDI IN] audio sampling rate has changed\n");
     REPORT(INFO, "[SDI IN] Audio fs = %d Hz", handle->aud_st.fs);
     REPORT(INFO, "[SDI IN] Audio width = %d Bit", handle->aud_st.bit_width);
-    REPORT(INFO, "[SDI IN] Audio count = %d", handle->aud_st.channel_cnt);
+    REPORT(INFO, "[SDI IN] Audio ch map = 0x%02X", handle->aud_st.ch_map);
     REPORT(INFO, "[SDI IN] Audio mute = %d\n", handle->aud_st.mute);
 
     return 1;

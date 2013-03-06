@@ -99,6 +99,7 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     int n, hdcp;
     t_rscp_rtp_format fmt;
     hdoip_eth_params eth;
+    struct hdoip_aud_params aud;
     char dst_mac[6];
     t_fec_setting fec;
     char *fec_setting;
@@ -165,14 +166,16 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
     // asi parameters (TODO: restrict audio channel based on registry)
     t_hoi_msg_info *nfo;
     hoi_drv_info_all(&nfo);
-    fmt.compress = nfo->audio_width[0];
-    fmt.value = nfo->audio_fs[0];
-    fmt.value2 = nfo->audio_cnt[0];
+    memcpy(&aud, &(nfo->aud_params[AUD_STREAM_NR_EMBEDDED]), sizeof(struct hdoip_aud_params));
+
+    fmt.compress = aud.sample_width;
+    fmt.value = aud.fs;
+    fmt.value2 = (uint32_t) aud.ch_map;
     hoi_drv_get_mtime(&fmt.rtptime);
 
-    if ( ((nfo->audio_width[0]<8) || (nfo->audio_width[0]>32)) ||
-         ((nfo->audio_fs[0]<32000) || (nfo->audio_fs[0]>192000)) ||
-         ((nfo->audio_cnt[0]<1) || (nfo->audio_cnt[0]>8)) ) {
+    if ( ((aud.sample_width < 8) || (aud.sample_width > 32)) ||
+         ((aud.fs < 32000) || (aud.fs > 192000)) ||
+         (aud.ch_map < 0x01) ) {
           rscp_err_def_source(rsp);
           return RSCP_REQUEST_ERROR;
     }
@@ -197,8 +200,8 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
         // activate asi
 #ifdef AUD_IN_PATH
         uint8_t channel_select[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
-        hoi_drv_asi(0, &eth, nfo->audio_fs[0], nfo->audio_width[0], nfo->audio_cnt[0], channel_select, &fec);
-        report(INFO "\naudio streaming started(fs = %d Hz, bitwidth = %d Bit)", nfo->audio_fs[0], nfo->audio_width[0]);
+        hoi_drv_asi(AUD_STREAM_NR_EMBEDDED, &eth, &aud, &fec);
+        report(INFO "\naudio embedded streaming started(fs = %d Hz, bitwidth = %d Bit, ch_map = 0x%02X)", aud.fs, aud.sample_width, aud.ch_map);
 #endif
         // We are streaming Audio now...
         hdoipd_set_vtb_state(VTB_AUDIO);

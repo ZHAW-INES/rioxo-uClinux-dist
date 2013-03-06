@@ -13,6 +13,7 @@
 #include <linux/types.h>
 #include "../hal/vid/stdvid.h"
 #include "../hal/eth/stdeth.h"
+#include "../hal/aud/stdaud.h"
 #include "../stdinc/event.h"
 #include "../driver/fec_tx/fec_tx_struct.h"
 
@@ -317,13 +318,10 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
-    uint32_t            cfg;
-    t_fec_setting       fec;            //!< (wr) fec parameters
-    hdoip_eth_params    eth;            //!< (wr) ethernet parameter
-    uint32_t            fs;             //!< (wr) sampel frequency in Hz
-    uint32_t            width;          //!< (wr) sampel bit width
-    uint32_t            channel_cnt;    //!< (wr) number of used audio channels
-    uint8_t             channel[16];    //!< (wr) mapping of input/transport channel
+    t_fec_setting              fec;            //!< (wr) fec parameters
+    int unsigned               stream_nr;
+    struct hdoip_eth_params    eth;            //!< (wr) ethernet parameter
+    struct hdoip_aud_params    aud;            //!< (wr) audio parameter
 } t_hoi_msg_asi;
 
 #define hoi_msg_asi_init(p) hoi_msg_init(p, HOI_MSG_ASI, t_hoi_msg_asi)
@@ -343,6 +341,14 @@ typedef struct {
 
 #define hoi_msg_aso_init(p) hoi_msg_init(p, HOI_MSG_ASO, t_hoi_msg_aso)
 
+typedef struct {
+    hoi_msg_extends;
+    int unsigned                slave_nr;
+    uint32_t                    stime;
+} t_hoi_msg_stime;
+
+#define hoi_msg_get_stime_init(p) hoi_msg_init(p, HOI_MSG_GETSTIME, t_hoi_msg_stime)
+#define hoi_msg_set_stime_init(p) hoi_msg_init(p, HOI_MSG_SETSTIME, t_hoi_msg_stime)
 
 //------------------------------------------------------------------------------
 // read/write single uin32_t command
@@ -440,13 +446,10 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
-    t_video_timing      timing;         //!< timing of video
-    uint32_t            advcnt;
-    uint32_t            advcnt_old;
-    uint32_t            audio_fs[2];    //!< audio sampling frequency [HZ] (0=off)
-    uint32_t            audio_width[2]; //!< audio sample width [bit]
-    uint32_t            audio_cnt[2];   //!< number of active channels
-    uint32_t            audio_map;      //!< bitmap for active audio channels
+    t_video_timing              timing;                         //!< timing of video
+    uint32_t                    advcnt;
+    uint32_t                    advcnt_old;
+    struct hdoip_aud_params     aud_params[AUD_STREAM_CNT];
 } t_hoi_msg_info;
 
 #define hoi_msg_info_init(p) hoi_msg_init(p, HOI_MSG_INFO, t_hoi_msg_info)

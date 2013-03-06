@@ -3,207 +3,194 @@
 
 /** Starts audio stream in 
  *
- * @param handle pointer to the audio stream in handle struct
+ * @param asi pointer to the audio stream in asi struct
  * @return error code
  */
-int asi_drv_start(t_asi* handle)
+int asi_drv_start(t_asi* asi, int unsigned stream)
 {
-    if((handle->status & ASI_DRV_STATUS_AUD_PARAMS_SET) == 0) {
+    if((asi->stream_status[stream] & ASI_DRV_STREAM_STATUS_AUD_PARAMS_SET) == 0) {
         return ERR_ASI_AUD_PARAMS_NOT_SET;
     }
 
-    if((handle->status & ASI_DRV_STATUS_ETH_PARAMS_SET) == 0) {
+    if((asi->stream_status[stream] & ASI_DRV_STREAM_STATUS_ETH_PARAMS_SET) == 0) {
         return ERR_ASI_ETH_PARAMS_NOT_SET;
     }
     
-    asi_enable(handle->p_asi);
-    handle->status = handle->status | ASI_DRV_STATUS_ACTIV;
+    asi_enable(asi->p_asi, stream);
+    asi->stream_status[stream] |= ASI_DRV_STREAM_STATUS_ACTIV;
     return ERR_ASI_SUCCESS; 
 }
 
 /** Stops audio stream in 
  *
- * @param handle pointer to the audio stream in handle struct
+ * @param asi pointer to the audio stream in asi struct
  * @return error code
  */
-int asi_drv_stop(t_asi* handle)
+int asi_drv_stop(t_asi* asi, int unsigned stream)
 {
-    asi_disable(handle->p_asi);
+    uint32_t mask = asi_stat_idle_mask(stream);
 
-    while(asi_get_ctrl(handle->p_asi, ASI_STAT_IDLE) != 0);
+    /* stop stream */
+    asi_disable(asi->p_asi, stream);
 
-    handle->status = handle->status & ~ASI_DRV_STATUS_ACTIV;
+    /* wait for DMA/FSM to return in IDLE */
+    while(asi_get_status(asi->p_asi, mask) == 0);
+
+    asi->stream_status[stream] &= ~ASI_DRV_STREAM_STATUS_ACTIV;
     return ERR_ASI_SUCCESS;
 }
 
-
-
 /** Initialize audio stream in core driver  
  *
- * @param handle pointer to the audio stream in handle struct
+ * @param asi pointer to the audio stream in asi struct
  * @param p_asi start address of the ACB registers
  * @return error code
  */
-int asi_drv_init(t_asi* handle, void* p_asi) 
+int asi_drv_init(t_asi* asi, void* p_asi)
 {
+    int i;
+
     REPORT(INFO, "+--------------------------------------------------+");
     REPORT(INFO, "| ASI-Driver: Initialize audio stream in           |");
     REPORT(INFO, "+--------------------------------------------------+");
 
-    handle->p_asi = p_asi;
-    handle->status = 0;
-    handle->audio_event_queue = 0;
+    asi->p_asi = p_asi;
+    asi->status = 0;
 
-    asi_drv_stop(handle); 
+    for (i = 0; i < AUD_STREAM_CNT; i++) {
+      asi->stream_status[i] = 0;
+      asi->detected_fs[i] = 0;
+      asi->detected_ch_map[i] = 0;
+      asi_drv_stop(asi, i);
+    }
 
     asi_set_dma_burst_size(p_asi, ASI_DRV_DMA_BURST_SIZE);
 
     return ERR_ASI_SUCCESS;
 }
 
-
-
 /** Updates all parameters (audio and ethernet)
  *
- * @param handle pointer to the audio stream in handle struct
+ * @param asi pointer to the audio stream in asi struct
  * @param eth_params pointer to the ethernet paramerter struct
  * @param aud_params pointer to the audio parameter struct
  * @return error code
  */
-int asi_drv_update(t_asi* handle, struct hdoip_eth_params* eth_params, struct hdoip_aud_params* aud_params)
+int asi_drv_update(t_asi* asi, int unsigned stream,
+    struct hdoip_eth_params* eth_params, struct hdoip_aud_params* aud_params)
 {
     uint32_t err;
 
-    REPORT(INFO, "status : %x", handle->status);
+    REPORT(INFO, "status : %x", asi->status);
 
-    asi_drv_stop(handle);
+    asi_drv_stop(asi, stream);
 
-    err = asi_drv_set_eth_params(handle, eth_params);
+    err = asi_drv_set_eth_params(asi, stream, eth_params, aud_params);
     if(err != ERR_ASI_SUCCESS) {
         return err;
     }
 
-    err = asi_drv_set_aud_params(handle, aud_params);
+    err = asi_drv_set_aud_params(asi, stream, aud_params);
     if(err != ERR_ASI_SUCCESS) {
         return err;
     }
 
-    asi_drv_start(handle);
-
-    return ERR_ASI_SUCCESS;
-}
-
-/** Inittialize the ringbuffer (write pointer)
- *
- * @param handle pointer to the asi handle
- * @param start_ptr start address of the buffer
- * @param size size of the buffer
- * @return error code
- */
-int asi_drv_set_buf(t_asi* handle, void* start_ptr, size_t size)
-{
-    t_rbf_dsc dsc;
-    rbf_dsc(&dsc, start_ptr, size);
-    asi_set_dsc(handle->p_asi,  &dsc);
+    asi_drv_start(asi, stream);
 
     return ERR_ASI_SUCCESS;
 }
 
 /** Flush the ringbuffer (set write to read pointer)
  *
- * @param handle pointer to the asi handle
+ * @param asi pointer to the asi asi
+ * @param dsc ringbuffer descriptor set
  * @return error code
  */
-int asi_drv_flush_buf(t_asi* handle)
+int asi_drv_flush_buf(t_asi* asi)
 {
-    asi_set_write_dsc(handle->p_asi, asi_get_read_dsc(handle->p_asi));
+    asi_set_write_dsc(asi->p_asi, asi_get_read_dsc(asi->p_asi));
     return ERR_ASI_SUCCESS;
 }
 
 /** Sets ethernet parameters (asi must be stoped) 
  *
- * @param handle pointer to the audio stream in handle struct
+ * @param asi pointer to the audio stream in asi struct
  * @param eth_params pointer to the ethernet parameter struct
  * @return error code
  */
-int asi_drv_set_eth_params(t_asi* handle, struct hdoip_eth_params* eth_params) 
+int asi_drv_set_eth_params(t_asi* asi, int unsigned stream,
+    struct hdoip_eth_params* eth_params, struct hdoip_aud_params* aud_params)
 {
-    if((handle->status & ASI_DRV_STATUS_ACTIV) != 0) {
+    uint16_t payload_words, frame_size;
+    uint8_t sample_len, ch;
+
+    /* check params */
+    if((asi->stream_status[stream] & ASI_DRV_STREAM_STATUS_ACTIV) != 0) {
         return ERR_ASI_RUNNING;
     }
-
     if(((eth_params->packet_size) < ASI_DRV_MIN_FRAME_SIZE) || ((eth_params->packet_size) > ASI_DRV_MAX_FRAME_SIZE)) {
         return ERR_ASI_PACKET_LENGTH_ERR;
     }
 
-    memcpy(&handle->eth_params, eth_params, sizeof(struct hdoip_eth_params));
+    /* calculate payload words (frame size must match data container) */
+    ch =  aud_chmap2cnt(aud_params->ch_map);
+    payload_words = eth_params->packet_size/4 - ASI_DRV_ETH_HEADER_LEN - ASI_DRV_IPV4_HEADER_LEN - ASI_DRV_UDP_HEADER_LEN - ASI_DRV_RTP_HEADER_LEN;
+    sample_len = aud_get_sample_length(aud_params->sample_width, ch);
+    payload_words = (payload_words / sample_len ) * sample_len; /* round */
 
-    asi_set_eth_params(handle->p_asi, eth_params);
+    /* calculate header length fields */
+    frame_size = (payload_words + ASI_DRV_RTP_HEADER_LEN - 1) * 4;
 
-    handle->status = (handle->status & ~ASI_DRV_STATUS_AUD_PARAMS_SET) | ASI_DRV_STATUS_ETH_PARAMS_SET;
+    /* set registers */
+    asi_set_frame_size(asi->p_asi, stream, frame_size);
+    asi_set_payload_words(asi->p_asi, stream, payload_words);
+    asi_set_eth_params(asi->p_asi, stream, eth_params);
 
+    /* finish */
+    asi->stream_status[stream] |= ASI_DRV_STREAM_STATUS_ETH_PARAMS_SET;
     eth_report_params(eth_params);
-
     return ERR_ASI_SUCCESS;
 }
 
 /** Get the ethernet parameters
  *
- * @param handle pointer to the audio stream in handle struct
+ * @param asi pointer to the audio stream in asi struct
  * @param eth_params pointe to the ethernet parameter struct
  * @return error code
  */
-int asi_drv_get_eth_params(t_asi* handle, struct hdoip_eth_params* eth_params)
+int asi_drv_get_eth_params(t_asi* asi, int unsigned stream, struct hdoip_eth_params* eth_params)
 {
-    if((handle->status & ASI_DRV_STATUS_ETH_PARAMS_SET) == 0) {
+    if((asi->stream_status[stream] & ASI_DRV_STREAM_STATUS_ETH_PARAMS_SET) == 0) {
         return ERR_ASI_ETH_PARAMS_NOT_SET;
     }
 
-    asi_get_eth_params(handle->p_asi, eth_params);
-
-    memcpy(&handle->eth_params, eth_params, sizeof(struct hdoip_eth_params));  
+    asi_get_eth_params(asi->p_asi, stream, eth_params);
 
     return ERR_ASI_SUCCESS;
 }
 
 /** Sets audio parameters (asi must be stoped and ethernet parameters set)
  *
- * @param handle pointer to the audio stream in handle struct
+ * @param asi pointer to the audio stream in asi struct
  * @param aud_params pointer to the audio parameter struct
  * @return error code
  */
-int asi_drv_set_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params) 
+int asi_drv_set_aud_params(t_asi* asi, int unsigned stream, struct hdoip_aud_params* aud_params)
 {
     uint32_t steps_per_sec, tmp;
-    uint16_t payload_words, frame_size, time_per_word;
-    uint8_t sample_len, ch;
-
+    uint16_t time_per_word;
+    uint8_t ch;
 
     if ((aud_params->sample_width) > 16) {
         aud_params->sample_width = 24;
     }
-
-    if((handle->status & ASI_DRV_STATUS_ACTIV) != 0) {
+    if((asi->stream_status[stream] & ASI_DRV_STREAM_STATUS_ACTIV) != 0) {
         return ERR_ASI_RUNNING;
     }
 
-    if((handle->status & ASI_DRV_STATUS_ETH_PARAMS_SET) == 0) {
-        return ERR_ASI_ETH_PARAMS_NOT_SET;
-    }
-
-    ch = aud_params->ch_cnt_left + aud_params->ch_cnt_right; 
-
-    /* calculate payload words */
-    payload_words = handle->eth_params.packet_size/4 - ASI_DRV_ETH_HEADER_LEN - ASI_DRV_IPV4_HEADER_LEN - ASI_DRV_UDP_HEADER_LEN - ASI_DRV_RTP_HEADER_LEN - ASI_DRV_AES_HEADER_LEN;
-    sample_len = aud_get_sample_length(aud_params->sample_width, ch);
-    payload_words = (payload_words / sample_len ) * sample_len; /* round */
-
-    /* calculate header length fields */
-    frame_size = (payload_words + ASI_DRV_RTP_HEADER_LEN + ASI_DRV_AES_HEADER_LEN) * 4;
-
     /* calculate time per word */
+    ch =  aud_chmap2cnt(aud_params->ch_map);
     tmp = aud_params->fs * ch;
-
     switch(aud_params->sample_width) {
         case 24: tmp = tmp - (tmp>>2);  /* tmp = tmp * 3/4 */
                  break;
@@ -216,13 +203,10 @@ int asi_drv_set_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params)
     time_per_word = (uint16_t) (((1 << 6) * steps_per_sec) / tmp);
 
     /* write parameter to registers */
-    asi_set_frame_size(handle->p_asi, frame_size);
-    asi_set_payload_words(handle->p_asi, payload_words);
-    asi_set_time_per_word(handle->p_asi, time_per_word);
-    asi_set_aud_params(handle->p_asi, aud_params);
+    asi_set_time_per_word(asi->p_asi, stream, time_per_word);
+    asi_set_aud_params(asi->p_asi, stream, aud_params);
 
-    handle->status = handle->status | ASI_DRV_STATUS_AUD_PARAMS_SET;
-    
+    asi->stream_status[stream] |= ASI_DRV_STREAM_STATUS_AUD_PARAMS_SET;
     aud_report_params(aud_params);
 
     return ERR_ASI_SUCCESS;
@@ -230,119 +214,104 @@ int asi_drv_set_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params)
 
 /** Get the audio parameters
  *
- * @param handle pointer to the audio stream in handle struct
+ * @param asi pointer to the audio stream in asi struct
  * @param aud_params pointe to the audio parameter struct
  * @return error code
  */ 
-int asi_drv_get_aud_params(t_asi* handle, struct hdoip_aud_params* aud_params) 
+int asi_drv_get_aud_params(t_asi* asi, int unsigned stream, struct hdoip_aud_params* aud_params)
 { 
-    if((handle->status & ASI_DRV_STATUS_AUD_PARAMS_SET) == 0) {
+    if((asi->stream_status[stream] & ASI_DRV_STREAM_STATUS_AUD_PARAMS_SET) == 0) {
         return ERR_ASI_AUD_PARAMS_NOT_SET;
     }
 
-    asi_get_aud_params(handle->p_asi, aud_params);
+    asi_get_aud_params(asi->p_asi, stream, aud_params);
     return ERR_ASI_SUCCESS;
 }
 
-/** audio stream in handler
+static uint32_t count2fs(uint32_t cnt)
+{
+    int i;
+    uint32_t fs = 0;
+    /* possible sampling rates */
+    const uint32_t fs_tab[7] = {32000, 44100, 48000, 88200, 96000, 176400, 192000};
+    /* counter counts over 2^17 micro seconds = 0.131s -> fs_tab * 0.131 =>  */
+    const uint32_t cnt_tab[7] = {4194, 5780, 6291, 11561, 12583, 23121, 25166};
+    const uint32_t tol = 7; // tolerance is 2^-tol * cnt_tab
+
+    for (i=0; i < 7; i++) {
+        if (cnt >= cnt_tab[i]) {
+            if ((cnt - cnt_tab[i]) < (cnt_tab[i] >> tol))
+                fs = fs_tab[i];
+        }
+        else {
+            if ((cnt_tab[i] - cnt) < (cnt_tab[i] >> tol))
+                fs = fs_tab[i];
+        }
+    }
+
+    return fs;
+}
+
+/** audio stream in asir
  *
- * @param handle pointer to the audio stream in handle struct
+ * @param asi pointer to the audio stream in asi struct
  * @param event_queue pointer to the event queue struct
  * @return error code
  */
-int asi_drv_handler(t_asi* handle, t_queue* event_queue)
+int asi_drv_handler(t_asi* asi, t_queue* event_queue)
 {
-    int i;
-    uint32_t status =  asi_get_status(handle->p_asi,0xFFFFFFFF);
-    uint32_t fs = asi_get_fs(handle->p_asi);
-    uint32_t ch_cnt_tmp = asi_get_ch_cnt(handle->p_asi);
-    uint32_t ch_cnt = 0;
+    uint32_t status =  asi_get_status(asi->p_asi,0xFFFFFFFF);
+    uint32_t fs_counter = asi_get_fs_detect(asi->p_asi, AUD_STREAM_NR_EMBEDDED);
+    uint32_t fs;
+    static uint32_t fs_old;
+    static uint32_t ch_map_old;
+    static int settings_changed = 0;
+    uint32_t detected_ch_map = asi_get_ch_map_detected(asi->p_asi, AUD_STREAM_NR_EMBEDDED);
+    //for debugging
+    uint32_t active_stream[3] = {0,0,0}, send_request[3] = {0,0,0};
 
     if((status & ASI_STAT_RBFULL) != 0) {
-        if((handle->status & ASI_DRV_STATUS_RBF_ERROR) == 0) {
+        if((asi->status & ASI_DRV_STATUS_RBF_ERROR) == 0) {
             queue_put(event_queue, E_ASI_RBF_ERROR);
         }
-        handle->status = handle->status | ASI_DRV_STATUS_RBF_ERROR;
+        asi->status = asi->status | ASI_DRV_STATUS_RBF_ERROR;
     } else { 
-        handle->status = handle->status & ~ASI_DRV_STATUS_RBF_ERROR;
+        asi->status = asi->status & ~ASI_DRV_STATUS_RBF_ERROR;
     }
 
-    // detect sampling rate
-    if ((handle->fs) != fs) {
-        switch (fs/200) {                           // mysterious bug in gateware: why is double of fs measured
-            case (31):  case (32):  handle->sampling_rate = 32000;
-                                    break;
-            case (43):  case (44):  handle->sampling_rate = 44100;
-                                    break;
-            case (47):  case (48):  handle->sampling_rate = 48000;
-                                    break;
-            case (87):  case (88):  handle->sampling_rate = 88200;
-                                    break;
-            case (95):  case (96):  handle->sampling_rate = 96000;
-                                    break;
-            case (175): case (176): handle->sampling_rate = 176400;
-                                    break;
-            case (191): case (192): handle->sampling_rate = 192000;
-                                    break;
-            default:                handle->sampling_rate = 0;
-        }
-        if (handle->sampling_rate_old != handle->sampling_rate) {
-            handle->audio_event_queue = 1;
-        }
-        handle->sampling_rate_old = handle->sampling_rate;
+    // detect fs change
+    fs = count2fs(fs_counter);
+    if (fs != fs_old) {
+      settings_changed = 1;
     }
-    handle->fs = fs;
+    fs_old = fs;
 
-    // detect number of channels
-    for(i=0;i<32;i++) {
-        ch_cnt += ((ch_cnt_tmp >> i) & 0x00000001);
+    // detect ch_map change
+    if (detected_ch_map != ch_map_old) {
+        settings_changed = 1;
     }
-    if ((handle->ch_cnt) != ch_cnt) {
-        if (ch_cnt == 0) {
-            // wait 60s after no audio data is available to send a stop event
-            handle->stop_queue = true;
-            handle->stop_counter = 0;
-        } else {
-            if ((handle->ch_cnt_old != ch_cnt) || (handle->stop_queue == false)) {
-                handle->audio_event_queue = 1;
-            }
-            handle->stop_queue = false;
-        }
-        handle->ch_cnt_old = handle->ch_cnt;
-    }
-    handle->ch_cnt = ch_cnt;
+    ch_map_old = detected_ch_map;
 
-    // 60s timer to stop audio with delay
-    if (handle->stop_queue == true) {
-        if (handle->stop_counter == 20000) {
-            handle->stop_queue = false;
-            handle->audio_event_queue = 1;
-        } else {
-            handle->stop_counter ++;
-        }
-    }
-
-    // To prevent that an audio event appears immediately after another audio event, wait some time (1s) before send an event to deamon.
+    // To prevent that an audio event appears immediately after another audio event, wait some time  before send an event to deamon.
     // That occur on hdmi source plug in, than changes fs and ch-count almost at same time.
-    if (handle->audio_event_queue != 0) {
-        handle->audio_event_queue++;
-    }
-    if (handle->audio_event_queue == 30) {
-        handle->audio_event_queue = 0;
-        handle->stop_queue = false;
+    if (settings_changed >= 30) {
+        settings_changed = 0;
+        asi->detected_ch_map[AUD_STREAM_NR_EMBEDDED] = detected_ch_map;
+        asi->detected_fs[AUD_STREAM_NR_EMBEDDED] = fs;
         queue_put(event_queue, E_ASI_NEW_FS);
-        queue_put(event_queue, E_ADV7441A_NO_AUDIO);        // audio is restarting after this stop
+        // this event produces a new connection setup
+        queue_put(event_queue, E_ADV7441A_NO_AUDIO);
+    }
+    else if (settings_changed) {
+      settings_changed++;
     }
 
+    send_request[2]  = send_request[1];
+    send_request[1]  = send_request[0];
+    send_request[0]  = asi_get_send_request(asi->p_asi);
+    active_stream[2] = active_stream[1];
+    active_stream[1] = active_stream[0];
+    active_stream[0] = asi_get_active_stream(asi->p_asi);
+    
     return ERR_ASI_SUCCESS;
-}
-
-int asi_drv_get_fs(t_asi* handle)
-{
-    return handle->sampling_rate;
-}
-
-int asi_drv_get_ch_cnt(t_asi* handle) 
-{
-    return handle->ch_cnt;
 }

@@ -244,19 +244,16 @@ int hoi_drv_vso(uint32_t compress, uint32_t encrypt, t_video_timing* timing, uin
 }
 
 
-int hoi_drv_asi(uint32_t cfg, hdoip_eth_params* eth, uint32_t fs, uint32_t width, uint32_t cnt, uint8_t* sel, t_fec_setting* fec)
+int hoi_drv_asi(int unsigned stream_nr, struct hdoip_eth_params* eth, struct hdoip_aud_params* aud, t_fec_setting* fec)
 {
     int ret;
     t_hoi_msg_asi msg;
 
     hoi_msg_asi_init(&msg);
-    msg.cfg = cfg;
-    memcpy(&msg.channel, sel, 16);
-    msg.channel_cnt = cnt;
-    msg.fs = fs;
-    msg.width = width;
+    msg.stream_nr = stream_nr;
+    memcpy(&msg.eth, eth, sizeof(struct hdoip_eth_params));
+    memcpy(&msg.aud, aud, sizeof(struct hdoip_aud_params));
     memcpy(&msg.fec, fec, sizeof(t_fec_setting));
-    memcpy(&msg.eth, eth, sizeof(hdoip_eth_params));
     ret = hoi_msg(&msg);
 
     return ret;

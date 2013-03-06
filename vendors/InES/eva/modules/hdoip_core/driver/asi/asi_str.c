@@ -29,9 +29,12 @@ char* asi_str_err(int err)
 int asi_str_report_eth(t_asi* handle)
 {     
     struct hdoip_eth_params eth_params;
+    int i;
 
-    asi_get_eth_params(handle->p_asi, &eth_params);
-    eth_report_params(&eth_params);
+    for (i = 0; i < AUD_STREAM_CNT; i++) {
+        asi_get_eth_params(handle->p_asi, i, &eth_params);
+        eth_report_params(&eth_params);
+    }
    
     return ERR_ASI_SUCCESS;
 }
@@ -44,9 +47,12 @@ int asi_str_report_eth(t_asi* handle)
 int asi_str_report_aud(t_asi* handle)
 {
     struct hdoip_aud_params aud_params;
+    int i;
 
-    asi_get_aud_params(handle->p_asi, &aud_params);
-    aud_report_params(&aud_params);
+    for (i = 0; i < AUD_STREAM_CNT; i++) {
+        asi_get_aud_params(handle->p_asi, i, &aud_params);
+        aud_report_params(&aud_params);
+    }
 
     return ERR_ASI_SUCCESS;
 }

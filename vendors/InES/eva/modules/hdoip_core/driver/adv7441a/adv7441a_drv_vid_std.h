@@ -2,10 +2,10 @@
 #define ADV7441A_DRV_VID_STD_H_
 
 typedef struct {
-	uint32_t		fs;
-	uint8_t			bit_width;
-	uint8_t			channel_cnt;
-	uint8_t			mute;
+	uint32_t               fs;
+	uint8_t                bit_width;
+	uint16_t               ch_map;
+	uint8_t                mute;
 } t_adv7441a_aud_st;
 
 typedef struct {

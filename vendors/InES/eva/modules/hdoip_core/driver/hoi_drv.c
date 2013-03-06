@@ -97,6 +97,8 @@ void hoi_drv_init(t_hoi* handle)
  */
 void hoi_drv_reset(t_hoi* handle, uint32_t rv)
 {
+    int i;
+
     // Stop Video I/O
     if (rv & (DRV_RST_VID_OUT | DRV_RST_VID_IN)) {
         REPORT(INFO, "reset vio");
@@ -150,7 +152,9 @@ void hoi_drv_reset(t_hoi* handle, uint32_t rv)
         REPORT(INFO, "reset eto/asi");
         eto_drv_stop_aud(&handle->eto);
         eto_set_config_audio_enc_dis(handle->p_eso);
-        asi_drv_stop(&handle->asi);
+        for (i = 0; i < AUD_STREAM_CNT; i++) {
+            asi_drv_stop(&handle->asi, i);
+        }
         asi_drv_flush_buf(&handle->asi);
     }
 
