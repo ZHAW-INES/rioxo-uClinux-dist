@@ -23,7 +23,6 @@ typedef struct {
 	t_vio               *p_vio;     //!< Vio driver
 	t_adv7441a_vid_st	vid_st;		//!< Video status
 	t_adv7441a_aud_st	aud_st;		//!< Audio status	
-
 } t_adv7441a;
 
 #endif /* ADV7441A_DRV_CFG_H_ */

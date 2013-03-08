@@ -944,8 +944,7 @@ void alt_avalon_rtp_rx_enable_fec_rx(alt_avalon_rtp_rx_dev* pDev)
    IOWR_ALTERA_AVALON_RTP_RX_EXTENDED_MODE(pDev->base, data);
 }
 
-// TODO: this is for video only
-void init_fec_rx_ip(void *p)
+void init_fec_rx_ip(void *p, int enable)
 {
     alt_avalon_rtp_rx_dev dev;
     alt_avalon_rtp_rx_channel_settings settings;
@@ -955,57 +954,80 @@ void init_fec_rx_ip(void *p)
     dev.MsgFIFODepth = 0;
     dev.UseSoftwareMsgFIFODepth = 0;
 
-    settings.Enable = 1;
+    settings.Enable = enable;
     settings.RTPBypass = 0;
 
+    // video
     alt_avalon_rtp_rx_set_channel(&dev, 0);
     alt_avalon_rtp_rx_set_channel_config(&dev, 0, &settings);
+
+    // audio
+    alt_avalon_rtp_rx_set_channel(&dev, 1);
+    alt_avalon_rtp_rx_set_channel_config(&dev, 1, &settings);
 }
 
 void fec_rx_statistics(void *p, t_fec_rx *counter_values)
 {
     alt_avalon_rtp_rx_dev               dev;
-    alt_avalon_rtp_rx_stats             stats;
-    alt_avalon_rtp_rx_fec_observations  fec_status;
+    alt_avalon_rtp_rx_stats             stats_vid;
+    alt_avalon_rtp_rx_stats             stats_aud;
+    alt_avalon_rtp_rx_fec_observations  fec_status_vid;
+    alt_avalon_rtp_rx_fec_observations  fec_status_aud;
     alt_avalon_rtp_rx_design_parameters parameters;
-    alt_avalon_rtp_rx_channel_settings  settings;
+    alt_avalon_rtp_rx_channel_settings  settings_vid;
+    alt_avalon_rtp_rx_channel_settings  settings_aud;
 
     dev.base = p;
     dev.SelectedChannel = 0;
     dev.MsgFIFODepth = 0;
     dev.UseSoftwareMsgFIFODepth = 0;
 
-    alt_avalon_rtp_rx_get_statistics(&dev, 0x00, &stats);
-    alt_avalon_rtp_rx_get_fec_status(&dev, 0x00, &fec_status);
     alt_avalon_rtp_rx_get_parameters(&dev, &parameters);
-    alt_avalon_rtp_rx_get_channel_config(&dev, 0x00, &settings);
 
+    alt_avalon_rtp_rx_set_channel(&dev, 0);
+    alt_avalon_rtp_rx_get_statistics(&dev, 0, &stats_vid);
+    alt_avalon_rtp_rx_get_fec_status(&dev, 0, &fec_status_vid);
+    alt_avalon_rtp_rx_get_channel_config(&dev, 0, &settings_vid);
 
-    counter_values->valid_packets        += stats.ValidPacketCount;
-    counter_values->missing_packets      += stats.MissingPacketCount;
-    counter_values->fixed_packets        += stats.FixedPacketCount;
-    counter_values->duplicate_packets    += stats.DuplicatePacketCount;
-    counter_values->reordered_packets    += stats.ReorderedPacketCount;
-    counter_values->out_of_range_packets += stats.OutOfRangePacketCount;
+    counter_values->valid_packets_vid        += stats_vid.ValidPacketCount;
+    counter_values->missing_packets_vid      += stats_vid.MissingPacketCount;
+    counter_values->fixed_packets_vid        += stats_vid.FixedPacketCount;
+    counter_values->duplicate_packets_vid    += stats_vid.DuplicatePacketCount;
+    counter_values->reordered_packets_vid    += stats_vid.ReorderedPacketCount;
+    counter_values->out_of_range_packets_vid += stats_vid.OutOfRangePacketCount;
 
+    alt_avalon_rtp_rx_set_channel(&dev, 1);
+    alt_avalon_rtp_rx_get_statistics(&dev, 1, &stats_aud);
+    alt_avalon_rtp_rx_get_fec_status(&dev, 1, &fec_status_aud);
+    alt_avalon_rtp_rx_get_channel_config(&dev, 1, &settings_aud);
 
-    printk("\ntotal valid pakets            %i", counter_values->valid_packets);
-    printk("\ntotal missing pakets          %i", counter_values->missing_packets);
-    printk("\ntotal fixed pakets            %i", counter_values->fixed_packets);
-    printk("\ntotal duplicate pakets        %i", counter_values->duplicate_packets);
-    printk("\ntotal reordered pakets        %i", counter_values->reordered_packets);
-    printk("\ntotal out-of-range pakets     %i", counter_values->out_of_range_packets);
-    printk("\n");
-    printk("\nlast payload length:         %i", alt_avalon_rtp_rx_get_last_payload_length(&dev, 0x00));
-    printk("\nbuffer depth:                %i / %i", alt_avalon_rtp_rx_get_buffer_depth(&dev, 0x00), parameters.FrameBufferEntriesPerChannel);
-    printk("\nbuffer time:                 %i ms", alt_avalon_rtp_rx_get_buffer_duration(&dev, 0x00) * 9 / 100);   // ref freq is 90 kHz, but we have 1MHz
-    printk("\nFlushed:                     %i", stats.Flushed);
-    printk("\n");
-    printk("\nColFECSeen:                  %i", fec_status.ColFECSeen);
-    printk("\nRowFECSeen:                  %i", fec_status.RowFECSeen);
-    printk("\nFECL:                        %i", fec_status.FECL);
-    printk("\nFECD:                        %i", fec_status.FECD);
-    printk("\n");
-    printk("\nEnable:                      %i", settings.Enable);
-    printk("\n");
+    counter_values->valid_packets_aud        += stats_aud.ValidPacketCount;
+    counter_values->missing_packets_aud      += stats_aud.MissingPacketCount;
+    counter_values->fixed_packets_aud        += stats_aud.FixedPacketCount;
+    counter_values->duplicate_packets_aud    += stats_aud.DuplicatePacketCount;
+    counter_values->reordered_packets_aud    += stats_aud.ReorderedPacketCount;
+    counter_values->out_of_range_packets_aud += stats_aud.OutOfRangePacketCount;
+
+    printk("\n+-------------------------------------------------------+");
+    printk("\n|                                 video           audio |");
+    printk("\n+-------------------------------------------------------+");
+    printk("\n|total valid pakets            %8i        %8i |", counter_values->valid_packets_vid, counter_values->valid_packets_aud);
+    printk("\n|total missing pakets          %8i        %8i |", counter_values->missing_packets_vid, counter_values->missing_packets_aud);
+    printk("\n|total fixed pakets            %8i        %8i |", counter_values->fixed_packets_vid, counter_values->fixed_packets_aud);
+    printk("\n|total duplicate pakets        %8i        %8i |", counter_values->duplicate_packets_vid, counter_values->duplicate_packets_aud);
+    printk("\n|total reordered pakets        %8i        %8i |", counter_values->reordered_packets_vid, counter_values->reordered_packets_aud);
+    printk("\n|total out-of-range pakets     %8i        %8i |", counter_values->out_of_range_packets_vid, counter_values->out_of_range_packets_aud);
+    printk("\n|                                                       |");
+    printk("\n|last payload length:              %4i            %4i |", alt_avalon_rtp_rx_get_last_payload_length(&dev, 0x00), alt_avalon_rtp_rx_get_last_payload_length(&dev, 0x01));
+    printk("\n|buffer depth:            (%4i / %4i)   (%4i / %4i) |", alt_avalon_rtp_rx_get_buffer_depth(&dev, 0x00), parameters.FrameBufferEntriesPerChannel, alt_avalon_rtp_rx_get_buffer_depth(&dev, 0x01), parameters.FrameBufferEntriesPerChannel);
+    printk("\n|buffer time:                    %3i ms          %3i ms |", alt_avalon_rtp_rx_get_buffer_duration(&dev, 0x00) * 9 / 100, alt_avalon_rtp_rx_get_buffer_duration(&dev, 0x01) * 9 / 100);   // ref freq is 90 kHz, but we have 1MHz
+    printk("\n|Flushed:                             %i               %i |", stats_vid.Flushed, stats_aud.Flushed);
+    printk("\n|                                                       |");
+    printk("\n|ColFECSeen:                         %2i              %2i |", fec_status_vid.ColFECSeen, fec_status_aud.ColFECSeen);
+    printk("\n|RowFECSeen:                         %2i              %2i |", fec_status_vid.RowFECSeen, fec_status_aud.RowFECSeen);
+    printk("\n|FECL:                               %2i              %2i |", fec_status_vid.FECL, fec_status_aud.FECL);
+    printk("\n|FECD:                               %2i              %2i |", fec_status_vid.FECD, fec_status_aud.FECD);
+    printk("\n|                                                       |");
+    printk("\n|Enable:                              %i               %i |", settings_vid.Enable, settings_aud.Enable);
+    printk("\n+-------------------------------------------------------+\n");
 }

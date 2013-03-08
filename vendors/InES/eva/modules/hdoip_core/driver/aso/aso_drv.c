@@ -4,82 +4,74 @@
 
 /** Initialize audio stream out driver 
  *
- * @param handle pointer to the audio stream out handle struct
+ * @param aso pointer to the audio stream out handle struct
  * @param p_aso address of the ACB audio stream out register
  * @return error code
  */
-int aso_drv_init(t_aso* handle, void* p_aso)
+int aso_drv_init(t_aso* aso, void* p_aso)
 {
     REPORT(INFO, "+--------------------------------------------------+");
     REPORT(INFO, "| ASO-Driver: Initialize audio stream out          |");
     REPORT(INFO, "+--------------------------------------------------+");
 
-    handle->p_aso = p_aso;
-    handle->status = 0;
-
-    aso_drv_stop(handle);
-
-    aso_set_dma_burst_size(handle->p_aso, ASO_DRV_DMA_BURST_SIZE);
-    aso_set_dma_fifo_almost_full(handle->p_aso, ASO_DRV_DMA_FIFO_ALMOST_FULL);
-
-    /* disable miss filter => no dummy data */
-    aso_set_fifo_low_th(handle->p_aso, 10); // value: 0 - 255
-    aso_set_min_frames_buffered(handle->p_aso, ASO_DRV_DISABLE_FRAMES_BUFFERED); // value: 0 - 1023
+    aso->p_aso = p_aso;
+    aso->stream_status = 0;
+    aso_drv_stop(aso);
 
     return ERR_ASO_SUCCESS;
 }
 
 /** Initialize the ringbuffer (read pointer)
  *
- * @param handle pointer to the aso handle
+ * @param aso pointer to the aso handle
  * @param start_ptr start address of the buffer
  * @param size size of the buffer
  * @return error code
- */
-int aso_drv_set_buf(t_aso* handle, void* start_ptr, size_t size) 
+ */ /*
+int aso_drv_set_buf(t_aso* aso, void* start_ptr, size_t size)
 {
     t_rbf_dsc dsc;
 
     rbf_dsc(&dsc, start_ptr, size);
-    aso_set_dsc(handle->p_aso, &dsc);
+    aso_set_dsc(aso->p_aso, &dsc);
 
     return ERR_ASO_SUCCESS;
-}
+}*/
 
 /** Flush the ringbuffer (set read to write pointer)
  *
- * @param handle pointer to the aso handle
+ * @param aso pointer to the aso handle
  * @return error code
  */
-int aso_drv_flush_buf(t_aso* handle)
+int aso_drv_flush_buf(t_aso* aso)
 {
-    aso_set_read_dsc(handle->p_aso, aso_get_write_dsc(handle->p_aso));
+    //TODO: clear frame reordering ram
     return ERR_ASO_SUCCESS;
 }
 
-
 /** Starts audio stream out (parameters must be set)
 *
-* @param handle pointer to the audio stream out handle struct
+* @param aso pointer to the audio stream out handle struct
 * @return error code
 */
-int aso_drv_start(t_aso* handle)
+int aso_drv_start(t_aso* aso)
 {
-    if((handle->status & ASO_DRV_STATUS_ACTIV) != 0) {
+    if((aso->stream_status & ASO_DRV_STATUS_ACTIV) != 0) {
         return ERR_ASO_RUNNING;
     }
 
-    if((handle->status & ASO_DRV_STATUS_AUD_PARAMS_SET) == 0) {
+    if((aso->stream_status & ASO_DRV_STATUS_AUD_PARAMS_SET) == 0) {
         return ERR_ASO_AUD_PARAMS_NOT_SET;
     }
 
-    if((handle->status & ASO_DRV_STATUS_AUD_DELAY_SET) == 0) {
+    if((aso->stream_status & ASO_DRV_STATUS_AUD_DELAY_SET) == 0) {
         return ERR_ASO_AUD_DELAY_NOT_SET;
     }
 
-    aso_enable(handle->p_aso);
+    aso_enable_i2s_output(aso->p_aso);
+    aso_enable(aso->p_aso);
 
-    handle->status = handle->status | ASO_DRV_STATUS_ACTIV;
+    aso->stream_status |= ASO_DRV_STATUS_ACTIV;
     
     return ERR_ASO_SUCCESS;
 }
@@ -87,43 +79,55 @@ int aso_drv_start(t_aso* handle)
 
 /** Stops audio stream out 
 *
-* @param handle pointer to the audio stream out handle struct
+* @param aso pointer to the audio stream out handle struct
 * @return error code
 */
-int aso_drv_stop(t_aso* handle)
+int aso_drv_stop(t_aso* aso)
 {
-    aso_disable(handle->p_aso);
-    // FIXME:
-    //while(aso_get_status(handle->p_aso, ASO_STATUS_IDLE) == 0);
+    uint32_t timeout = 10000000;
 
-    handle->status = handle->status & ~ASO_DRV_STATUS_ACTIV;
+    aso_disable(aso->p_aso);
+
+    while(timeout > 0) {
+        if (aso_get_status(aso->p_aso, ASO_STATUS_IDLE) != 0) {
+            break;
+        }
+        timeout -= 1;
+    }
+    if (timeout == 0) {
+        REPORT(ERROR, "ASO blocked: unable to stop");
+        return ERR_ASO;
+    }
+    
+    aso_clr_status(aso->p_aso, ASO_STATUS_ALL);
+    aso->stream_status = 0;
     return ERR_ASO_SUCCESS;
 }
 
 /** Updates all parameters during runtime
  *
- * @param handle pointer to the audio stream out handle struct
+ * @param aso pointer to the audio stream out handle struct
  * @param aud_params pointer to the audio parameter struct
  * @param aud_delay_us audio delay in microseconds
  * @return error code
  */
-int aso_drv_update(t_aso* handle, struct hdoip_aud_params* aud_params, uint32_t aud_delay_us)
+int aso_drv_update(t_aso* aso, struct hdoip_aud_params* aud_params, uint32_t aud_delay_us)
 {
     uint32_t err;
 
-    aso_drv_stop(handle);
+    aso_drv_stop(aso);
 
-    err = aso_drv_set_aud_params(handle, aud_params);
+    err = aso_drv_set_aud_params(aso, aud_params);
     if(err != ERR_ASO_SUCCESS) {
         return err;
     }
 
-    err = aso_drv_set_aud_delay(handle, aud_delay_us);
+    err = aso_drv_set_aud_delay(aso, aud_delay_us);
     if(err != ERR_ASO_SUCCESS) {
         return err;
     }
 
-    aso_drv_start(handle);
+    aso_drv_start(aso);
 
     return ERR_ASO_SUCCESS;
 }
@@ -134,94 +138,108 @@ int aso_drv_update(t_aso* handle, struct hdoip_aud_params* aud_params, uint32_t 
  * @param event_queue pointer to the event queue
  * @return error code
  */
-int aso_drv_handler(t_aso* handle, t_queue* event_queue)
+int aso_drv_handler(t_aso* aso, t_queue* event_queue)
 {
-    uint32_t status = aso_get_status(handle->p_aso, ASO_STATUS_FRAME_SIZE_ERROR | ASO_STATUS_FIFO_EMPTY | ASO_STATUS_FIFO_FULL);
-    uint32_t status_reordering = aso_get_reordering_status(handle->p_aso, ASO_REORDERING_STATUS_RAM_FULL);
+    uint32_t status = 0;
+	static uint32_t counter = 0;
+
+    status = aso_get_status(aso->p_aso, ASO_STATUS_FRAME_SIZE_ERROR | ASO_STATUS_FIFO_EMPTY | ASO_STATUS_FIFO_FULL);
 
     if((status & ASO_STATUS_FRAME_SIZE_ERROR) != 0) {
-        if((handle->status & ASO_DRV_STATUS_SIZE_ERROR) == 0) {
+        if((aso->stream_status & ASO_DRV_STATUS_SIZE_ERROR) == 0) {
             queue_put(event_queue, E_ASO_SIZE_ERROR);
         }
-        handle->status = handle->status | ASO_DRV_STATUS_SIZE_ERROR;
+        aso->stream_status |= ASO_DRV_STATUS_SIZE_ERROR;
     } else {
-        handle->status = handle->status & ~ASO_DRV_STATUS_SIZE_ERROR;
+        aso->stream_status &= ~ASO_DRV_STATUS_SIZE_ERROR;
     }
 
     if((status & ASO_STATUS_FIFO_EMPTY) != 0) {
-        if((handle->status & ASO_DRV_STATUS_FIFO_EMPTY) == 0) {
+        if((aso->stream_status & ASO_DRV_STATUS_FIFO_EMPTY) == 0) {
             queue_put(event_queue, E_ASO_FIFO_EMPTY);
         }
-        handle->status = handle->status | ASO_DRV_STATUS_FIFO_EMPTY;
+        aso->stream_status |= ASO_DRV_STATUS_FIFO_EMPTY;
     } else {
-        handle->status = handle->status & ~ASO_DRV_STATUS_FIFO_EMPTY;
+        aso->stream_status &= ~ASO_DRV_STATUS_FIFO_EMPTY;
     }
 
     if((status & ASO_STATUS_FIFO_FULL) != 0) {
-        if((handle->status & ASO_DRV_STATUS_FIFO_FULL) == 0) {
+        if((aso->stream_status & ASO_DRV_STATUS_FIFO_FULL) == 0) {
             queue_put(event_queue, E_ASO_FIFO_FULL);
         }
-        handle->status = handle->status | ASO_DRV_STATUS_FIFO_FULL;
+        aso->stream_status |= ASO_DRV_STATUS_FIFO_FULL;
     } else {
-        handle->status = handle->status &  ~ASO_DRV_STATUS_FIFO_FULL;
+        aso->stream_status &=  ~ASO_DRV_STATUS_FIFO_FULL;
     }
 
-    if((status_reordering & ASO_REORDERING_STATUS_RAM_FULL) != 0) {
-        if((handle->status & ASO_DRV_STATUS_RAM_FULL) == 0) {
-            queue_put(event_queue, E_ASO_RAM_FULL);
-        }
-        handle->status = handle->status | ASO_DRV_STATUS_RAM_FULL;
-    } else {
-        handle->status = handle->status & ~ASO_DRV_STATUS_RAM_FULL;
-    }
+        //print control difference
+	/*if((aso_get_clk_div_act(aso->p_aso)!=0)&&(counter>201)){
+        
+		REPORT(INFO, "act: %d \n",aso_get_clk_div_act(aso->p_aso));
+        counter=0;
+	}
+    else{
+        counter++;    
+    }*/
 
     return ERR_ASO_SUCCESS;
 }
 
 /** Sets the audio parameters 
  *
- * @param handle pointer to the audio stream out handle struct
+ * @param aso pointer to the audio stream out handle struct
  * @param aud_params pointer to the audio parameter struct
  * @return error code
  */
-int aso_drv_set_aud_params(t_aso* handle, struct hdoip_aud_params* aud_params)
+int aso_drv_set_aud_params(t_aso* aso, struct hdoip_aud_params* aud_params)
 {
-    uint64_t div_base, div_lower_bound, div_upper_bound;
-    uint32_t div_inc;
+    uint64_t div_base;
+    uint32_t div_ki, div_kp;
+    uint32_t mclk_freq;
 
-    if((handle->status & ASO_DRV_STATUS_ACTIV) != 0) {
+	//default values for clk control
+	div_kp = 400;//400   //200
+    div_ki = 250;//250   //4000	// 1/KI
+
+    if((aso->stream_status & ASO_DRV_STATUS_ACTIV) != 0) {
         return ERR_ASO_RUNNING;
+    }
+
+    switch (aud_params->fs) {
+      case 32000:
+      case 48000:
+      case 48000*2:
+      case 48000*4:
+        mclk_freq = 48000*4*64;
+        break;
+      case 44100:
+      case 44100*2:
+      case 44100*4:
+        mclk_freq = 44100*4*64;
     }
 
     if ((aud_params->sample_width) > 16) {
         aud_params->sample_width = 24;
     }
 
-    /* calculate i2s clock (in q5.27 format) */
+    /* calculate i2s clock (in q8.24 format) */
 
-    /* 64*fs = output frequency. division by 2 because clock signal toggles after division factor */
-    div_base = ((uint64_t)(1 << 27) * SFREQ) / (aud_params->fs * 64 * 2); 
-    
+    /* division by 2 because clock signal toggles after division factor */
+    div_base = ((uint64_t)(1 << 24) * (AUD_GEN_FREQ)) / (mclk_freq * 2);
+
     /* fixed point multiplied with tolerance */
-    div_upper_bound = div_base * ((uint64_t)ASO_DRV_I2S_FREQ_FACT_UPPER);
-    div_upper_bound = div_upper_bound >> 27;
+    aso_set_clk_div_base(aso->p_aso, (uint32_t)div_base);
+    aso_set_mclk2bclk_ratio(aso->p_aso, mclk_freq / (aud_params->fs * 64));
+    aso_set_bclk2lrclk_ratio(aso->p_aso, 64);
 
-    div_lower_bound = div_base * ((uint64_t)ASO_DRV_I2S_FREQ_FACT_LOWER);  
-    div_lower_bound = div_lower_bound >> 27;
-
-    aso_set_clk_div_upper_bound(handle->p_aso, (uint32_t)div_upper_bound);
-    aso_set_clk_div_lower_bound(handle->p_aso, (uint32_t)div_lower_bound);
-    aso_set_clk_div_act(handle->p_aso, (uint32_t)div_base);
-
-    /* calculate incremental value*/
-    div_inc = (uint32_t)div_upper_bound - (uint32_t)div_base;
-    div_inc = div_inc / ASO_DRV_I2S_FREQ_TOL_DIV; 
-    aso_set_clk_div_inc(handle->p_aso, div_inc);
+	/* set the parameters for the clk control */
+    aso_set_clk_div_kp(aso->p_aso, div_kp);
+    aso_set_clk_div_ki(aso->p_aso, div_ki);
 
     /* set fs, sample_width, channel count left and channel count right */
-    aso_set_aud_params(handle->p_aso, aud_params);
+    aso_set_aud_params(aso->p_aso, aud_params);
     
-    handle->status = handle->status | ASO_DRV_STATUS_AUD_PARAMS_SET;
+    aso->stream_status |= ASO_DRV_STATUS_AUD_PARAMS_SET;
     
     aud_report_params(aud_params);
 
@@ -230,52 +248,52 @@ int aso_drv_set_aud_params(t_aso* handle, struct hdoip_aud_params* aud_params)
 
 /** Gets the audio parameters
  *
- * @param handle pointer to the audio stream out handle struct
+ * @param aso pointer to the audio stream out handle struct
  * @param aud_params pointer to the audio parameter struct
  * @return error code
  */
-int aso_drv_get_aud_params(t_aso* handle, struct hdoip_aud_params* aud_params)
+int aso_drv_get_aud_params(t_aso* aso, struct hdoip_aud_params* aud_params)
 {
-    if((handle->status & ASO_DRV_STATUS_AUD_PARAMS_SET) == 0) {
+    if((aso->stream_status & ASO_DRV_STATUS_AUD_PARAMS_SET) == 0) {
         return ERR_ASO_AUD_PARAMS_NOT_SET;
     }
 
-    aso_get_aud_params(handle->p_aso, aud_params); 
+    aso_get_aud_params(aso->p_aso, aud_params);
     return ERR_ASO_SUCCESS;
 }
 
 /** Sets the audio delay
  *
- * @param handle pointer to the audio stream out handle struct
+ * @param aso pointer to the audio stream out handle struct
  * @param aud_delay_us audio delay in microseconds
  * @return error code
  */
-int aso_drv_set_aud_delay(t_aso* handle, uint32_t aud_delay_us) 
+int aso_drv_set_aud_delay(t_aso* aso, uint32_t aud_delay_us)
 {
-    if((handle->status & ASO_DRV_STATUS_ACTIV) != 0) {
+    if((aso->stream_status & ASO_DRV_STATUS_ACTIV) != 0) {
         return ERR_ASO_RUNNING;
     }
 
     /* set audio delay */
-    aso_set_aud_delay(handle->p_aso, aud_delay_us / AVPERIOD);    
+    aso_set_aud_delay(aso->p_aso, aud_delay_us / AVPERIOD);
 
-    handle->status = handle->status | ASO_DRV_STATUS_AUD_DELAY_SET;
+    aso->stream_status |= ASO_DRV_STATUS_AUD_DELAY_SET;
 
     return ERR_ASO_SUCCESS;
 }
 
 /** Gets the audio delay
  *
- * @param handle pointer to the audio stream out handle struct
+ * @param aso pointer to the audio stream out handle struct
  * @param aud_delay_us pointer to the audio delay in microseconds
  * @return error code
  */
-int aso_drv_get_aud_delay(t_aso* handle, uint32_t* aud_delay_us)
+int aso_drv_get_aud_delay(t_aso* aso, uint32_t* aud_delay_us)
 {
-    if((handle->status & ASO_DRV_STATUS_AUD_DELAY_SET) == 0) {
+    if((aso->stream_status & ASO_DRV_STATUS_AUD_DELAY_SET) == 0) {
         return ERR_ASO_AUD_DELAY_NOT_SET;
     }
 
-    *aud_delay_us = aso_get_aud_delay(handle->p_aso) * AVPERIOD;
+    *aud_delay_us = aso_get_aud_delay(aso->p_aso) * AVPERIOD;
     return ERR_ASO_SUCCESS;
 }

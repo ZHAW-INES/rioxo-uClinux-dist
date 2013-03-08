@@ -329,14 +329,11 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
-    uint32_t            cfg;
-    uint32_t            delay_ms;       //!< (wr) audio delay
-    uint32_t            av_delay;       //!< (wr) audio-video delay
-    uint32_t            fs;             //!< (wr) sampel frequency in Hz
-    uint32_t            fs_tol;         //!< (wr) frequency tolerance (fs +/- fs_tol)
-    uint32_t            width;          //!< (wr) sampel bit width
-    uint32_t            channel_cnt;    //!< (wr) number of used audio channels
-    uint8_t             channel[16];    //!< (wr) mapping of transport/output channel
+    int unsigned                stream_nr;
+    uint32_t                    cfg;
+    uint32_t                    delay_ms;       //!< (wr) audio delay
+    uint32_t                    av_delay;       //!< (wr) audio-video delay
+    struct hdoip_aud_params     aud;            //!< (wr) audio parameter
 } t_hoi_msg_aso;
 
 #define hoi_msg_aso_init(p) hoi_msg_init(p, HOI_MSG_ASO, t_hoi_msg_aso)

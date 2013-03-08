@@ -190,7 +190,7 @@ typedef struct
 void fec_rx_statistics(void *p, t_fec_rx *counter_values);
 
 /* Initialize FEC block*/
-void init_fec_rx_ip(void *p);
+void init_fec_rx_ip(void *p, int enable);
 
 /* Get the parameters of a design */
 void alt_avalon_rtp_rx_get_parameters(alt_avalon_rtp_rx_dev* pDev, alt_avalon_rtp_rx_design_parameters* pParams);

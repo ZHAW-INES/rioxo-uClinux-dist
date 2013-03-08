@@ -350,7 +350,8 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     int delay, scomm5, vid, vsd;
     uint32_t ien;
 
-    init_fec_rx_ip(handle->p_fec_ip_rx);
+    // activate FEC RX block
+    init_fec_rx_ip(handle->p_fec_ip_rx, 1);
 
     // setup vio
     if (msg->compress & DRV_CODEC) {
@@ -461,8 +462,6 @@ int hoi_drv_msg_vso_repaire(t_hoi* handle)
 
 int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
 {
-    struct hdoip_aud_params aud_params;
-
     asi_drv_flush_buf(&handle->asi);
 
     // start fec tx block;
@@ -483,7 +482,6 @@ int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
 int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
 {
     int delay, vid = 0;
-    struct hdoip_aud_params aud_params;
 
     // sync...
     aso_drv_stop(&handle->aso);
@@ -491,11 +489,6 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
     fec_rx_disable_audio_int_out(handle->p_fec_rx); 
 
     // setup aso ()
- //   aud_params.ch_cnt_left = (msg->channel_cnt+1) >> 1;
- //   aud_params.ch_cnt_right = msg->channel_cnt - aud_params.ch_cnt_left;
-    aud_params.fs = msg->fs;
-    aud_params.sample_width = msg->width;
-
     if (handle->vio.active) {
         vid = vid_duration_in_us(&handle->vio.timing);
         delay = (((67 + msg->delay_ms + msg->av_delay - 53) * 1000) + vid);     // audio is 53ms too late
@@ -514,13 +507,13 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
     fec_rx_enable_audio_emb_out(handle->p_fec_rx);
     fec_rx_enable_audio_int_out(handle->p_fec_rx); 
 
-    aso_drv_update(&handle->aso, &aud_params, delay);
+    aso_drv_update(&handle->aso, &(msg->aud), delay);
     aso_drv_start(&handle->aso);
 
     if (handle->drivers & DRV_ADV9889) {
-        adv9889_drv_setup_audio(&handle->adv9889, msg->channel_cnt, msg->fs, msg->width);
+        adv9889_drv_setup_audio(&handle->adv9889, aud_chmap2cnt(msg->aud.ch_map), msg->aud.fs, msg->aud.sample_width);
     }
-
+    
     if (msg->cfg & DRV_STREAM_SYNC) {
         stream_sync_chg_source(&handle->sync, SYNC_SOURCE_AUDIO);
         stream_sync_start(&handle->sync);

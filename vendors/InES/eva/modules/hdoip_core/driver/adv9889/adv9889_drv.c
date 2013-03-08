@@ -374,7 +374,6 @@ int adv9889_irq_handler(t_adv9889* handle, t_queue* event_queue)
             handle->edid_timeout = EDID_TIMEOUT;
         } else {
             REPORT(INFO, "adv9889 deactivated");
-       
             adv9889_drv_powerdown(handle);
             queue_put(event_queue, E_ADV9889_CABLE_OFF);
         }

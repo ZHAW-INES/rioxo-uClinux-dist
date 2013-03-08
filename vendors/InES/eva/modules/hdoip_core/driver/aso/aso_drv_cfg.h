@@ -9,13 +9,14 @@
 #define ASO_DRV_CFG_H_
 
 #include "std.h"
+#include "stdaud.h"
 #include "hoi_burst.h"
 
 /* config values */
 #define ASO_DRV_DMA_FIFO_ALMOST_FULL        (ASO_DATA_FIFO_SIZE - ASO_DRV_DMA_BURST_SIZE - 4)
-#define ASO_DRV_I2S_FREQ_TOL                (((uint64_t)1050<<27)/1e6)      /* 1000(source) + 50(local) ppm */
-#define ASO_DRV_I2S_FREQ_FACT_UPPER         ((1<<27) + ASO_DRV_I2S_FREQ_TOL)
-#define ASO_DRV_I2S_FREQ_FACT_LOWER         ((1<<27) - ASO_DRV_I2S_FREQ_TOL)
+#define ASO_DRV_I2S_FREQ_TOL                (((uint64_t)1050<<24)/1e6)      /* 1000(source) + 50(local) ppm */
+#define ASO_DRV_I2S_FREQ_FACT_UPPER         ((1<<24) + ASO_DRV_I2S_FREQ_TOL)
+#define ASO_DRV_I2S_FREQ_FACT_LOWER         ((1<<24) - ASO_DRV_I2S_FREQ_TOL)
 #define ASO_DRV_I2S_FREQ_TOL_DIV            (10500)                       /* max 0.1ppm change per frequency step*/
 #define ASO_DRV_DISABLE_FIFO_LOW_TH         (0)
 #define ASO_DRV_DEFAULT_FIFO_LOW_TH         (5)
@@ -33,7 +34,7 @@
 #define ASO_DRV_STATUS_RAM_FULL             (0x00000040)
 
 typedef struct {
-    uint32_t                    status;
+    uint32_t                    stream_status;
     void*                       p_aso;
 } t_aso;
 

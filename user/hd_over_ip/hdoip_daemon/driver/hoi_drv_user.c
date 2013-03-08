@@ -260,18 +260,17 @@ int hoi_drv_asi(int unsigned stream_nr, struct hdoip_eth_params* eth, struct hdo
 }
 
 
-int hoi_drv_aso(uint32_t fs, uint32_t fs_tol, uint32_t width, uint32_t cnt, uint8_t* sel, uint32_t delay_ms, uint32_t av_delay, uint32_t cfg)
+int hoi_drv_aso(int unsigned stream_nr, uint32_t fs, uint32_t width, uint16_t ch_map, uint32_t delay_ms, uint32_t av_delay, uint32_t cfg)
 {
     int ret;
     t_hoi_msg_aso msg;
 
     hoi_msg_aso_init(&msg);
+    msg.stream_nr = stream_nr;
     msg.cfg = cfg;
-    msg.fs_tol = fs_tol;
-    memcpy(&msg.channel, sel, 16);
-    msg.channel_cnt = cnt;
-    msg.fs = fs;
-    msg.width = width;
+    msg.aud.ch_map = ch_map;
+    msg.aud.fs = fs;
+    msg.aud.sample_width = width;
     msg.delay_ms = delay_ms;
     msg.av_delay = av_delay;
     ret = hoi_msg(&msg);
