@@ -57,37 +57,6 @@ int vsi_drv_init(t_vsi* handle, void* p_vsi)
 	return ERR_VSI_SUCCESS;
 }
 
-/** Inittialize the ringbuffer (write pointer)
- *
- * @param handle pointer to the vsi handle
- * @param start_ptr start address of the buffer
- * @param size size of the buffer
- * @return error code
- */
-int vsi_drv_set_buf(t_vsi* handle, void* start_ptr, size_t size)
-{
-    t_rbf_dsc dsc;
-
-    PTR(handle); PTR(handle->p_vsi); PTR(start_ptr);
-
-    rbf_dsc(&dsc, start_ptr, size);
-    vsi_set_dsc(handle->p_vsi, &dsc);
-
-    return ERR_VSI_SUCCESS;
-}
-
-/** Flushs the buffer (set write to read pointer)
- *
- * @param handle pointer to the vsi handle
- * @return error code
- */
-int vsi_drv_flush_buf(t_vsi* handle)
-{
-    PTR(handle); PTR(handle->p_vsi);
-    vsi_set_write_dsc(handle->p_vsi, vsi_get_read_dsc(handle->p_vsi));
-    return ERR_VSI_SUCCESS; 
-}
-
 int vsi_drv_update(t_vsi* handle, struct hdoip_eth_params* eth_params)
 {
     uint32_t activ, err;
@@ -128,8 +97,8 @@ int vsi_drv_go(t_vsi* handle, struct hdoip_eth_params* eth)
  */
 int vsi_drv_get_eth_params(t_vsi* handle, struct hdoip_eth_params* eth_params)
 {
-    vsi_get_eth_params(handle->p_vsi, &(handle->eth_params));
-    
+    handle->eth_params.packet_size = vsi_get_eth_word_len(handle->p_vsi)*4;
+
     memcpy(eth_params, &(handle->eth_params), sizeof(struct hdoip_eth_params));
 
     return ERR_VSI_SUCCESS;
@@ -150,8 +119,8 @@ int vsi_drv_set_eth_params(t_vsi* handle, struct hdoip_eth_params* eth_params)
         return ERR_VSI_PACKET_LENGTH_ERR;
     }
 
-    vsi_set_eth_params(handle->p_vsi, eth_params);
-	
+	vsi_set_eth_word_len(handle->p_vsi, eth_params->packet_size/4);
+
     memcpy(&(handle->eth_params), eth_params, sizeof(struct hdoip_eth_params));
     handle->status = handle->status | VSI_DRV_STATUS_ETH_PARAMS_SET;
 

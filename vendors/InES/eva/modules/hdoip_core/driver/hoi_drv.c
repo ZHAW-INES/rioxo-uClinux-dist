@@ -135,7 +135,6 @@ void hoi_drv_reset(t_hoi* handle, uint32_t rv)
         eto_drv_stop_vid(&handle->eto);
         eto_set_config_video_enc_dis(handle->p_eso);
         vsi_drv_stop(&handle->vsi);
-        vsi_drv_flush_buf(&handle->vsi);
     }
 
     // Stop Audio Output

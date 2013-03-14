@@ -270,15 +270,6 @@ int asi_drv_handler(t_asi* asi, t_queue* event_queue)
     //for debugging
     uint32_t active_stream[3] = {0,0,0}, send_request[3] = {0,0,0};
 
-    if((status & ASI_STAT_RBFULL) != 0) {
-        if((asi->status & ASI_DRV_STATUS_RBF_ERROR) == 0) {
-            queue_put(event_queue, E_ASI_RBF_ERROR);
-        }
-        asi->status = asi->status | ASI_DRV_STATUS_RBF_ERROR;
-    } else { 
-        asi->status = asi->status & ~ASI_DRV_STATUS_RBF_ERROR;
-    }
-
     // detect fs change
     fs = count2fs(fs_counter);
     if (fs != fs_old) {

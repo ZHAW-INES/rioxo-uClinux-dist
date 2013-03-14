@@ -82,7 +82,6 @@ int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
     // set descriptors and burst size in fec block
     fec_drv_set_descriptors(handle->p_fec_tx, msg->vid_tx_buf, msg->aud_tx_buf, msg->vid_tx_len, msg->aud_tx_len, 0x08);
 
-    vsi_drv_flush_buf(&handle->vsi);
     vso_drv_flush_buf(&handle->vso);
     asi_drv_flush_buf(&handle->asi);
     aso_drv_flush_buf(&handle->aso);
@@ -287,8 +286,6 @@ int hoi_drv_msg_getversion(t_hoi* handle, t_hoi_msg_version* msg)
 
 int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 {
-    vsi_drv_flush_buf(&handle->vsi);
-
     // start fec tx block;
     start_fec_ip_tx(handle->p_fec_ip_tx, msg->fec.video_enable, msg->fec.video_l, msg->fec.video_d, msg->fec.video_interleaving, msg->fec.video_col_only, 
                                          msg->fec.audio_enable, msg->fec.audio_l, msg->fec.audio_d, msg->fec.audio_interleaving, msg->fec.audio_col_only);

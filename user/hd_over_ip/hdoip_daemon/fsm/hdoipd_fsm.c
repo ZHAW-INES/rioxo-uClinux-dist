@@ -825,9 +825,6 @@ void hdoipd_event(uint32_t event)
             // try to repair
             //hoi_drv_repair();
         break;
-
-        case E_ASI_RBF_ERROR:
-        break;
         case E_ASI_NEW_FS:
             hoi_drv_get_fs(&buff);
             if (buff == 0) {

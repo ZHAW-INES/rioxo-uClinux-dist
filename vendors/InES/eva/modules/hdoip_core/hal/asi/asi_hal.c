@@ -61,7 +61,7 @@ void asi_get_aud_params(void* p, int unsigned stream, struct hdoip_aud_params* a
     asi_get_aud_cfg(p, stream, &(aud_params->ch_map), &(aud_params->sample_width));
 }
 
-/** set following ethernet parameters: destination & source MAC, destination & source IPs, destination & source udp port and rtp ssrc
+/** set following ethernet parameters: rtp ssrc
  * 
  * @param p pointer to the ACB registers
  * @param eth_params pointer to the ethernet parameter struct
@@ -71,7 +71,7 @@ void asi_set_eth_params(void* p, int unsigned stream, struct hdoip_eth_params* e
     asi_set_ssrc(p, stream, eth_params->rtp_ssrc);
 }
 
-/** set following ethernet parameters: destination & source MAC, destination & source IPs, destination & source udp port, packet length and rtp ssrc
+/** get following ethernet parameters: packet length and rtp ssrc
  * 
  * @param p pointer to the ACB registers
  * @param eth_params pointer to the ethernet parameter struct
