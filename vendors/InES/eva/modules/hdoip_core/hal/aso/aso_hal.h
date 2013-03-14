@@ -48,6 +48,8 @@
 #define aso_set_clk_div_act(p, v)           HOI_WR32((p), ASO_OFF_CLK_DIV_ACT, (v))
 #define aso_get_clk_div_act(p)              HOI_RD32((p), ASO_OFF_CLK_DIV_ACT)
 
+#define aso_set_denominator(p, v)           HOI_WR32((p), ASO_OFF_DENOMINATOR, (v))
+
 static inline void aso_set_aud_params(void* p, struct hdoip_aud_params* aud_params)
 {
     uint16_t ch_cnt_left, ch_cnt_right, ch_cnt;//remove

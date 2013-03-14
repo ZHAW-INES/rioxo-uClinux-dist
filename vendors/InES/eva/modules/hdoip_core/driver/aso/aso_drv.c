@@ -238,7 +238,10 @@ int aso_drv_set_aud_params(t_aso* aso, struct hdoip_aud_params* aud_params)
 
     /* set fs, sample_width, channel count left and channel count right */
     aso_set_aud_params(aso->p_aso, aud_params);
-    
+
+    /* set denominator for missing packet check (fs * bit_width * ch_count * 1.0485)*/    
+    aso_set_denominator(aso->p_aso, (uint32_t)((uint64_t)aud_params->fs * aud_params->sample_width * aud_chmap2cnt(aud_params->ch_map & 0xFF) * 1048576 / 1000000));
+
     aso->stream_status |= ASO_DRV_STATUS_AUD_PARAMS_SET;
     
     aud_report_params(aud_params);
