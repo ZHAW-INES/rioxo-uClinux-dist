@@ -22,14 +22,6 @@
 #define ETI_CPU_STOP_REG            20
 #define ETI_CPU_WRITE_REG           24
 #define ETI_CPU_READ_REG            28
-#define ETI_AUD_START_REG           32
-#define ETI_AUD_STOP_REG            36
-#define ETI_AUD_WRITE_REG           40
-#define ETI_AUD_READ_REG            44
-#define ETI_VID_START_REG           48
-#define ETI_VID_STOP_REG            52
-#define ETI_VID_WRITE_REG           56
-#define ETI_VID_READ_REG            60
 #define ETI_CPU_FILTER_MASK_REG     64
 #define ETI_AUD_FILTER_MASK_REG     68
 #define ETI_VID_FILTER_MASK_REG     72

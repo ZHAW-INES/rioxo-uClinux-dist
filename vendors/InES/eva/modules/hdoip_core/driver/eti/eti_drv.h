@@ -33,7 +33,5 @@ int eti_drv_stop_aud(t_eti* handle);
 int eti_drv_start_vid(t_eti* handle);
 int eti_drv_stop_vid(t_eti* handle);
 int eti_drv_set_filter(t_eti* handle, uint32_t dev_ip, uint32_t aud_src_ip, uint32_t vid_src_ip, uint16_t aud_port, uint16_t vid_port);
-int eti_drv_set_aud_buf(t_eti* handle, void* start_ptr, size_t size);
-int eti_drv_set_vid_buf(t_eti* handle, void* start_ptr, size_t size);
 
 #endif /* ETI_DRV_H_ */

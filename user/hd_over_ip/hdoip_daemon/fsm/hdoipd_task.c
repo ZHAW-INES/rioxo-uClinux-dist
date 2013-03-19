@@ -231,10 +231,6 @@ void task_get_aso_status(char** p)
     hoi_drv_asoreg(&stat);
 
     tmp += sprintf(buf, "config: 0x%08x, status: 0x%08x\n",stat->config, stat->status);
-    tmp += sprintf(tmp, " start = 0x%08x\n", stat->start);
-    tmp += sprintf(tmp, " stop  = 0x%08x\n", stat->stop);
-    tmp += sprintf(tmp, " read  = 0x%08x\n", stat->read);
-    tmp += sprintf(tmp, " write = 0x%08x\n", stat->write);
 
     *p = buf;
 }

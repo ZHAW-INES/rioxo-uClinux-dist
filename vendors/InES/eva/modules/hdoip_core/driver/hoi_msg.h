@@ -209,12 +209,8 @@ typedef struct {
     hoi_msg_extends;
     void*               vid_tx_buf;     //! < physical address
     size_t              vid_tx_len;     //! < buffer size
-    void*               vid_rx_buf;     //! < physical address
-    size_t              vid_rx_len;     //! < buffer size
     void*               aud_tx_buf;     //! < physical address
     size_t              aud_tx_len;     //! < buffer size
-    void*               aud_rx_buf;     //! < physical address
-    size_t              aud_rx_len;     //! < buffer size
 } t_hoi_msg_buf;
 
 #define hoi_msg_buf_init(p) hoi_msg_init(p, HOI_MSG_BUF, t_hoi_msg_buf)
@@ -259,12 +255,8 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
-    uint32_t			config;
-    uint32_t                    status;
-    uint32_t			start;
-    uint32_t			stop;
-    uint32_t			read;
-    uint32_t			write;
+    uint32_t            config;
+    uint32_t            status;
 } t_hoi_msg_asoreg;
 
 #define hoi_msg_asoreg_init(p) hoi_msg_init(p, HOI_MSG_ASOREG, t_hoi_msg_asoreg)

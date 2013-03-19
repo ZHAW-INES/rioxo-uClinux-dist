@@ -70,8 +70,6 @@ int eti_drv_start_vid(t_eti* handle)
     REPORT(INFO, "[ETI] video ip : %pI4", &tmp_ip);
     tmp_ip = eti_get_aud_src_ip(handle->ptr);
     REPORT(INFO, "[ETI] video port : %d", ntohs(eti_get_vid_dst_udp_port(handle->ptr)));
-    
-    rbf_report_dsc(handle->ptr, ETI_VID_START_REG);
 
     return ERR_ETI_SUCCESS;
 }
@@ -159,40 +157,6 @@ int eti_drv_set_cpu_buf(t_eti* handle, void* start_ptr, size_t size)
 
     rbf_dsc(&dsc, start_ptr, size);
     eti_set_cpu_desc(handle->ptr, &dsc);
-
-    return ERR_ETI_SUCCESS;
-}
-
-/** Initialize audio ringbuffer
- *
- * @param handle pointer to the eti handle
- * @param start_ptr start address of the buffer
- * @param size size of the buffer
- * @return error code
- */
-int eti_drv_set_aud_buf(t_eti* handle, void* start_ptr, size_t size)
-{
-    t_rbf_dsc dsc;
-
-    rbf_dsc(&dsc, start_ptr, size);
-    eti_set_aud_desc(handle->ptr, &dsc);
-
-    return ERR_ETI_SUCCESS;
-}
-
-/** Initialize video ringbuffer
- *
- * @param handle pointer to the eti handle
- * @param start_ptr start address of the buffer
- * @param size size of the buffer
- * @return error code
- */
-int eti_drv_set_vid_buf(t_eti* handle, void* start_ptr, size_t size)
-{
-    t_rbf_dsc dsc;
-
-    rbf_dsc(&dsc, start_ptr, size);
-    eti_set_vid_desc(handle->ptr, &dsc);
 
     return ERR_ETI_SUCCESS;
 }

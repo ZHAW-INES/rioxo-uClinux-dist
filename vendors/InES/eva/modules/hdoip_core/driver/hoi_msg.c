@@ -74,13 +74,11 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
 int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
 {
     // ringbuffer
-    eti_drv_set_vid_buf(&handle->eti, msg->vid_rx_buf, msg->vid_rx_len - MAX_FRAME_LENGTH);
-    eti_drv_set_aud_buf(&handle->eti, msg->aud_rx_buf, msg->aud_rx_len - MAX_FRAME_LENGTH);
     eto_drv_set_vid_buf(&handle->eto, msg->vid_tx_buf, msg->vid_tx_len - MAX_FRAME_LENGTH);
     eto_drv_set_aud_buf(&handle->eto, msg->aud_tx_buf, msg->aud_tx_len - MAX_FRAME_LENGTH);
 
     // fec memory offset
-    fec_rx_set_address_offset(handle->p_fec_memory_interface, msg->vid_rx_buf);
+    fec_rx_set_address_offset(handle->p_fec_memory_interface, msg->vid_tx_buf);
 
     // set descriptors and burst size in fec block
     fec_drv_set_descriptors(handle->p_fec_tx, msg->vid_tx_buf, msg->aud_tx_buf, msg->vid_tx_len, msg->aud_tx_len, 0x08);
@@ -252,10 +250,6 @@ int hoi_drv_msg_asoreg(t_hoi* handle, t_hoi_msg_asoreg* msg)
 {
     msg->config = aso_get_ctrl(handle->p_aso, 0xFFFFFFFF);
     msg->status = aso_get_status(handle->p_aso, 0xFFFFFFFF);
-    msg->start = eti_get_aud_start_desc(handle->p_esi);
-    msg->stop = eti_get_aud_stop_desc(handle->p_esi);
-    msg->read = eti_get_aud_read_desc(handle->p_esi);
-    msg->write = eti_get_aud_write_desc(handle->p_esi);
 
     return SUCCESS;
 }

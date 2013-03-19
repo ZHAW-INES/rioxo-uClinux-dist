@@ -49,13 +49,11 @@ int hoi_drv_ldrv(uint32_t drivers)
     return hoi_msg(&msg);
 }
 
-int hoi_drv_buf(void* ar, size_t arl, void* vr, size_t vrl, void* at, size_t atl, void* vt, size_t vtl)
+int hoi_drv_buf(void* at, size_t atl, void* vt, size_t vtl)
 {
     t_hoi_msg_buf msg;
 
     hoi_msg_buf_init(&msg);
-    msg.aud_rx_buf = ar; msg.aud_rx_len = arl; memset(ar, 0, arl);
-    msg.vid_rx_buf = vr; msg.vid_rx_len = vrl; memset(vr, 0, vrl);
     msg.aud_tx_buf = at; msg.aud_tx_len = atl; memset(at, 0, atl);
     msg.vid_tx_buf = vt; msg.vid_tx_len = vtl; memset(vt, 0, vtl);
 

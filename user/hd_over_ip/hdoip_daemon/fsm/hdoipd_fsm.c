@@ -920,7 +920,6 @@ void hdoipd_start()
 }
 
 #define FEC_IP_BUFFER_SIZE  ((2*1024+62)*1540)
-#define AUD_RX_SIZE         (512*1024)
 #define AUD_TX_SIZE         (512*1024)
 
 bool hdoipd_init(int drv)
@@ -947,9 +946,7 @@ bool hdoipd_init(int drv)
 
     // set ringbuffer addresses
     void* vid = malloc(FEC_IP_BUFFER_SIZE);
-    void* aud_rx = malloc(AUD_RX_SIZE);
     void* aud_tx = malloc(AUD_TX_SIZE);
-
 
     hdoipd_set_default();
 
@@ -1028,12 +1025,6 @@ bool hdoipd_init(int drv)
             unlock("hdoipd_init");
             return false;
         }
- 
-        if (!aud_rx) {
-            report("malloc(AUD_RX_SIZE) failed");
-            unlock("hdoipd_init");
-            return false;
-        }
 
         if (!aud_tx) {
             report("malloc(AUD_TX_SIZE) failed");
@@ -1043,11 +1034,7 @@ bool hdoipd_init(int drv)
 
         hdoipd.img_buff = vid;
 
-        if (hoi_drv_buf(
-                aud_rx, AUD_RX_SIZE,
-                vid, FEC_IP_BUFFER_SIZE,
-                aud_tx, AUD_TX_SIZE,
-                vid, FEC_IP_BUFFER_SIZE)) {
+        if (hoi_drv_buf(aud_tx, AUD_TX_SIZE, vid, FEC_IP_BUFFER_SIZE)) {
             report("set buffers failed");
             unlock("hdoipd_init");
             return false;
