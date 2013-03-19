@@ -52,6 +52,7 @@
 #define BASE_FEC_RX         (na_acb_fec_rx)
 #define BASE_FEC_IP_TX      (na_fec_tx)
 #define BASE_FEC_IP_RX      (na_fec_rx)
+#define BASE_FEC_MEMORY     (na_fec_memory_interface_0_control_slave)
 // Register area sizes
 #define TSE_MAC_SIZE        0x400
 

@@ -138,6 +138,7 @@ label = {
     p_fec_column_only = "Column only";
     p_fec_l = "L (rows)";
     p_fec_d = "D (columns)";
+    p_fec_matrix = "Size of Matrix";
     p_fec_overhead = "Overhead";
 
     -- Page TEST

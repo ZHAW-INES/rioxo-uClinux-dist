@@ -919,9 +919,9 @@ void hdoipd_start()
 
 }
 
-#define VID_SIZE        (3*1024*1024)
-#define AUD_RX_SIZE     (512*1024)
-#define AUD_TX_SIZE     (512*1024)
+#define FEC_IP_BUFFER_SIZE  ((2*1024+62)*1540)
+#define AUD_RX_SIZE         (512*1024)
+#define AUD_TX_SIZE         (512*1024)
 
 bool hdoipd_init(int drv)
 {
@@ -946,10 +946,10 @@ bool hdoipd_init(int drv)
     hdoipd.hdcp.enc_state = 0;
 
     // set ringbuffer addresses
-    // TODO: Audio backchannel (aud_tx) uses the same address as fec rx!
-    void* vid = (void*) (na_ddr2_1_end);
-    void* aud_rx = (void*) (vid + VID_SIZE);
-    void* aud_tx = (void*) (aud_rx + AUD_RX_SIZE);
+    void* vid = malloc(FEC_IP_BUFFER_SIZE);
+    void* aud_rx = malloc(AUD_RX_SIZE);
+    void* aud_tx = malloc(AUD_TX_SIZE);
+
 
     hdoipd_set_default();
 
@@ -1024,7 +1024,7 @@ bool hdoipd_init(int drv)
         report("setup buffers...");
 
         if (!vid) {
-            report("malloc(VID_SIZE) failed");
+            report("malloc(FEC_IP_BUFFER_SIZE) failed");
             unlock("hdoipd_init");
             return false;
         }
@@ -1045,9 +1045,9 @@ bool hdoipd_init(int drv)
 
         if (hoi_drv_buf(
                 aud_rx, AUD_RX_SIZE,
-                vid, VID_SIZE,
+                vid, FEC_IP_BUFFER_SIZE,
                 aud_tx, AUD_TX_SIZE,
-                vid, VID_SIZE)) {
+                vid, FEC_IP_BUFFER_SIZE)) {
             report("set buffers failed");
             unlock("hdoipd_init");
             return false;

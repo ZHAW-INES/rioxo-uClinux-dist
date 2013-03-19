@@ -30,7 +30,7 @@
 */
 
 /*
- *  Modified for used in uClinux
+ *  Modified for use in uClinux
  *  15.01.2013, buan
  */
 
@@ -42,71 +42,71 @@
 /* Registers of Interface Out Block */
 
 //video dst mac
-#define fec_tx_write_vid_dst_mac_1(base, data)                      HOI_WR8((base), 36, (data));
-#define fec_tx_write_vid_dst_mac_0(base, data)                      HOI_WR8((base), 37, (data));
-#define fec_tx_write_vid_dst_mac_5(base, data)                      HOI_WR8((base), 40, (data));
-#define fec_tx_write_vid_dst_mac_4(base, data)                      HOI_WR8((base), 41, (data));
-#define fec_tx_write_vid_dst_mac_3(base, data)                      HOI_WR8((base), 42, (data));
-#define fec_tx_write_vid_dst_mac_2(base, data)                      HOI_WR8((base), 43, (data));
+#define fec_tx_write_vid_dst_mac_1(base, data)                      HOI_WR8((base), 36, (data))
+#define fec_tx_write_vid_dst_mac_0(base, data)                      HOI_WR8((base), 37, (data))
+#define fec_tx_write_vid_dst_mac_5(base, data)                      HOI_WR8((base), 40, (data))
+#define fec_tx_write_vid_dst_mac_4(base, data)                      HOI_WR8((base), 41, (data))
+#define fec_tx_write_vid_dst_mac_3(base, data)                      HOI_WR8((base), 42, (data))
+#define fec_tx_write_vid_dst_mac_2(base, data)                      HOI_WR8((base), 43, (data))
 //video src mac
-#define fec_tx_write_vid_src_mac_3(base, data)                      HOI_WR8((base), 44, (data));
-#define fec_tx_write_vid_src_mac_2(base, data)                      HOI_WR8((base), 45, (data));
-#define fec_tx_write_vid_src_mac_1(base, data)                      HOI_WR8((base), 46, (data));
-#define fec_tx_write_vid_src_mac_0(base, data)                      HOI_WR8((base), 47, (data));
-#define fec_tx_write_vid_src_mac_5(base, data)                      HOI_WR8((base), 48, (data));
-#define fec_tx_write_vid_src_mac_4(base, data)                      HOI_WR8((base), 49, (data));
+#define fec_tx_write_vid_src_mac_3(base, data)                      HOI_WR8((base), 44, (data))
+#define fec_tx_write_vid_src_mac_2(base, data)                      HOI_WR8((base), 45, (data))
+#define fec_tx_write_vid_src_mac_1(base, data)                      HOI_WR8((base), 46, (data))
+#define fec_tx_write_vid_src_mac_0(base, data)                      HOI_WR8((base), 47, (data))
+#define fec_tx_write_vid_src_mac_5(base, data)                      HOI_WR8((base), 48, (data))
+#define fec_tx_write_vid_src_mac_4(base, data)                      HOI_WR8((base), 49, (data))
 //video tll/tos
-#define fec_tx_write_vid_ttl_tos(base, ttl, tos)                    HOI_WR32((base), 52, (ttl<<8) | tos);
+#define fec_tx_write_vid_ttl_tos(base, ttl, tos)                    HOI_WR32((base), 52, (ttl<<8) | tos)
 //video src ip
-#define fec_tx_write_vid_src_ip(base, data)                         HOI_WR32((base), 56, swap32((data)));
+#define fec_tx_write_vid_src_ip(base, data)                         HOI_WR32((base), 56, swap32((data)))
 //video dst ip
-#define fec_tx_write_vid_dst_ip(base, data)                         HOI_WR32((base), 60, swap32((data)));
+#define fec_tx_write_vid_dst_ip(base, data)                         HOI_WR32((base), 60, swap32((data)))
 //video src port
-#define fec_tx_write_vid_src_port(base, data)                       HOI_WR32((base), 64, swap16((data)));
+#define fec_tx_write_vid_src_port(base, data)                       HOI_WR32((base), 64, swap16((data)))
 //video dst port
-#define fec_tx_write_vid_dst_port(base, data)                       HOI_WR32((base), 68, swap16((data)));
+#define fec_tx_write_vid_dst_port(base, data)                       HOI_WR32((base), 68, swap16((data)))
 
 
 //audio dst mac
-#define fec_tx_write_aud_dst_mac_1(base, data)                      HOI_WR8((base), 72, (data));
-#define fec_tx_write_aud_dst_mac_0(base, data)                      HOI_WR8((base), 73, (data));
-#define fec_tx_write_aud_dst_mac_5(base, data)                      HOI_WR8((base), 76, (data));
-#define fec_tx_write_aud_dst_mac_4(base, data)                      HOI_WR8((base), 77, (data));
-#define fec_tx_write_aud_dst_mac_3(base, data)                      HOI_WR8((base), 78, (data));
-#define fec_tx_write_aud_dst_mac_2(base, data)                      HOI_WR8((base), 79, (data));
+#define fec_tx_write_aud_dst_mac_1(base, data)                      HOI_WR8((base), 72, (data))
+#define fec_tx_write_aud_dst_mac_0(base, data)                      HOI_WR8((base), 73, (data))
+#define fec_tx_write_aud_dst_mac_5(base, data)                      HOI_WR8((base), 76, (data))
+#define fec_tx_write_aud_dst_mac_4(base, data)                      HOI_WR8((base), 77, (data))
+#define fec_tx_write_aud_dst_mac_3(base, data)                      HOI_WR8((base), 78, (data))
+#define fec_tx_write_aud_dst_mac_2(base, data)                      HOI_WR8((base), 79, (data))
 //audio src mac
-#define fec_tx_write_aud_src_mac_3(base, data)                      HOI_WR8((base), 80, (data));
-#define fec_tx_write_aud_src_mac_2(base, data)                      HOI_WR8((base), 81, (data));
-#define fec_tx_write_aud_src_mac_1(base, data)                      HOI_WR8((base), 82, (data));
-#define fec_tx_write_aud_src_mac_0(base, data)                      HOI_WR8((base), 83, (data));
-#define fec_tx_write_aud_src_mac_5(base, data)                      HOI_WR8((base), 84, (data));
-#define fec_tx_write_aud_src_mac_4(base, data)                      HOI_WR8((base), 85, (data));
+#define fec_tx_write_aud_src_mac_3(base, data)                      HOI_WR8((base), 80, (data))
+#define fec_tx_write_aud_src_mac_2(base, data)                      HOI_WR8((base), 81, (data))
+#define fec_tx_write_aud_src_mac_1(base, data)                      HOI_WR8((base), 82, (data))
+#define fec_tx_write_aud_src_mac_0(base, data)                      HOI_WR8((base), 83, (data))
+#define fec_tx_write_aud_src_mac_5(base, data)                      HOI_WR8((base), 84, (data))
+#define fec_tx_write_aud_src_mac_4(base, data)                      HOI_WR8((base), 85, (data))
 //audio tll/tos
-#define fec_tx_write_aud_ttl_tos(base, ttl, tos)                    HOI_WR32((base), 88, (ttl<<8) | tos);
+#define fec_tx_write_aud_ttl_tos(base, ttl, tos)                    HOI_WR32((base), 88, (ttl<<8) | tos)
 //audio src ip
-#define fec_tx_write_aud_src_ip(base, data)                         HOI_WR32((base), 92, swap32((data)));
+#define fec_tx_write_aud_src_ip(base, data)                         HOI_WR32((base), 92, swap32((data)))
 //audio dst ip
-#define fec_tx_write_aud_dst_ip(base, data)                         HOI_WR32((base), 96, swap32((data)));
+#define fec_tx_write_aud_dst_ip(base, data)                         HOI_WR32((base), 96, swap32((data)))
 //audio src port
-#define fec_tx_write_aud_src_port(base, data)                       HOI_WR32((base), 100, swap16((data)));
+#define fec_tx_write_aud_src_port(base, data)                       HOI_WR32((base), 100, swap16((data)))
 //audio dst port
-#define fec_tx_write_aud_dst_port(base, data)                       HOI_WR32((base), 104, swap16((data)));
+#define fec_tx_write_aud_dst_port(base, data)                       HOI_WR32((base), 104, swap16((data)))
 
 
 // set video descriptors
 #define fec_tx_write_video_descriptors(base, data)                  HOI_WR32((base), 0x10, data.start>>2); \
                                                                     HOI_WR32((base), 0x14, data.stop>>2);  \
                                                                     HOI_WR32((base), 0x18, data.read>>2);  \
-                                                                    HOI_WR32((base), 0x1C, data.write>>2);
+                                                                    HOI_WR32((base), 0x1C, data.write>>2)
 
 // set audio descriptors
 #define fec_tx_write_audio_descriptors(base, data)                  HOI_WR32((base), 0x00, data.start>>2); \
                                                                     HOI_WR32((base), 0x04, data.stop>>2);  \
                                                                     HOI_WR32((base), 0x08, data.read>>2);  \
-                                                                    HOI_WR32((base), 0x0C, data.write>>2);
+                                                                    HOI_WR32((base), 0x0C, data.write>>2)
 
 // set burst size
-#define fec_tx_write_burst_size(base, data)                         HOI_WR32((base), 0x20, (data));
+#define fec_tx_write_burst_size(base, data)                         HOI_WR32((base), 0x20, (data))
 
 
 

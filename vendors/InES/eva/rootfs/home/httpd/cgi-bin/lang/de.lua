@@ -137,6 +137,7 @@ label = {
     p_fec_column_only = "Nur Spalten";
     p_fec_l = "L (Zeilen)";
     p_fec_d = "D (Spalten)";
+    p_fec_matrix = "Matrizengrösse";
     p_fec_overhead = "Overhead";
 
     -- Page TEST

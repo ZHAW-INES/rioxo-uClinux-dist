@@ -70,6 +70,7 @@ typedef struct {
     void                *p_fec_rx;
     void                *p_fec_ip_tx;
     void                *p_fec_ip_rx;
+    void                *p_fec_memory_interface;
 
     t_i2c               i2c_tx;
     t_i2c               i2c_rx;

@@ -29,20 +29,28 @@
 **####ECOSGPLCOPYRIGHTEND####
 */
 
+/*
+ *  Modified for use in uClinux
+ *  15.01.2013, buan
+ */
+
 #ifndef __ALT_AVALON_RTP_RX_REGS_H__
 #define __ALT_AVALON_RTP_RX_REGS_H__
 
 #include "stdhal.h"
 
+/* Registers of Memory Interface*/
+#define fec_rx_set_address_offset(base, offset)                             HOI_WR32((base), 0, (offset))
+#define fec_rx_get_address_offset(base)                                     HOI_RD32((base), 0)
 
 /* Registers of Interface Out Block */
-#define fec_rx_enable_video_out(base)                                       HOI_REG_SET((base), 0, 1);
-#define fec_rx_enable_audio_emb_out(base)                                   HOI_REG_SET((base), 0, 2);
-#define fec_rx_enable_audio_int_out(base)                                   HOI_REG_SET((base), 0, 4);
+#define fec_rx_enable_video_out(base)                                       HOI_REG_SET((base), 0, 1)
+#define fec_rx_enable_audio_emb_out(base)                                   HOI_REG_SET((base), 0, 2)
+#define fec_rx_enable_audio_int_out(base)                                   HOI_REG_SET((base), 0, 4)
 
-#define fec_rx_disable_video_out(base)                                      HOI_REG_CLR((base), 0, 1);
-#define fec_rx_disable_audio_emb_out(base)                                  HOI_REG_CLR((base), 0, 2);
-#define fec_rx_disable_audio_int_out(base)                                  HOI_REG_CLR((base), 0, 4);
+#define fec_rx_disable_video_out(base)                                      HOI_REG_CLR((base), 0, 1)
+#define fec_rx_disable_audio_emb_out(base)                                  HOI_REG_CLR((base), 0, 2)
+#define fec_rx_disable_audio_int_out(base)                                  HOI_REG_CLR((base), 0, 4)
 
 /* Registers of FEC RX IP */
 #define ALTERA_AVALON_RTP_RX_CHANNEL_REG                                    0

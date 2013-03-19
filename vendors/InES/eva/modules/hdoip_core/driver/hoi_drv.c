@@ -19,33 +19,34 @@
 void hoi_drv_init(t_hoi* handle)
 {
     // TODO proper range in config.h
-    handle->p_tx            = ioremap(BASE_VIDEO_TX,    0xffffffff);
-    handle->p_rx            = ioremap(BASE_VIDEO_RX,    0xffffffff);
-    handle->p_i2c_tag_aud   = ioremap(BASE_I2C_AUD_TAG, 0xffffffff);
-    handle->p_i2c_tag_vid   = ioremap(BASE_I2C_VID_TAG, 0xffffffff);
-    handle->p_vio           = ioremap(BASE_VIO,         0xffffffff);
-    handle->p_vsi           = ioremap(BASE_VSI,         0xffffffff);
-    handle->p_vso           = ioremap(BASE_VSO,         0xffffffff);
-    handle->p_aso           = ioremap(BASE_ASO,         0xffffffff);
-    handle->p_asi           = ioremap(BASE_ASI,         0xffffffff);
-    handle->p_adv212        = ioremap(BASE_ADV212,      0xffffffff);
-    handle->p_vrp           = ioremap(BASE_VRP,         0xffffffff);
-    handle->p_tmr           = ioremap(BASE_TIMER,       0xffffffff);
-    handle->p_wdg           = ioremap(BASE_WATCHDOG,    0xffffffff);
-    handle->p_hdcp          = ioremap(BASE_HDCP,        0xffffffff);
-    handle->p_irq           = ioremap(BASE_EXT_IRQ,     0xffffffff);
-    handle->p_esi           = ioremap(BASE_ETI,         0xffffffff);
-    handle->p_eso           = ioremap(BASE_ETO,         0xffffffff);
-    handle->p_ver           = ioremap(BASE_VER,         0xffffffff);
-    handle->p_sysid         = ioremap(BASE_SYSID,       0xffffffff);
-    handle->p_led           = ioremap(BASE_LED,         0xffffffff);
-    handle->p_video_mux     = ioremap(BASE_VIDEO_MUX,   0xffffffff);
-    handle->p_spi_tx        = ioremap(BASE_SPI_TX,      0xffffffff);
-    handle->p_spi_rx        = ioremap(BASE_SPI_RX,      0xffffffff);
-    handle->p_fec_tx        = ioremap(BASE_FEC_TX,      0xffffffff);
-    handle->p_fec_rx        = ioremap(BASE_FEC_RX,      0xffffffff);
-    handle->p_fec_ip_tx     = ioremap(BASE_FEC_IP_TX,   0xffffffff);
-    handle->p_fec_ip_rx     = ioremap(BASE_FEC_IP_RX,   0xffffffff);
+    handle->p_tx                    = ioremap(BASE_VIDEO_TX,    0xffffffff);
+    handle->p_rx                    = ioremap(BASE_VIDEO_RX,    0xffffffff);
+    handle->p_i2c_tag_aud           = ioremap(BASE_I2C_AUD_TAG, 0xffffffff);
+    handle->p_i2c_tag_vid           = ioremap(BASE_I2C_VID_TAG, 0xffffffff);
+    handle->p_vio                   = ioremap(BASE_VIO,         0xffffffff);
+    handle->p_vsi                   = ioremap(BASE_VSI,         0xffffffff);
+    handle->p_vso                   = ioremap(BASE_VSO,         0xffffffff);
+    handle->p_aso                   = ioremap(BASE_ASO,         0xffffffff);
+    handle->p_asi                   = ioremap(BASE_ASI,         0xffffffff);
+    handle->p_adv212                = ioremap(BASE_ADV212,      0xffffffff);
+    handle->p_vrp                   = ioremap(BASE_VRP,         0xffffffff);
+    handle->p_tmr                   = ioremap(BASE_TIMER,       0xffffffff);
+    handle->p_wdg                   = ioremap(BASE_WATCHDOG,    0xffffffff);
+    handle->p_hdcp                  = ioremap(BASE_HDCP,        0xffffffff);
+    handle->p_irq                   = ioremap(BASE_EXT_IRQ,     0xffffffff);
+    handle->p_esi                   = ioremap(BASE_ETI,         0xffffffff);
+    handle->p_eso                   = ioremap(BASE_ETO,         0xffffffff);
+    handle->p_ver                   = ioremap(BASE_VER,         0xffffffff);
+    handle->p_sysid                 = ioremap(BASE_SYSID,       0xffffffff);
+    handle->p_led                   = ioremap(BASE_LED,         0xffffffff);
+    handle->p_video_mux             = ioremap(BASE_VIDEO_MUX,   0xffffffff);
+    handle->p_spi_tx                = ioremap(BASE_SPI_TX,      0xffffffff);
+    handle->p_spi_rx                = ioremap(BASE_SPI_RX,      0xffffffff);
+    handle->p_fec_tx                = ioremap(BASE_FEC_TX,      0xffffffff);
+    handle->p_fec_rx                = ioremap(BASE_FEC_RX,      0xffffffff);
+    handle->p_fec_ip_tx             = ioremap(BASE_FEC_IP_TX,   0xffffffff);
+    handle->p_fec_ip_rx             = ioremap(BASE_FEC_IP_RX,   0xffffffff);
+    handle->p_fec_memory_interface  = ioremap(BASE_FEC_MEMORY,  0xffffffff);
 
     // init
     handle->event = queue_init(100);

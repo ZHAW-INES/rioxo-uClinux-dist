@@ -79,6 +79,9 @@ int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
     eto_drv_set_vid_buf(&handle->eto, msg->vid_tx_buf, msg->vid_tx_len - MAX_FRAME_LENGTH);
     eto_drv_set_aud_buf(&handle->eto, msg->aud_tx_buf, msg->aud_tx_len - MAX_FRAME_LENGTH);
 
+    // fec memory offset
+    fec_rx_set_address_offset(handle->p_fec_memory_interface, msg->vid_rx_buf);
+
     // set descriptors and burst size in fec block
     fec_drv_set_descriptors(handle->p_fec_tx, msg->vid_tx_buf, msg->aud_tx_buf, msg->vid_tx_len, msg->aud_tx_len, 0x08);
 
