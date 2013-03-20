@@ -15,14 +15,14 @@ function show(t)
        -- t.fec_video_l = string.sub(temp_reg, 2, 2)
        -- t.fec_video_d = string.sub(temp_reg, 3, 3)
         t.fec_video_matrix = string.sub(temp_reg, 2, 2)
-        t.fec_video_interleave = string.sub(temp_reg, 4, 4)
+       -- t.fec_video_interleave = string.sub(temp_reg, 4, 4)
         t.fec_video_column_only = string.sub(temp_reg, 5, 5)
 
         t.fec_audio_en = string.sub(temp_reg, 6, 6)
        -- t.fec_audio_l = string.sub(temp_reg, 7, 7)
        -- t.fec_audio_d = string.sub(temp_reg, 8, 8)
         t.fec_audio_matrix = string.sub(temp_reg, 7, 7)
-        t.fec_audio_interleave = string.sub(temp_reg, 9, 9)
+       -- t.fec_audio_interleave = string.sub(temp_reg, 9, 9)
         t.fec_audio_column_only = string.sub(temp_reg, 10, 10)
     else
         if(t.fec_video_en == nil) then
@@ -37,21 +37,14 @@ function show(t)
         if(t.fec_audio_column_only == nil) then
             t.fec_audio_column_only = 0
         end
-        if(t.fec_video_interleave == nil) then
-            t.fec_video_interleave = 0
-        end
-        if(t.fec_audio_interleave == nil) then
-            t.fec_audio_interleave = 0
-        end
 
-
-        temp_reg = t.fec_video_en .. t.fec_video_matrix .. t.fec_video_matrix .. t.fec_video_interleave .. t.fec_video_column_only .. t.fec_audio_en .. t.fec_audio_matrix .. t.fec_audio_matrix .. t.fec_audio_interleave .. t.fec_audio_column_only
+        temp_reg = hdoip.pipe.getParam(hdoip.pipe.REG_FEC_SETTING)
+        temp_reg = t.fec_video_en .. t.fec_video_matrix .. t.fec_video_matrix .. string.sub(temp_reg, 4, 4) .. t.fec_video_column_only .. t.fec_audio_en .. t.fec_audio_matrix .. t.fec_audio_matrix .. string.sub(temp_reg, 9, 9) .. t.fec_audio_column_only
 
         if(hdoip.pipe.getParam(hdoip.pipe.REG_FEC_SETTING) ~= temp_reg) then
             hdoip.pipe.setParam(hdoip.pipe.REG_FEC_SETTING, temp_reg)
         end
 
-        hdoip.pipe.getParam(hdoip.pipe.REG_FEC_SETTING)
     end
 
     if (tonumber(t.fec_video_column_only) == 1) then
@@ -98,13 +91,11 @@ function show(t)
         hdoip.html.DropdownBox10("fec_audio_matrix", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, t.fec_audio_matrix)                                                                     hdoip.html.TableInsElement(1);
 
        -- hdoip.html.Text(label.p_fec_interleave);                                                                                                                            hdoip.html.TableInsElement(1);
-       -- hdoip.html.DropdownBox3("fec_video_interleave", label.p_fec_interleave_off, label.p_fec_interleave_style1, label.p_fec_interleave_style2, t.fec_video_interleave)   hdoip.html.TableInsElement(1);
-       -- hdoip.html.DropdownBox3("fec_audio_interleave", label.p_fec_interleave_off, label.p_fec_interleave_style1, label.p_fec_interleave_style2, t.fec_audio_interleave)   hdoip.html.TableInsElement(1);
-        hdoip.html.Text(label.p_fec_interleave);                                                                                                                            hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("fec_video_interleave", 2, "", tonumber(t.fec_video_interleave))                                                                            hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("fec_audio_interleave", 2, "", tonumber(t.fec_audio_interleave))                                                                            hdoip.html.TableInsElement(1);
-
-
+       -- hdoip.html.DropdownBox3("fec_video_interleave", label.p_fec_interleave_off, label.p_fec_interleave_style2, label.p_fec_interleave_style1, t.fec_video_interleave)   hdoip.html.TableInsElement(1);
+       -- hdoip.html.DropdownBox3("fec_audio_interleave", label.p_fec_interleave_off, label.p_fec_interleave_style2, label.p_fec_interleave_style1, t.fec_audio_interleave)   hdoip.html.TableInsElement(1);
+       -- hdoip.html.Text(label.p_fec_interleave);                                                                                                                            hdoip.html.TableInsElement(1);
+       -- hdoip.html.FormCheckbox("fec_video_interleave", 1, "", tonumber(t.fec_video_interleave))                                                                            hdoip.html.TableInsElement(1);
+       -- hdoip.html.FormCheckbox("fec_audio_interleave", 1, "", tonumber(t.fec_audio_interleave))                                                                            hdoip.html.TableInsElement(1);
 
         hdoip.html.Text(label.p_fec_column_only);                                                                                                                           hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("fec_video_column_only", 1, "", tonumber(t.fec_video_column_only))                                                                          hdoip.html.TableInsElement(1);

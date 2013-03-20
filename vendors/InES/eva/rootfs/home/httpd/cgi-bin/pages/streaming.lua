@@ -83,11 +83,11 @@ function show(t)
                 t.auto_stream = 0;
             end
 
---            if(hdoip.pipe.getParam(hdoip.pipe.REG_TRAFFIC_SHAPING) == "true") then
---                t.traffic_shaping = 1;
---            else 
---                t.traffic_shaping = 0;
---            end
+            if(hdoip.pipe.getParam(hdoip.pipe.REG_TRAFFIC_SHAPING) == "true") then
+                t.traffic_shaping = 1;
+            else 
+                t.traffic_shaping = 0;
+            end
         end
 
         if(t.mode_vrb) then
@@ -249,14 +249,20 @@ function show(t)
                t.auto_stream = 0 
             end
 
---            if(t.traffic_shaping ~= nil) then
---               hdoip.pipe.setParam(hdoip.pipe.REG_TRAFFIC_SHAPING, "true")
---               t.traffic_shaping = 1
---            else
---               hdoip.pipe.setParam(hdoip.pipe.REG_TRAFFIC_SHAPING, "false")
---               t.traffic_shaping = 0 
---            end
+            if(t.traffic_shaping ~= nil) then
+               hdoip.pipe.setParam(hdoip.pipe.REG_TRAFFIC_SHAPING, "true")
+               t.traffic_shaping = 1
+            else
+               hdoip.pipe.setParam(hdoip.pipe.REG_TRAFFIC_SHAPING, "false")
+               t.traffic_shaping = 0 
+            end
             
+            fec_setting = hdoip.pipe.getParam(hdoip.pipe.REG_FEC_SETTING)
+            fec_setting_modified = string.sub(fec_setting, 1, 3) .. t.traffic_shaping .. string.sub(fec_setting, 5, 8) .. t.traffic_shaping .. string.sub(fec_setting, 10, 10)
+            if(hdoip.pipe.getParam(hdoip.pipe.REG_FEC_SETTING) ~= fec_setting_modified) then
+                hdoip.pipe.setParam(hdoip.pipe.REG_FEC_SETTING, fec_setting_modified)
+            end
+
             if((t.multicast_en ~= nil) and (t.multicast_en == "true")) then
 	            hdoip.pipe.setParam(hdoip.pipe.REG_MULTICAST_EN, "true")
 	            t.multicast_en = 1
@@ -440,8 +446,8 @@ function show(t)
             hdoip.html.Text(label.p_st_auto_stream);                                                    hdoip.html.TableInsElement(1);
             hdoip.html.FormCheckbox("auto_stream", 1, "", t.auto_stream)                                hdoip.html.TableInsElement(2);
 
---            hdoip.html.Text(label.p_st_traffic_shaping);                                                hdoip.html.TableInsElement(1);
---            hdoip.html.FormCheckbox("traffic_shaping", 1, "", t.traffic_shaping)                        hdoip.html.TableInsElement(2);
+            hdoip.html.Text(label.p_st_traffic_shaping);                                                hdoip.html.TableInsElement(1);
+            hdoip.html.FormCheckbox("traffic_shaping", 1, "", t.traffic_shaping)                        hdoip.html.TableInsElement(2);
         end
 
         -- VRB specific fields

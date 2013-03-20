@@ -30,7 +30,7 @@
 */
 
 /*
- *  Modified for used in uClinux
+ *  Modified for use in uClinux
  *  15.01.2013, buan
  */
 
@@ -147,8 +147,8 @@ void change_setting_fec_ip_tx(void* p_fec_ip_tx, int enable_vid, int d_vid, int 
     fec_settings_channel_0.ColFECOnly = single_mode_vid;
 
     switch (interleave_vid) {
-        case 1:     fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_a;  break;
-        case 2:     fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_b;  break;
+        case 1:     fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_b;  break;
+        case 2:     fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_a;  break;
         default:    fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_off;
     }
 
@@ -159,8 +159,8 @@ void change_setting_fec_ip_tx(void* p_fec_ip_tx, int enable_vid, int d_vid, int 
     fec_settings_channel_1.ColFECOnly = single_mode_aud;
 
     switch (interleave_aud) {
-        case 1:     fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_a;  break;
-        case 2:     fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_b;  break;
+        case 1:     fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_b;  break;
+        case 2:     fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_a;  break;
         default:    fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_off;
     }
 
