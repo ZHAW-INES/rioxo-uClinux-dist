@@ -246,6 +246,7 @@ int eto_drv_init(t_eto* handle, void* ptr)
     handle->atx = 0;
     handle->vcnt = 0;
     handle->acnt = 0;
+    handle->traffic_shaping_enable = 0;
 
 	eto_drv_stop(handle);
     eto_set_config_cpu_frame_disable(handle->ptr);
@@ -346,6 +347,7 @@ void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, t_fec_setti
 
     uint32_t l = fec->video_l;
     uint32_t d = fec->video_d;
+    handle->traffic_shaping_enable = enable;
 
     h = (timing->width + timing->hfront + timing->hpulse + timing->hback);
     v = (timing->height + timing->vfront + timing->vpulse + timing->vback);

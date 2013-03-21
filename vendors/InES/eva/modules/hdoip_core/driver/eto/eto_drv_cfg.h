@@ -24,7 +24,8 @@
 
 typedef struct {
     uint32_t link_state;
-    void*    ptr;
+    void*       ptr;
+    int         traffic_shaping_enable;
     uint32_t    vtx;
     uint32_t    atx;
     int         vcnt;

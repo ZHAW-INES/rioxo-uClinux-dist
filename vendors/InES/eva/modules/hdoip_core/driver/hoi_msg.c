@@ -968,6 +968,9 @@ int hoi_drv_msg_clear_osd(t_hoi* handle)
 
 int hoi_drv_msg_set_fec_tx_params(t_hoi* handle, t_hoi_msg_fec_tx* msg)
 {
+    // reconfigure traffic shaping because count of overhead packets changes
+    eto_drv_set_frame_period(&handle->eto, &handle->vio.timing, &msg->fec, handle->eto.traffic_shaping_enable);
+
     change_setting_fec_ip_tx(handle->p_fec_ip_tx, msg->fec.video_enable, msg->fec.video_l, msg->fec.video_d, msg->fec.video_interleaving, msg->fec.video_col_only, 
                                                   msg->fec.audio_enable, msg->fec.audio_l, msg->fec.audio_d, msg->fec.audio_interleaving, msg->fec.audio_col_only);
     return SUCCESS;
