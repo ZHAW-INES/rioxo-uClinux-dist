@@ -345,7 +345,7 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     uint32_t ien;
 
     // activate FEC RX block
-    init_fec_rx_ip(handle->p_fec_ip_rx, 1);
+    init_fec_rx_ip_video(handle->p_fec_ip_rx, 1);
 
     // setup vio
     if (msg->compress & DRV_CODEC) {
@@ -476,6 +476,9 @@ int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
 int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
 {
     int delay, vid = 0;
+
+    // activate FEC RX block
+    init_fec_rx_ip_audio(handle->p_fec_ip_rx, 1);
 
     // sync...
     aso_drv_stop(&handle->aso);

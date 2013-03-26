@@ -758,13 +758,13 @@ void task_set_fec_setting (char *p)
 
     // convert from ascii to integer
     fec.video_enable = fec_setting[0] - 48;
-    fec.video_l = fec_setting[1] - 48 + 1;
-    fec.video_d = fec_setting[2] - 48 + 1;
+    fec.video_l = fec_setting[1] - 48 + 2;
+    fec.video_d = fec_setting[2] - 48 + 2;
     fec.video_interleaving = fec_setting[3] - 48;
     fec.video_col_only = fec_setting[4] - 48;
     fec.audio_enable =fec_setting[5] - 48;
-    fec.audio_l = fec_setting[6] - 48 + 1;
-    fec.audio_d = fec_setting[7] - 48 + 1;
+    fec.audio_l = fec_setting[6] - 48 + 2;
+    fec.audio_d = fec_setting[7] - 48 + 2;
     fec.audio_interleaving = fec_setting[8] - 48;
     fec.audio_col_only = fec_setting[9] - 48;
 

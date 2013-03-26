@@ -944,7 +944,7 @@ void alt_avalon_rtp_rx_enable_fec_rx(alt_avalon_rtp_rx_dev* pDev)
    IOWR_ALTERA_AVALON_RTP_RX_EXTENDED_MODE(pDev->base, data);
 }
 
-void init_fec_rx_ip(void *p, int enable)
+void init_fec_rx_ip_video(void *p, int enable)
 {
     alt_avalon_rtp_rx_dev dev;
     alt_avalon_rtp_rx_channel_settings settings;
@@ -960,6 +960,20 @@ void init_fec_rx_ip(void *p, int enable)
     // video
     alt_avalon_rtp_rx_set_channel(&dev, 0);
     alt_avalon_rtp_rx_set_channel_config(&dev, 0, &settings);
+}
+
+void init_fec_rx_ip_audio(void *p, int enable)
+{
+    alt_avalon_rtp_rx_dev dev;
+    alt_avalon_rtp_rx_channel_settings settings;
+
+    dev.base = p;
+    dev.SelectedChannel = 0;
+    dev.MsgFIFODepth = 0;
+    dev.UseSoftwareMsgFIFODepth = 0;
+
+    settings.Enable = enable;
+    settings.RTPBypass = 0;
 
     // audio
     alt_avalon_rtp_rx_set_channel(&dev, 1);

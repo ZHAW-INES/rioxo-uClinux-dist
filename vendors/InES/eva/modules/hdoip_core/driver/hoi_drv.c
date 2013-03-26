@@ -10,7 +10,7 @@
 #include "hoi_msg.h"
 #include "wdg_hal.h"
 #include "si598.h"
-
+#include "fec_rx_drv.h"
 
 /* base driver initialization
  *
@@ -141,6 +141,8 @@ void hoi_drv_reset(t_hoi* handle, uint32_t rv)
     // Stop Audio Output
     if (rv & DRV_RST_AUD_OUT) {
         REPORT(INFO, "reset aso/eti");
+        // deactivate FEC RX block
+        init_fec_rx_ip_audio(handle->p_fec_ip_rx, 0);
         aso_drv_stop(&handle->aso);
         eti_drv_stop_aud(&handle->eti);
         eti_set_config_audio_enc_dis(handle->p_esi);

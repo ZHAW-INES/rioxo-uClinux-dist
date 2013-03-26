@@ -48,18 +48,18 @@ function show(t)
     end
 
     if (tonumber(t.fec_video_column_only) == 1) then
-        overhead_video = 1 / (tonumber(t.fec_video_matrix) + 1) * 100
+        overhead_video = 1 / (tonumber(t.fec_video_matrix) + 2) * 100
     else
-        numerator_video = (tonumber(t.fec_video_matrix) + 1) + (tonumber(t.fec_video_matrix) + 1)
-        denominator_video = (tonumber(t.fec_video_matrix) + 1) * (tonumber(t.fec_video_matrix) + 1)
+        numerator_video = (tonumber(t.fec_video_matrix) + 2) + (tonumber(t.fec_video_matrix) + 2)
+        denominator_video = (tonumber(t.fec_video_matrix) + 2) * (tonumber(t.fec_video_matrix) + 2)
         overhead_video = numerator_video / denominator_video * 100
     end
 
     if (tonumber(t.fec_audio_column_only) == 1) then
-        overhead_audio = 1 / (tonumber(t.fec_audio_matrix) + 1) * 100
+        overhead_audio = 1 / (tonumber(t.fec_audio_matrix) + 2) * 100
     else
-        numerator_audio = (tonumber(t.fec_audio_matrix) + 1) + (tonumber(t.fec_audio_matrix) + 1)
-        denominator_audio = (tonumber(t.fec_audio_matrix) + 1) * (tonumber(t.fec_audio_matrix) + 1)
+        numerator_audio = (tonumber(t.fec_audio_matrix) + 2) + (tonumber(t.fec_audio_matrix) + 2)
+        denominator_audio = (tonumber(t.fec_audio_matrix) + 2) * (tonumber(t.fec_audio_matrix) + 2)
         overhead_audio = numerator_audio / denominator_audio * 100
     end
 
@@ -87,8 +87,8 @@ function show(t)
        -- hdoip.html.DropdownBox10("fec_audio_d", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, t.fec_audio_d)                                                                               hdoip.html.TableInsElement(1);
 
         hdoip.html.Text(label.p_fec_matrix);                                                                                                                                hdoip.html.TableInsElement(1);
-        hdoip.html.DropdownBox10("fec_video_matrix", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, t.fec_video_matrix)                                                                     hdoip.html.TableInsElement(1);
-        hdoip.html.DropdownBox10("fec_audio_matrix", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, t.fec_audio_matrix)                                                                     hdoip.html.TableInsElement(1);
+        hdoip.html.DropdownBox9("fec_video_matrix", 2, 3, 4, 5, 6, 7, 8, 9, 10, t.fec_video_matrix)                                                                         hdoip.html.TableInsElement(1);
+        hdoip.html.DropdownBox9("fec_audio_matrix", 2, 3, 4, 5, 6, 7, 8, 9, 10, t.fec_audio_matrix)                                                                         hdoip.html.TableInsElement(1);
 
        -- hdoip.html.Text(label.p_fec_interleave);                                                                                                                            hdoip.html.TableInsElement(1);
        -- hdoip.html.DropdownBox3("fec_video_interleave", label.p_fec_interleave_off, label.p_fec_interleave_style2, label.p_fec_interleave_style1, t.fec_video_interleave)   hdoip.html.TableInsElement(1);
