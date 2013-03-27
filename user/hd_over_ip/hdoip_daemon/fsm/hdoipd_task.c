@@ -194,6 +194,26 @@ void task_get_eth_status(char** p)
     *p = buf;
 }
 
+void task_get_fec_status(char** p)
+{
+    t_hoi_msg_fecstat *stat;
+    hoi_drv_fecstat(&stat);
+    sprintf(buf, "VID (pkg: %i mis: %i fix: %i en: %i buf: %i/%i)\nAUD (pkg: %i mis: %i fix: %i en: %i buf: %i/%i))",
+            stat->vid_pkg_cnt,
+            stat->vid_mis_cnt,
+            stat->vid_fix_cnt,
+            stat->vid_fec_en,
+            stat->vid_buf,
+            stat->buf_size,
+            stat->aud_pkg_cnt,
+            stat->aud_mis_cnt,
+            stat->aud_fix_cnt,
+            stat->aud_fec_en,
+            stat->aud_buf,
+            stat->buf_size);
+    *p = buf;
+}
+
 void task_get_multicast_client(char ** p)
 {
     report_available_clients();
@@ -786,6 +806,7 @@ void hdoipd_register_task()
     get_listener("daemon-vrb-state", task_get_vrb_state);
     get_listener("daemon-rsc-state", task_get_rsc_state);
     get_listener("eth-status", task_get_eth_status);
+    get_listener("fec-status", task_get_fec_status);
     get_listener("vso-status", task_get_vso_status);
     get_listener("vio-status", task_get_vio_status);
     get_listener("aso-status", task_get_aso_status);

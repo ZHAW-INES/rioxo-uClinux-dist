@@ -79,6 +79,7 @@
 #define HOI_MSG_HDCP_DISAD9889	    (0x7000003a)
 #define HOI_MSG_HPDRESET            (0x7000003b)
 #define HOI_MSG_SET_FPS_REDUCTION   (0x7000003c)
+#define HOI_MSG_FECSTAT             (0x7000003d)
 
 #define HOI_MSG_POLL                (0x700000ff)
 #define HOI_MSG_HDCP_GET_KEY        (0x70000100)
@@ -240,6 +241,23 @@ typedef struct {
 } t_hoi_msg_ethstat;
 
 #define hoi_msg_ethstat_init(p) hoi_msg_init(p, HOI_MSG_ETHSTAT, t_hoi_msg_ethstat)
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t            vid_pkg_cnt;
+    uint32_t            vid_mis_cnt;
+    uint32_t            vid_fix_cnt;
+    uint32_t            vid_fec_en;
+    uint32_t            vid_buf;
+    uint32_t            aud_pkg_cnt;
+    uint32_t            aud_mis_cnt;
+    uint32_t            aud_fix_cnt;
+    uint32_t            aud_fec_en;
+    uint32_t            aud_buf;
+    uint32_t            buf_size;
+} t_hoi_msg_fecstat;
+
+#define hoi_msg_fecstat_init(p) hoi_msg_init(p, HOI_MSG_FECSTAT, t_hoi_msg_fecstat)
 
 typedef struct {
     hoi_msg_extends;

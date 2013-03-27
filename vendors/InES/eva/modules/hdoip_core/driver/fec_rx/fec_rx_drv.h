@@ -34,6 +34,7 @@
 
 #include "fec_rx_hal.h"
 #include "fec_rx_struct.h"
+#include "hoi_msg.h"
 
 /* Used to set message FIFO to all channel mode */
 #define ALTERA_AVALON_RTP_RX_ALL_CHANNELS  (0x00010000)
@@ -186,13 +187,13 @@ typedef struct
 } alt_avalon_rtp_rx_fec_channel_debug_values;
 
 /* statistic for FEC packets*/
-void fec_rx_statistics(void *p, t_fec_rx *counter_values);
+void fec_rx_statistics(void *p, t_fec_rx *counter_values, t_hoi_msg_fecstat* msg);
 
 /* Initialize FEC block for video*/
-void init_fec_rx_ip_video(void *p, int enable);
+void init_fec_rx_ip_video(void *p, int enable, t_fec_rx *counter_values);
 
 /* Initialize FEC block for audio*/
-void init_fec_rx_ip_audio(void *p, int enable);
+void init_fec_rx_ip_audio(void *p, int enable, t_fec_rx *counter_values);
 
 /* Get the parameters of a design */
 void alt_avalon_rtp_rx_get_parameters(alt_avalon_rtp_rx_dev* pDev, alt_avalon_rtp_rx_design_parameters* pParams);

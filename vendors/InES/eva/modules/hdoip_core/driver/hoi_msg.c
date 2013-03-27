@@ -224,12 +224,17 @@ int hoi_drv_msg_ethstat(t_hoi* handle, t_hoi_msg_ethstat* msg)
     msg->rx_inv_cnt = eti_get_inv_packet_cnt(handle->p_esi);
     msg->debug = eti_get_debug_reg(handle->p_esi);
 
-    fec_rx_statistics(handle->p_fec_ip_rx, &handle->fec_rx);
-
     msg->tx_cpu_cnt = eto_get_cpu_packet_cnt(handle->p_eso);
     msg->tx_aud_cnt = eto_get_aud_packet_cnt(handle->p_eso);
     msg->tx_vid_cnt = eto_get_vid_packet_cnt(handle->p_eso);
     msg->tx_inv_cnt = eto_get_inv_packet_cnt(handle->p_eso);
+
+    return SUCCESS;
+}
+
+int hoi_drv_msg_fecstat(t_hoi* handle, t_hoi_msg_fecstat* msg)
+{
+    fec_rx_statistics(handle->p_fec_ip_rx, &handle->fec_rx, msg);
 
     return SUCCESS;
 }
@@ -345,7 +350,7 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     uint32_t ien;
 
     // activate FEC RX block
-    init_fec_rx_ip_video(handle->p_fec_ip_rx, 1);
+    init_fec_rx_ip_video(handle->p_fec_ip_rx, 1, &handle->fec_rx);
 
     // setup vio
     if (msg->compress & DRV_CODEC) {
@@ -478,7 +483,7 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
     int delay, vid = 0;
 
     // activate FEC RX block
-    init_fec_rx_ip_audio(handle->p_fec_ip_rx, 1);
+    init_fec_rx_ip_audio(handle->p_fec_ip_rx, 1, &handle->fec_rx);
 
     // sync...
     aso_drv_stop(&handle->aso);
@@ -1034,6 +1039,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_SET_FPS_REDUCTION,     hoi_drv_msg_set_fps_reduction);
 
         call(HOI_MSG_ETHSTAT,               hoi_drv_msg_ethstat);
+        call(HOI_MSG_FECSTAT,               hoi_drv_msg_fecstat);
         call(HOI_MSG_VSOSTAT,               hoi_drv_msg_vsostat);
         call(HOI_MSG_VIOSTAT,               hoi_drv_msg_viostat);
         call(HOI_MSG_ASOREG,                hoi_drv_msg_asoreg);

@@ -43,6 +43,7 @@ int hoi_drv_get_device_id(uint32_t* p);
 int hoi_drv_info(t_video_timing* timing, uint32_t *advcnt, uint32_t *advcnt_old);
 int hoi_drv_info_all(t_hoi_msg_info** nfo);
 int hoi_drv_ethstat(t_hoi_msg_ethstat** stat);
+int hoi_drv_fecstat(t_hoi_msg_fecstat** stat);
 int hoi_drv_vsostat(t_hoi_msg_vsostat** stat);
 int hoi_drv_viostat(t_hoi_msg_viostat** stat);
 int hoi_drv_asoreg(t_hoi_msg_asoreg** stat);

@@ -125,7 +125,7 @@ void hoi_drv_reset(t_hoi* handle, uint32_t rv)
     if (rv & DRV_RST_VID_OUT) {
         REPORT(INFO, "reset vso/eti");
         // deactivate FEC RX block
-        init_fec_rx_ip_video(handle->p_fec_ip_rx, 0);
+        init_fec_rx_ip_video(handle->p_fec_ip_rx, 0, &handle->fec_rx);
         fec_rx_disable_video_out(handle->p_fec_rx);
         vso_drv_stop(&handle->vso);
         eti_drv_stop_vid(&handle->eti);
@@ -145,7 +145,7 @@ void hoi_drv_reset(t_hoi* handle, uint32_t rv)
     if (rv & DRV_RST_AUD_OUT) {
         REPORT(INFO, "reset aso/eti");
         // deactivate FEC RX block
-        init_fec_rx_ip_audio(handle->p_fec_ip_rx, 0);
+        init_fec_rx_ip_audio(handle->p_fec_ip_rx, 0, &handle->fec_rx);
         fec_rx_disable_audio_emb_out(handle->p_fec_rx);
         fec_rx_disable_audio_int_out(handle->p_fec_rx); 
         aso_drv_stop(&handle->aso);
