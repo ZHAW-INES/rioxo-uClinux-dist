@@ -40,21 +40,6 @@
 #define AUK_RTP_RX_API_DIAG(...)  printk(__VA_ARGS__)
 
 
-// Private function for changing the channel. Must not be called directly as
-// doing so would not be thread-safe.
-void alt_avalon_rtp_rx_set_channel(alt_avalon_rtp_rx_dev* pDev, uint32_t Channel)
-{
-   // We keep a shadow of the channel selector in the device handle.
-   // This avoids having to change the hardware channel unnecessarily.
-
-   if(Channel != pDev->SelectedChannel)
-   {
-      pDev->SelectedChannel = Channel;
-
-      IOWR_ALTERA_AVALON_RTP_RX_CHANNEL(pDev->base, (Channel << ALTERA_AVALON_RTP_RX_CHANNEL_SEL_OFST) & ALTERA_AVALON_RTP_RX_CHANNEL_SEL_MSK);
-   }
-}
-
 
 // Private function for determining the number of bits required to store a given number of items
 uint32_t alt_avalon_rtp_rx_clogb2(uint32_t Value)
@@ -121,7 +106,7 @@ void alt_avalon_rtp_rx_set_channel_config(alt_avalon_rtp_rx_dev* pDev, uint32_t 
    uint32_t data;
 
    // Set the channel
-   alt_avalon_rtp_rx_set_channel(pDev, Channel);
+   IOWR_ALTERA_AVALON_RTP_RX_CHANNEL(pDev->base, (Channel << ALTERA_AVALON_RTP_RX_CHANNEL_SEL_OFST) & ALTERA_AVALON_RTP_RX_CHANNEL_SEL_MSK);
 
    // Change the settings
    data = 0;
@@ -146,7 +131,7 @@ void alt_avalon_rtp_rx_get_channel_config(alt_avalon_rtp_rx_dev* pDev, uint32_t 
    uint32_t data;
 
    // Set the channel
-   alt_avalon_rtp_rx_set_channel(pDev, Channel);
+   IOWR_ALTERA_AVALON_RTP_RX_CHANNEL(pDev->base, (Channel << ALTERA_AVALON_RTP_RX_CHANNEL_SEL_OFST) & ALTERA_AVALON_RTP_RX_CHANNEL_SEL_MSK);
 
    // Read the settings
    data = IORD_ALTERA_AVALON_RTP_RX_CONFIG(pDev->base);
@@ -177,7 +162,7 @@ uint32_t alt_avalon_rtp_rx_get_last_payload_length(alt_avalon_rtp_rx_dev* pDev, 
    uint32_t data;
 
    // Set the channel
-   alt_avalon_rtp_rx_set_channel(pDev, Channel);
+   IOWR_ALTERA_AVALON_RTP_RX_CHANNEL(pDev->base, (Channel << ALTERA_AVALON_RTP_RX_CHANNEL_SEL_OFST) & ALTERA_AVALON_RTP_RX_CHANNEL_SEL_MSK);
 
    // Read the length value
    data = IORD_ALTERA_AVALON_RTP_RX_CONFIG(pDev->base);
@@ -194,7 +179,7 @@ bool alt_avalon_rtp_rx_get_flushed(alt_avalon_rtp_rx_dev* pDev, uint32_t Channel
    uint32_t data;
 
    // Set the channel
-   alt_avalon_rtp_rx_set_channel(pDev, Channel);
+   IOWR_ALTERA_AVALON_RTP_RX_CHANNEL(pDev->base, (Channel << ALTERA_AVALON_RTP_RX_CHANNEL_SEL_OFST) & ALTERA_AVALON_RTP_RX_CHANNEL_SEL_MSK);
 
    // Read the flush value
    data = IORD_ALTERA_AVALON_RTP_RX_CONFIG(pDev->base);
@@ -214,7 +199,7 @@ void alt_avalon_rtp_rx_clear_flushed(alt_avalon_rtp_rx_dev* pDev, uint32_t Chann
    uint32_t data;
 
    // Set the channel
-   alt_avalon_rtp_rx_set_channel(pDev, Channel);
+   IOWR_ALTERA_AVALON_RTP_RX_CHANNEL(pDev->base, (Channel << ALTERA_AVALON_RTP_RX_CHANNEL_SEL_OFST) & ALTERA_AVALON_RTP_RX_CHANNEL_SEL_MSK);
 
    // Get the current value of the config register
    data = IORD_ALTERA_AVALON_RTP_RX_CONFIG(pDev->base);
@@ -238,7 +223,7 @@ void alt_avalon_rtp_rx_get_statistics(alt_avalon_rtp_rx_dev* pDev, uint32_t Chan
    uint32_t data;
 
    // Set the channel
-   alt_avalon_rtp_rx_set_channel(pDev, Channel);
+   IOWR_ALTERA_AVALON_RTP_RX_CHANNEL(pDev->base, (Channel << ALTERA_AVALON_RTP_RX_CHANNEL_SEL_OFST) & ALTERA_AVALON_RTP_RX_CHANNEL_SEL_MSK);
 
    // Get the valid packet count register value
    data = IORD_ALTERA_AVALON_RTP_RX_VALID_PACKETS(pDev->base);
@@ -306,7 +291,7 @@ bool alt_avalon_rtp_rx_get_fec_status(alt_avalon_rtp_rx_dev* pDev, uint32_t Chan
    uint32_t data;
 
    // Set the channel
-   alt_avalon_rtp_rx_set_channel(pDev, Channel);
+   IOWR_ALTERA_AVALON_RTP_RX_CHANNEL(pDev->base, (Channel << ALTERA_AVALON_RTP_RX_CHANNEL_SEL_OFST) & ALTERA_AVALON_RTP_RX_CHANNEL_SEL_MSK);
 
    // Read the FEC status register
    data = IORD_ALTERA_AVALON_RTP_RX_FEC_MODE(pDev->base);
@@ -357,7 +342,7 @@ uint32_t alt_avalon_rtp_rx_get_buffer_depth(alt_avalon_rtp_rx_dev* pDev, uint32_
    uint32_t data;
 
    // Set the channel
-   alt_avalon_rtp_rx_set_channel(pDev, Channel);
+   IOWR_ALTERA_AVALON_RTP_RX_CHANNEL(pDev->base, (Channel << ALTERA_AVALON_RTP_RX_CHANNEL_SEL_OFST) & ALTERA_AVALON_RTP_RX_CHANNEL_SEL_MSK);
 
    // Get the depth
    data = IORD_ALTERA_AVALON_RTP_RX_BUFFER_DEPTH_SEQ_NUM(pDev->base);
@@ -375,7 +360,7 @@ uint32_t alt_avalon_rtp_rx_get_buffer_duration(alt_avalon_rtp_rx_dev* pDev, uint
    uint32_t data = 0;
 
    // Set the channel
-   alt_avalon_rtp_rx_set_channel(pDev, Channel);
+   IOWR_ALTERA_AVALON_RTP_RX_CHANNEL(pDev->base, (Channel << ALTERA_AVALON_RTP_RX_CHANNEL_SEL_OFST) & ALTERA_AVALON_RTP_RX_CHANNEL_SEL_MSK);
 
    // Read depth first as this latches all the status values
    data = IORD_ALTERA_AVALON_RTP_RX_BUFFER_DEPTH_SEQ_NUM(pDev->base);
@@ -396,7 +381,7 @@ uint32_t alt_avalon_rtp_rx_get_base_timestamp(alt_avalon_rtp_rx_dev* pDev, uint3
    uint32_t data;
 
    // Set the channel
-   alt_avalon_rtp_rx_set_channel(pDev, Channel);
+   IOWR_ALTERA_AVALON_RTP_RX_CHANNEL(pDev->base, (Channel << ALTERA_AVALON_RTP_RX_CHANNEL_SEL_OFST) & ALTERA_AVALON_RTP_RX_CHANNEL_SEL_MSK);
 
    // Read depth first as this latches all the status values
    data = IORD_ALTERA_AVALON_RTP_RX_BUFFER_DEPTH_SEQ_NUM(pDev->base);
@@ -950,7 +935,6 @@ void init_fec_rx_ip_video(void *p, int enable)
     alt_avalon_rtp_rx_channel_settings settings;
 
     dev.base = p;
-    dev.SelectedChannel = 0;
     dev.MsgFIFODepth = 0;
     dev.UseSoftwareMsgFIFODepth = 0;
 
@@ -958,7 +942,6 @@ void init_fec_rx_ip_video(void *p, int enable)
     settings.RTPBypass = 0;
 
     // video
-    alt_avalon_rtp_rx_set_channel(&dev, 0);
     alt_avalon_rtp_rx_set_channel_config(&dev, 0, &settings);
 }
 
@@ -968,7 +951,6 @@ void init_fec_rx_ip_audio(void *p, int enable)
     alt_avalon_rtp_rx_channel_settings settings;
 
     dev.base = p;
-    dev.SelectedChannel = 0;
     dev.MsgFIFODepth = 0;
     dev.UseSoftwareMsgFIFODepth = 0;
 
@@ -976,7 +958,6 @@ void init_fec_rx_ip_audio(void *p, int enable)
     settings.RTPBypass = 0;
 
     // audio
-    alt_avalon_rtp_rx_set_channel(&dev, 1);
     alt_avalon_rtp_rx_set_channel_config(&dev, 1, &settings);
 }
 
@@ -992,13 +973,11 @@ void fec_rx_statistics(void *p, t_fec_rx *counter_values)
     alt_avalon_rtp_rx_channel_settings  settings_aud;
 
     dev.base = p;
-    dev.SelectedChannel = 0;
     dev.MsgFIFODepth = 0;
     dev.UseSoftwareMsgFIFODepth = 0;
 
     alt_avalon_rtp_rx_get_parameters(&dev, &parameters);
 
-    alt_avalon_rtp_rx_set_channel(&dev, 0);
     alt_avalon_rtp_rx_get_statistics(&dev, 0, &stats_vid);
     alt_avalon_rtp_rx_get_fec_status(&dev, 0, &fec_status_vid);
     alt_avalon_rtp_rx_get_channel_config(&dev, 0, &settings_vid);
@@ -1010,7 +989,6 @@ void fec_rx_statistics(void *p, t_fec_rx *counter_values)
     counter_values->reordered_packets_vid    += stats_vid.ReorderedPacketCount;
     counter_values->out_of_range_packets_vid += stats_vid.OutOfRangePacketCount;
 
-    alt_avalon_rtp_rx_set_channel(&dev, 1);
     alt_avalon_rtp_rx_get_statistics(&dev, 1, &stats_aud);
     alt_avalon_rtp_rx_get_fec_status(&dev, 1, &fec_status_aud);
     alt_avalon_rtp_rx_get_channel_config(&dev, 1, &settings_aud);

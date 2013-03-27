@@ -44,7 +44,6 @@
 typedef struct
 {
    void *base;                             /* Base address of the device */
-   uint32_t SelectedChannel;               /* Shadow the channel selector */
    uint32_t MsgFIFODepth;                  /* Software message FIFO depth counter */
    uint8_t  UseSoftwareMsgFIFODepth;       /* Flag indicating whether to use the hardware or software depth counter */
 } alt_avalon_rtp_rx_dev;
