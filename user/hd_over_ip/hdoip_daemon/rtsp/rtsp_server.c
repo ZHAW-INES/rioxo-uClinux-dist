@@ -131,7 +131,7 @@ void traverse_dispatcher(char *key, char* value, void* data)
   serverData->handler(server, media, serverData->data);
 }
 
-int traverse(t_rtsp_server* server, char* mediaName, void* data, traverse_handler handler)
+static int traverse(t_rtsp_server* server, char* mediaName, void* data, traverse_handler handler)
 {
   t_server_data serverData;
   t_rtsp_media* media = NULL;
@@ -316,12 +316,14 @@ int rtsp_server_thread(t_rtsp_server* handle)
 
     // receive request line
     while (handle->open) {
-        memset(&buf, 0, sizeof(u_rtsp_header));
-        memset(&common, 0, sizeof(u_rtsp_header));
+        memset(&buf, 0, sizeof(buf));
+        memset(&common, 0, sizeof(common));
+
         n = rtsp_parse_request(&handle->con, rtsp_srv_methods, &method, &buf, &common);
 
         // request has already been handled (probably because an error occured)
-        if (n == RTSP_HANDLED) continue;
+        if (n == RTSP_HANDLED)
+            continue;
 
         // connection closed...
         if (n) {
