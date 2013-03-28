@@ -119,7 +119,7 @@ void rtsp_server_remove_media(t_rtsp_server* handle, t_rtsp_media* media, bool r
  * param value pointer to t_rtsp_media structure
  * param data pointer to t_server_data structure
  */
-void traverse_dispatcher(char *key, char* value, void* data)
+static void traverse_dispatcher(char *key, char* value, void* data)
 {
   t_rtsp_media *media = (t_rtsp_media*)value;
   t_server_data *serverData = (t_server_data*)data;
