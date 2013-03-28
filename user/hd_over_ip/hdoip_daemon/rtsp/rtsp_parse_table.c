@@ -16,6 +16,13 @@ const t_map_fnc tab_request_options[] = {
     MAP_FNC_NULL
 };
 
+// DESCRIBE attributes
+const t_map_fnc tab_request_describe[] = {
+    { "Accept", rtsp_parse_str,     true,   offsetof(t_rtsp_req_describe, accept) },
+    { "CSeq",   rtsp_parse_ui32,    true,   offsetof(t_rtsp_req_describe, cseq) },
+    MAP_FNC_NULL
+};
+
 // GET_PARAMETER attributes
 const t_map_fnc tab_request_get_parameter[] = {
     { "CSeq",   rtsp_parse_ui32,    true,   offsetof(t_rtsp_req_get_parameter, cseq) },
@@ -126,6 +133,7 @@ const t_map_fnc tab_response_pause[] ={
 // the methods
 const t_map_set rtsp_srv_methods[] = {
     { "OPTIONS",        tab_request_options,        rmsq_options,       false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, options)         },
+    { "DESCRIBE",       tab_request_describe,       rmsq_describe,      false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, describe)        },
     { "GET_PARAMETER",  tab_request_get_parameter,  rmsq_get_parameter, false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, get_parameter)   },
     { "SET_PARAMETER",  tab_request_set_parameter,  rmsq_set_parameter, false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, set_parameter)   },
     { "SETUP",          tab_request_setup,          rmsq_setup,         false,  RTSP_STATE_ALL,                         offsetof(t_rtsp_media, setup)           },

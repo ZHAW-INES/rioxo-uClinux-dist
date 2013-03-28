@@ -83,6 +83,7 @@ typedef struct rtsp_media {
     size_t  cookie_size;        // Size of cookie
     void*   cookie;             // Media related data
     frtspm* options;
+    frtspm* describe;
     frtspm* hdcp;
     frtspm* error;              // (media*, rtsp-code, connection)
     frtspm* get_parameter;      // (c->s)
@@ -115,6 +116,7 @@ int rtsp_media_check_request(const t_map_set* method, t_rtsp_media* media, void*
 
 // rtsp media server
 int rmsq_options(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
+int rmsq_describe(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp);
 int rmsq_get_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp);
 int rmsq_set_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp);
 int rmsq_setup(t_rtsp_media* media, void* msg, t_rtsp_connection* rsp);
@@ -140,6 +142,10 @@ int rtsp_media_ready(t_rtsp_media* media);
 int rtsp_media_setup(t_rtsp_media* media);
 int rtsp_media_play(t_rtsp_media* media);
 int rtsp_media_event(t_rtsp_media* media, uint32_t event);
+
+// RTSP DESCRIBE
+int rtsp_handle_describe_generic(t_rtsp_media *media, t_rtsp_req_describe *data,
+                                 t_rtsp_connection *con);
 
 static inline bool rtsp_media_sinit(t_rtsp_media* media)
 {

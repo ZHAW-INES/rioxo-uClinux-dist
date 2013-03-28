@@ -25,6 +25,24 @@
 
 static char usb_host_ip[50];
 
+int usb_describe(t_rtsp_media *media, void *_data, t_rtsp_connection *con)
+{
+    t_rtsp_req_describe *data = _data;
+
+    if (!data)
+        return -1;
+
+    rtsp_handle_describe_generic(media, data, con);
+
+    /* Add media specific content */
+
+    /* TODO: List all available media-controls */
+
+    rtsp_send(con);
+
+    return 0;
+}
+
 int usb_setup(t_rtsp_media UNUSED *media, t_rtsp_req_setup* m, t_rtsp_connection* rsp)
 {
     report(VRB_METHOD "usb_setup");
@@ -210,6 +228,7 @@ t_rtsp_media usb_media = {
     .owner = 0,
     .cookie = 0,
     .options = (frtspm*)box_sys_options,
+    .describe = usb_describe,
     .get_parameter = (frtspm*)box_sys_vtb_get_parameter,
     .setup = (frtspm*)usb_setup,
     .play = (frtspm*)usb_play,

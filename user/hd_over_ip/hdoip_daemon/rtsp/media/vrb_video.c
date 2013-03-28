@@ -35,6 +35,24 @@ static struct {
     bool                multicast_en;
 } vrb;
 
+int vrb_video_describe(t_rtsp_media *media, void *_data, t_rtsp_connection *con)
+{
+    t_rtsp_req_describe *data = _data;
+
+    if (!data)
+        return -1;
+
+    rtsp_handle_describe_generic(media, data, con);
+
+    /* Add media specific content */
+
+    /* TODO: List all available media descriptors */
+
+    rtsp_send(con);
+
+    return 0;
+}
+
 int vrb_video_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection* rsp UNUSED)
 {
     int n;
@@ -407,6 +425,7 @@ t_rtsp_media vrb_video = {
     .owner = 0,
     .cookie = 0,
     .options = (frtspm*)box_sys_options,
+    .describe = vrb_video_describe,
     .setup = (frtspm*)vrb_video_setup,
     .play = (frtspm*)vrb_video_play,
     .pause = (frtspm*)vrb_video_ext_pause,

@@ -62,6 +62,11 @@ int rmsq_options(t_rtsp_media *media, void *msg UNUSED, t_rtsp_connection *rsp)
     return RTSP_SUCCESS;
 }
 
+int rmsq_describe(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp)
+{
+    return media->describe(media, msg, rsp);
+}
+
 int rmsq_get_parameter(t_rtsp_media *media, void *msg, t_rtsp_connection *rsp)
 {
     return media->get_parameter(media, msg, rsp);
@@ -420,4 +425,102 @@ int rtsp_media_event(t_rtsp_media* media, uint32_t event)
         }
     }
     return ret;
+}
+
+static char *strtrim(char *p, char c)
+{
+    size_t len = strlen(p);
+    char *q;
+
+    while (*p && len--) {
+        if (*p == c)
+            p++;
+        else
+            break;
+    }
+
+    len = strlen(p);
+    while (*p && len) {
+        q = p + len - 1;
+        if (*q == c)
+            *q = 0;
+        else
+            break;
+        len = strlen(p);
+    }
+}
+
+int rtsp_handle_describe_generic(t_rtsp_media *media, t_rtsp_req_describe *data,
+                                 t_rtsp_connection *con)
+{
+    t_rtsp_buffer *repbuf;
+    size_t content_length = 0;
+    time_t now;
+    struct tm *nowp;
+    char now_str[200];
+    char accept[200], *ptr;
+    size_t len;
+
+    /* check if the client asked for Content-Type application/sdp, we don't
+     * speak anything else */
+    report(INFO "Accept: %s", data->accept);
+
+    /* TODO: Split string by ',' and only accept application/sdp */
+    strncpy(accept, data->accept, sizeof(accept));
+    ptr = accept;
+    ptr = strtrim(ptr, ' ');
+    ptr = strtrim(ptr, '\n');
+    ptr = strtrim(ptr, '\r');
+
+    if (strcmp(accept, "application/sdp") != 0) {
+        report(ERROR "Invalid Accept header: %s", data->accept);
+        return -1;
+    }
+
+    now = time(NULL);
+    nowp = localtime(&now);
+    if (nowp == NULL) {
+        report(ERROR "Failed to get current time");
+        return -1;
+    }
+
+    if (strftime(now_str, sizeof(now_str), "%a, %d %b %Y %T %z", nowp) == 0) {
+        report(ERROR "Failed to format time");
+        return -1;
+    }
+
+    repbuf = malloc(sizeof(t_rtsp_buffer));
+    if (!repbuf) {
+        report(ERROR "Failed to allocate memory");
+	    return -1;
+    }
+
+    // assemble body
+    rtsp_buffer_init(repbuf);
+
+    rtsp_buffer_printf(repbuf, "v=%d\r\n", RTSP_SDP_VERSION);
+    rtsp_buffer_printf(repbuf, "o=- %lu %u IN IP4 %s\r\n", (unsigned long) now, 1, reg_get("system-ip"));
+    rtsp_buffer_printf(repbuf, "s=RIOXO RTSP Server\r\n");
+
+    rtsp_buffer_printf(repbuf, "t=0 0\r\n");
+    rtsp_buffer_printf(repbuf, "a=control:*\r\n");
+    rtsp_buffer_printf(repbuf, "a=range:npt=0-\r\n");
+
+    // get body length for header
+    content_length = (size_t) (repbuf->eol - repbuf->sol);
+
+    // set header
+    rtsp_response_line(con, RTSP_STATUS_OK, "OK");
+    msgprintf(con, "Date: %s\r\n", now_str);
+    msgprintf(con, "Content-Type: application/sdp\r\n");
+    msgprintf(con, "Content-Length: %zu\r\n", content_length);
+    msgprintf(con, "Content-Base: %s://%s\r\n", RTSP_SCHEME, reg_get("system-ip"));
+
+    rtsp_eoh(con);  // End of header
+
+    repbuf->eol = '\0';
+    msgprintf(con, "%s", repbuf->buf);
+
+    free(repbuf);
+    return RTSP_SUCCESS;
 }

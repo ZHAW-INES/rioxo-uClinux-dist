@@ -29,6 +29,24 @@ static struct {
     bool                multicast_en;
 } vrb;
 
+int vrb_audio_describe(t_rtsp_media *media, void *_data, t_rtsp_connection *con)
+{
+    t_rtsp_req_describe *data = _data;
+
+    if (!data)
+        return -1;
+
+    rtsp_handle_describe_generic(media, data, con);
+
+    /* Add media specific content */
+
+    /* TODO: List all available media controls */
+
+    rtsp_send(con);
+
+    return 0;
+}
+
 int vrb_audio_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection* rsp UNUSED)
 {
     int n;
@@ -352,6 +370,7 @@ t_rtsp_media vrb_audio = {
     .owner = 0,
     .cookie = 0,
     .options = (frtspm*)box_sys_options,
+    .describe = vrb_audio_describe,
     .setup = (frtspm*)vrb_audio_setup,
     .play = (frtspm*)vrb_audio_play,
     .pause = (frtspm*)vrb_audio_ext_pause,

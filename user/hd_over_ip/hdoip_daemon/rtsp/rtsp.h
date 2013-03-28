@@ -21,6 +21,7 @@
 #define RTSP_VERSION                "RTSP/1.0"
 #define RTSP_SCHEME                 "rtsp"
 
+#define RTSP_SDP_VERSION            0
 
 //------------------------------------------------------------------------------
 // Status Codes
@@ -171,6 +172,11 @@ typedef struct {
 
 typedef struct {
     uint32_t            cseq;
+    char                accept[1024];
+} t_rtsp_req_describe;
+
+typedef struct {
+    uint32_t            cseq;
     char                session[50];
 } t_rtsp_req_get_parameter;
 
@@ -256,6 +262,7 @@ typedef struct {
 
 typedef union {
     t_rtsp_req_options  req_options;
+    t_rtsp_req_describe req_describe;
     t_rtsp_req_setup    req_setup;
     t_rtsp_req_hdcp     req_hdcp;
     t_rtsp_req_play     req_play;

@@ -12,6 +12,24 @@
 
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
+static int box_sys_vrb_describe(t_rtsp_media *media, void *_data, t_rtsp_connection *con)
+{
+    t_rtsp_req_describe *data = _data;
+    int ret;
+
+    if (!data)
+        return -1;
+
+    ret = rtsp_handle_describe_generic(media, data, con);
+    if (ret)
+        return ret;
+
+    /* VRB offers no streams */
+    rtsp_send(con);
+
+    return 0;
+}
+
 static int box_sys_vrb_event(t_rtsp_media *media, uint32_t event)
 {
   t_rtsp_client *client = NULL;
@@ -42,6 +60,7 @@ t_rtsp_media box_sys_vrb = {
     .owner          = 0,
     .cookie         = NULL,
     .options        = box_sys_options,
+    .describe       = box_sys_vrb_describe,
     .get_parameter  = box_sys_get_parameter,
     .set_parameter  = box_sys_set_parameter,
     .event          = box_sys_vrb_event

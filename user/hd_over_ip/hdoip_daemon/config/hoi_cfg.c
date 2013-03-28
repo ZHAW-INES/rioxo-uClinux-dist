@@ -55,7 +55,7 @@ int hoi_cfg_write(char* filename)
     return 0;
 }
 
-void strtrim(char** p)
+static void strtrim(char** p)
 {
     int i;
     char* s;

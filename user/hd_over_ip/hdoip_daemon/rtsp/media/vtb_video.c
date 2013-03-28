@@ -27,6 +27,37 @@
 #define TICK_TIMEOUT_UNICAST            (hdoipd.eth_timeout)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
+int vtb_video_describe(t_rtsp_media *media, void *_data, t_rtsp_connection *con)
+{
+    t_rtsp_req_describe *data = _data;
+    int ret;
+    const char *s, *compress;
+
+    if (!data)
+        return -1;
+
+    ret = rtsp_handle_describe_generic(media, data, con);
+    if (ret)
+        return ret;
+
+    /* Add media specific content */
+
+    s = reg_get("compress");
+    if (strcmp(s, "jp2k") == 0)
+        compress = "JPEG2000";
+    else
+        compress = "Plain";
+
+    msgprintf(con, "m=video 0 RTP/AVP 96\r\n");
+    msgprintf(con, "a=control:/device/1/video/1/\r\n");
+    msgprintf(con, "a=rtpmap:96 %s/1000000\r\n", compress);
+    msgprintf(con, "a=fmtp:96 img_size=1920*1080; adv_div=4; FPS=60\r\n");
+
+    rtsp_send(con);
+
+    return 0;
+}
+
 int vtb_video_hdcp(t_rtsp_media* media, t_rtsp_req_hdcp* m, t_rtsp_connection* rsp)
 {
 	int ret;
@@ -356,6 +387,7 @@ t_rtsp_media vtb_video = {
     .owner = 0,
     .cookie = 0,
     .options = (frtspm*)box_sys_options,
+    .describe = vtb_video_describe,
     .get_parameter = (frtspm*)box_sys_vtb_get_parameter,
     .hdcp = (frtspm*)vtb_video_hdcp,
     .cookie_size = sizeof(t_multicast_cookie),
