@@ -127,6 +127,7 @@ label = {
 
     -- Page FEC
     p_fec_transmitter_only = "Nur beim Sender verf&uuml;gbar";
+    p_fec_media = "Media typ";
     p_fec_video = "Video";
     p_fec_audio = "Audio";
     p_fec_enable = "Aktivieren";
@@ -137,8 +138,12 @@ label = {
     p_fec_column_only = "Nur Spalten";
     p_fec_l = "L (Zeilen)";
     p_fec_d = "D (Spalten)";
-    p_fec_matrix = "Matrizengrösse";
+    p_fec_matrix = "Matrizengr&ouml;sse";
     p_fec_overhead = "Overhead";
+    p_fec_received_packets = "Empfangege pakete";
+    p_fec_lost_packets = "Verlorene pakete";
+    p_fec_recovered_packets = "Wiederhergestellte pakete";
+    p_fec_buffer_status = "Buffer status";
 
     -- Page TEST
     p_usb_image = "Testbilder";

@@ -128,6 +128,7 @@ label = {
 
     -- Page FEC
     p_fec_transmitter_only = "only available on transmitter";
+    p_fec_media = "Media type";
     p_fec_video = "Video";
     p_fec_audio = "Audio";
     p_fec_enable = "Enable";
@@ -140,6 +141,10 @@ label = {
     p_fec_d = "D (columns)";
     p_fec_matrix = "Size of Matrix";
     p_fec_overhead = "Overhead";
+    p_fec_received_packets = "Received packets";
+    p_fec_lost_packets = "Lost packets";
+    p_fec_recovered_packets = "Recovered packets";
+    p_fec_buffer_status = "Buffer status";
 
     -- Page TEST
     p_usb_image = "Test Images";
