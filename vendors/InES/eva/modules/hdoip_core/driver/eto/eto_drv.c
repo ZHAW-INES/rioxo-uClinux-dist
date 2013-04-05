@@ -344,6 +344,8 @@ void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, t_fec_setti
     uint32_t h;
     uint32_t v;
     uint32_t period_10ns;
+    uint32_t packet_divider;
+    uint32_t packet_multiplier;
 
     uint32_t l = fec->video_l;
     uint32_t d = fec->video_d;
@@ -355,11 +357,20 @@ void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, t_fec_setti
 
     if (fec->video_enable) {
         if (fec->video_col_only) {
-            period_10ns = period_10ns * d / (1 + d);
+            packet_divider = d;
+            packet_multiplier = 1;
         } else {
-            period_10ns = period_10ns * l * d / (l + d + (l * d));
+            packet_divider = l * d;
+            packet_multiplier = l + d;
         }
+    } else {
+        packet_divider = 1;
+        packet_multiplier = 1;
     }
+
+    // set correction factor to modify count of packets
+    eto_set_tf_divider_10ns(handle->ptr, packet_divider);
+    eto_set_tf_multiplier_10ns(handle->ptr, packet_multiplier);
 
     // period_10ns must not be longer than real refresh rate of video.
     // There can be a measurement error of 1% and it still works

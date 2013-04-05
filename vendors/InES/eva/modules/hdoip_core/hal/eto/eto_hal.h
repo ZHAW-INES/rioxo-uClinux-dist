@@ -74,6 +74,8 @@
 #define eto_set_prio_vid_scale(p, v)            HOI_REG_LD((p), ETO_VID_PRIORITY_REG, ETO_PRIO_SCALE_MASK, ((v)<<24))
 
 #define eto_set_frame_period_10ns(p, v)         HOI_WR32((p), ETO_FRAME_PERIOD_10NS, (v))
+#define eto_set_tf_divider_10ns(p, v)           HOI_WR32((p), ETO_TF_DIVIDER, (v))
+#define eto_set_tf_multiplier_10ns(p, v)        HOI_WR32((p), ETO_TF_MULTIPLIER, (v))
 
 /* macros get*/
 #define eto_get_config_reg(p) 			        HOI_RD32((p), ETO_CONFIG_SET_REG)
