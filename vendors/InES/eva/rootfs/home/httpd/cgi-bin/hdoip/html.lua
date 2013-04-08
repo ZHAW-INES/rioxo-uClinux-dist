@@ -290,7 +290,7 @@ function Header(t, title, script_path, addon)
             menu_class = 'current'
         end
         -- show page test only on vrb
-        if((t.mode_vrb) or (i ~= 8)) then
+        if((t.mode_vrb) or (i ~= 9)) then
             html_str = html_str .. '    <li id="'..menu_class..'"><a href="' .. script_path .. '?page=' .. i .. '"><span>' .. menu_items[i] .. '</span></a></li>\n'
         end
     end
