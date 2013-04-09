@@ -142,7 +142,7 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     }
 
     struct in_addr a1; a1.s_addr = vrb.remote.address;
-    osd_printf("Streaming%sAudio %ikHz %i channel from %s\n", stream_type, m->format.value, m->format.value2, inet_ntoa(a1));
+    osd_printf("Streaming%sAudio %ikHz %i channel from %s\n", stream_type, m->format.value, aud_chmap2cnt(m->format.value2), inet_ntoa(a1));
 
     hoi_drv_set_led_status(SDI_OUT_WITH_AUDIO);
 

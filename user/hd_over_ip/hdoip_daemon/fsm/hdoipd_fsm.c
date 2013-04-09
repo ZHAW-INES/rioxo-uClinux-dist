@@ -553,10 +553,8 @@ void show_local_ip_address_on_osd()
     struct ifreq ifr;
     t_hoi_msg_info* info;
     uint32_t image_freq, image_pixel;
-    uint32_t fs;
     bool vtb;
     hoi_drv_info_all(&info);
-    hoi_drv_get_fs(&fs);
 
     if (!strcmp("vtb", reg_get("mode-start"))) {
         vtb = true;
@@ -624,8 +622,8 @@ void show_local_ip_address_on_osd()
     }
 
     if (vtb) {
-        if (fs != 0) {
-            osd_printf("\nAudio Embedded:    %i Hz  %i Bit  %i channel", 1, 2, 0); // TODO: (info->aud_params)[0].fs[0], info->aud_params.sample_width[0], info->aud_params.ch_map[0]);
+        if (info->aud_params[0].fs != 0) {
+            osd_printf("\nAudio Embedded:    %i Hz  %i Bit  %i channel", info->aud_params[0].fs, info->aud_params[0].sample_width, aud_chmap2cnt(info->aud_params[0].ch_map));
         } else {
             osd_printf("\nAudio:             (no audio)");
         }
