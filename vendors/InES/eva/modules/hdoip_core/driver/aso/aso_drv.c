@@ -212,25 +212,25 @@ int aso_drv_set_aud_params(t_aso* aso, struct hdoip_aud_params* aud_params)
 
     switch (aud_params->fs) {
       case 32000:
-        mclk_freq = 32000*4*64;
+        mclk_freq = 32000*64;
         break;
       case 48000:
-        mclk_freq = 48000*4*64;
+        mclk_freq = 48000*4*64; // Audio Codec use this frequency (12.288MHz)
         break;
       case 48000*2:
-        mclk_freq = 48000*2*4*64;
+        mclk_freq = 48000*2*64;
         break;
       case 48000*4:
-        mclk_freq = 48000*4*4*64;
+        mclk_freq = 48000*4*64;
         break;
       case 44100:
-        mclk_freq = 44100*4*64;
+        mclk_freq = 44100*64;
         break;
       case 44100*2:
-        mclk_freq = 44100*2*4*64;
+        mclk_freq = 44100*2*64;
         break;
       case 44100*4:
-        mclk_freq = 44100*4*4*64;
+        mclk_freq = 44100*4*64;
         break;
       default:
         return ERR_ASO_SAMPLE_WIDTH_ERR;

@@ -89,10 +89,11 @@ void* hdoipd_osd_timer(void UNUSED *d)
         lock("hdoipd_osd_timer");
         if (hdoipd.osd_timeout > 0) {
             hdoipd.osd_timeout--;
-        }
-        if (hdoipd.osd_timeout == 0) {
-            if (hdoipd_rsc(RSC_OSD)) {
-                hdoipd_osd_deactivate();
+        } else { 
+            if (hdoipd.osd_timeout == 0) {
+                if (hdoipd_rsc(RSC_OSD)) {
+                    hdoipd_osd_deactivate();
+                }
             }
         }
         unlock("hdoipd_osd_timer");
