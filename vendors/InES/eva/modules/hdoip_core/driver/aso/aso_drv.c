@@ -117,6 +117,11 @@ int aso_drv_update(t_aso* aso, struct hdoip_aud_params* aud_params, uint32_t aud
 
     aso_drv_stop(aso);
 
+    // if sample width = 20Bit, a container size of 24Bit is used
+    if ((aud_params->sample_width) == 20) {
+        aud_params->sample_width = 24;
+    }
+
     err = aso_drv_set_aud_params(aso, aud_params);
     if(err != ERR_ASO_SUCCESS) {
         return err;
@@ -207,19 +212,28 @@ int aso_drv_set_aud_params(t_aso* aso, struct hdoip_aud_params* aud_params)
 
     switch (aud_params->fs) {
       case 32000:
+        mclk_freq = 32000*4*64;
+        break;
       case 48000:
-      case 48000*2:
-      case 48000*4:
         mclk_freq = 48000*4*64;
         break;
+      case 48000*2:
+        mclk_freq = 48000*2*4*64;
+        break;
+      case 48000*4:
+        mclk_freq = 48000*4*4*64;
+        break;
       case 44100:
-      case 44100*2:
-      case 44100*4:
         mclk_freq = 44100*4*64;
-    }
-
-    if ((aud_params->sample_width) > 16) {
-        aud_params->sample_width = 24;
+        break;
+      case 44100*2:
+        mclk_freq = 44100*2*4*64;
+        break;
+      case 44100*4:
+        mclk_freq = 44100*4*4*64;
+        break;
+      default:
+        return ERR_ASO_SAMPLE_WIDTH_ERR;
     }
 
     /* calculate i2s clock (in q8.24 format) */
