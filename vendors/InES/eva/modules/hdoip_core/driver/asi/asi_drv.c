@@ -85,6 +85,11 @@ int asi_drv_update(t_asi* asi, int unsigned stream,
 
     asi_drv_stop(asi, stream);
 
+    // if 20Bit audio, container size must be 24Bit
+    if ((aud_params->sample_width) == 20 ) {
+        aud_params->sample_width = 24;
+    }
+
     err = asi_drv_set_eth_params(asi, stream, eth_params, aud_params);
     if(err != ERR_ASI_SUCCESS) {
         return err;
@@ -136,6 +141,10 @@ int asi_drv_set_eth_params(t_asi* asi, int unsigned stream,
     ch =  aud_chmap2cnt(aud_params->ch_map);
     payload_words = eth_params->packet_size/4 - ASI_DRV_ETH_HEADER_LEN - ASI_DRV_IPV4_HEADER_LEN - ASI_DRV_UDP_HEADER_LEN - ASI_DRV_RTP_HEADER_LEN;
     sample_len = aud_get_sample_length(aud_params->sample_width, ch);
+    if (sample_len == 0) {
+        return ERR_ASI_AUD_PARAMS_ERR;
+    }
+
     payload_words = (payload_words / sample_len ) * sample_len; /* round */
 
     /* calculate header length fields */
@@ -181,9 +190,6 @@ int asi_drv_set_aud_params(t_asi* asi, int unsigned stream, struct hdoip_aud_par
     uint16_t time_per_word;
     uint8_t ch;
 
-    if ((aud_params->sample_width) > 16) {
-        aud_params->sample_width = 24;
-    }
     if((asi->stream_status[stream] & ASI_DRV_STREAM_STATUS_ACTIV) != 0) {
         return ERR_ASI_RUNNING;
     }
