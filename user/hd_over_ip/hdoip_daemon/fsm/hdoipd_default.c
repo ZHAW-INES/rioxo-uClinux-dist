@@ -25,7 +25,7 @@ void hdoipd_set_default()
 
     reg_set("auto-stream", "true");
     reg_set("mode-start", "none");
-    reg_set("mode-media", "video");
+    reg_set("mode-media", "video audio");
     reg_set("mode-sync", "streamsync");
     reg_set("sync-target", "video");
     reg_set("remote-uri", "rscp://192.168.1.201");
@@ -40,7 +40,7 @@ void hdoipd_set_default()
     reg_set("network-alive", "1");
     reg_set("network-timeout", "3");
     reg_set("video-port", "3400");
-    reg_set("audio-port", "3402");
+    reg_set("audio-port", "3406");
     reg_set("rscp-server-port", "554");
 
     reg_set("hdcp-force", "false");
@@ -62,13 +62,13 @@ void hdoipd_set_default()
     reg_set("alive-check-port", "554");
 
     reg_set("led_instruction", "0");
-    reg_set("osd-time", "10");
+    reg_set("osd-time", "5");
     reg_set("serial-number", "00000000000000");
 
     reg_set("usb-mode", "off");
     reg_set("edid-mode", "receiver");
     reg_set("traffic-shaping", "true");
-    reg_set("fec_setting", "0442004420");     
+    reg_set("fec_setting", "1441014410");     
 
     reg_set(CFGTAG, "origin");
 }
