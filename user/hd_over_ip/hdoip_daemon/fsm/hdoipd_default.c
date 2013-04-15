@@ -142,6 +142,21 @@ static void update_0_2_to_0_3()
     }
 
     reg_set(CFGTAG, "v0.3");
+
+    report(INFO "updated registry from version 0.2 to 0.3");
+}
+
+static void update_0_3_to_0_4()
+{
+    char *p;
+
+    // because fec, one port must be at least 6 bigger than the other port
+    reg_set("video-port", "3400");
+    reg_set("audio-port", "3406");
+
+    reg_set(CFGTAG, "v0.4");
+
+    report(INFO "updated registry from version 0.3 to 0.4");
 }
 
 /** upgrade config
@@ -161,7 +176,7 @@ void hdoipd_registry_update()
     }
 
     if (reg_test(CFGTAG, "origin")) {
-        reg_set(CFGTAG, "v0.3");
+        reg_set(CFGTAG, "v0.4");
         update = true;
     }
 
@@ -175,8 +190,10 @@ void hdoipd_registry_update()
         update = true;
     }
 
-    // ... further version upgrades
-    // if (reg_test(CFGTAG, "v0.1")) -> upgrade to 0.2 etc..
+    if (reg_test(CFGTAG, "v0.3")) {
+        update_0_3_to_0_4();
+        update = true;
+    }
 
     // when update store the result
     if (update) {
@@ -184,7 +201,7 @@ void hdoipd_registry_update()
         hoi_cfg_write(CFG_FILE);
     }
 
-    if (!reg_test(CFGTAG, "v0.3")) {
+    if (!reg_test(CFGTAG, "v0.4")) {
         report(INFO "unknown config version");
     }
 }
