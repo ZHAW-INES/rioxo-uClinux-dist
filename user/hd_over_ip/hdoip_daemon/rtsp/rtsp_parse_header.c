@@ -401,9 +401,19 @@ static int rtsp_parse_header_common(const char *attrstr, const char *line,
     if (!common)
         return -1;
 
-    if (strcmp(attrstr, "Session") == 0)
+    if (strcmp(attrstr, "Session") == 0) {
+        int i = 0;
         strncpy(common->session, line, sizeof(common->session));
-    else if (strcmp(attrstr, "Content-Type") == 0)
+        /* If there is an optional timeout in the Session line, ignore it */
+        for (i = 0; i < sizeof(common->session); i++) {
+            if (common->session[i] == ';') {
+                common->session[i] = '\0';
+                if (i > 0 && common->session[i-1] == ' ')
+                    common->session[i-1] = '\0';
+                break;
+            }
+        }
+    } else if (strcmp(attrstr, "Content-Type") == 0)
         strncpy(common->content_type, line, sizeof(common->content_type));
     else if (strcmp(attrstr, "Content-Length") == 0)
         common->content_length = atoi(line);
