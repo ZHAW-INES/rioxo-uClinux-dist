@@ -669,7 +669,7 @@ int adv7441a_irq1_handler(t_adv7441a* handle, t_queue* event_queue)
     uint8_t vga_int_1_clr;
 	uint8_t hdmi_status2, hdmi_status3, hdmi_status5;
 	uint8_t hdmi_raw2, hdmi_raw3;
-    uint8_t int2_clr = 0, int3_clr = 0, int5_clr = 0, reg_04 = 0;
+    uint8_t int2_clr = 0, int3_clr = 0, int5_clr = 0;
 
     vga_status1 = adv7441a_usr_map1_read(handle, ADV7441A_REG_INTERRUPT_STATUS_1);	
 

@@ -78,14 +78,16 @@ int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
     eto_drv_set_aud_buf(&handle->eto, msg->aud_tx_buf, msg->aud_tx_len - MAX_FRAME_LENGTH);
 
     // fec memory offset
-    fec_rx_set_address_offset(handle->p_fec_memory_interface, msg->vid_tx_buf);
+    fec_rx_set_address_offset(handle->p_fec_memory_interface, (uint32_t)msg->vid_tx_buf);
 
     // set descriptors and burst size in fec block
     fec_drv_set_descriptors(handle->p_fec_tx, msg->vid_tx_buf, msg->aud_tx_buf, msg->vid_tx_len, msg->aud_tx_len, 0x08);
 
     vso_drv_flush_buf(&handle->vso);
     asi_drv_flush_buf(&handle->asi);
-    aso_drv_flush_buf(&handle->aso);
+    for (int st = 0; st < AUD_STREAM_CNT; st++) {
+        aso_drv_flush_buf(&handle->aso[st]);
+    }
 
     return SUCCESS;
 }
@@ -177,15 +179,17 @@ int hoi_drv_msg_eti(t_hoi* handle, t_hoi_msg_eti* msg)
     // load filter...
     eti_drv_set_filter(&handle->eti,
             msg->ip_address_dst, msg->ip_address_src_aud, msg->ip_address_src_vid,
-            msg->udp_port_aud, msg->udp_port_vid);
+            msg->udp_port_aud_emb, msg->udp_port_aud_board, msg->udp_port_vid);
 
     // flush buffers
     if (msg->udp_port_vid) vso_drv_flush_buf(&handle->vso);
-    if (msg->udp_port_aud) aso_drv_flush_buf(&handle->aso);
+    if (msg->udp_port_aud_emb) aso_drv_flush_buf(&handle->aso[AUD_STREAM_NR_EMBEDDED]);
+    if (msg->udp_port_aud_board) aso_drv_flush_buf(&handle->aso[AUD_STREAM_NR_IF_BOARD]);
 
     // activate ethernet input
     if (msg->udp_port_vid) eti_drv_start_vid(&handle->eti);
-    if (msg->udp_port_aud) eti_drv_start_aud(&handle->eti);
+    if (msg->udp_port_aud_emb) eti_drv_start_aud_emb(&handle->eti);
+    if (msg->udp_port_aud_board) eti_drv_start_aud_board(&handle->eti);
 
     return SUCCESS;
 }
@@ -219,13 +223,15 @@ int hoi_drv_msg_syncdelay(t_hoi* handle, t_hoi_msg_param* msg)
 int hoi_drv_msg_ethstat(t_hoi* handle, t_hoi_msg_ethstat* msg)
 {
     msg->rx_cpu_cnt = eti_get_cpu_packet_cnt(handle->p_esi);
-    msg->rx_aud_cnt = eti_get_aud_packet_cnt(handle->p_esi);
+    msg->rx_aud_emb_cnt = eti_get_aud_emb_packet_cnt(handle->p_esi);
+    msg->rx_aud_board_cnt = eti_get_aud_board_packet_cnt(handle->p_esi);
     msg->rx_vid_cnt = eti_get_vid_packet_cnt(handle->p_esi);
     msg->rx_inv_cnt = eti_get_inv_packet_cnt(handle->p_esi);
     msg->debug = eti_get_debug_reg(handle->p_esi);
 
     msg->tx_cpu_cnt = eto_get_cpu_packet_cnt(handle->p_eso);
-    msg->tx_aud_cnt = eto_get_aud_packet_cnt(handle->p_eso);
+    msg->tx_aud_emb_cnt = eto_get_aud_emb_packet_cnt(handle->p_eso);
+    msg->tx_aud_board_cnt = 0; // TODO
     msg->tx_vid_cnt = eto_get_vid_packet_cnt(handle->p_eso);
     msg->tx_inv_cnt = eto_get_inv_packet_cnt(handle->p_eso);
 
@@ -253,8 +259,10 @@ int hoi_drv_msg_vsostat(t_hoi* handle, t_hoi_msg_vsostat* msg)
 
 int hoi_drv_msg_asoreg(t_hoi* handle, t_hoi_msg_asoreg* msg)
 {
-    msg->config = aso_get_ctrl(handle->p_aso, 0xFFFFFFFF);
-    msg->status = aso_get_status(handle->p_aso, 0xFFFFFFFF);
+    for (int st = 0; st < AUD_STREAM_CNT; st++) {
+        msg->config[st] = aso_get_ctrl(handle->p_aso[st], 0xFFFFFFFF);
+        msg->status[st] = aso_get_status(handle->p_aso[st], 0xFFFFFFFF);
+    }
 
     return SUCCESS;
 }
@@ -470,7 +478,12 @@ int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
     eto_drv_start_aud(&handle->eto);
 
     // set parameters for packet generation in fec block
-    fec_drv_set_audio_eth_params(handle->p_fec_tx, &msg->eth);
+    if (msg->stream_nr == AUD_STREAM_NR_EMBEDDED) {
+        fec_drv_set_audio_emb_eth_params(handle->p_fec_tx, &msg->eth);
+    }
+    if (msg->stream_nr == AUD_STREAM_NR_IF_BOARD) {
+        fec_drv_set_audio_board_eth_params(handle->p_fec_tx, &msg->eth);
+    }
 
     // setup asi
     asi_drv_update(&handle->asi, msg->stream_nr, &msg->eth, &msg->aud); // this also stops and restarts stream
@@ -483,12 +496,21 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
     int delay, vid = 0;
 
     // activate FEC RX block
-    init_fec_rx_ip_audio(handle->p_fec_ip_rx, 1, &handle->fec_rx);
+    if (msg->stream_nr == AUD_STREAM_NR_EMBEDDED) {
+        init_fec_rx_ip_audio_emb(handle->p_fec_ip_rx, 1, &handle->fec_rx);
+    }
+    if (msg->stream_nr == AUD_STREAM_NR_IF_BOARD) {
+        init_fec_rx_ip_audio_board(handle->p_fec_ip_rx, 1);
+    }
 
     // sync...
-    aso_drv_stop(&handle->aso);
-    fec_rx_disable_audio_emb_out(handle->p_fec_rx);
-    fec_rx_disable_audio_int_out(handle->p_fec_rx); 
+    aso_drv_stop(&handle->aso[msg->stream_nr]);
+    if (msg->stream_nr == AUD_STREAM_NR_EMBEDDED) {
+        fec_rx_disable_audio_emb_out(handle->p_fec_rx);
+    }
+    if (msg->stream_nr == AUD_STREAM_NR_IF_BOARD) {
+        fec_rx_disable_audio_board_out(handle->p_fec_rx);
+    }
 
     // setup aso ()
     if (handle->vio.active) {
@@ -506,15 +528,19 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
     }
 
     // enable fec rx output interface
-    fec_rx_enable_audio_emb_out(handle->p_fec_rx);
-    fec_rx_enable_audio_int_out(handle->p_fec_rx); 
-
-    aso_drv_update(&handle->aso, &(msg->aud), delay);
-    aso_drv_start(&handle->aso);
-
-    if (handle->drivers & DRV_ADV9889) {
-        adv9889_drv_setup_audio(&handle->adv9889, aud_chmap2cnt(msg->aud.ch_map), msg->aud.fs, msg->aud.sample_width);
+    if (msg->stream_nr == AUD_STREAM_NR_EMBEDDED) {
+        fec_rx_enable_audio_emb_out(handle->p_fec_rx);
+        if (handle->drivers & DRV_ADV9889) {
+            adv9889_drv_setup_audio(&handle->adv9889, aud_chmap2cnt(msg->aud.ch_map), msg->aud.fs, msg->aud.sample_width);
+        }
     }
+    if (msg->stream_nr == AUD_STREAM_NR_IF_BOARD) {
+        fec_rx_enable_audio_board_out(handle->p_fec_rx);
+    }
+
+    aso_drv_update(&handle->aso[msg->stream_nr], &(msg->aud), delay);
+    aso_drv_start(&handle->aso[msg->stream_nr]);
+
     
     if (msg->cfg & DRV_STREAM_SYNC) {
         stream_sync_chg_source(&handle->sync, SYNC_SOURCE_AUDIO);

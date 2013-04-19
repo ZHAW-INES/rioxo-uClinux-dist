@@ -78,8 +78,9 @@ int vrb_audio_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
     }
 
 #ifdef ETI_PATH
-    // TODO: separete Audio/Video
-    hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port);
+    hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port, 0);
+    //TODO: only for test
+    hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, 0, htons(3660));
 #endif
 
     hdoipd_set_vtb_state(VTB_AUD_IDLE);
@@ -126,8 +127,10 @@ int vrb_audio_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     }
 
 #ifdef AUD_OUT_PATH
-    // start aso (TODO: delay = 4*vframe+networkdelay)
     hoi_drv_aso(AUD_STREAM_NR_EMBEDDED, m->format.value, m->format.compress, m->format.value2, reg_get_int("network-delay"),reg_get_int("av-delay"), compress);  
+    report(INFO "\naudio streaming started(fs = %d Hz, bitwidth = %d Bit, channel_map = 0x%x)", m->format.value, m->format.compress, m->format.value2); 
+    //TODO: only for test -> remove
+    hoi_drv_aso(AUD_STREAM_NR_IF_BOARD, m->format.value, m->format.compress, m->format.value2, reg_get_int("network-delay"),reg_get_int("av-delay"), compress);  
     report(INFO "\naudio streaming started(fs = %d Hz, bitwidth = %d Bit, channel_map = 0x%x)", m->format.value, m->format.compress, m->format.value2); 
 #endif
 
@@ -158,7 +161,9 @@ int vrb_audio_teardown(t_rscp_media *media, t_rscp_req_teardown UNUSED *m, t_rsc
 
     if (hdoipd_tstate(VTB_AUDIO|VTB_AUD_IDLE)) {
 #ifdef AUD_OUT_PATH
-        hdoipd_hw_reset(DRV_RST_AUD_OUT);
+        hdoipd_hw_reset(DRV_RST_AUD_EMB_OUT);
+        // TODO: remove, only for test
+        hdoipd_hw_reset(DRV_RST_AUD_BOARD_OUT);
 #endif
         hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
         hdoipd_set_vtb_state(VTB_AUD_OFF);
@@ -222,10 +227,14 @@ void vrb_audio_pause(t_rscp_media *media)
     if (hdoipd_tstate(VTB_AUDIO)) {
 
 #ifdef AUD_OUT_PATH
-        hdoipd_hw_reset(DRV_RST_AUD_OUT);
+        hdoipd_hw_reset(DRV_RST_AUD_EMB_OUT);
+        // TODO: only for test
+        hdoipd_hw_reset(DRV_RST_AUD_BOARD_OUT);
 #endif
 #ifdef ETI_PATH
-        hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port);
+        hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port, 0);
+        // TODO: only for test
+        hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, 0, htons(3660));
 #endif
         hdoipd_clr_rsc(RSC_AUDIO_OUT|RSC_AUDIO_SYNC);
         hdoipd_set_vtb_state(VTB_AUD_IDLE);

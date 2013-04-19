@@ -213,7 +213,7 @@ int asi_drv_set_aud_params(t_asi* asi, int unsigned stream, struct hdoip_aud_par
     asi_set_aud_params(asi->p_asi, stream, aud_params);
 
     asi->stream_status[stream] |= ASI_DRV_STREAM_STATUS_AUD_PARAMS_SET;
-    aud_report_params(aud_params);
+    aud_report_params(aud_params, stream);
 
     return ERR_ASI_SUCCESS;
 }
@@ -266,7 +266,6 @@ static uint32_t count2fs(uint32_t cnt)
  */
 int asi_drv_handler(t_asi* asi, t_queue* event_queue)
 {
-    uint32_t status =  asi_get_status(asi->p_asi,0xFFFFFFFF);
     uint32_t fs_counter = asi_get_fs_detect(asi->p_asi, AUD_STREAM_NR_EMBEDDED);
     uint32_t fs;
     static uint32_t fs_old;

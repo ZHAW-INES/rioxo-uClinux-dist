@@ -20,7 +20,7 @@ int aso_str_report_aud(t_aso* handle)
     struct hdoip_aud_params aud_params;
 
     aso_get_aud_params(handle->p_aso, &aud_params);
-    aud_report_params(&aud_params);
+    aud_report_params(&aud_params, handle->stream_nr);
 
     REPORT(INFO, "Audio delay                : %d us", aso_get_aud_delay(handle->p_aso));
     REPORT(INFO, "Clock div. base value      : %d", aso_get_clk_div_base(handle->p_aso));

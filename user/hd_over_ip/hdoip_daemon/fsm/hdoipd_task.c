@@ -186,10 +186,11 @@ void task_get_eth_status(char** p)
 {
     t_hoi_msg_ethstat *stat;
     hoi_drv_ethstat(&stat);
-    sprintf(buf, "TX|RX (C: %d|%d, V: %d|%d, A: %d|%d, Inv: %d|%d)",
+    sprintf(buf, "TX|RX (C: %d|%d, V: %d|%d, AE: %d|%d, AB: %d|%d, Inv: %d|%d)",
             stat->tx_cpu_cnt, stat->rx_cpu_cnt,
             stat->tx_vid_cnt, stat->rx_vid_cnt,
-            stat->tx_aud_cnt, stat->rx_aud_cnt,
+            stat->tx_aud_emb_cnt, stat->rx_aud_emb_cnt,
+            stat->tx_aud_board_cnt, stat->rx_aud_board_cnt,
             stat->tx_inv_cnt, stat->rx_inv_cnt);
     *p = buf;
 }

@@ -39,16 +39,20 @@
 
 #define eti_set_cpu_filter_mask(p, v)		HOI_WR32((p), ETI_CPU_FILTER_MASK_REG, (v))
 #define eti_set_vid_filter_mask(p, v)		HOI_WR32((p), ETI_VID_FILTER_MASK_REG, (v))
-#define eti_set_aud_filter_mask(p, v)		HOI_WR32((p), ETI_AUD_FILTER_MASK_REG, (v))
-#define eti_set_aud_fec_col_filter_mask(p, v)   HOI_WR32((p), ETI_AUD_FEC_COL_FILTER_MASK_REG, (v))
-#define eti_set_aud_fec_row_filter_mask(p, v)   HOI_WR32((p), ETI_AUD_FEC_ROW_FILTER_MASK_REG, (v))
+#define eti_set_aud_emb_filter_mask(p, v)	HOI_WR32((p), ETI_AUD_EMB_FILTER_MASK_REG, (v))
+#define eti_set_aud_board_filter_mask(p, v) HOI_WR32((p), ETI_AUD_BOARD_FILTER_MASK_REG, (v))
+#define eti_set_aud_emb_fec_col_filter_mask(p, v)   HOI_WR32((p), ETI_AUD_EMB_FEC_COL_FILTER_MASK_REG, (v))
+#define eti_set_aud_emb_fec_row_filter_mask(p, v)   HOI_WR32((p), ETI_AUD_EMB_FEC_ROW_FILTER_MASK_REG, (v))
+#define eti_set_aud_board_fec_col_filter_mask(p, v) HOI_WR32((p), ETI_AUD_BOARD_FEC_COL_FILTER_MASK_REG, (v))
+#define eti_set_aud_board_fec_row_filter_mask(p, v) HOI_WR32((p), ETI_AUD_BOARD_FEC_ROW_FILTER_MASK_REG, (v))
 #define eti_set_vid_fec_col_filter_mask(p, v)   HOI_WR32((p), ETI_VID_FEC_COL_FILTER_MASK_REG, (v))
 #define eti_set_vid_fec_row_filter_mask(p, v)   HOI_WR32((p), ETI_VID_FEC_ROW_FILTER_MASK_REG, (v))
 
 #define eti_set_device_ip(p, v)			    HOI_WR32((p), ETI_DEVICE_IP_REG, swap32(v))
 #define eti_set_vid_src_ip(p, v)		    HOI_WR32((p), ETI_VID_SRC_IP_REG, swap32(v))
 #define eti_set_aud_src_ip(p, v)		    HOI_WR32((p), ETI_AUD_SRC_IP_REG, swap32(v))
-#define eti_set_aud_dst_udp_port(p, v)		HOI_WR32((p), ETI_AUD_DST_UDP_PORT_REG, swap16(v))
+#define eti_set_aud_emb_dst_udp_port(p, v)  HOI_WR32((p), ETI_AUD_EMB_DST_UDP_PORT_REG, swap16(v))
+#define eti_set_aud_board_dst_udp_port(p, v) HOI_WR32((p), ETI_AUD_BOARD_DST_UDP_PORT_REG, swap16(v))
 #define eti_set_vid_dst_udp_port(p, v)		HOI_WR32((p), ETI_VID_DST_UDP_PORT_REG, swap16(v))
 
 #define eti_set_aes_session_key_0(p, v)		HOI_WR32((p), ETI_AES_SESSION_KEY0_REG, (v))
@@ -89,7 +93,7 @@
 
 #define eti_get_cpu_filter_mask(p)		    HOI_RD32((p), ETI_CPU_FILTER_MASK_REG)
 #define eti_get_vid_filter_mask(p)		    HOI_RD32((p), ETI_VID_FILTER_MASK_REG)
-#define eti_get_aud_filter_mask(p)		    HOI_RD32((p), ETI_AUD_FILTER_MASK_REG)
+#define eti_get_aud_emb_filter_mask(p)      HOI_RD32((p), ETI_AUD_EMB_FILTER_MASK_REG)
 
 #define eti_get_device_ip(p)			    swap32(HOI_RD32((p), ETI_DEVICE_IP_REG))
 #define eti_get_vid_src_ip(p)			    swap32(HOI_RD32((p), ETI_VID_SRC_IP_REG))
@@ -104,7 +108,8 @@
 #define eti_get_aes_riv_0(p)			    HOI_RD32((p), ETI_AES_RIV0_REG)
 #define eti_get_aes_riv_1(p)			    HOI_RD32((p), ETI_AES_RIV1_REG)
 
-#define eti_get_aud_packet_cnt(p)		    HOI_RD32((p), ETI_AUD_PACKET_CNT_REG)
+#define eti_get_aud_emb_packet_cnt(p)	    HOI_RD32((p), ETI_AUD_EMB_PACKET_CNT_REG)
+#define eti_get_aud_board_packet_cnt(p)     HOI_RD32((p), ETI_AUD_BOARD_PACKET_CNT_REG)
 #define eti_get_vid_packet_cnt(p)		    HOI_RD32((p), ETI_VID_PACKET_CNT_REG)
 #define eti_get_cpu_packet_cnt(p)		    HOI_RD32((p), ETI_CPU_PACKET_CNT_REG)
 #define eti_get_inv_packet_cnt(p)		    HOI_RD32((p), ETI_INV_PACKET_CNT_REG)

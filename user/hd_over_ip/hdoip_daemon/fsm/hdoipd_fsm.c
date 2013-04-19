@@ -173,8 +173,10 @@ void hdoipd_hw_reset(int rv)
     if (rv & DRV_RST_STSYNC) s += sprintf(s, "SYNC ");
     if (rv & DRV_RST_VID_OUT) s += sprintf(s, "Video-OUT ");
     if (rv & DRV_RST_VID_IN) s += sprintf(s, "Video-IN ");
-    if (rv & DRV_RST_AUD_OUT) s += sprintf(s, "Audio-OUT ");
-    if (rv & DRV_RST_AUD_IN) s += sprintf(s, "Audio-IN ");
+    if (rv & DRV_RST_AUD_BOARD_OUT) s += sprintf(s, "Audio-Board-OUT ");
+    if (rv & DRV_RST_AUD_EMB_OUT) s += sprintf(s, "Audio-Embedded-OUT ");
+    if (rv & DRV_RST_AUD_BOARD_IN) s += sprintf(s, "Audio-Board-IN ");
+    if (rv & DRV_RST_AUD_EMB_IN) s += sprintf(s, "Audio-Embedded-IN ");
     if (rv & DRV_RST_VRP) s += sprintf(s, "VRP ");
     report(tmp);
 }
@@ -502,8 +504,11 @@ void hdoipd_fsm_vrb(uint32_t event)
         case E_ETI_VIDEO_OFF:
             rscp_client_event(hdoipd.client, EVENT_VIDEO_STIN_OFF);
         break;
-        case E_ETI_AUDIO_OFF:
+        case E_ETI_AUDIO_EMB_OFF:
             rscp_client_event(hdoipd.client, EVENT_AUDIO_STIN_OFF);
+        break;
+        case E_ETI_AUDIO_BOARD_OFF:
+            // TODO
         break;
     }
 }
@@ -746,15 +751,21 @@ void hdoipd_event(uint32_t event)
                 hoi_drv_set_led_status(ETHERNET_ACTIVE);
             }
         break;
-        case E_ETI_AUDIO_ON:
+        case E_ETI_AUDIO_EMB_ON:
             hdoipd_set_rsc(RSC_EAI);
             hoi_drv_set_led_status(DVI_OUT_CONNECTED_WITH_AUDIO);
         break;
-        case E_ETI_AUDIO_OFF:
+        case E_ETI_AUDIO_EMB_OFF:
             hdoipd_clr_rsc(RSC_EAI);
             if(hdoipd_rsc(RSC_VIDEO_SINK)) {
                 hoi_drv_set_led_status(DVI_OUT_CONNECTED_NO_AUDIO);
             }
+        break;
+        case E_ETI_AUDIO_BOARD_ON:
+            // TODO
+        break;
+        case E_ETI_AUDIO_BOARD_OFF:
+            // TODO
         break;
         case E_ETO_VIDEO_ON:
             hdoipd_set_rsc(RSC_EVO);
@@ -917,7 +928,7 @@ void hdoipd_start()
 
 }
 
-#define FEC_IP_BUFFER_SIZE  ((2*1024+62)*1540)
+#define FEC_IP_BUFFER_SIZE  ((3*1024+62)*1540)
 #define AUD_TX_SIZE         (512*1024)
 
 bool hdoipd_init(int drv)

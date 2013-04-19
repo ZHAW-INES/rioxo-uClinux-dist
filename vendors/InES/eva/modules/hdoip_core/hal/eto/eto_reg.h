@@ -41,7 +41,7 @@
 #define ETO_DMA_ALMOST_FULL_REG         120
 #define ETO_AES_COUNT_START_L_REG       128
 #define ETO_AES_COUNT_START_H_REG       132
-#define ETO_AUD_PACKET_CNT_REG          136
+#define ETO_AUD_EMB_PACKET_CNT_REG      136
 #define ETO_VID_PACKET_CNT_REG          140
 #define ETO_CPU_PACKET_CNT_REG          144
 #define ETO_INV_PACKET_CNT_REG          148

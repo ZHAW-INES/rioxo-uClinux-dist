@@ -8,13 +8,14 @@
  * @param p_aso address of the ACB audio stream out register
  * @return error code
  */
-int aso_drv_init(t_aso* aso, void* p_aso)
+int aso_drv_init(t_aso* aso, void* p_aso, int unsigned stream_nr)
 {
     REPORT(INFO, "+--------------------------------------------------+");
-    REPORT(INFO, "| ASO-Driver: Initialize audio stream out          |");
+    REPORT(INFO, "| ASO-Driver: Initialize audio stream out %u        |", stream_nr);
     REPORT(INFO, "+--------------------------------------------------+");
 
     aso->p_aso = p_aso;
+    aso->stream_nr = stream_nr;
     aso->stream_status = 0;
     aso_drv_stop(aso);
 
@@ -146,7 +147,6 @@ int aso_drv_update(t_aso* aso, struct hdoip_aud_params* aud_params, uint32_t aud
 int aso_drv_handler(t_aso* aso, t_queue* event_queue)
 {
     uint32_t status = 0;
-	static uint32_t counter = 0;
 
     status = aso_get_status(aso->p_aso, ASO_STATUS_FRAME_SIZE_ERROR | ASO_STATUS_FIFO_EMPTY | ASO_STATUS_FIFO_FULL);
 
@@ -258,7 +258,7 @@ int aso_drv_set_aud_params(t_aso* aso, struct hdoip_aud_params* aud_params)
 
     aso->stream_status |= ASO_DRV_STATUS_AUD_PARAMS_SET;
     
-    aud_report_params(aud_params);
+    aud_report_params(aud_params, aso->stream_nr);
 
     return ERR_ASO_SUCCESS;
 }

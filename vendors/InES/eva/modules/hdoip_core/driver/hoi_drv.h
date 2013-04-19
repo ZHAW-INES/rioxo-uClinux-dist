@@ -53,7 +53,7 @@ typedef struct {
     void                *p_asi;
     void                *p_esi;
     void                *p_vso;
-    void                *p_aso;
+    void                *p_aso[AUD_STREAM_CNT];
     void                *p_adv212;
     void                *p_vrp;
     void                *p_tmr;
@@ -87,7 +87,7 @@ typedef struct {
     t_vsi               vsi;
     t_vso               vso;
     t_asi               asi;
-    t_aso               aso;
+    t_aso               aso[AUD_STREAM_CNT];
     t_eto               eto;
     t_eti               eti;
     //t_hdcp				hdcp;

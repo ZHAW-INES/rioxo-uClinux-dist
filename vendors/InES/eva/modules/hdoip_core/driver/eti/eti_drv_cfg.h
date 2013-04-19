@@ -6,10 +6,11 @@
 /* ETI configuration */
 #define ETI_CPU_FILTER_MASK         (0x00000808)
 #define ETI_VID_FILTER_MASK         (0x000004D6)
-#define ETI_AUD_FILTER_MASK         (0x000004E6)
+#define ETI_AUD_EMB_FILTER_MASK     (0x000004E6)
+#define ETI_AUD_BOARD_FILTER_MASK   (0x000104C6)
 
-#define ETI_AUD_FEC_C_FILTER_MASK   (0x000084C6)
-#define ETI_AUD_FEC_R_FILTER_MASK   (0x000044C6)
+#define ETI_AUD_EMB_FEC_C_FILTER_MASK (0x000084C6)
+#define ETI_AUD_EMB_FEC_R_FILTER_MASK (0x000044C6)
 #define ETI_VID_FEC_C_FILTER_MASK   (0x000024C6)
 #define ETI_VID_FEC_R_FILTER_MASK   (0x000014C6)
 
@@ -30,8 +31,10 @@ typedef struct {
     void*       ptr;
     uint32_t    vrx;
     uint32_t    arx;
+    uint32_t    abrx;
     int         vcnt;
     int         acnt;
+    int         abcnt;
 } t_eti;
 
 #endif /* ETI_DRV_CFG_H_ */

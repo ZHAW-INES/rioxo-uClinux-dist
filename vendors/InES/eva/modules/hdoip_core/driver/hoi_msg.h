@@ -120,14 +120,16 @@
 #define BDT_ID_SDI8_BOARD           (0x01)
 
 // Reset
-#define DRV_RST                     (0x7f)
+#define DRV_RST                     (0x1ff)
 #define DRV_RST_TMR                 (1<<0)
 #define DRV_RST_STSYNC              (1<<1)
 #define DRV_RST_VID_OUT             (1<<2)
 #define DRV_RST_VID_IN              (1<<3)
-#define DRV_RST_AUD_OUT             (1<<4)
-#define DRV_RST_AUD_IN              (1<<5)
-#define DRV_RST_VRP                 (1<<6)
+#define DRV_RST_AUD_BOARD_OUT       (1<<4)
+#define DRV_RST_AUD_EMB_OUT         (1<<5)
+#define DRV_RST_AUD_BOARD_IN        (1<<6)
+#define DRV_RST_AUD_EMB_IN          (1<<7)
+#define DRV_RST_VRP                 (1<<8)
 
 // Timer
 #define DRV_TMR_IN                  (0x00000001)
@@ -219,7 +221,8 @@ typedef struct {
 typedef struct {
     hoi_msg_extends;
     uint32_t            udp_port_vid;
-    uint32_t            udp_port_aud;
+    uint32_t            udp_port_aud_emb;
+    uint32_t            udp_port_aud_board;
     uint32_t            ip_address_dst;
     uint32_t            ip_address_src_aud;
     uint32_t            ip_address_src_vid;
@@ -231,11 +234,13 @@ typedef struct {
     hoi_msg_extends;
     uint32_t            tx_cpu_cnt;
     uint32_t            tx_vid_cnt;
-    uint32_t            tx_aud_cnt;
+    uint32_t            tx_aud_emb_cnt;
+    uint32_t            tx_aud_board_cnt;
     uint32_t            tx_inv_cnt;
     uint32_t            rx_cpu_cnt;
     uint32_t            rx_vid_cnt;
-    uint32_t            rx_aud_cnt;
+    uint32_t            rx_aud_emb_cnt;
+    uint32_t            rx_aud_board_cnt;
     uint32_t            rx_inv_cnt;
     uint32_t            debug;
 } t_hoi_msg_ethstat;
@@ -273,8 +278,8 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
-    uint32_t            config;
-    uint32_t            status;
+    uint32_t            config[AUD_STREAM_CNT];
+    uint32_t            status[AUD_STREAM_CNT];
 } t_hoi_msg_asoreg;
 
 #define hoi_msg_asoreg_init(p) hoi_msg_init(p, HOI_MSG_ASOREG, t_hoi_msg_asoreg)

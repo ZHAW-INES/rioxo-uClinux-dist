@@ -10,7 +10,8 @@ local REG_ST_NET_DELAY_LABEL = "net_delay"
 local REG_ST_AV_DELAY_LABEL = "av_delay"
 local REG_ST_OSD_LABEL = "osd_time"
 local REG_ST_VID_PORT_LABEL = "vid_port"
-local REG_ST_AUD_PORT_LABEL = "aud_port"
+local REG_ST_AUD_EMB_PORT_LABEL = "aud_emb_port"
+local REG_ST_AUD_BOARD_PORT_LABEL = "aud_board_port"
 local REG_ST_RSCP_PORT_LABEL = "rscp_port"
 local REG_ST_HELLO_PORT_LABEL = "hello_port"
 
@@ -39,11 +40,13 @@ function show(t)
         --t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3 = hdoip.network.text2IpValues(string.sub(str, 8))
         
         t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
-        t.aud_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_PORT)
+        t.aud_emb_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_EMB_PORT)
+        t.aud_board_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_BOARD_PORT)
         t.rscp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RSCP_PORT)
         t.hello_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT)
         t.edit_vid_port = 0
-        t.edit_aud_port = 0
+        t.edit_aud_emb_port = 0
+        t.edit_aud_board_port = 0
         t.edit_rscp_port = 0
         t.edit_hello_port = 0
 
@@ -130,15 +133,15 @@ function show(t)
         end 
         hdoip.pipe.setParam(hdoip.pipe.REG_FORCE_HDCP, t.hdcp_force_str)
 
-        if(t.save_aud_port ~= nil) then 
-            if(tonumber(t.aud_port) ~= nil) then
-                t.aud_port = tonumber(t.aud_port)
-                if((t.aud_port >= 0) and (t.aud_port < 65536)) then
-                    if ((t.aud_port % 2) == 0) then
+        if(t.save_aud_emb_port ~= nil) then 
+            if(tonumber(t.aud_emb_port) ~= nil) then
+                t.aud_emb_port = tonumber(t.aud_emb_port)
+                if((t.aud_emb_port >= 0) and (t.aud_emb_port < 65536)) then
+                    if ((t.aud_emb_port % 2) == 0) then
                         t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
                         t.vid_port = tonumber(t.vid_port)
-                        if (((t.aud_port - t.vid_port) >= 6) or ((t.vid_port - t.aud_port) >= 6))  then
-                            hdoip.pipe.setParam(hdoip.pipe.REG_TEMP1, t.aud_port)
+                        if (((t.aud_emb_port - t.vid_port) >= 6) or ((t.vid_port - t.aud_emb_port) >= 6))  then
+                            hdoip.pipe.setParam(hdoip.pipe.REG_TEMP1, t.aud_emb_port)
                             pages.restart.show(t)
                         else
                             hdoip.html.AddError(t, label.err_aud_port_cross_vid_port)
@@ -154,7 +157,28 @@ function show(t)
             end
 
         else
-            t.aud_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_PORT)
+            t.aud_emb_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_EMB_PORT)
+        end
+
+        if(t.save_aud_board_port ~= nil) then 
+            if(tonumber(t.aud_board_port) ~= nil) then
+                t.aud_board_port = tonumber(t.aud_board_port)
+                if((t.aud_board_port >= 0) and (t.aud_board_port < 65536)) then
+                    if ((t.aud_board_port % 2) == 0) then
+                        -- TODO check collision with video and audio embedded port number
+                        hdoip.pipe.setParam(hdoip.pipe.REG_TEMP5, t.aud_board_port)
+                        pages.restart.show(t)
+                    else
+                        hdoip.html.AddError(t, label.err_aud_port_not_even)
+                    end
+                else
+                    hdoip.html.AddError(t, label.err_aud_port_not_in_range)
+                end
+            else
+                hdoip.html.AddError(t, label.err_aud_port_not_number)
+            end
+        else
+            t.aud_board_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_BOARD_PORT)
         end
 
         if(t.save_vid_port ~= nil) then 
@@ -162,9 +186,9 @@ function show(t)
                 t.vid_port = tonumber(t.vid_port)
                 if((t.vid_port >= 0) and (t.vid_port < 65536)) then
                     if ((t.vid_port % 2) == 0) then
-                        t.aud_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_PORT)
-                        t.aud_port = tonumber(t.aud_port)
-                        if (((t.aud_port - t.vid_port) >= 6) or ((t.vid_port - t.aud_port) >= 6)) then
+                        t.aud_emb_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_EMB_PORT)
+                        t.aud_emb_port = tonumber(t.aud_emb_port)
+                        if (((t.aud_emb_port - t.vid_port) >= 6) or ((t.vid_port - t.aud_emb_port) >= 6)) then
                             hdoip.pipe.setParam(hdoip.pipe.REG_TEMP2, t.vid_port)
                             pages.restart.show(t)
                         else
@@ -333,14 +357,20 @@ function show(t)
     end
 
     if(t.button_restart_yes ~= nil) then
-        t.aud_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP1)
+        t.aud_emb_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP1)
+        t.aud_board_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP5)
         t.vid_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP2)
         t.rscp_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP3)
         t.hello_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP4)
 
-        if(t.aud_port_changed ~= nil) then 
-            if(t.aud_port_changed ~= "") then
-                hdoip.pipe.setParam(hdoip.pipe.REG_ST_AUD_PORT, t.aud_port_changed)
+        if(t.aud_emb_port_changed ~= nil) then 
+            if(t.aud_emb_port_changed ~= "") then
+                hdoip.pipe.setParam(hdoip.pipe.REG_ST_AUD_EMB_PORT, t.aud_emb_port_changed)
+            end
+        end
+        if(t.aud_board_port_changed ~= nil) then 
+            if(t.aud_board_port_changed ~= "") then
+                hdoip.pipe.setParam(hdoip.pipe.REG_ST_AUD_BOARD_PORT, t.aud_board_port_changed)
             end
         end
         if(t.vid_port_changed ~= nil) then
@@ -399,15 +429,26 @@ function show(t)
                 hdoip.html.FormCheckbox("edit_vid_port", 1, label.button_edit, t.edit_vid_port)         hdoip.html.TableInsElement(1);
             end
 
-            hdoip.html.Text(label.p_st_aud_port);                                                       hdoip.html.TableInsElement(1);
-            if((t.edit_aud_port ~= nil) and (t.edit_aud_port == "1")) then
-                hdoip.html.FormText(REG_ST_AUD_PORT_LABEL, t.aud_port, 5, 0);                           hdoip.html.TableInsElement(1); 
-                hdoip.html.FormHidden("save_aud_port", 1)
+            hdoip.html.Text(label.p_st_aud_emb_port);                                                   hdoip.html.TableInsElement(1);
+            if((t.edit_aud_emb_port ~= nil) and (t.edit_aud_emb_port == "1")) then
+                hdoip.html.FormText(REG_ST_AUD_EMB_PORT_LABEL, t.aud_emb_port, 5, 0);                   hdoip.html.TableInsElement(1); 
+                hdoip.html.FormHidden("save_aud_emb_port", 1)
                 hdoip.html.Text(label.u_decimal);                                                       hdoip.html.TableInsElement(1);
             else
-                hdoip.html.Text(t.aud_port)                                                             hdoip.html.TableInsElement(1); 
-                hdoip.html.FormCheckbox("edit_aud_port", 1, label.button_edit, t.edit_aud_port)         hdoip.html.TableInsElement(1);
+                hdoip.html.Text(t.aud_emb_port)                                                         hdoip.html.TableInsElement(1); 
+                hdoip.html.FormCheckbox("edit_aud_emb_port", 1, label.button_edit, t.edit_aud_emb_port) hdoip.html.TableInsElement(1);
             end
+
+            hdoip.html.Text(label.p_st_aud_board_port);                                                 hdoip.html.TableInsElement(1);
+            if((t.edit_aud_board_port ~= nil) and (t.edit_aud_board_port == "1")) then
+                hdoip.html.FormText(REG_ST_AUD_BOARD_PORT_LABEL, t.aud_board_port, 5, 0);               hdoip.html.TableInsElement(1); 
+                hdoip.html.FormHidden("save_aud_board_port", 1)
+                hdoip.html.Text(label.u_decimal);                                                       hdoip.html.TableInsElement(1);
+            else
+                hdoip.html.Text(t.aud_board_port)                                                       hdoip.html.TableInsElement(1); 
+                hdoip.html.FormCheckbox("edit_aud_board_port", 1, label.button_edit, t.edit_aud_board_port) hdoip.html.TableInsElement(1);
+            end
+
         end
 
         hdoip.html.Text(label.p_st_rscp_port);                                                          hdoip.html.TableInsElement(1);

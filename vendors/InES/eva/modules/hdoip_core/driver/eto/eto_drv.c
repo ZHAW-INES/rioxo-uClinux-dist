@@ -278,7 +278,7 @@ int eto_drv_handler(t_eto* handle, t_queue* event_queue)
 {
     uint32_t reg = eto_get_config_reg(handle->ptr) & ETO_CONFIG_FSM_EN;
     uint32_t vtx = eto_get_vid_packet_cnt(handle->ptr);
-    uint32_t atx = eto_get_aud_packet_cnt(handle->ptr);
+    uint32_t atx = eto_get_aud_emb_packet_cnt(handle->ptr);
 
     if(reg != handle->link_state) {
         if(reg > 0) {   /* link up */
@@ -354,6 +354,11 @@ void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, t_fec_setti
     h = (timing->width + timing->hfront + timing->hpulse + timing->hback);
     v = (timing->height + timing->vfront + timing->vpulse + timing->vback);
     period_10ns = (uint32_t)(((uint64_t)100000000*h*v)/timing->pfreq);
+
+    // if interlaced, there are 2 fields per image
+    if (timing->interlaced) {
+        period_10ns = period_10ns * 2;
+    }
 
     if (fec->video_enable) {
         if (fec->video_col_only) {

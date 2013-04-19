@@ -118,7 +118,8 @@ typedef struct
 void fec_drv_set_video_eth_params(void *p, hdoip_eth_params *eth);
 
 /* set eth parameters for eth, ip and udp header */
-void fec_drv_set_audio_eth_params(void *p, hdoip_eth_params *eth);
+void fec_drv_set_audio_emb_eth_params(void *p, hdoip_eth_params *eth);
+void fec_drv_set_audio_board_eth_params(void *p, hdoip_eth_params *eth);
 
 /* set ringbuffer descriptors and burst size for dma access */
 void fec_drv_set_descriptors(void *p, void *vid_tx_buf, void *aud_tx_buf, size_t vid_tx_len, size_t aud_tx_len, uint32_t burst_size);

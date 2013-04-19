@@ -202,6 +202,12 @@ int vtb_audio_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connec
         uint8_t channel_select[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
         hoi_drv_asi(AUD_STREAM_NR_EMBEDDED, &eth, &aud, &fec);
         report(INFO "\naudio embedded streaming started(fs = %d Hz, bitwidth = %d Bit, ch_map = 0x%02X)", aud.fs, aud.sample_width, aud.ch_map);
+        // TODO: remove -> only for test
+        eth.rtp_ssrc = 1;
+        eth.udp_dst_port = 3660;
+        eth.udp_src_port = 3660;
+        hoi_drv_asi(AUD_STREAM_NR_IF_BOARD, &eth, &aud, &fec);
+        report(INFO "\naudio embedded streaming started(fs = %d Hz, bitwidth = %d Bit, ch_map = 0x%02X)", aud.fs, aud.sample_width, aud.ch_map);
 #endif
         // We are streaming Audio now...
         hdoipd_set_vtb_state(VTB_AUDIO);
@@ -223,7 +229,9 @@ int vtb_audio_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t_rsc
     if (hdoipd_tstate(VTB_AUD_MASK)) {
         if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
 #ifdef AUD_IN_PATH
-            hdoipd_hw_reset(DRV_RST_AUD_IN);
+            hdoipd_hw_reset(DRV_RST_AUD_EMB_IN);
+            // TODO: remove
+            hdoipd_hw_reset(DRV_RST_AUD_BOARD_IN);
 #endif
             hdoipd_set_vtb_state(VTB_AUD_OFF);
         }
@@ -252,7 +260,9 @@ void vtb_audio_pause(t_rscp_media *media)
     if (hdoipd_tstate(VTB_AUDIO)) {
         if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
 #ifdef AUD_IN_PATH
-            hdoipd_hw_reset(DRV_RST_AUD_IN);
+            hdoipd_hw_reset(DRV_RST_AUD_EMB_IN);
+            // TODO: remove
+            hdoipd_hw_reset(DRV_RST_AUD_BOARD_IN);
 #endif
             hdoipd_set_vtb_state(VTB_AUD_IDLE);
         }

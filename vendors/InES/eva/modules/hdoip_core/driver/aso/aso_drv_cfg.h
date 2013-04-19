@@ -36,6 +36,7 @@
 typedef struct {
     uint32_t                    stream_status;
     void*                       p_aso;
+    int unsigned                stream_nr;
 } t_aso;
 
 #endif /* ASO_DRV_CFG_H_ */

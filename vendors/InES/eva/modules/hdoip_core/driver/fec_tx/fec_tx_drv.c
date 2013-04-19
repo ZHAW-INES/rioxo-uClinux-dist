@@ -73,7 +73,7 @@ void fec_drv_set_video_eth_params(void *p, hdoip_eth_params *eth)
     fec_tx_write_vid_dst_port(p, eth->udp_dst_port);
 }
 
-void fec_drv_set_audio_eth_params(void *p, hdoip_eth_params *eth)
+void fec_drv_set_audio_emb_eth_params(void *p, hdoip_eth_params *eth)
 {
     //audio dst mac
     fec_tx_write_aud_dst_mac_0(p, eth->dst_mac[0]);
@@ -99,6 +99,20 @@ void fec_drv_set_audio_eth_params(void *p, hdoip_eth_params *eth)
     fec_tx_write_aud_src_port(p, eth->udp_src_port);
     //audio dst port
     fec_tx_write_aud_dst_port(p, eth->udp_dst_port);
+
+    //ssrc
+    fec_tx_write_aud_emb_ssrc(p, eth->rtp_ssrc);
+}
+
+void fec_drv_set_audio_board_eth_params(void *p, hdoip_eth_params *eth)
+{
+    //NOTE: fec_drv_set_audio_embedded_eth_params() must be called first to set eth and ip config
+    //audio src port
+    fec_tx_write_aud_board_src_port(p, eth->udp_src_port);
+    //audio dst port
+    fec_tx_write_aud_board_dst_port(p, eth->udp_dst_port);
+    //ssrc
+    fec_tx_write_aud_board_ssrc(p, eth->rtp_ssrc);
 }
 
 void fec_drv_set_descriptors(void *p, void *vid_tx_buf, void *aud_tx_buf, size_t vid_tx_len, size_t aud_tx_len, uint32_t burst_size)
@@ -137,6 +151,7 @@ void change_setting_fec_ip_tx(void* p_fec_ip_tx, int enable_vid, int d_vid, int 
     alt_avalon_rtp_tx_dev p;
     alt_avalon_rtp_tx_fec_settings fec_settings_channel_0;
     alt_avalon_rtp_tx_fec_settings fec_settings_channel_1;
+    alt_avalon_rtp_tx_fec_settings fec_settings_channel_2;
 
     p.base = p_fec_ip_tx;
 
@@ -152,7 +167,7 @@ void change_setting_fec_ip_tx(void* p_fec_ip_tx, int enable_vid, int d_vid, int 
         default:    fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_off;
     }
 
-    // settings for audio channel
+    // settings for audio embedded channel
     fec_settings_channel_1.EnableFEC = enable_aud;
     fec_settings_channel_1.L = l_aud;
     fec_settings_channel_1.D = d_aud;
@@ -164,11 +179,21 @@ void change_setting_fec_ip_tx(void* p_fec_ip_tx, int enable_vid, int d_vid, int 
         default:    fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_off;
     }
 
+    // settings for audio board channel (always disabled)
+    fec_settings_channel_2.EnableFEC = 0;
+    fec_settings_channel_2.L = 10;
+    fec_settings_channel_2.D = 10;
+    fec_settings_channel_2.ColFECOnly = 0;
+    fec_settings_channel_2.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_off;
+
     // configure channel 0 (video)
     alt_avalon_rtp_tx_set_fec_config(&p, 0x00, &fec_settings_channel_0);
 
-    // configure channel 1 (audio)
+    // configure channel 1 (audio embedded)
     alt_avalon_rtp_tx_set_fec_config(&p, 0x01, &fec_settings_channel_1);
+
+    // configure channel 2 (audio board)
+    alt_avalon_rtp_tx_set_fec_config(&p, 0x02, &fec_settings_channel_2);
 }
 
 /* Get the parameters of a design */

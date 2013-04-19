@@ -46,11 +46,11 @@
 /* Registers of Interface Out Block */
 #define fec_rx_enable_video_out(base)                                       HOI_REG_SET((base), 0, 1)
 #define fec_rx_enable_audio_emb_out(base)                                   HOI_REG_SET((base), 0, 2)
-#define fec_rx_enable_audio_int_out(base)                                   HOI_REG_SET((base), 0, 4)
+#define fec_rx_enable_audio_board_out(base)                                 HOI_REG_SET((base), 0, 4)
 
 #define fec_rx_disable_video_out(base)                                      HOI_REG_CLR((base), 0, 1)
 #define fec_rx_disable_audio_emb_out(base)                                  HOI_REG_CLR((base), 0, 2)
-#define fec_rx_disable_audio_int_out(base)                                  HOI_REG_CLR((base), 0, 4)
+#define fec_rx_disable_audio_board_out(base)                                HOI_REG_CLR((base), 0, 4)
 
 /* Registers of FEC RX IP */
 #define ALTERA_AVALON_RTP_RX_CHANNEL_REG                                    0

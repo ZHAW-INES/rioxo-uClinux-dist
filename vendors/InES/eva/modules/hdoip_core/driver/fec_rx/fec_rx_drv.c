@@ -955,7 +955,7 @@ void init_fec_rx_ip_video(void *p, int enable, t_fec_rx *counter_values)
     }
 }
 
-void init_fec_rx_ip_audio(void *p, int enable, t_fec_rx *counter_values)
+void init_fec_rx_ip_audio_emb(void *p, int enable, t_fec_rx *counter_values)
 {
     alt_avalon_rtp_rx_dev dev;
     alt_avalon_rtp_rx_channel_settings settings;
@@ -968,7 +968,6 @@ void init_fec_rx_ip_audio(void *p, int enable, t_fec_rx *counter_values)
     settings.Enable = enable;
     settings.RTPBypass = 0;
 
-    // audio
     alt_avalon_rtp_rx_set_channel_config(&dev, 1, &settings);
 
     if (enable == 1) {
@@ -979,6 +978,21 @@ void init_fec_rx_ip_audio(void *p, int enable, t_fec_rx *counter_values)
         // statistic counter start on first call of this routine
         alt_avalon_rtp_rx_get_statistics(&dev, 1, &stats);
     }
+}
+
+void init_fec_rx_ip_audio_board(void *p, int enable)
+{
+    alt_avalon_rtp_rx_dev dev;
+    alt_avalon_rtp_rx_channel_settings settings;
+
+    dev.base = p;
+    dev.MsgFIFODepth = 0;
+    dev.UseSoftwareMsgFIFODepth = 0;
+
+    settings.Enable = enable;
+    settings.RTPBypass = 0;
+
+    alt_avalon_rtp_rx_set_channel_config(&dev, 2, &settings);
 }
 
 void fec_rx_statistics(void *p, t_fec_rx *counter_values, t_hoi_msg_fecstat* msg)

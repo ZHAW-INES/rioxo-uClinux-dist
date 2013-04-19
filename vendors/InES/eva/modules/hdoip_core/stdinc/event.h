@@ -77,8 +77,10 @@
 #define E_ETI_LINK_DOWN         (E_ETI_ID + 0x00000002)
 #define E_ETI_VIDEO_ON          (E_ETI_ID + 0x00000003)
 #define E_ETI_VIDEO_OFF         (E_ETI_ID + 0x00000004)
-#define E_ETI_AUDIO_ON          (E_ETI_ID + 0x00000005)
-#define E_ETI_AUDIO_OFF         (E_ETI_ID + 0x00000006)
+#define E_ETI_AUDIO_EMB_ON      (E_ETI_ID + 0x00000005)
+#define E_ETI_AUDIO_EMB_OFF     (E_ETI_ID + 0x00000006)
+#define E_ETI_AUDIO_BOARD_ON    (E_ETI_ID + 0x00000007)
+#define E_ETI_AUDIO_BOARD_OFF   (E_ETI_ID + 0x00000008)
 
 /* ETO events */
 #define E_ETO_ID                (0x80000000)

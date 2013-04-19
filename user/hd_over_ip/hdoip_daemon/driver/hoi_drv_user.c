@@ -94,7 +94,7 @@ int hoi_drv_hdcpstat(uint32_t *eto_hdcp_audio,uint32_t *eto_hdcp_video,uint32_t 
 }
 //-----------------------------------------------------------------------------
 
-int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud, uint32_t vid, uint32_t aud)
+int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud, uint32_t vid, uint32_t aud_emb, uint32_t aud_board)
 {
     t_hoi_msg_eti msg;
 
@@ -102,8 +102,9 @@ int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud,
     msg.ip_address_dst = addr_dst;
     msg.ip_address_src_vid = addr_src_vid;
     msg.ip_address_src_aud = addr_src_aud;
-    msg.udp_port_aud = aud;
+    msg.udp_port_aud_emb = aud_emb;
     msg.udp_port_vid = vid;
+    msg.udp_port_aud_board = aud_board;
 
     return hoi_msg(&msg);
 

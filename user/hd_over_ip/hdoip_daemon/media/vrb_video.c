@@ -84,7 +84,7 @@ int vrb_video_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection*
 
 #ifdef ETI_PATH
     // setup ethernet input
-    hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0);
+    hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0, 0);
 #endif
 
     hdoipd_set_vtb_state(VTB_VID_IDLE);
@@ -256,7 +256,7 @@ void vrb_video_pause(t_rscp_media *media)
         hdoipd_hw_reset(DRV_RST_VID_OUT);
 #endif
 #ifdef ETI_PATH
-        hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0);
+        hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0, 0);
 #endif
 
         // disable HDCP on AD9889

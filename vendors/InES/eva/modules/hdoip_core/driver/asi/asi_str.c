@@ -51,7 +51,7 @@ int asi_str_report_aud(t_asi* handle)
 
     for (i = 0; i < AUD_STREAM_CNT; i++) {
         asi_get_aud_params(handle->p_asi, i, &aud_params);
-        aud_report_params(&aud_params);
+        aud_report_params(&aud_params, i);
     }
 
     return ERR_ASI_SUCCESS;

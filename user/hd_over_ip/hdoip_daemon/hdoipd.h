@@ -239,6 +239,20 @@ static inline bool tick_delay(uint64_t x)
 
 
 //------------------------------------------------------------------------------
+// convert functions
+
+static inline uint8_t aud_chmap2cnt(uint16_t ch_map)
+{
+    int i;
+    uint8_t ch = 0;
+
+    for (i = 0; i < 15; i++) {
+        if (ch_map & (1<<i)) ch++;
+    }
+    return ch;
+}
+
+//------------------------------------------------------------------------------
 //
 
 #define reg_set(n, v)           bstmap_set(&hdoipd.registry, (n), (v))
