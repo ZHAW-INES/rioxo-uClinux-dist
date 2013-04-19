@@ -332,7 +332,6 @@ void* rtsp_listener_get_session(t_rtsp_listener* handle, char* id)
 void rtsp_listener_create_sessionid(t_rtsp_listener* handle, char* id)
 {
     do {
-        memset(id, 0, sizeof(id));
         snprintf(id, 19, "%d", rand());
     } while (rtsp_listener_get_session(handle, id) != NULL);
 }
