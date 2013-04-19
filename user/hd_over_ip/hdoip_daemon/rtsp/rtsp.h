@@ -23,6 +23,8 @@
 
 #define RTSP_SDP_VERSION            0
 
+#define RTSP_DEFAULT_TIMEOUT        60  /* secs */
+
 //------------------------------------------------------------------------------
 // Status Codes
 

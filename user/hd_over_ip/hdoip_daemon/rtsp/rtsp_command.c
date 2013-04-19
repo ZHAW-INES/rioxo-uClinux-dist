@@ -205,7 +205,11 @@ char* rtsp_str_multicast(bool b)
 
 void rtsp_header_session(t_rtsp_connection* msg, char* s)
 {
-    msgprintf(msg, "Session: %s\r\n", s);
+    msgprintf(msg, "Session: %s", s);
+    if (hdoipd.eth_timeout != RTSP_DEFAULT_TIMEOUT) {
+        msgprintf(msg, " ; timeout = %d", hdoipd.eth_timeout);
+    }
+    msgprintf(msg, "\r\n");
 }
 
 void rtsp_header_content_length(t_rtsp_connection* msg, size_t length)
