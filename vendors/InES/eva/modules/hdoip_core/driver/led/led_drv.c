@@ -119,7 +119,7 @@ int led_drv_init(t_led* handle, t_i2c* p_vid_i2c, t_i2c* p_aud_i2c, void* p_led,
     handle->led_set         = 0;
     handle->set_mask        = 0;
     handle->clr_mask        = 0;
-    handle->device_id       = bdt_return_device(handle_bdt);
+    handle->device_id       = bdt_return_video_device(handle_bdt);
 
     led_drv_set_status(handle, FIRMWARE_START);
 

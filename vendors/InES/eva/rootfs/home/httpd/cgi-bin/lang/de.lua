@@ -5,7 +5,7 @@ label = {
     page_name = "Rioxo&reg; : ";
 
     u_decimal = "[dezimal]";
-    u_mbps = "[Mbit / s]";
+    u_mbps = "[MBit / s]";
     u_ms = "[ms]";
     u_s = "[s]";
     u_percent = "[% von der halben Datenrate]";
@@ -75,6 +75,7 @@ label = {
 
     -- Page names
     page_streaming = "Stream Konfiguration";
+    page_audio = "Audio Konfiguration";
     page_ethernet = "System Konfiguration";
     page_firmware = "Firmware";
     page_status = "Status";
@@ -87,6 +88,7 @@ label = {
     page_settings = "Einstellungen";
     page_login = "Anmelden";
     tab_streaming = "Stream";
+    tab_audio = "Audio";
     tab_ethernet = "Netzwerk";
     tab_firmware = "Firmware";
     tab_status = "Status";
@@ -181,7 +183,8 @@ label = {
 
     -- Page streaming
     p_st_video = "Video";
-    p_st_audio = "Audio";
+    p_st_audio_board = "Audio (Audioboard)";
+    p_st_audio_emb = "Audio (Videoboard)";
     p_st_connect = "Verbinden mit";
     p_st_media_sel = "Media Selektierung";
     p_st_vid_port = "Video UDP Port";
@@ -203,6 +206,19 @@ label = {
     p_st_unicast = "Unicast";
     p_st_multicast = "Multicast";
     p_osd_time = "OSD Zeit";
+
+    -- Page audio
+    p_aud_card = "Audiokarte: ";
+    p_aud_source_sel = "Audioquelle w&auml;hlen";
+    p_aud_mic = "Mikrofon";
+    p_aud_line_in = "Line-In";
+    p_aud_hpgain = "Lautst&auml;rke Kopfh&ouml;rer (0..100)";
+    p_aud_hpgain_warning = "Laust&auml;rke kann nur im Bereich von 0 bis 100 eingestellt werden";
+    p_aud_linegain = "Lautst&auml;rke Line-In  (0..100)";
+    p_aud_linegain_warning = "Laust&auml;rke kann nur im Bereich von 0 bis 100 eingestellt werden";
+    p_aud_mic_label = "Mikrofon Verst&auml;rkung";
+    p_aud_mic_boost = "+20dB";
+    p_aud_mute = "Stumm";
 
     -- Page reboot
     p_rb_desc = "Die ge&auml;nderte Einstellung wird erst nach einem Neustart des Ger&auml;ts wirksam.<br>Soll das Ger&auml;t neu gestartet werden?<br>";

@@ -33,7 +33,7 @@ int asi_str_report_eth(t_asi* handle)
 
     for (i = 0; i < AUD_STREAM_CNT; i++) {
         asi_get_eth_params(handle->p_asi, i, &eth_params);
-        eth_report_params(&eth_params);
+        eth_report_params(&eth_params, i);
     }
    
     return ERR_ASI_SUCCESS;

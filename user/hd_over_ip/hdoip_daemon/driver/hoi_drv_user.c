@@ -185,23 +185,53 @@ HOI_WRITE(ifmt, HOI_MSG_IFMT);
 HOI_WRITE(ofmt, HOI_MSG_OFMT);
 HOI_WRITE(pfmt, HOI_MSG_PFMT);
 HOI_WRITE(set_mtime, HOI_MSG_SETMTIME);
-HOI_WRITE(set_stime, HOI_MSG_SETSTIME);
 HOI_WRITE(timer, HOI_MSG_TIMER);
 HOI_WRITE(set_led_status, HOI_MSG_LED);
 HOI_WRITE(reset, HOI_MSG_OFF);
 HOI_WRITE(new_audio, HOI_MSG_NEW_AUDIO);
 HOI_WRITE(read_ram, HOI_MSG_DEBUG_READ_RAM);
+HOI_WRITE(stsync, HOI_MSG_STSYNC);
 HOI_WRITE(set_fps_reduction, HOI_MSG_SET_FPS_REDUCTION);
 
+
 HOI_READ(get_mtime, HOI_MSG_GETMTIME);
-HOI_READ(get_stime, HOI_MSG_GETSTIME);
 HOI_READ(get_syncdelay, HOI_MSG_SYNCDELAY);
 HOI_READ(get_fs, HOI_MSG_GET_FS);
 HOI_READ(get_analog_timing, HOI_MSG_GET_ANALOG_TIMING);
-HOI_READ(get_device_id, HOI_MSG_GET_DEV_ID);
+HOI_READ(get_video_device_id, HOI_MSG_GET_VID_DEV_ID);
+HOI_READ(get_audio_device_id, HOI_MSG_GET_AUD_DEV_ID);
 HOI_READ(get_reset_to_default, HOI_MSG_GET_RESET_TO_DEFAULT);
 HOI_READ(get_encrypted_status, HOI_MSG_GET_ENCRYPTED_STATUS);
 HOI_READ(get_active_resolution, HOI_MSG_GET_ACTIVE_RESOLUTION);
+
+//------------------------------------------------------------------------------
+//
+
+int hoi_drv_set_stime(int unsigned slave_nr, uint32_t stime)
+{
+    int ret;
+    t_hoi_msg_stime msg;
+
+    hoi_msg_set_stime_init(&msg);
+    msg.slave_nr = slave_nr;
+    msg.stime = stime;
+    ret = hoi_msg(&msg);
+
+    return ret;
+}
+
+int hoi_drv_get_stime(int unsigned slave_nr, uint32_t *stime)
+{
+    int ret;
+    t_hoi_msg_stime msg;
+
+    hoi_msg_get_stime_init(&msg);
+    msg.slave_nr = slave_nr;
+    ret = hoi_msg(&msg);
+    *stime = msg.stime;
+
+    return ret;
+}
 
 //------------------------------------------------------------------------------
 // capture/show image command
@@ -259,8 +289,41 @@ int hoi_drv_asi(int unsigned stream_nr, struct hdoip_eth_params* eth, struct hdo
     return ret;
 }
 
+int hoi_drv_aic23b_adc(uint32_t enable, uint32_t source, int line_gain, uint32_t mic_boost,
+                      struct hdoip_aud_params* aud)
+{
+    int ret;
+    t_hoi_msg_aic23b_adc msg;
 
-int hoi_drv_aso(int unsigned stream_nr, uint32_t fs, uint32_t width, uint16_t ch_map, uint32_t delay_ms, uint32_t av_delay, uint32_t cfg)
+    hoi_msg_aic23b_adc_init(&msg);
+    msg.enable = enable;
+    msg.source = source;
+    msg.line_gain = line_gain;
+    msg.mic_boost = mic_boost;
+    memcpy(&msg.aud, aud, sizeof(struct hdoip_aud_params));
+    ret = hoi_msg(&msg);
+
+    return ret;
+}
+
+int hoi_drv_aic23b_dac(uint32_t enable, int hp_gain,
+    uint32_t fs, uint32_t width, uint16_t ch_map)
+{
+    int ret;
+    t_hoi_msg_aic23b_dac msg;
+
+    hoi_msg_aic23b_dac_init(&msg);
+    msg.enable = enable;
+    msg.hp_gain = hp_gain;
+    msg.aud.ch_map = ch_map;
+    msg.aud.fs = fs;
+    msg.aud.sample_width = width;
+    ret = hoi_msg(&msg);
+
+    return ret;
+}
+
+int hoi_drv_aso(int unsigned stream_nr, uint32_t fs, uint32_t width, uint16_t ch_map, uint32_t delay_ms, uint32_t av_delay, uint32_t cfg, uint16_t config)
 {
     int ret;
     t_hoi_msg_aso msg;
@@ -268,6 +331,7 @@ int hoi_drv_aso(int unsigned stream_nr, uint32_t fs, uint32_t width, uint16_t ch
     hoi_msg_aso_init(&msg);
     msg.stream_nr = stream_nr;
     msg.cfg = cfg;
+    msg.config = config;
     msg.aud.ch_map = ch_map;
     msg.aud.fs = fs;
     msg.aud.sample_width = width;

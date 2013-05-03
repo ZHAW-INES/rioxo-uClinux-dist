@@ -17,7 +17,9 @@ int asi_drv_start(t_asi* asi, int unsigned stream)
     }
     
     asi_enable(asi->p_asi, stream);
+    asi->settings_changed = 0;
     asi->stream_status[stream] |= ASI_DRV_STREAM_STATUS_ACTIV;
+
     return ERR_ASI_SUCCESS; 
 }
 
@@ -37,6 +39,7 @@ int asi_drv_stop(t_asi* asi, int unsigned stream)
     while(asi_get_status(asi->p_asi, mask) == 0);
 
     asi->stream_status[stream] &= ~ASI_DRV_STREAM_STATUS_ACTIV;
+
     return ERR_ASI_SUCCESS;
 }
 
@@ -55,7 +58,7 @@ int asi_drv_init(t_asi* asi, void* p_asi)
     REPORT(INFO, "+--------------------------------------------------+");
 
     asi->p_asi = p_asi;
-    asi->status = 0;
+    asi->settings_changed = 0;
 
     for (i = 0; i < AUD_STREAM_CNT; i++) {
       asi->stream_status[i] = 0;
@@ -80,8 +83,6 @@ int asi_drv_update(t_asi* asi, int unsigned stream,
     struct hdoip_eth_params* eth_params, struct hdoip_aud_params* aud_params)
 {
     uint32_t err;
-
-    REPORT(INFO, "status : %x", asi->status);
 
     asi_drv_stop(asi, stream);
 
@@ -157,7 +158,7 @@ int asi_drv_set_eth_params(t_asi* asi, int unsigned stream,
 
     /* finish */
     asi->stream_status[stream] |= ASI_DRV_STREAM_STATUS_ETH_PARAMS_SET;
-    eth_report_params(eth_params);
+    eth_report_params(eth_params, stream);
     return ERR_ASI_SUCCESS;
 }
 
@@ -268,46 +269,34 @@ int asi_drv_handler(t_asi* asi, t_queue* event_queue)
 {
     uint32_t fs_counter = asi_get_fs_detect(asi->p_asi, AUD_STREAM_NR_EMBEDDED);
     uint32_t fs;
-    static uint32_t fs_old;
-    static uint32_t ch_map_old;
-    static int settings_changed = 0;
     uint32_t detected_ch_map = asi_get_ch_map_detected(asi->p_asi, AUD_STREAM_NR_EMBEDDED);
-    //for debugging
-    uint32_t active_stream[3] = {0,0,0}, send_request[3] = {0,0,0};
 
     // detect fs change
     fs = count2fs(fs_counter);
-    if (fs != fs_old) {
-      settings_changed = 1;
+    if (fs != asi->fs_old) {
+        asi->settings_changed = 1;
     }
-    fs_old = fs;
+    asi->fs_old = fs;
 
     // detect ch_map change
-    if (detected_ch_map != ch_map_old) {
-        settings_changed = 1;
+    if (detected_ch_map != asi->ch_map_old) {
+        asi->settings_changed = 1;
     }
-    ch_map_old = detected_ch_map;
+    asi->ch_map_old = detected_ch_map;
 
     // To prevent that an audio event appears immediately after another audio event, wait some time  before send an event to deamon.
     // That occur on hdmi source plug in, than changes fs and ch-count almost at same time.
-    if (settings_changed >= 30) {
-        settings_changed = 0;
+    if (asi->settings_changed >= 30) {
+        asi->settings_changed = 0;
         asi->detected_ch_map[AUD_STREAM_NR_EMBEDDED] = detected_ch_map;
         asi->detected_fs[AUD_STREAM_NR_EMBEDDED] = fs;
         queue_put(event_queue, E_ASI_NEW_FS);
         // this event produces a new connection setup
         queue_put(event_queue, E_ADV7441A_NO_AUDIO);
     }
-    else if (settings_changed) {
-      settings_changed++;
+    else if (asi->settings_changed) {
+      asi->settings_changed++;
     }
-
-    send_request[2]  = send_request[1];
-    send_request[1]  = send_request[0];
-    send_request[0]  = asi_get_send_request(asi->p_asi);
-    active_stream[2] = active_stream[1];
-    active_stream[1] = active_stream[0];
-    active_stream[0] = asi_get_active_stream(asi->p_asi);
     
     return ERR_ASI_SUCCESS;
 }

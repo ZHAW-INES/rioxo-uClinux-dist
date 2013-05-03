@@ -132,8 +132,8 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     }
 
     // set slave timer when not already synced
-    if (!hdoipd_rsc(RSC_SYNC)) {
-        hoi_drv_set_stime(m->format.rtptime+PROCESSING_DELAY_CORRECTION-21000); //TODO: set slave timer correctly
+    if (!hdoipd_rsc(RSC_VIDEO_SYNC)) {
+        hoi_drv_set_stime(0/*slave_nr*/, m->format.rtptime+PROCESSING_DELAY_CORRECTION-21000);
     }
 
     if (m->format.compress) {
@@ -161,7 +161,7 @@ int vrb_video_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UN
     }
 
     struct in_addr a1; a1.s_addr = vrb.remote.address;
-    osd_printf("Streaming%sVideo %d x %d from %s\n", stream_type, m->timing.width, m->timing.height, inet_ntoa(a1));
+    osd_printf("Streaming%svideo %d x %d from %s\n", stream_type, m->timing.width, m->timing.height, inet_ntoa(a1));
 
     hoi_drv_set_led_status(SDI_OUT_NO_AUDIO);
 

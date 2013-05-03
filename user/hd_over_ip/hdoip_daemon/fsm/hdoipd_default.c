@@ -25,7 +25,11 @@ void hdoipd_set_default()
 
     reg_set("auto-stream", "true");
     reg_set("mode-start", "none");
-    reg_set("mode-media", "video audio");
+    reg_set("mode-media", "video audio_emb");
+    reg_set("audio-source", "linein");
+    reg_set("audio-hpgain", "50");
+    reg_set("audio-linegain", "50");
+    reg_set("audio-mic-boost","0");
     reg_set("mode-sync", "streamsync");
     reg_set("sync-target", "video");
     reg_set("remote-uri", "rscp://192.168.1.201");

@@ -31,8 +31,10 @@
 
 #include "vrb_video.h"
 #include "vtb_video.h"
-#include "vrb_audio.h"
-#include "vtb_audio.h"
+#include "vrb_audio_emb.h"
+#include "vrb_audio_board.h"
+#include "vtb_audio_emb.h"
+#include "vtb_audio_board.h"
 #include "box_sys.h"
 #include "usb_media.h"
 
@@ -51,7 +53,7 @@ const char* statestr(int state)
 
 const char* vtbstatestr(int state)
 {
-    static char *tmp = "(v:idle|a:idle)";
+    static char *tmp = "                          ";//"(v:idle|a_b:idle|a_e:idle)";
     char *p = tmp;
     if (state == VTB_OFF) {
         p += sprintf(p, "off");
@@ -60,9 +62,13 @@ const char* vtbstatestr(int state)
         if (state & VTB_VID_IDLE) p += sprintf(p, "idle");
         else if (state & VTB_VIDEO) p += sprintf(p, "on");
         else p += sprintf(p, "off");
-        p += sprintf(p, "|a:");
-        if (state & VTB_AUD_IDLE) p += sprintf(p, "idle");
-        else if (state & VTB_AUDIO) p += sprintf(p, "on");
+        p += sprintf(p, "|a_b:");
+        if (state & VTB_AUD_BOARD_IDLE) p += sprintf(p, "idle");
+        else if (state & VTB_AUDIO_BOARD) p += sprintf(p, "on");
+        else p += sprintf(p, "off");
+        p += sprintf(p, "|a_e:");
+        if (state & VTB_AUD_EMB_IDLE) p += sprintf(p, "idle");
+        else if (state & VTB_AUDIO_EMB) p += sprintf(p, "on");
         else p += sprintf(p, "off");
         p += sprintf(p, ")");
     }
@@ -74,7 +80,8 @@ const char* vrbstatestr(int state)
     switch (state) {
         case VRB_OFF: return "off";
         case VRB_IDLE: return "idle";
-        case VRB_AUDIO: return "audio";
+        case VRB_AUDIO_EMB: return "audio0";
+        case VRB_AUDIO_BOARD: return "audio1;";
     }
     return "unknown";
 }
@@ -83,16 +90,16 @@ bool hdoipd_clr_rsc(int state)
 {
     bool tmp = hdoipd.rsc_state & state;
     hdoipd.rsc_state &= ~state;
-    // TODO: when clearing aud/vid sync but an other stream is still running -> switch sync
-    if ((state & RSC_VIDEO_SYNC) && hdoipd_rsc(RSC_AUDIO_OUT)) {
+    // clear video sync but audio embedded is still running -> switch sync
+    if ((state & RSC_VIDEO_SYNC) && hdoipd_rsc(RSC_AUDIO_EMB_OUT)) {
         if (reg_test("mode-sync", "streamsync")) {
-            // TODO: switch sync to
-            hdoipd_set_rsc(RSC_AUDIO_SYNC);
+            // switch sync to audio done in vrb audio
+            hdoipd_set_rsc(RSC_AUDIO_EMB_SYNC);
         }
     }
-    if ((state & RSC_AUDIO_SYNC) && hdoipd_rsc(RSC_VIDEO_OUT) && !hdoipd_rsc(RSC_OSD)) {
+    if ((state & RSC_AUDIO_EMB_SYNC) && hdoipd_rsc(RSC_VIDEO_OUT) && !hdoipd_rsc(RSC_OSD)) {
         if (reg_test("mode-sync", "streamsync")) {
-            // TODO: switch sync to
+            // switch sync to video done in vrb video
             hdoipd_set_rsc(RSC_VIDEO_SYNC);
         }
     }
@@ -120,7 +127,8 @@ bool hdoipd_set_vtb_state(int vtb_state)
 {
     if (hdoipd_state(HOID_VTB|HOID_VRB)) {
         if (vtb_state & VTB_VID_MASK) hdoipd.vtb_state = (hdoipd.vtb_state & ~VTB_VID_MASK) | vtb_state;
-        else if (vtb_state & VTB_AUD_MASK) hdoipd.vtb_state = (hdoipd.vtb_state & ~VTB_AUD_MASK) | vtb_state;
+        else if (vtb_state & VTB_AUD_BOARD_MASK) hdoipd.vtb_state = (hdoipd.vtb_state & ~VTB_AUD_BOARD_MASK) | vtb_state;
+        else if (vtb_state & VTB_AUD_EMB_MASK) hdoipd.vtb_state = (hdoipd.vtb_state & ~VTB_AUD_EMB_MASK) | vtb_state;
         else hdoipd.vtb_state = vtb_state;
         hdoipd.vtb_state &= VTB_VALID;
         if (!hdoipd.vtb_state) hdoipd.vtb_state = VTB_OFF;
@@ -254,9 +262,11 @@ void hdoipd_goto_vtb()
                 report(CHANGE "goto vtb");
 
                 // set output uses slave timer
-                hoi_drv_timer(DRV_TMR_OUT);
+                hoi_drv_timer(DRV_TMR_CFG_T1_MASTER | DRV_TMR_CFG_T2_SLAVE_0 |
+                              DRV_TMR_CFG_T3_MASTER | DRV_TMR_CFG_T4_MASTER);
 
-                rscp_listener_add_media(&hdoipd.listener, &vtb_audio);
+                rscp_listener_add_media(&hdoipd.listener, &vtb_audio_board);
+                rscp_listener_add_media(&hdoipd.listener, &vtb_audio_emb);
                 rscp_listener_add_media(&hdoipd.listener, &vtb_video);
                 rscp_listener_add_media(&hdoipd.listener, &box_sys);
                 rscp_listener_add_media(&hdoipd.listener, &usb_media);
@@ -284,12 +294,14 @@ int hdoipd_goto_vrb()
                 report(CHANGE "goto vrb");
 
                 // set output uses slave timer
-                hoi_drv_timer(DRV_TMR_OUT);
+                hoi_drv_timer(DRV_TMR_CFG_T1_MASTER | DRV_TMR_CFG_T2_SLAVE_0 |
+                              DRV_TMR_CFG_T3_SLAVE_1 | DRV_TMR_CFG_T4_SLAVE_1);
 
                 rscp_listener_add_media(&hdoipd.listener, &box_sys);
                 rscp_listener_add_media(&hdoipd.listener, &usb_media);
 
-                hdoipd_set_state(HOID_VRB);
+                if(hdoipd.auto_stream) hdoipd_set_state(HOID_VRB);
+
                 // register remote for "hello"
                 //box_sys_set_remote(reg_get("remote-uri"));
                 // first thing to try is setup a new connection based on registry
@@ -330,6 +342,7 @@ int hdoipd_vrb_setup(t_rscp_media* media, void UNUSED *d)
 
     // test if we are ready to start media
     if (rscp_media_ready(media) != RSCP_SUCCESS) {
+        //if no SINK available
         report(ERROR "hdoipd_vrb_setup() media-client not ready");
         return -1;
     }
@@ -407,7 +420,7 @@ int hdoipd_start_vrb_cb(t_rscp_media* media, void* d)
     }
 
     // detect connected video card
-    hoi_drv_get_device_id(&dev_id);
+    hoi_drv_get_video_device_id(&dev_id);
 
     // If SDI there is no event if a source is connected
     if (dev_id == BDT_ID_SDI8_BOARD) {
@@ -495,7 +508,11 @@ void hdoipd_fsm_vrb(uint32_t event)
             // plug in the cable is a start point for the VRB to
             // work when video or embedded audio is desired ...
             if(hdoipd.auto_stream) {
-                alive_check_start_vrb_alive();
+                if (hdoipd_tstate(VTB_AUDIO_BOARD)){
+                    hdoipd_set_task_start_vrb();
+                }
+                else
+                    alive_check_start_vrb_alive();
             }
         break;
         case E_ADV9889_CABLE_OFF:
@@ -534,8 +551,9 @@ void hdoipd_fsm_vtb(uint32_t event)
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
         break;
         case E_ADV7441A_NC:
-            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
+            //shut down audio before video to prevent problems with hdcp 
             rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_OFF);
+            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
         break;
         case E_ADV7441A_NEW_HDMI_RES:
             rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
@@ -704,7 +722,7 @@ void hdoipd_event(uint32_t event)
             if (!hdoipd_rsc(RSC_VIDEO_IN)) { 
                 hdoipd_set_rsc(RSC_VIDEO_IN);
                 hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
-                hdoipd_set_rsc(RSC_AUDIO0_IN);
+                hdoipd_set_rsc(RSC_AUDIO_EMB_IN);
                 hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
                 hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
                 show_local_ip_address_on_osd();
@@ -713,7 +731,7 @@ void hdoipd_event(uint32_t event)
         case E_ADV7441A_NEW_VGA_RES:
             hdoipd_set_rsc(RSC_VIDEO_IN);
             hdoipd_set_rsc(RSC_VIDEO_IN_VGA);
-            hdoipd_clr_rsc(RSC_AUDIO0_IN);
+            hdoipd_clr_rsc(RSC_AUDIO_EMB_IN);
             hoi_drv_get_analog_timing(&buff);
             if (buff != 7) {
                 hoi_drv_set_led_status(DVI_IN_CONNECTED_NO_AUDIO);
@@ -726,7 +744,7 @@ void hdoipd_event(uint32_t event)
         break;
         case E_ADV7441A_NC:
             hdoipd_clr_rsc(RSC_VIDEO_IN);
-            hdoipd_clr_rsc(RSC_AUDIO0_IN);
+            hdoipd_clr_rsc(RSC_AUDIO_EMB_IN);
             if (hdoipd_state(HOID_VTB)) {
                 hoi_drv_set_led_status(DVI_IN_DISCONNECTED_VTB);
                 hoi_drv_hdcp_adv9889dis();
@@ -794,7 +812,7 @@ void hdoipd_event(uint32_t event)
         case E_GS2971_VIDEO_ON:
             hdoipd_set_rsc(RSC_VIDEO_IN);
             hdoipd_set_rsc(RSC_VIDEO_IN_SDI);
-            hdoipd_set_rsc(RSC_AUDIO0_IN);
+            hdoipd_set_rsc(RSC_AUDIO_EMB_IN);
             s = reg_get("mode-start"); // hdoipd_state(HOID_VTB) is not set yet, when sdi input is active on startup
             if (strcmp(s, "vtb") == 0) {
                 hoi_drv_set_led_status(SDI_IN_CONNECTED_WITH_AUDIO);
@@ -803,7 +821,7 @@ void hdoipd_event(uint32_t event)
         case E_GS2971_VIDEO_OFF:
             hdoipd_clr_rsc(RSC_VIDEO_IN);
             hdoipd_clr_rsc(RSC_VIDEO_IN_SDI);
-            hdoipd_clr_rsc(RSC_AUDIO0_IN);
+            hdoipd_clr_rsc(RSC_AUDIO_EMB_IN);
             if (hdoipd_state(HOID_VTB)) {
                 hoi_drv_set_led_status(SDI_IN_DISCONNECTED);
             }
@@ -843,13 +861,21 @@ void hdoipd_event(uint32_t event)
                 hoi_drv_new_audio(buff);
             }
         break;
-        case E_ASO_SIZE_ERROR:
+        case E_ASO_EMB_SIZE_ERROR:
         break;
-        case E_ASO_FIFO_EMPTY:
+        case E_ASO_BOARD_SIZE_ERROR:
         break;
-        case E_ASO_FIFO_FULL:
+        case E_ASO_EMB_FIFO_EMPTY:
         break;
-        case E_ASO_RAM_FULL:
+        case E_ASO_BOARD_FIFO_EMPTY:
+        break;
+        case E_ASO_EMB_FIFO_FULL:
+        break;
+        case E_ASO_BOARD_FIFO_FULL:
+        break;
+        case E_ASO_EMB_RAM_FULL:
+        break;
+        case E_ASO_BOARD_RAM_FULL:
         break;
 
         case E_VIO_JD0ENC_OOS:
@@ -940,6 +966,7 @@ bool hdoipd_init(int drv)
     pthread_mutexattr_t attr;
 
     hdoipd.drv = drv;
+    hdoipd.drivers = 0;
     hdoipd.set_listener = 0;
     hdoipd.get_listener = 0;
     hdoipd.verify = 0;
@@ -985,17 +1012,34 @@ bool hdoipd_init(int drv)
     hdoipd.ethernet_init = false;
 
     // detect connected video card
-    hoi_drv_get_device_id(&dev_id);
+    hoi_drv_get_video_device_id(&dev_id);
 
     switch (dev_id) {
-        case BDT_ID_HDMI_BOARD: hdoipd.drivers = DRV_ADV9889 | DRV_ADV7441;   
+        case BDT_ID_HDMI_BOARD: hdoipd.drivers |= DRV_ADV9889 | DRV_ADV7441;
                                 break;
-        case BDT_ID_SDI8_BOARD: hdoipd.drivers = DRV_GS2971  | DRV_GS2972;    
+        case BDT_ID_SDI8_BOARD: hdoipd.drivers |= DRV_GS2971  | DRV_GS2972;
                                 break;
         default:                report("Video card detection failed");
     }
 
-    // activate red LED on used video-board connectors 
+	// detect connected audio card
+    hoi_drv_get_audio_device_id(&dev_id);
+
+    if(dev_id == BDT_ID_ANAUDIO_BOARD){
+        report("Audio card detected");
+        hdoipd.drivers |= DRV_AIC23B_ADC | DRV_AIC23B_DAC;
+        hdoipd_set_rsc(RSC_AUDIO_BOARD_IN);
+        hdoipd_set_rsc(RSC_AUDIO_BOARD_OUT);
+        rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN1_ON);
+    }
+    else{
+        report("No audio card detected");
+        hdoipd_clr_rsc(RSC_AUDIO_BOARD_IN);
+        hdoipd_clr_rsc(RSC_AUDIO_BOARD_OUT);
+        rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN1_OFF);
+    }
+
+// activate red LED on used video-board connectors 
     s = reg_get("mode-start");
     if (strcmp(s, "vtb") == 0) {
         hoi_drv_set_led_status(CONFIGURE_VTB);

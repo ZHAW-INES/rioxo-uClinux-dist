@@ -218,7 +218,7 @@ function show(t)
             hdoip.html.FormRadio(REG_MODE_START_LABEL, t_sys_mode, 3, t.sys_mode)                                   hdoip.html.TableInsElement(1);
 
             hdoip.html.Text(label.p_eth_led);                                                                       hdoip.html.TableInsElement(1);
-            hdoip.html.FormCheckbox("identification", 1, "", t.identification)                                      hdoip.html.TableInsElement(2);
+            hdoip.html.FormCheckbox("identification", 1, "", t.identification,0)                                    hdoip.html.TableInsElement(2);
 
             hdoip.html.TableBottom()
         

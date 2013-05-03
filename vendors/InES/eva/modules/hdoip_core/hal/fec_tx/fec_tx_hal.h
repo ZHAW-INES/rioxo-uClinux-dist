@@ -88,13 +88,13 @@
 //audio dst ip
 #define fec_tx_write_aud_dst_ip(base, data)                         HOI_WR32((base), 96, swap32((data)))
 //audio src port
-#define fec_tx_write_aud_src_port(base, data)                       HOI_WR32((base), 100, swap16((data)))
+#define fec_tx_write_aud_emb_src_port(base, data)                   HOI_WR32((base), 100, swap16((data)))
 //audio dst port
-#define fec_tx_write_aud_dst_port(base, data)                       HOI_WR32((base), 104, swap16((data)))
+#define fec_tx_write_aud_emb_dst_port(base, data)                   HOI_WR32((base), 104, swap16((data)))
 //audio board src port
-#define fec_tx_write_aud_board_src_port(base, data)                 HOI_WR32((base), 108, (data))
+#define fec_tx_write_aud_board_src_port(base, data)                 HOI_WR32((base), 108, swap16((data)))
 //audio board dst port
-#define fec_tx_write_aud_board_dst_port(base, data)                 HOI_WR32((base), 112, (data))
+#define fec_tx_write_aud_board_dst_port(base, data)                 HOI_WR32((base), 112, swap16((data)))
 //ssrc embedded audio
 #define fec_tx_write_aud_emb_ssrc(base, data)                       HOI_WR32((base), 116, (data))
 //ssrc interface board audio

@@ -20,7 +20,8 @@
 #include "vrb_video.h"
 #include "update.h"
 #include "edid.h"
-#include "vrb_audio.h"
+#include "vrb_audio_emb.h"
+#include "vrb_audio_board.h"
 #include "hdoipd_task.h"
 
 void hdoipd_cmd_canvas(t_hoic_canvas* cmd)
@@ -132,13 +133,14 @@ void hdoipd_cmd_vrb_setup(t_hoic_load* cmd)
 void hdoipd_cmd_play(t_hoic_cmd UNUSED *cmd)
 {
     if(!hdoipd_goto_vrb()) {
+        hdoipd_set_state(HOID_VRB);
         alive_check_start_vrb_alive();
     }
 }
 
 void hdoipd_cmd_pause(t_hoic_cmd UNUSED *cmd)
 {
-    t_rscp_media* media = &vrb_audio;           // audio only for debug purposes
+    t_rscp_media* media = &vrb_audio_board;           // audio only for debug purposes
     t_rscp_client *client = media->creator;
     u_rscp_header buf;
     int ret;
@@ -158,7 +160,7 @@ void hdoipd_cmd_pause(t_hoic_cmd UNUSED *cmd)
 
 void hdoipd_cmd_pause_play(t_hoic_cmd UNUSED *cmd)
 {
-    t_rscp_media* media = &vrb_audio;           // audio only for debug purposes
+    t_rscp_media* media = &vrb_audio_board;           // audio only for debug purposes
     t_rscp_client *client = media->creator;
     t_rscp_rtp_format fmt;
     char *s;

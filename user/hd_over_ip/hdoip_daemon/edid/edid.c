@@ -27,7 +27,7 @@ void edid_write_function(t_edid* edid, char* string)
     edid_write_file(edid, EDID_PATH_VIDEO_IN);
     if(!hdoipd_rsc(RSC_VIDEO_IN_VGA)) {
         hdoipd_clr_rsc(RSC_VIDEO_IN);
-        hdoipd_clr_rsc(RSC_AUDIO0_IN);
+        hdoipd_clr_rsc(RSC_AUDIO_EMB_IN);
     }
     hoi_drv_wredid(edid);
 }

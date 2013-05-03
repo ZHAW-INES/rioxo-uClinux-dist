@@ -19,6 +19,7 @@
 #include "gs2971_drv.h"
 #include "gs2972_drv.h"
 #include "adv212_drv.h"
+#include "tlv320aic23b_drv.h"
 #include "led_drv.h"
 #include "eti_drv.h"
 #include "eto_drv.h"
@@ -95,10 +96,13 @@ typedef struct {
     t_adv7441a          adv7441a;
     t_gs2971            gs2971;
     t_gs2972            gs2972;
-    t_sync_means        sync;
+    t_sync_means        sync_slave_0;
+    t_sync_means        sync_slave_1;
     t_bdt               bdt;
     t_si598             si598;
     t_fec_rx            fec_rx;
+    t_tlv320aic23b      aic23b_rx;
+    t_tlv320aic23b      aic23b_tx;
 
     t_queue             *event;
     wait_queue_head_t   eq;

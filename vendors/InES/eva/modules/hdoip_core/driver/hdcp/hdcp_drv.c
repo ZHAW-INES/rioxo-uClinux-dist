@@ -16,7 +16,7 @@
 int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv9889* h_adv9889, t_vsi* h_vsi ,t_vso* h_vso, t_asi* h_asi, t_aso* h_aso, uint32_t* h_drivers, t_queue* event_queue)
 {
 	//get aes status
-	uint32_t audio_enc_en_eto, video_enc_en_eto, audio_enc_en_eti, video_enc_en_eti;
+    uint32_t audio_enc_en_eto, video_enc_en_eto, audio_enc_en_eti, video_enc_en_eti;
 	eto_drv_aes_stat(h_eto, &audio_enc_en_eto, &video_enc_en_eto);
 	eti_drv_aes_stat(h_eti, &audio_enc_en_eti, &video_enc_en_eti);
 

@@ -12,7 +12,7 @@
  *
  */
 
-#define ETI_ADDR_SPACE              168
+#define ETI_ADDR_SPACE              212
 
 #define ETI_CONFIG_SET_REG          0
 #define ETI_CONFIG_CLR_REG          4

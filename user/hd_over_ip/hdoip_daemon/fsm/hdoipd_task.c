@@ -15,7 +15,8 @@
 #include "testimage.h"
 
 #include "vrb_video.h"
-#include "vrb_audio.h"
+#include "vrb_audio_emb.h"
+#include "vrb_audio_board.h"
 
 // local buffer
 static char buf[256];
@@ -151,14 +152,16 @@ void task_get_vrb_state(char** p)
             switch (hdoipd.vrb_state) {
                 case VRB_OFF: *p = "off (remote state unknown)"; break;
                 case VRB_IDLE: *p = "no audio backchannel"; break;
-                case VRB_AUDIO: *p = "audio backchannel active"; break;
+                case VRB_AUDIO_EMB: *p = "audio embedded backchannel active"; break;
+                case VRB_AUDIO_BOARD: *p = "audio board backchannel active"; break;
             }
         break;
         case HOID_VRB:
             switch (hdoipd.vrb_state) {
                 case VRB_OFF: *p = "idle"; break;
                 case VRB_IDLE: *p = "idle"; break;
-                case VRB_AUDIO: *p = "sending audio back"; break;
+                case VRB_AUDIO_EMB: *p = "sending audio embedded back"; break;
+                case VRB_AUDIO_BOARD: *p = "sending audio board back"; break;
             }
         break;
     }
@@ -172,10 +175,12 @@ void task_get_rsc_state(char** p)
     if (hdoipd.rsc_state & RSC_AUDIO_IN) tmp += sprintf(tmp, "Audio-In ");
     if (hdoipd.rsc_state & RSC_VIDEO_SINK) tmp += sprintf(tmp, "Video-Sink ");
     if (hdoipd.rsc_state & RSC_VIDEO_OUT) tmp += sprintf(tmp, "Video-Out ");
-    if (hdoipd.rsc_state & RSC_AUDIO_OUT) tmp += sprintf(tmp, "Audio-Out ");
+    if (hdoipd.rsc_state & RSC_AUDIO_EMB_OUT) tmp += sprintf(tmp, "Audio0-Out ");
+    if (hdoipd.rsc_state & RSC_AUDIO_BOARD_OUT) tmp += sprintf(tmp, "Audio1-Out ");
     if (hdoipd.rsc_state & RSC_OSD) tmp += sprintf(tmp, "OSD ");
     if (hdoipd.rsc_state & RSC_VIDEO_SYNC) tmp += sprintf(tmp, "Sync-Video ");
-    if (hdoipd.rsc_state & RSC_AUDIO_SYNC) tmp += sprintf(tmp, "Sync-Audio ");
+    if (hdoipd.rsc_state & RSC_AUDIO_EMB_SYNC) tmp += sprintf(tmp, "Sync-Audio video board");
+    if (hdoipd.rsc_state & RSC_AUDIO_IF_BOARD_SYNC) tmp += sprintf(tmp, "Sync-Audio audio board");
 
     if (tmp!=buf) tmp--;
     *tmp = 0;
@@ -301,10 +306,11 @@ void task_get_system_state(char** p)
     else tmp += sprintf(tmp, "Box is Idle. ");
 
     if (hdoipd_state(HOID_VTB|HOID_VRB)) {
-        int m = hdoipd_tstate(VTB_VIDEO|VTB_AUDIO);
-        if (m==(VTB_VIDEO|VTB_AUDIO)) tmp += sprintf(tmp, "Streaming Video & Audio. ");
+        int m = hdoipd_tstate(VTB_VIDEO|VTB_AUDIO_BOARD|VTB_AUDIO_EMB);
+        if (m==(VTB_VIDEO|VTB_AUDIO_BOARD|VTB_AUDIO_EMB)) tmp += sprintf(tmp, "Streaming Video & all Audio. ");
         if (m==VTB_VIDEO) tmp += sprintf(tmp, "Streaming Video. ");
-        if (m==VTB_AUDIO) tmp += sprintf(tmp, "Streaming Audio. ");
+        if (m==VTB_AUDIO_BOARD) tmp += sprintf(tmp, "Streaming Audio from Board. ");
+        if (m==VTB_AUDIO_EMB) tmp += sprintf(tmp, "Streaming Audio from Embedded. ");
     }
 
     if (hdoipd.update) tmp += sprintf(tmp, "Device update pending. Restart box to continue");
@@ -550,10 +556,22 @@ void task_get_vrb_is_playing(char** p)
                             break;
     }
 
-    switch(vrb_audio.state) {
+    switch(vrb_audio_board.state) {
         case RSCP_PLAYING:  *p = "true";
                             break;
     }
+}
+
+void task_get_aud_board(char** p){
+    // detect connected audio card
+    uint32_t dev_id;
+    hoi_drv_get_audio_device_id(&dev_id);
+	if(dev_id == BDT_ID_ANAUDIO_BOARD){
+		*p = "AIC23B";
+	}
+	else{
+		*p = "none";
+	}
 }
 
 int task_ready()
@@ -679,6 +697,84 @@ void task_set_mode_start(char* p)
 void task_set_mode_media(char* p)
 {
 	update_vector |= HOID_TSK_EXEC_RESTART_VRB;
+}
+
+void task_set_audio_hpgain(char* p){
+    struct hdoip_aud_params aud;
+    int volume;
+ 
+    uint32_t fs = AUD_FS;
+    uint32_t sample_width = AUD_SAMPLE_WIDTH;
+    uint16_t ch_map = AUD_CH_MAP; // stereo
+
+    volume = atoi(reg_get("audio-hpgain"));
+    volume = volume*79/100 - 73;
+
+    hoi_drv_aic23b_dac(AIC23B_ENABLE, volume, fs, sample_width, ch_map);
+
+}
+
+void task_set_audio_linegain(char* p){
+    struct hdoip_aud_params aud;
+    int volume;
+    int mic_boost, source;
+
+    aud.fs = AUD_FS;
+    aud.sample_width = AUD_SAMPLE_WIDTH;
+    aud.ch_map = AUD_CH_MAP; // stereo
+
+    volume = atoi(reg_get("audio-linegain"));
+    volume = volume*31/100;
+    
+    if(reg_test("audio-mic-boost","0")) mic_boost = AIC23B_ADC_MICBOOST_0DB;    //just to choose between 0 and 20dB mic-boost
+    else                                mic_boost = AIC23B_ADC_MICBOOST_20DB;
+
+    if(reg_test("audio-source","mic"))  source = AIC23B_ADC_SRC_MIC;
+    else                                source = AIC23B_ADC_SRC_LINE;
+
+    hoi_drv_aic23b_adc(AIC23B_ENABLE, source, volume, mic_boost, &aud);
+}
+
+void task_set_audio_mic_boost(char* p){
+    struct hdoip_aud_params aud;
+    int volume;
+    int mic_boost;
+    int source;
+    aud.fs = AUD_FS;
+    aud.sample_width = AUD_SAMPLE_WIDTH;
+    aud.ch_map = AUD_CH_MAP; // stereo
+    
+    volume = atoi(reg_get("audio-linegain"));
+    volume = volume*31/100;
+
+    if(reg_test("audio-mic-boost","0")) mic_boost = AIC23B_ADC_MICBOOST_0DB;    //just to choose between 0 and 20dB mic-boost
+    else                                mic_boost = AIC23B_ADC_MICBOOST_20DB;
+
+    if(reg_test("audio-source","mic"))  source = AIC23B_ADC_SRC_MIC;
+    else                                source = AIC23B_ADC_SRC_LINE;
+
+    hoi_drv_aic23b_adc(AIC23B_ENABLE, source, volume, mic_boost, &aud);
+}
+
+void task_set_audio_source(char* p){
+    struct hdoip_aud_params aud;
+    int volume;
+    int mic_boost;
+    int source;
+    aud.fs = AUD_FS;
+    aud.sample_width = AUD_SAMPLE_WIDTH;
+    aud.ch_map = AUD_CH_MAP; // stereo
+
+    volume = atoi(reg_get("audio-linegain"));
+    volume = volume*31/100;
+
+    if(reg_test("audio-mic-boost","0")) mic_boost = AIC23B_ADC_MICBOOST_0DB;    //just to choose between 0 and 20dB mic-boost
+    else                                mic_boost = AIC23B_ADC_MICBOOST_20DB;
+    
+    if(reg_test("audio-source","mic"))  source = AIC23B_ADC_SRC_MIC;
+    else                                source = AIC23B_ADC_SRC_LINE;
+
+    hoi_drv_aic23b_adc(AIC23B_ENABLE, source, volume, mic_boost, &aud);
 }
 
 void task_set_amx_update(char* p)
@@ -816,6 +912,7 @@ void hdoipd_register_task()
     get_listener("stream-state", task_get_rscp_state);
     get_listener("multicast", task_get_multicast_client);
     get_listener("vrb_is_playing", task_get_vrb_is_playing);
+    get_listener("audio-board", task_get_aud_board);
 
     // set-listener are called when a new value is written to the register
     // if the same value is written as already stored the listener isn't called
@@ -834,6 +931,10 @@ void hdoipd_register_task()
     set_listener("av-delay", task_set_av_delay);
     set_listener("mode-start", task_set_mode_start);
     set_listener("mode-media", task_set_mode_media);
+    set_listener("audio-linegain", task_set_audio_linegain);
+    set_listener("audio-hpgain", task_set_audio_hpgain);
+    set_listener("audio-mic-boost", task_set_audio_mic_boost);
+    set_listener("audio-source", task_set_audio_source);
     set_listener("remote-uri", task_set_remote);
     set_listener("hello-uri", task_set_hello);
     set_listener("auto-stream", task_set_auto_stream);

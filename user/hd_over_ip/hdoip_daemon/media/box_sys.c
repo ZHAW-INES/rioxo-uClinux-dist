@@ -26,7 +26,7 @@ int box_sys_hello(t_rscp_media UNUSED *media, intptr_t UNUSED m, t_rscp_connecti
         // new connection = new hdcp-key exchange
         hdoipd.hdcp.ske_executed = 0;
 
-        if(hdoipd.auto_stream) {
+        if(hdoipd.auto_stream || hdoipd_state(HOID_VRB)) {
             hdoipd_set_task_start_vrb();
         }
     }

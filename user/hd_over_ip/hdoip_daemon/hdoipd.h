@@ -31,6 +31,10 @@
 #define EDID_PATH_VIDEO_IN          "/tmp/edid_vid_in"
 #define EDID_PREAMBLE               "/tmp/edid_"
 
+#define AUD_FS                      48000
+#define AUD_SAMPLE_WIDTH            16
+#define AUD_CH_MAP                  0x0003
+
 typedef void (f_task)(void* value);
 
 // state of box
@@ -45,25 +49,30 @@ enum {
 
 // upstream state for video and audio
 enum {
-    VTB_OFF         = 0x01,			// no upstream
-    VTB_VID_IDLE    = 0x02,			// video configured but not active
-    VTB_AUD_IDLE    = 0x04,			// audio configured but not active
-    VTB_VIDEO       = 0x08,         // video active
-    VTB_AUDIO       = 0x10,         // audio active
-    VTB_VID_OFF     = 0x20,			// goto video off (remove idle & active bit)
-    VTB_AUD_OFF     = 0x40,			// goto audio off (remove idle & active bit)
-    VTB_VID_MASK    = 0x2a,
-    VTB_AUD_MASK    = 0x54,
-    VTB_VALID       = 0x1f,
-    VTB_ACTIVE      = 0x1e
+    VTB_OFF             = 0x0001,			// no upstream
+    VTB_VID_IDLE        = 0x0002,			// video configured but not active
+    VTB_AUD_BOARD_IDLE  = 0x0004,			// audio board configured but not active
+    VTB_AUD_EMB_IDLE    = 0x0008,           // audio emb configured but not active
+    VTB_VIDEO           = 0x0010,           // video active
+    VTB_AUDIO_BOARD     = 0x0020,           // audio board active
+    VTB_AUDIO_EMB       = 0x0040,           // audio emb active
+    VTB_VID_OFF         = 0x0100,			// goto video off (remove idle & active bit)
+    VTB_AUD_BOARD_OFF   = 0x0200,			// goto audio board off (remove idle & active bit)
+    VTB_AUD_EMB_OFF     = 0x0400,			// goto audio emb off (remove idle & active bit)
+    VTB_VID_MASK        = 0x0112,
+    VTB_AUD_BOARD_MASK  = 0x0224,
+    VTB_AUD_EMB_MASK    = 0x0448,
+    VTB_VALID           = 0x00ff,         // all active but off
+    VTB_ACTIVE          = 0x00fe          // all active
 };
 
 // downstream state for audio backchannel
 enum {
     VRB_OFF         = 0x01,
     VRB_IDLE        = 0x02,         // not streaming
-    VRB_AUDIO       = 0x04,         // streaming audio back
-    VRB_AUD_MASK    = 0x06
+    VRB_AUDIO_EMB   = 0x04,         // streaming audio back to video card
+    VRB_AUDIO_BOARD = 0x08,         // streaming audio back to audio card
+    VRB_AUD_MASK    = 0x0F
 };
 
 // hdcp enabled / disabled in HW
@@ -92,21 +101,23 @@ enum {
 
 // what is
 enum {
-    RSC_AUDIO0_IN   = 0x000001,     // active audio input (from video board)
-    RSC_AUDIO1_IN   = 0x000002,     // active audio input (from audio board)
-    RSC_AUDIO_IN    = 0x000003,     // active audio input
+    RSC_AUDIO_EMB_IN = 0x000001,     // active audio input (from video board)
+    RSC_AUDIO_BOARD_IN = 0x000002,     // active audio input (from audio board)    (audio board detected (test if source on not possible))
+    RSC_AUDIO_IN    = 0x000003,     // active audio input (not used anymore)
     RSC_VIDEO_IN    = 0x000010,     // active video input
     RSC_VIDEO_IN_HDCP=0x000020,	    // HDCP required
     RSC_VIDEO_IN_VGA =0x000040,     // active VGA input
-    RSC_VIDEO_IN_SDI =0x000080,		// active SDI input
+    RSC_VIDEO_IN_SDI =0x000080,	    // active SDI input
     RSC_VIDEO_SINK  = 0x000100,     // a video sink is connected
     RSC_ETH_LINK    = 0x000200,     // a ethernet link is on
-    RSC_AUDIO_OUT   = 0x001000,     // active audio output
-    RSC_VIDEO_OUT   = 0x002000,     // active video output
-    RSC_OSD         = 0x004000,     // osd output is active
+    RSC_AUDIO_EMB_OUT = 0x001000,   // active audio output (to video board)
+    RSC_AUDIO_BOARD_OUT = 0x002000, // active audio output (to audio board)     (audio board detected (test if sink on not possible))
+    RSC_VIDEO_OUT   = 0x004000,     // active video output
+    RSC_OSD         = 0x008000,     // osd output is active
     RSC_VIDEO_SYNC  = 0x010000,     // sync running on video
-    RSC_AUDIO_SYNC  = 0x020000,     // sync running on audio
-    RSC_SYNC        = 0x030000,     // sync running
+    RSC_AUDIO_EMB_SYNC = 0x020000,     // sync running on audio (video)
+    RSC_AUDIO_IF_BOARD_SYNC = 0x040000,     // sync running on audio (board)
+    RSC_SYNC        = 0x070000,     // sync running
     RSC_EVI         = 0x100000,     // ethernet video input
     RSC_EAI         = 0x200000,     // ethernet audio input
     RSC_EVO         = 0x400000,     // ethernet video output
@@ -123,8 +134,8 @@ enum {
     EVENT_VIDEO_IN_OFF  = 0x00000020,   // Video input deactivated
     EVENT_VIDEO_SINK_ON = 0x00000100,   // Video input activated
     EVENT_VIDEO_SINK_OFF= 0x00000200,   // Video input deactivated
-    EVENT_VIDEO_STIN_OFF= 0x00001000,   // Ethernet Video Stream Input stoped
-    EVENT_AUDIO_STIN_OFF= 0x00002000,   // Ethernet Audio Stream Input stoped
+    EVENT_VIDEO_STIN_OFF= 0x00001000,   // Ethernet Video Stream Input stopped
+    EVENT_AUDIO_STIN_OFF= 0x00002000,   // Ethernet Audio Stream Input stopped
     EVENT_TICK          = 0x10000000    // a tick event
 };
 

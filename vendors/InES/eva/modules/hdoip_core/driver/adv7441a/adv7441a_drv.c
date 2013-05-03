@@ -641,8 +641,8 @@ int adv7441a_get_analog_video_timing(t_adv7441a* handle)
 int adv7441a_get_hdcp_status(t_adv7441a* handle)
 {
     int i, ret;
-    uint32_t time;
-
+  /*  uint32_t time;
+TODO: remove comment
     for(i=0;i<100;i++) {
         time = jiffies;
         while ((time + HZ/100) >= jiffies); // wait ~1000ms until bit is valid
@@ -652,8 +652,8 @@ int adv7441a_get_hdcp_status(t_adv7441a* handle)
             break;
         }
     }
-
-    return ret;
+*/
+    return 0; ret;
 }
 
 
@@ -814,7 +814,7 @@ int adv7441a_audio_fs_change(t_adv7441a* handle, uint32_t fs, uint16_t ch_map)
         REPORT(INFO, "[HDMI IN] audio sampling rate has changed (audio unmuted)\n");
         REPORT(INFO, "[HDMI IN] Audio fs = %d Hz", handle->aud_st.fs);
         REPORT(INFO, "[HDMI IN] Audio width = %d Bit", handle->aud_st.bit_width);
-        REPORT(INFO, "[HDMI IN] Audio ch map = %d", handle->aud_st.ch_map);
+        REPORT(INFO, "[HDMI IN] Audio ch map = %d ", handle->aud_st.ch_map);
         REPORT(INFO, "[HDMI IN] Audio mute = %d\n", handle->aud_st.mute);
 
         adv7441a_audio_unmute(handle);

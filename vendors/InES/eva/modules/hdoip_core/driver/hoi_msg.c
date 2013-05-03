@@ -51,6 +51,12 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
     if (rmdrv & DRV_GS2972) {
         // TODO
     }
+    if (rmdrv & DRV_AIC23B_ADC) {
+        // TODO
+    }
+    if (rmdrv & DRV_AIC23B_DAC) {
+            // TODO
+    }
 
     // install driver...
     if (lddrv & DRV_ADV9889) {
@@ -64,6 +70,14 @@ int hoi_drv_msg_ldrv(t_hoi* handle, t_hoi_msg_ldrv* msg)
     }
     if (lddrv & DRV_GS2972) {
         gs2972_driver_init(&handle->gs2972, handle->p_spi_tx, &handle->i2c_tag_vid, handle->p_video_mux);
+    }
+    if (lddrv & DRV_AIC23B_ADC) {
+        // ADC device
+        aic23b_init(&handle->aic23b_rx, &handle->i2c_tag_aud, AIC23B_ADDR_RX, true);
+    }
+    if (lddrv & DRV_AIC23B_DAC) {
+        // DAC device
+        aic23b_init(&handle->aic23b_tx, &handle->i2c_tag_aud, AIC23B_ADDR_TX, false);
     }
 
     handle->drivers = msg->drivers & DRV_ALL;
@@ -199,11 +213,10 @@ int hoi_drv_msg_stsync(t_hoi* handle, t_hoi_msg_param* msg)
 {
     
     if (msg->value & DRV_ST_VIDEO) {
-        stream_sync_chg_source(&handle->sync, SYNC_SOURCE_VIDEO);
+        stream_sync_chg_source(&handle->sync_slave_0, SYNC_SOURCE_VIDEO);
     } else if (msg->value & DRV_ST_AUDIO) {
-        stream_sync_chg_source(&handle->sync, SYNC_SOURCE_AUDIO);
+        stream_sync_chg_source(&handle->sync_slave_0, SYNC_SOURCE_AUDIO);
     }
-    stream_sync_start(&handle->sync);
     
     return SUCCESS;
 }
@@ -211,7 +224,7 @@ int hoi_drv_msg_stsync(t_hoi* handle, t_hoi_msg_param* msg)
 
 int hoi_drv_msg_syncdelay(t_hoi* handle, t_hoi_msg_param* msg)
 {
-    msg->value = stream_sync_get_delay(&handle->sync);
+    msg->value = stream_sync_get_delay(&handle->sync_slave_0);          //TODO return also dealy of slave_1
 
     return SUCCESS;
 }
@@ -234,6 +247,11 @@ int hoi_drv_msg_ethstat(t_hoi* handle, t_hoi_msg_ethstat* msg)
     msg->tx_aud_board_cnt = 0; // TODO
     msg->tx_vid_cnt = eto_get_vid_packet_cnt(handle->p_eso);
     msg->tx_inv_cnt = eto_get_inv_packet_cnt(handle->p_eso);
+
+printk("\n act  %i   %i", aso_get_clk_div_act(handle->p_aso[0]), aso_get_clk_div_act(handle->p_aso[1]));
+printk("\n base %i   %i", aso_get_clk_div_base(handle->p_aso[0]), aso_get_clk_div_base(handle->p_aso[1]));
+printk("\n diff %i   %i", aso_get_clk_div_diff(handle->p_aso[0]), aso_get_clk_div_diff(handle->p_aso[1]));
+printk("\n cfg  %i   %i \n", aso_get_clk_config(handle->p_aso[0]), aso_get_clk_config(handle->p_aso[1]));
 
     return SUCCESS;
 }
@@ -340,9 +358,9 @@ int hoi_drv_msg_vsi(t_hoi* handle, t_hoi_msg_vsi* msg)
 
     // setup vio
     if (msg->compress) {
-        vio_drv_encodex(&handle->vio, msg->bandwidth, msg->chroma, msg->advcnt, bdt_return_device(&handle->bdt));
+        vio_drv_encodex(&handle->vio, msg->bandwidth, msg->chroma, msg->advcnt, bdt_return_video_device(&handle->bdt));
     } else {
-        vio_drv_plainin(&handle->vio, bdt_return_device(&handle->bdt));
+        vio_drv_plainin(&handle->vio, bdt_return_video_device(&handle->bdt));
     }
 
     vio_drv_get_advcnt(&handle->vio, &msg->advcnt);
@@ -362,9 +380,9 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
 
     // setup vio
     if (msg->compress & DRV_CODEC) {
-        n = vio_drv_decodex(&handle->vio, &msg->timing, msg->advcnt, bdt_return_device(&handle->bdt));
+        n = vio_drv_decodex(&handle->vio, &msg->timing, msg->advcnt, bdt_return_video_device(&handle->bdt));
     } else {
-        n = vio_drv_plainoutx(&handle->vio, &msg->timing, bdt_return_device(&handle->bdt));
+        n = vio_drv_plainoutx(&handle->vio, &msg->timing, bdt_return_video_device(&handle->bdt));
     }
 
     if (n) {
@@ -421,10 +439,8 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     // !!! back to normal !!!
 
     if (msg->compress & DRV_STREAM_SYNC) {
-        stream_sync_chg_source(&handle->sync, SYNC_SOURCE_VIDEO);
-        stream_sync_start(&handle->sync);
+        stream_sync_chg_source(&handle->sync_slave_0, SYNC_SOURCE_VIDEO);       //start slave 0!
     }
-
     return SUCCESS;
 }
 
@@ -438,7 +454,7 @@ int hoi_drv_msg_vso_repaire(t_hoi* handle)
     vso_drv_stop(&handle->vso);
     vso_drv_flush_buf(&handle->vso);
 
-    vio_drv_decode(&handle->vio, bdt_return_device(&handle->bdt));
+    vio_drv_decode(&handle->vio, bdt_return_video_device(&handle->bdt));
 
     vso_drv_stop(&handle->vso);
 
@@ -471,9 +487,9 @@ int hoi_drv_msg_asi(t_hoi* handle, t_hoi_msg_asi* msg)
 {
     asi_drv_flush_buf(&handle->asi);
 
-    // start fec tx block;
-    start_fec_ip_tx(handle->p_fec_ip_tx, msg->fec.video_enable, msg->fec.video_l, msg->fec.video_d, msg->fec.video_interleaving, msg->fec.video_col_only, 
+    start_fec_ip_tx(handle->p_fec_ip_tx, msg->fec.video_enable, msg->fec.video_l, msg->fec.video_d, msg->fec.video_interleaving, msg->fec.video_col_only,
                                          msg->fec.audio_enable, msg->fec.audio_l, msg->fec.audio_d, msg->fec.audio_interleaving, msg->fec.audio_col_only);
+
     // activate ethernet output
     eto_drv_start_aud(&handle->eto);
 
@@ -538,14 +554,102 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
         fec_rx_enable_audio_board_out(handle->p_fec_rx);
     }
 
-    aso_drv_update(&handle->aso[msg->stream_nr], &(msg->aud), delay);
+    aso_drv_update(&handle->aso[msg->stream_nr], &(msg->aud), delay, msg->config);
     aso_drv_start(&handle->aso[msg->stream_nr]);
 
     
     if (msg->cfg & DRV_STREAM_SYNC) {
-        stream_sync_chg_source(&handle->sync, SYNC_SOURCE_AUDIO);
-        stream_sync_start(&handle->sync);
+        if (msg->stream_nr == AUD_STREAM_NR_EMBEDDED) {
+            stream_sync_chg_source(&handle->sync_slave_0, SYNC_SOURCE_AUDIO);
+        } else {
+            stream_sync_start_slave_1(&handle->sync_slave_1);
+        }
     }
+
+    return SUCCESS;
+}
+
+int hoi_drv_msg_aic23b_adc(t_hoi* hoi, t_hoi_msg_aic23b_adc* msg)
+{
+    t_tlv320aic23b* codec = &(hoi->aic23b_rx);
+    int ret;
+    // disable ?
+    if (msg->enable == AIC23B_DISABLE) {
+        if ((ret = aic23b_set_if_acitve(codec, false)) != ERR_I2C_SUCCESS)
+            return ret;
+        else
+            return SUCCESS;
+    }
+
+    if ((ret = aic23b_set_power_down(codec, true, true)) != ERR_I2C_SUCCESS) //power off individual ADC
+        return ret;
+    if ((ret = aic23b_set_sidetone(codec, false, 0)) != ERR_I2C_SUCCESS)
+        return ret;
+
+
+    // configure and enable
+    if (msg->source == AIC23B_ADC_SRC_MIC) {
+        if ((ret = aic23b_set_adc_input(codec, AIC23B_ADC_INPUT_MIC)) != ERR_I2C_SUCCESS)
+            return ret;
+        if ((ret = aic23b_set_gain(codec, AIC23B_AMPLIFIER_MIC, msg->mic_boost)) != ERR_I2C_SUCCESS)
+            return ret;
+        if ((ret = aic23b_set_mute(codec, AIC23B_MUTELINE_MIC, false)) != ERR_I2C_SUCCESS)
+            return ret;
+    }
+    else if (msg->source == AIC23B_ADC_SRC_LINE) {
+        if ((ret = aic23b_set_adc_input(codec, AIC23B_ADC_INPUT_LINE)) != ERR_I2C_SUCCESS)
+            return ret;
+        if ((ret = aic23b_set_gain(codec, AIC23B_AMPLIFIER_LINE_IN_L, msg->line_gain)) != ERR_I2C_SUCCESS)
+            return ret;
+        if ((ret = aic23b_set_gain(codec, AIC23B_AMPLIFIER_LINE_IN_R, msg->line_gain)) != ERR_I2C_SUCCESS)
+            return ret;
+        if ((ret = aic23b_set_mute(codec, AIC23B_MUTELINE_LINE_IN_L, false)) != ERR_I2C_SUCCESS)
+            return ret;
+        if ((ret = aic23b_set_mute(codec, AIC23B_MUTELINE_LINE_IN_R, false)) != ERR_I2C_SUCCESS)
+            return ret;
+    }
+    else {
+        REPORT(ERROR, "passed wrong source for aic23b codec");
+    }
+    if ((ret = aic23b_set_fs(codec, msg->aud.fs)) != ERR_I2C_SUCCESS)
+        return ret;
+    if ((ret = aic23b_set_if_acitve(codec, true)) != ERR_I2C_SUCCESS)
+        return ret;
+
+    return SUCCESS;
+}
+
+int hoi_drv_msg_aic23b_dac(t_hoi* hoi, t_hoi_msg_aic23b_dac* msg)
+{
+    t_tlv320aic23b* codec = &(hoi->aic23b_tx);
+    int ret;
+
+    // disable ?
+    if (msg->enable == AIC23B_DISABLE) {
+        if ((ret = aic23b_set_mute(codec, AIC23B_MUTELINE_DAC, true)) != ERR_I2C_SUCCESS)
+            return ret;
+        if ((ret = aic23b_set_if_acitve(codec, false)) != ERR_I2C_SUCCESS)
+            return ret;
+        else
+            return SUCCESS;
+    }
+
+    if ((ret = aic23b_set_power_down(codec, true, false)) != ERR_I2C_SUCCESS) //power off individual DAC
+        return ret;
+
+    // configure and enable
+    if ((ret = aic23b_set_sidetone(codec, false, 0)) != ERR_I2C_SUCCESS)
+        return ret;
+    if ((ret = aic23b_set_gain(codec, AIC23B_AMPLIFIER_HEADPH_L, msg->hp_gain)) != ERR_I2C_SUCCESS)
+        return ret;
+    if ((ret = aic23b_set_gain(codec, AIC23B_AMPLIFIER_HEADPH_R, msg->hp_gain)) != ERR_I2C_SUCCESS)
+        return ret;
+    if ((ret = aic23b_set_mute(codec, AIC23B_MUTELINE_DAC, false)) != ERR_I2C_SUCCESS)
+        return ret;
+    if ((ret = aic23b_set_fs(codec, msg->aud.fs)) != ERR_I2C_SUCCESS)
+        return ret;
+    if ((ret = aic23b_set_if_acitve(codec, true)) != ERR_I2C_SUCCESS)
+        return ret;
 
     return SUCCESS;
 }
@@ -561,9 +665,9 @@ int hoi_drv_msg_capture(t_hoi* handle, t_hoi_msg_image* msg)
     // TODO: proper bandwidth/size
 
     if (msg->compress) {
-        ret = vrp_drv_capture_jpeg2000(&handle->vrp, msg->buffer, msg->size, (msg->size * 3 / 4), bdt_return_device(&handle->bdt));
+        ret = vrp_drv_capture_jpeg2000(&handle->vrp, msg->buffer, msg->size, (msg->size * 3 / 4), bdt_return_video_device(&handle->bdt));
     } else {
-        ret = vrp_drv_capture_image(&handle->vrp, msg->buffer, msg->size, bdt_return_device(&handle->bdt));
+        ret = vrp_drv_capture_image(&handle->vrp, msg->buffer, msg->size, bdt_return_video_device(&handle->bdt));
     }
 
     vio_drv_get_timing(&handle->vio, &msg->timing);
@@ -582,9 +686,9 @@ int hoi_drv_msg_show(t_hoi* handle, t_hoi_msg_image* msg)
     }
 
     if (msg->compress) {
-        ret = vrp_drv_show_jpeg2000(&handle->vrp, msg->buffer, &msg->timing, msg->advcnt, bdt_return_device(&handle->bdt));
+        ret = vrp_drv_show_jpeg2000(&handle->vrp, msg->buffer, &msg->timing, msg->advcnt, bdt_return_video_device(&handle->bdt));
     } else {
-        ret = vrp_drv_show_image(&handle->vrp, msg->buffer, &msg->timing, bdt_return_device(&handle->bdt));
+        ret = vrp_drv_show_image(&handle->vrp, msg->buffer, &msg->timing, bdt_return_video_device(&handle->bdt));
     }
 
     return ret;
@@ -601,7 +705,7 @@ int hoi_drv_msg_set_timing(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
-    vio_drv_debugx(&handle->vio, &msg->timing, msg->vtb, bdt_return_device(&handle->bdt), &handle->gs2972, &handle->adv7441a);
+    vio_drv_debugx(&handle->vio, &msg->timing, msg->vtb, bdt_return_video_device(&handle->bdt), &handle->gs2972, &handle->adv7441a);
 
     return ret;
 }
@@ -638,7 +742,7 @@ int hoi_drv_msg_new_audio(t_hoi* handle, t_hoi_msg_param* msg)
 
 int hoi_drv_msg_loop(t_hoi* handle)
 {
-    vio_drv_loop(&handle->vio, bdt_return_device(&handle->bdt));
+    vio_drv_loop(&handle->vio, bdt_return_video_device(&handle->bdt));
     return SUCCESS;
 }
 
@@ -826,9 +930,9 @@ int hoi_drv_msg_set_mtime(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
-int hoi_drv_msg_get_stime(t_hoi* handle, t_hoi_msg_param* msg)
+int hoi_drv_msg_get_stime(t_hoi* handle, t_hoi_msg_stime* msg)
 {
-    msg->value = tmr_get_slave(handle->p_tmr);
+    msg->stime = tmr_get_slave(handle->p_tmr, msg->slave_nr);
     return SUCCESS;
 }
 
@@ -846,9 +950,15 @@ int hoi_drv_msg_get_analog_timing(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
-int hoi_drv_msg_get_device_id(t_hoi* handle, t_hoi_msg_param* msg)
+int hoi_drv_msg_get_video_device_id(t_hoi* handle, t_hoi_msg_param* msg)
 {
-    msg->value = bdt_return_device(&handle->bdt);
+    msg->value = bdt_return_video_device(&handle->bdt);
+    return SUCCESS;
+}
+
+int hoi_drv_msg_get_audio_device_id(t_hoi* handle, t_hoi_msg_param* msg)
+{
+    msg->value = bdt_return_audio_device(&handle->bdt);
     return SUCCESS;
 }
 
@@ -870,10 +980,10 @@ int hoi_drv_msg_get_reset_to_default(t_hoi* handle, t_hoi_msg_param* msg)
     return SUCCESS;
 }
 
-int hoi_drv_msg_set_stime(t_hoi* handle, t_hoi_msg_param* msg)
+int hoi_drv_msg_set_stime(t_hoi* handle, t_hoi_msg_stime* msg)
 {
-    tmr_set_slave(handle->p_tmr, msg->value);
-    REPORT(INFO, "Set Slave-Timer: %u", msg->value);
+    tmr_set_slave(handle->p_tmr, msg->slave_nr, msg->stime);
+    REPORT(INFO, "Set Slave-Timer %u: %u", msg->slave_nr, msg->stime);
     return SUCCESS;
 }
 
@@ -1040,7 +1150,8 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_NEW_AUDIO,             hoi_drv_msg_new_audio);
         call(HOI_MSG_GET_FS,                hoi_drv_msg_get_fs);
         call(HOI_MSG_GET_ANALOG_TIMING,     hoi_drv_msg_get_analog_timing);
-        call(HOI_MSG_GET_DEV_ID,            hoi_drv_msg_get_device_id);
+        call(HOI_MSG_GET_VID_DEV_ID,        hoi_drv_msg_get_video_device_id);
+		call(HOI_MSG_GET_AUD_DEV_ID,        hoi_drv_msg_get_audio_device_id);
         call(HOI_MSG_GET_RESET_TO_DEFAULT,  hoi_drv_msg_get_reset_to_default);
         call(HOI_MSG_GET_ENCRYPTED_STATUS,  hoi_drv_mgs_get_encrypted_status);
         call(HOI_MSG_GET_ACTIVE_RESOLUTION, hoi_drv_mgs_get_active_resolution);
@@ -1054,6 +1165,8 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_WRAUDTAG,              hoi_drv_msg_wraudtag);
         call(HOI_MSG_RDEDID,                hoi_drv_msg_rdedid);
         call(HOI_MSG_WREDID,                hoi_drv_msg_wredid);
+        call(HOI_MSG_AIC23B_ADC,            hoi_drv_msg_aic23b_adc);
+        call(HOI_MSG_AIC23B_DAC,            hoi_drv_msg_aic23b_dac);
 
         call(HOI_MSG_GETMTIME,              hoi_drv_msg_get_mtime);
         call(HOI_MSG_SETMTIME,              hoi_drv_msg_set_mtime);

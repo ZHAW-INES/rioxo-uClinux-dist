@@ -6,6 +6,7 @@ require("pages.fec")
 require("pages.test")
 require("pages.edid")
 require("pages.streaming")
+require("pages.audio")
 require("pages.firmware")
 require("pages.default")
 require("pages.debug")
@@ -23,14 +24,15 @@ img_path = "/img/"
 main_form = "mainform"
 PAGE_ID_ETH = 0
 PAGE_ID_STREAM = 1
-PAGE_ID_USB = 2
-PAGE_ID_EDID = 3
-PAGE_ID_FEC = 4
-PAGE_ID_STATUS = 5
-PAGE_ID_FIRMWARE = 6
-PAGE_ID_DEFAULT = 7
-PAGE_ID_SETTING = 8
-PAGE_ID_TEST = 9
+PAGE_ID_AUDIO = 2
+PAGE_ID_USB = 3
+PAGE_ID_EDID = 4
+PAGE_ID_FEC = 5
+PAGE_ID_STATUS = 6
+PAGE_ID_FIRMWARE = 7
+PAGE_ID_DEFAULT = 8
+PAGE_ID_SETTING = 9
+PAGE_ID_TEST = 10
 
 PAGE_ID_LOGIN = 20
 PAGE_ID_RESTART = 40
@@ -155,6 +157,8 @@ if(query.page == PAGE_ID_ETH) then
     pages.ethernet.show(query)
 elseif(query.page == PAGE_ID_STREAM) then
     pages.streaming.show(query)
+elseif(query.page == PAGE_ID_AUDIO) then
+    pages.audio.show(query)
 elseif(query.page == PAGE_ID_USB) then
     pages.usb.show(query)
 elseif(query.page == PAGE_ID_EDID) then 

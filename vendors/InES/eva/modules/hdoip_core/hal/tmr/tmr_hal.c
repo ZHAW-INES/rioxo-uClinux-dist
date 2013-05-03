@@ -10,9 +10,12 @@
  */
 void tmr_init(void* p)
 {
-    HOI_WR32(p, TMR_OFF_CONFIG, 0);
-    HOI_WR32(p, TMR_OFF_DIVISION, SFREQ/AVFREQ-1);
-    tmr_set_inc(p, 1 << TMR_INC_FRACTION_WIDTH);
+    tmr_set_mux(p, 0);
+    tmr_set_div(p, SFREQ/AVFREQ-1);
     tmr_set_master(p, 0);
-    tmr_set_slave(p, 0);
+
+    for (int sl = 0; sl < TMR_SLAVE_CNT; sl++) {
+        tmr_set_slave(p, sl, 0);
+        tmr_set_inc(p, sl, 1 << TMR_INC_FRACTION_WIDTH);
+    }
 }

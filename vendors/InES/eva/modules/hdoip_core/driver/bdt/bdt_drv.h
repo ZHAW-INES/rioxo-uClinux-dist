@@ -4,6 +4,7 @@
  *  Created on: 06.07.2011
  *      Author: buan
  */
+#include "aso_drv_cfg.h"
 
 #ifndef BDT_DRV_H_
 #define BDT_DRV_H_
@@ -42,11 +43,14 @@
 
 typedef struct {
 	t_i2c    		    *p_i2c;       	//!< I2C driver
-    uint8_t             device;         // connected card
+    uint8_t             device_video;   // connected video card
+	uint8_t				device_audio;	// connected audio card
 } t_bdt;
 
-uint32_t bdt_return_device(t_bdt* handle);
-void bdt_drv_read_id(t_bdt* handle, t_i2c* p_i2c);
+uint32_t bdt_return_video_device(t_bdt* handle);
+uint32_t bdt_return_audio_device(t_bdt* handle);
+void bdt_drv_read_video_id(t_bdt* handle, t_i2c* p_i2c);
+void bdt_drv_read_audio_id(t_bdt* handle, t_aso* aso);
 void bdt_drv_set_video_mux(t_bdt* handle, void* p_video_mux);
 int  bdt_drv_get_reset_to_default(t_bdt* handle, void* p_video_mux);
 void bdt_drv_clear_reset_0(void* p_video_mux);

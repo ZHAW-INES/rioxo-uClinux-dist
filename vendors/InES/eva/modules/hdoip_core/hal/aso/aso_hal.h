@@ -29,6 +29,7 @@
 #define aso_enable_i2s_output(p)            aso_set_ctrl((p), ASO_CFG_OE) /*TODO perhaps only needed for the test with stellaris board */
 #define aso_disable_i2s_output(p)           aso_clr_ctrl((p), ASO_CFG_OE)
 
+#define aso_get_aud_id(p)                   HOI_RD32((p), ASO_OFF_AUD_ID_RO)
 #define aso_set_aud_delay(p, v)             HOI_WR32((p), ASO_OFF_AUD_DELAY, (v))
 #define aso_get_aud_delay(p)                HOI_RD32((p), ASO_OFF_AUD_DELAY)
 #define aso_get_clk_diff(p)                 HOI_RD32((p), ASO_OFF_CLK_CTRL_DIFF_RO)
@@ -47,7 +48,8 @@
 #define aso_get_clk_div_diff(p)             HOI_RD32((p), ASO_OFF_CLK_DIV_DIFF)
 #define aso_set_clk_div_act(p, v)           HOI_WR32((p), ASO_OFF_CLK_DIV_ACT, (v))
 #define aso_get_clk_div_act(p)              HOI_RD32((p), ASO_OFF_CLK_DIV_ACT)
-
+#define aso_set_clk_config(p, v)            HOI_WR32((p), ASO_OFF_CLK_CONFIG, (v))
+#define aso_get_clk_config(p)               HOI_RD32((p), ASO_OFF_CLK_CONFIG)
 #define aso_set_denominator(p, v)           HOI_WR32((p), ASO_OFF_DENOMINATOR, (v))
 
 static inline void aso_set_aud_params(void* p, struct hdoip_aud_params* aud_params)

@@ -12,7 +12,7 @@ local html_table_str = "<b>table error</b>"
 local html_table_backup = ""
 local html_table_col = 0
 local html_table_col_cnt = 0
- 
+
 function escape(str)
     str = string.gsub(str, "\n", "\r\n")
     str = string.gsub(str, "([^0-9a-zA-Z ])", function (c) return string.format("%%%02X", string.byte(c)) end)
@@ -178,12 +178,20 @@ function FormIP(name, value0, value1, value2, value3, disable)
     end
 end
 
-function FormCheckbox(name, value, label, checked)
-    html_str = html_str .. "<input type=\"checkbox\" name=\""..name.."\" value=\""..value.."\""
+function FormCheckbox(name, value, label, checked, disabled)
+    if(disabled==1) then
+        html_str = html_str .. "<input type=\"checkbox\" name=\""..name.."\" value=\""..value.."\" disabled"
+    else
+        html_str = html_str .. "<input type=\"checkbox\" name=\""..name.."\" value=\""..value.."\""
+    end
     if((checked ~= nil) and (checked > 0))then
         html_str = html_str .." checked"
     end
     html_str = html_str ..">"..label
+end
+
+function FormSlide(name, min, max, step,size , value)
+    html_str = html_str .. "<input type=\"range\" name=\""..name.."\" value=\""..value.."\" min=\""..min.."\" max=\""..max.."\" step=\""..step.."\" size=\""..size.."\">"
 end
 
 function OneButtonForm(t, script_path, value, button_label)
@@ -229,8 +237,8 @@ function FormBottom(t)
 end
 
 function Header(t, title, script_path, addon)
-    local menu_item_cnt = 10
-    local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_usb; [3] = label.tab_edid; [4] = label.tab_fec; [5] = label.tab_status;  [6] = label.tab_firmware; [7] = label.tab_default; [8] = label.tab_settings; [9] = label.tab_test;}
+    local menu_item_cnt = 11
+    local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_audio; [3] = label.tab_usb; [4] = label.tab_edid; [5] = label.tab_fec; [6] = label.tab_status;  [7] = label.tab_firmware; [8] = label.tab_default; [9] = label.tab_settings; [10] = label.tab_test;}
     local dev_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_HOST_NAME)
     local dev_caption = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DEV_CAPTION)
 
@@ -290,7 +298,7 @@ function Header(t, title, script_path, addon)
             menu_class = 'current'
         end
         -- show page test only on vrb
-        if((t.mode_vrb) or (i ~= 9)) then
+        if(((t.mode_vrb) or (i ~= 10)) and ((i ~= 2) or (hdoip.pipe.getParam(hdoip.pipe.REG_AUD_BOARD) ~= "none"))) then
             html_str = html_str .. '    <li id="'..menu_class..'"><a href="' .. script_path .. '?page=' .. i .. '"><span>' .. menu_items[i] .. '</span></a></li>\n'
         end
     end

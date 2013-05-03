@@ -32,11 +32,13 @@
 #define ASI_DRV_STATUS_RBF_ERROR                (0x00000001)
 
 typedef struct {
-    uint32_t                    status;
     uint32_t                    stream_status[AUD_STREAM_CNT];
     void*                       p_asi;
     uint32_t                    detected_fs[AUD_STREAM_CNT];
     uint16_t                    detected_ch_map[AUD_STREAM_CNT];
+    uint32_t                    fs_old;
+    uint32_t                    ch_map_old;
+    int                         settings_changed;
 } t_asi;
 
 

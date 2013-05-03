@@ -5,6 +5,7 @@
  *      Author: buan
  */
 #include "i2c_drv.h"
+#include "aso_drv.h"
 #include "bdt_drv.h"
 #include "hoi_msg.h"
 
@@ -18,21 +19,32 @@ static inline int bdt_read(t_bdt* handle)
     return i2c_drv_read(handle->p_i2c, BDT_ADDRESS);
 }
 
-uint32_t bdt_return_device(t_bdt* handle)
+uint32_t bdt_return_video_device(t_bdt* handle)
 {
-    return (uint32_t) handle->device;
+    return (uint32_t) handle->device_video;
 }
 
-void bdt_drv_read_id(t_bdt* handle, t_i2c* p_i2c)
+uint32_t bdt_return_audio_device(t_bdt* handle)
+{
+    return (uint32_t) handle->device_audio;
+}
+
+void bdt_drv_read_video_id(t_bdt* handle, t_i2c* p_i2c)
 {
     if (p_i2c) handle->p_i2c = p_i2c;
 
-    handle->device = (bdt_read(handle) >> 4) & 0x0F;
+    handle->device_video = (bdt_read(handle) >> 4) & 0x0F;
+}
+
+void bdt_drv_read_audio_id(t_bdt* handle, t_aso* aso)
+{
+    handle->device_audio = 0x01; // TODO: aso_drv_get_aud_id(aso);
+    printk("\n\n\n\nAUDIO ID: %i    \n\n\n", aso_drv_get_aud_id(aso));
 }
 
 void bdt_drv_set_video_mux(t_bdt* handle, void* p_video_mux)
 {
-    switch (handle->device) {
+    switch (handle->device_video) {
         case BDT_ID_HDMI_BOARD: bdt_set_video_mux(p_video_mux, INPUT_MUX_HDMI);
                                 printk("\nset video mux to HDMI\n");
                                 break;

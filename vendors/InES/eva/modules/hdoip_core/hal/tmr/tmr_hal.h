@@ -7,20 +7,18 @@
 /** tmr hal macros
  * 
  */
-#define tmr_set_mux(p, v)       HOI_REG_LD(p, TMR_OFF_CONFIG, TMR_CFG_MUX_MASK, v)
-#define tmr_set_div(p, v)       HOI_WR32(p, TMR_OFF_DIVISION, v)
-#define tmr_set_master(p, v)    HOI_WR32(p, TMR_OFF_MASTER, v)
-#define tmr_set_slave(p, v)     HOI_WR32(p, TMR_OFF_SLAVE, v)
-#define tmr_set_inc(p, v)       HOI_WR32(p, TMR_OFF_INCREMENT, v)
+#define tmr_set_mux(p, v)               HOI_WR32(p, TMR_OFF_CONFIG, v)
+#define tmr_set_div(p, v)               HOI_WR32(p, TMR_OFF_DIVISION, v)
+#define tmr_set_master(p, v)            HOI_WR32(p, TMR_OFF_MASTER, v)
+#define tmr_set_slave(p, slave_nr, v)   HOI_WR32(p, tmr_reg2off(slave_nr, TMR_REG_SLAVE), v)
+#define tmr_set_inc(p, slave_nr, v)     HOI_WR32(p, tmr_reg2off(slave_nr, TMR_REG_INCREMENT), v)
 
-#define tmr_get_master(p)       HOI_RD32(p, TMR_OFF_MASTER)
-#define tmr_get_slave(p)        HOI_RD32(p, TMR_OFF_SLAVE)
-#define tmr_get_avin(p)         HOI_RD32(p, TMR_OFF_AVIN)
-#define tmr_get_avout(p)        HOI_RD32(p, TMR_OFF_AVOUT)
-#define tmr_get_eth(p)          HOI_RD32(p, TMR_OFF_ETH)
-#define tmr_get_diff(p)         HOI_RD32(p, TMR_OFF_DIFF)
-#define tmr_get_inc(p)          HOI_RD32(p, TMR_OFF_INCREMENT)
+#define tmr_get_master(p)               HOI_RD32(p, TMR_OFF_MASTER)
+#define tmr_get_slave(p, slave_nr)      HOI_RD32(p, tmr_reg2off(slave_nr, TMR_REG_SLAVE))
+#define tmr_get_diff(p, slave_nr)       HOI_RD32(p, tmr_reg2off(slave_nr, TMR_REG_DIFF))
+#define tmr_get_inc(p, slave_nr)        HOI_RD32(p, tmr_reg2off(slave_nr, TMR_REG_INCREMENT))
 
+#define TMR_SLAVE_CNT                   2
 
 /** tmr hal function prototypes
  * 

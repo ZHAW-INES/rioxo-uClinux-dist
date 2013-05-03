@@ -5,7 +5,7 @@ label = {
     page_name = "Rioxo&reg; : ";
     
     u_decimal = "[decimal]";
-    u_mbps = "[Mbit / s]";
+    u_mbps = "[MBit / s]";
     u_ms = "[ms]";
     u_s = "[s]";
     u_percent = "[% of half datarate]";
@@ -75,6 +75,7 @@ label = {
 
     -- Page names
     page_streaming = "Stream configuration";
+    page_audio = "Stream configuration";
     page_ethernet = "System configuration";
     page_firmware = "Firmware";
     page_status = "Status";
@@ -87,6 +88,7 @@ label = {
     page_settings = "Settings";
     page_login = "Login";
     tab_streaming = "Stream";
+    tab_audio = "Audio";
     tab_ethernet = "Ethernet";
     tab_firmware = "Firmware";
     tab_status = "Status";
@@ -183,7 +185,8 @@ label = {
 
     -- Page streaming
     p_st_video = "Video";
-    p_st_audio = "Audio";
+    p_st_audio_board = "Audio (Audioboard)";
+    p_st_audio_emb = "Audio (Videoboard)";
     p_st_connect = "Connect to";
     p_st_media_sel = "Media select";
     p_st_vid_port = "Video UDP port";
@@ -205,6 +208,19 @@ label = {
     p_st_unicast = "Unicast";
     p_st_multicast = "Multicast";
     p_osd_time = "OSD time";
+
+    -- Page audio
+    p_aud_source_sel = "Audio source select";
+    p_aud_mic = "Microphone";
+    p_aud_line_in = "Line In";
+    p_aud_hpgain = "Headphones gain (0..100)";
+    p_aud_hpgain_warning = "Gain can just be defined in the range of 0 to 100";
+    p_aud_linegain = "Line in gain (0..100)";
+    p_aud_linegain_warning = "Gain can just be defined in the range of 0 to 100";
+    p_aud_mic_label = "Microphone boost";
+    p_aud_mic_boost = "+20dB";
+    p_aud_board = "Audio card: ";
+    p_aud_mute = "Mute";
 
     -- Page reboot
     p_rb_desc = "The new setting will take effect only after a restart of the device.<br>Should the device be restarted?<br>";

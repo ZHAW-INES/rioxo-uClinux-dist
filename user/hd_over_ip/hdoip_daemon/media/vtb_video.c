@@ -90,7 +90,7 @@ int vtb_video_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection*
     	m->hdcp.hdcp_on = 1;
     	hdoipd.hdcp.enc_state = HDCP_ENABLED;
     }
-
+printf("\n\n\nSETUP VIDEO PORT: %i   \n\n\n", PORT_RANGE_START(m->transport.client_port));
     cookie->remote.address = rsp->address;
     cookie->remote.vid_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.vid_port, hdoipd.local.vid_port);

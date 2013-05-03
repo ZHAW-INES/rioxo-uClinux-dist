@@ -52,7 +52,6 @@ void fec_drv_set_video_eth_params(void *p, hdoip_eth_params *eth)
     fec_tx_write_vid_dst_mac_3(p, eth->dst_mac[3]);
     fec_tx_write_vid_dst_mac_4(p, eth->dst_mac[4]);
     fec_tx_write_vid_dst_mac_5(p, eth->dst_mac[5]);
-
     //video src mac
     fec_tx_write_vid_src_mac_0(p, eth->src_mac[0]);
     fec_tx_write_vid_src_mac_1(p, eth->src_mac[1]);
@@ -60,7 +59,6 @@ void fec_drv_set_video_eth_params(void *p, hdoip_eth_params *eth)
     fec_tx_write_vid_src_mac_3(p, eth->src_mac[3]);
     fec_tx_write_vid_src_mac_4(p, eth->src_mac[4]);
     fec_tx_write_vid_src_mac_5(p, eth->src_mac[5]);
-
     //video tll/tos
     fec_tx_write_vid_ttl_tos(p, eth->ipv4_ttl, eth->ipv4_tos);
     //video src ip
@@ -96,17 +94,35 @@ void fec_drv_set_audio_emb_eth_params(void *p, hdoip_eth_params *eth)
     //audio dst ip
     fec_tx_write_aud_dst_ip(p, eth->ipv4_dst_ip);
     //audio src port
-    fec_tx_write_aud_src_port(p, eth->udp_src_port);
+    fec_tx_write_aud_emb_src_port(p, eth->udp_src_port);
     //audio dst port
-    fec_tx_write_aud_dst_port(p, eth->udp_dst_port);
-
+    fec_tx_write_aud_emb_dst_port(p, eth->udp_dst_port);
     //ssrc
     fec_tx_write_aud_emb_ssrc(p, eth->rtp_ssrc);
 }
 
 void fec_drv_set_audio_board_eth_params(void *p, hdoip_eth_params *eth)
 {
-    //NOTE: fec_drv_set_audio_embedded_eth_params() must be called first to set eth and ip config
+    //audio dst mac
+    fec_tx_write_aud_dst_mac_0(p, eth->dst_mac[0]);
+    fec_tx_write_aud_dst_mac_1(p, eth->dst_mac[1]);
+    fec_tx_write_aud_dst_mac_2(p, eth->dst_mac[2]);
+    fec_tx_write_aud_dst_mac_3(p, eth->dst_mac[3]);
+    fec_tx_write_aud_dst_mac_4(p, eth->dst_mac[4]);
+    fec_tx_write_aud_dst_mac_5(p, eth->dst_mac[5]);
+    //audio src mac
+    fec_tx_write_aud_src_mac_0(p, eth->src_mac[0]);
+    fec_tx_write_aud_src_mac_1(p, eth->src_mac[1]);
+    fec_tx_write_aud_src_mac_2(p, eth->src_mac[2]);
+    fec_tx_write_aud_src_mac_3(p, eth->src_mac[3]);
+    fec_tx_write_aud_src_mac_4(p, eth->src_mac[4]);
+    fec_tx_write_aud_src_mac_5(p, eth->src_mac[5]);
+    //audio tll/tos
+    fec_tx_write_aud_ttl_tos(p, eth->ipv4_ttl, eth->ipv4_tos);
+    //audio src ip
+    fec_tx_write_aud_src_ip(p, eth->ipv4_src_ip);
+    //audio dst ip
+    fec_tx_write_aud_dst_ip(p, eth->ipv4_dst_ip);
     //audio src port
     fec_tx_write_aud_board_src_port(p, eth->udp_src_port);
     //audio dst port

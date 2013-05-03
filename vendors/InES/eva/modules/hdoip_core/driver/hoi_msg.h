@@ -80,6 +80,8 @@
 #define HOI_MSG_HPDRESET            (0x7000003b)
 #define HOI_MSG_SET_FPS_REDUCTION   (0x7000003c)
 #define HOI_MSG_FECSTAT             (0x7000003d)
+#define HOI_MSG_AIC23B_ADC          (0x7000003e)
+#define HOI_MSG_AIC23B_DAC          (0x7000003f)
 
 #define HOI_MSG_POLL                (0x700000ff)
 #define HOI_MSG_HDCP_GET_KEY        (0x70000100)
@@ -97,27 +99,31 @@
 #define HOI_MSG_NEW_AUDIO           (0x7000010C)
 #define HOI_MSG_GET_FS              (0x7000010D)
 #define HOI_MSG_GET_ANALOG_TIMING   (0x7000010E)
-#define HOI_MSG_GET_DEV_ID          (0x7000010F)
-#define HOI_MSG_GET_RESET_TO_DEFAULT (0x70000110)
-#define HOI_MSG_GET_ENCRYPTED_STATUS (0x70000111)
-#define HOI_MSG_DEBUG_READ_RAM      (0x70000112)
-#define HOI_MSG_CLR_OSD             (0x70000113)
-#define HOI_MSG_GET_ACTIVE_RESOLUTION (0x70000114)
-#define HOI_MSG_HDCP_BLACK_OUTPUT   (0x70000115)
-#define HOI_MSG_OSD_CLR_BORDER      (0x70000116)
-#define HOI_MSG_FEC_TX              (0x70000117)
+#define HOI_MSG_GET_VID_DEV_ID      (0x7000010F)
+#define HOI_MSG_GET_AUD_DEV_ID      (0x70000110)
+#define HOI_MSG_GET_RESET_TO_DEFAULT (0x70000111)
+#define HOI_MSG_GET_ENCRYPTED_STATUS (0x70000112)
+#define HOI_MSG_DEBUG_READ_RAM      (0x70000113)
+#define HOI_MSG_CLR_OSD             (0x70000114)
+#define HOI_MSG_GET_ACTIVE_RESOLUTION (0x70000115)
+#define HOI_MSG_HDCP_BLACK_OUTPUT   (0x70000116)
+#define HOI_MSG_OSD_CLR_BORDER      (0x70000117)
+#define HOI_MSG_FEC_TX              (0x70000118)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
-#define DRV_ALL                     (0x0000000F)
+#define DRV_ALL                     (0x0000003F)
 #define DRV_ADV9889                 (1<<0)
 #define DRV_ADV7441                 (1<<1)
 #define DRV_GS2971                  (1<<2)
 #define DRV_GS2972                  (1<<3)
+#define DRV_AIC23B_DAC              (1<<4)
+#define DRV_AIC23B_ADC              (1<<5)
 
 //Card List
 #define BDT_ID_HDMI_BOARD           (0x00)
 #define BDT_ID_SDI8_BOARD           (0x01)
+#define BDT_ID_ANAUDIO_BOARD        (0x01)
 
 // Reset
 #define DRV_RST                     (0x1ff)
@@ -132,9 +138,18 @@
 #define DRV_RST_VRP                 (1<<8)
 
 // Timer
-#define DRV_TMR_IN                  (0x00000001)
-#define DRV_TMR_OUT                 (0x00000002)
-#define DRV_TMR_ETH                 (0x00000004)
+#define DRV_TMR_CFG_T1_MASTER       (0x01)
+#define DRV_TMR_CFG_T1_SLAVE_0      (0x02)
+#define DRV_TMR_CFG_T1_SLAVE_1      (0x03)
+#define DRV_TMR_CFG_T2_MASTER       (0x04)
+#define DRV_TMR_CFG_T2_SLAVE_0      (0x08)
+#define DRV_TMR_CFG_T2_SLAVE_1      (0x0C)
+#define DRV_TMR_CFG_T3_MASTER       (0x10)
+#define DRV_TMR_CFG_T3_SLAVE_0      (0x20)
+#define DRV_TMR_CFG_T3_SLAVE_1      (0x30)
+#define DRV_TMR_CFG_T4_MASTER       (0x40)
+#define DRV_TMR_CFG_T4_SLAVE_0      (0x80)
+#define DRV_TMR_CFG_T4_SLAVE_1      (0xC0)
 
 // Config
 #define DRV_CODEC                   (0x000000ff)
@@ -346,12 +361,39 @@ typedef struct {
     hoi_msg_extends;
     int unsigned                stream_nr;
     uint32_t                    cfg;
+    uint16_t                    config;         // config for i2s control: control activ if vtb
     uint32_t                    delay_ms;       //!< (wr) audio delay
     uint32_t                    av_delay;       //!< (wr) audio-video delay
     struct hdoip_aud_params     aud;            //!< (wr) audio parameter
 } t_hoi_msg_aso;
 
 #define hoi_msg_aso_init(p) hoi_msg_init(p, HOI_MSG_ASO, t_hoi_msg_aso)
+
+#define AIC23B_DISABLE                  (0)
+#define AIC23B_ENABLE                   (1)
+#define AIC23B_ADC_SRC_MIC              (2)
+#define AIC23B_ADC_SRC_LINE             (3)
+#define AIC23B_ADC_MICBOOST_0DB         (0)
+#define AIC23B_ADC_MICBOOST_20DB        (20)
+typedef struct {
+    hoi_msg_extends;
+    uint32_t                    enable;         //!< (wr) true to enable codec
+    uint32_t                    source;         //!< (wr) input is mic or line in
+    int                         line_gain;      //!< (wr) line input gain
+    uint32_t                    mic_boost;      //!< (wr) true for mic +20dB gain
+    struct hdoip_aud_params     aud;            //!< (wr) audio parameter
+} t_hoi_msg_aic23b_adc;
+
+#define hoi_msg_aic23b_adc_init(p) hoi_msg_init(p, HOI_MSG_AIC23B_ADC, t_hoi_msg_aic23b_adc)
+
+typedef struct {
+    hoi_msg_extends;
+    uint32_t                    enable;         //!< (wr) true to enable codec
+    int                         hp_gain;        //!< (wr) headphone gain
+    struct hdoip_aud_params     aud;            //!< (wr) audio parameter
+} t_hoi_msg_aic23b_dac;
+
+#define hoi_msg_aic23b_dac_init(p) hoi_msg_init(p, HOI_MSG_AIC23B_DAC, t_hoi_msg_aic23b_dac)
 
 typedef struct {
     hoi_msg_extends;
@@ -458,7 +500,7 @@ typedef struct {
 
 typedef struct {
     hoi_msg_extends;
-    t_video_timing              timing;                         //!< timing of video
+    t_video_timing              timing;         //!< timing of video
     uint32_t                    advcnt;
     uint32_t                    advcnt_old;
     struct hdoip_aud_params     aud_params[AUD_STREAM_CNT];

@@ -112,7 +112,7 @@ int aso_drv_stop(t_aso* aso)
  * @param aud_delay_us audio delay in microseconds
  * @return error code
  */
-int aso_drv_update(t_aso* aso, struct hdoip_aud_params* aud_params, uint32_t aud_delay_us)
+int aso_drv_update(t_aso* aso, struct hdoip_aud_params* aud_params, uint32_t aud_delay_us, uint16_t config)
 {
     uint32_t err;
 
@@ -122,6 +122,8 @@ int aso_drv_update(t_aso* aso, struct hdoip_aud_params* aud_params, uint32_t aud
     if ((aud_params->sample_width) == 20) {
         aud_params->sample_width = 24;
     }
+
+    aso_set_clk_config(aso->p_aso, config);
 
     err = aso_drv_set_aud_params(aso, aud_params);
     if(err != ERR_ASO_SUCCESS) {
@@ -146,46 +148,21 @@ int aso_drv_update(t_aso* aso, struct hdoip_aud_params* aud_params, uint32_t aud
  */
 int aso_drv_handler(t_aso* aso, t_queue* event_queue)
 {
-    uint32_t status = 0;
+ //   uint32_t status = 0;
 
-    status = aso_get_status(aso->p_aso, ASO_STATUS_FRAME_SIZE_ERROR | ASO_STATUS_FIFO_EMPTY | ASO_STATUS_FIFO_FULL);
+ //   status = aso_get_status(aso->p_aso, ASO_STATUS_FRAME_SIZE_ERROR | ASO_STATUS_FIFO_EMPTY | ASO_STATUS_FIFO_FULL);
 
-    if((status & ASO_STATUS_FRAME_SIZE_ERROR) != 0) {
-        if((aso->stream_status & ASO_DRV_STATUS_SIZE_ERROR) == 0) {
-            queue_put(event_queue, E_ASO_SIZE_ERROR);
-        }
-        aso->stream_status |= ASO_DRV_STATUS_SIZE_ERROR;
-    } else {
-        aso->stream_status &= ~ASO_DRV_STATUS_SIZE_ERROR;
-    }
 
-    if((status & ASO_STATUS_FIFO_EMPTY) != 0) {
-        if((aso->stream_status & ASO_DRV_STATUS_FIFO_EMPTY) == 0) {
-            queue_put(event_queue, E_ASO_FIFO_EMPTY);
-        }
-        aso->stream_status |= ASO_DRV_STATUS_FIFO_EMPTY;
-    } else {
-        aso->stream_status &= ~ASO_DRV_STATUS_FIFO_EMPTY;
-    }
+ //   if((status & ASO_STATUS_FIFO_FULL) != 0) {
+ //       if((aso->stream_status & ASO_DRV_STATUS_FIFO_FULL) == 0) {
+ //           queue_put(event_queue, E_ASO_FIFO_FULL);
+ //       }
+ //       aso->stream_status |= ASO_DRV_STATUS_FIFO_FULL;
+ //   } else {
+ //       aso->stream_status &=  ~ASO_DRV_STATUS_FIFO_FULL;
+ //   }
 
-    if((status & ASO_STATUS_FIFO_FULL) != 0) {
-        if((aso->stream_status & ASO_DRV_STATUS_FIFO_FULL) == 0) {
-            queue_put(event_queue, E_ASO_FIFO_FULL);
-        }
-        aso->stream_status |= ASO_DRV_STATUS_FIFO_FULL;
-    } else {
-        aso->stream_status &=  ~ASO_DRV_STATUS_FIFO_FULL;
-    }
 
-        //print control difference
-	/*if((aso_get_clk_div_act(aso->p_aso)!=0)&&(counter>201)){
-        
-		REPORT(INFO, "act: %d \n",aso_get_clk_div_act(aso->p_aso));
-        counter=0;
-	}
-    else{
-        counter++;    
-    }*/
 
     return ERR_ASO_SUCCESS;
 }
@@ -313,4 +290,14 @@ int aso_drv_get_aud_delay(t_aso* aso, uint32_t* aud_delay_us)
 
     *aud_delay_us = aso_get_aud_delay(aso->p_aso) * AVPERIOD;
     return ERR_ASO_SUCCESS;
+}
+
+/** Gets the audio board id
+ *
+ * @param aso pointer to the audio stream out handle struct
+ * @return audio board id
+ */
+uint32_t aso_drv_get_aud_id(t_aso* aso)
+{
+    return aso_get_aud_id(aso->p_aso) & 0x03;
 }

@@ -94,6 +94,7 @@
 #define eti_get_cpu_filter_mask(p)		    HOI_RD32((p), ETI_CPU_FILTER_MASK_REG)
 #define eti_get_vid_filter_mask(p)		    HOI_RD32((p), ETI_VID_FILTER_MASK_REG)
 #define eti_get_aud_emb_filter_mask(p)      HOI_RD32((p), ETI_AUD_EMB_FILTER_MASK_REG)
+#define eti_get_aud_board_filter_mask(p)    HOI_RD32((p), ETI_AUD_BOARD_FILTER_MASK_REG)
 
 #define eti_get_device_ip(p)			    swap32(HOI_RD32((p), ETI_DEVICE_IP_REG))
 #define eti_get_vid_src_ip(p)			    swap32(HOI_RD32((p), ETI_VID_SRC_IP_REG))

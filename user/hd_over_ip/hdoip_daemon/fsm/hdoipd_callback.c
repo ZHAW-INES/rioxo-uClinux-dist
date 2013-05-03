@@ -49,19 +49,22 @@ int hdoipd_media_callback(t_rscp_media* media, int (*f)(t_rscp_media*, void*), v
         report("mode-media: %s", reg_get("mode-media"));
         while (s && *s) {
                  if (strscmp(&s, "video")) ret |= f(&vrb_video, d);
-            else if (strscmp(&s, "audio")) ret |= f(&vrb_audio, d);
+            else if (strscmp(&s, "audio_board")) ret |= f(&vrb_audio_board, d);
+            else if (strscmp(&s, "audio_emb")) ret |= f(&vrb_audio_emb, d);
             else { report("unsupported media: %s", s); break; }
         }
     } else if (media == (void*)1) {
     	report("hdoipd_media_callback() media = 1");
         // Choose all active media
         if (rscp_media_active(&vrb_video)) ret |= f(&vrb_video, d);
-        if (rscp_media_active(&vrb_audio)) ret |= f(&vrb_audio, d);
+        if (rscp_media_active(&vrb_audio_board)) ret |= f(&vrb_audio_board, d);
+        if (rscp_media_active(&vrb_audio_emb)) ret |= f(&vrb_audio_emb, d);
     } else if (media == (void*)2) {
     	report("hdoipd_media_callback() media = 2");
         // Choose all media
         ret |= f(&vrb_video, d);
-        ret |= f(&vrb_audio, d);
+        ret |= f(&vrb_audio_board, d);
+        ret |= f(&vrb_audio_emb, d);
     } else {
         // Choose media specified by *media
         ret |= f(media, d);

@@ -39,10 +39,14 @@ const char* event_str(uint32_t e)
 
         case E_ASI_NEW_FS: return "asi detected new audio sampling rate";
     
-        case E_ASO_SIZE_ERROR: return "aso size error";
-        case E_ASO_FIFO_EMPTY: return "aso fifo underflow";
-        case E_ASO_FIFO_FULL: return "aso fifo overflow";
-        case E_ASO_RAM_FULL: return "aso ram full";
+        case E_ASO_EMB_SIZE_ERROR: return "audio_emb: aso size error";
+        case E_ASO_EMB_FIFO_EMPTY: return "audio_emb: aso fifo underflow";
+        case E_ASO_EMB_FIFO_FULL: return "audio_emb: aso fifo overflow";
+        case E_ASO_EMB_RAM_FULL: return "audio_emb: aso ram full";
+        case E_ASO_BOARD_SIZE_ERROR: return "audio_board: aso size error";
+        case E_ASO_BOARD_FIFO_EMPTY: return "audio_board: aso fifo underflow";
+        case E_ASO_BOARD_FIFO_FULL: return "audio_board: aso fifo overflow";
+        case E_ASO_BOARD_RAM_FULL: return "audio_board: aso ram full";
 
         case E_ETI_LINK_UP: return "Ethernet Input Link UP";
         case E_ETI_LINK_DOWN: return "Ethernet Input Link DOWN";

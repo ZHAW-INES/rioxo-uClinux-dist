@@ -3,8 +3,9 @@
 #include "std.h"
 
 
-int eth_report_params(struct hdoip_eth_params* eth_params)
+int eth_report_params(struct hdoip_eth_params* eth_params, int unsigned stream)
 {
+    REPORT(INFO, "Stream                 : %d", stream);
     REPORT(INFO, "Ethernet packet length : %d bytes",eth_params->packet_size);
     REPORT(INFO, "ETH destination MAC    : %pM", eth_params->dst_mac);
     REPORT(INFO, "ETH source MAC         : %pM", eth_params->src_mac);

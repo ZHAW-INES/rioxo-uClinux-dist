@@ -336,24 +336,25 @@ void alive_check_handle_msg_vrb_alive(t_alive_check *handle)
                         }
 
                         // response only when not already unicast is streaming
-                        if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) {
+                        if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO_BOARD | VTB_AUDIO_EMB)) {
                             for (timeout=0;timeout<120;timeout++) {             // wait up to 1.2s if video-in in active (and hpd is low after edid is written)
                                 if(hdoipd.drivers & DRV_ADV7441) {
                                     hoi_drv_get_active_resolution(&active_res);
                                     if (active_res == 2) {                      // input is active
                                         hdoipd_set_rsc(RSC_VIDEO_IN);
                                         hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
-                                        hdoipd_set_rsc(RSC_AUDIO0_IN);
+                                        hdoipd_set_rsc(RSC_AUDIO_EMB_IN);
+										hdoipd_set_rsc(RSC_AUDIO_BOARD_IN);
                                         hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
                                         alive_check_response_vrb_alive(client_ip);
                                         break;
                                     }
-                              //      if (active_res == 1) {                      // no input
-                              //          break;
-                              //      }
+                                    if (active_res == 1) {                      // no input
+                                        break;
+                                    }
                                     usleep(10000);   // 10ms
                                 } else {
-                                    if (hdoipd_rsc(RSC_VIDEO_IN)) {
+                                    if (hdoipd_rsc(RSC_VIDEO_IN) || hdoipd_rsc(RSC_AUDIO_BOARD_IN) || hdoipd_rsc(RSC_AUDIO_EMB_IN)) {
                                         alive_check_response_vrb_alive(client_ip);
                                         break;
                                     }

@@ -24,8 +24,10 @@
 
 #include "vrb_video.h"
 #include "vtb_video.h"
-#include "vrb_audio.h"
-#include "vtb_audio.h"
+#include "vrb_audio_emb.h"
+#include "vrb_audio_board.h"
+#include "vtb_audio_emb.h"
+#include "vtb_audio_board.h"
 #include "box_sys.h"
 
 int hdoipd_media_callback(t_rscp_media* media, int (*f)(t_rscp_media*, void*), void* d);

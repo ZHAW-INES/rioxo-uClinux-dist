@@ -1000,6 +1000,7 @@ void fec_rx_statistics(void *p, t_fec_rx *counter_values, t_hoi_msg_fecstat* msg
     alt_avalon_rtp_rx_dev               dev;
     alt_avalon_rtp_rx_stats             stats_vid;
     alt_avalon_rtp_rx_stats             stats_aud;
+    alt_avalon_rtp_rx_stats             stats_aud_board;
     alt_avalon_rtp_rx_design_parameters parameters;
     alt_avalon_rtp_rx_channel_settings  settings_vid;
     alt_avalon_rtp_rx_channel_settings  settings_aud;
@@ -1012,6 +1013,7 @@ void fec_rx_statistics(void *p, t_fec_rx *counter_values, t_hoi_msg_fecstat* msg
     alt_avalon_rtp_rx_get_parameters(&dev, &parameters);
     alt_avalon_rtp_rx_get_statistics(&dev, 0, &stats_vid);
     alt_avalon_rtp_rx_get_statistics(&dev, 1, &stats_aud);
+    alt_avalon_rtp_rx_get_statistics(&dev, 2, &stats_aud_board);
     alt_avalon_rtp_rx_get_channel_config(&dev, 0, &settings_vid);
     alt_avalon_rtp_rx_get_channel_config(&dev, 1, &settings_aud);
 
@@ -1034,4 +1036,7 @@ void fec_rx_statistics(void *p, t_fec_rx *counter_values, t_hoi_msg_fecstat* msg
     msg->aud_fec_en     = settings_aud.Enable;
     msg->aud_buf        = alt_avalon_rtp_rx_get_buffer_depth(&dev, 1);
     msg->buf_size       = parameters.FrameBufferEntriesPerChannel;
+
+    printk("\nCount: %i , buffer: %i\n", stats_aud_board.ValidPacketCount, alt_avalon_rtp_rx_get_buffer_depth(&dev, 2));
+
 }

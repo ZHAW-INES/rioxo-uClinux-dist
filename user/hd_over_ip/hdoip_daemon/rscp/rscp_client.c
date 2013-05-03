@@ -22,6 +22,7 @@
 #include "rscp_command.h"
 #include "rscp_parse_header.h"
 #include "hdoipd.h"
+#include "hdoipd_fsm.h"
 #include "hdcp.h"
 #include "hoi_drv_user.h"
 
@@ -367,8 +368,14 @@ int rscp_client_play(t_rscp_client* client, t_rscp_rtp_format* fmt)
     rscp_default_response_play((void*)&buf);
 
     // response
-    n = rscp_parse_response(&client->con, tab_response_play, (void*)&buf, 0, CFG_RSP_TIMEOUT);
-
+        
+        //if audio_board stream and no audio board connected -> do NOT stream!
+    if(!strcmp(client->media->name,"audio_board") && !hdoipd_rsc(RSC_AUDIO_BOARD_OUT)) {
+        n = RSCP_RESPONSE_ERROR;                        //TODO generate another error (-> generates error NULL in client->media->error)                 
+    } else {
+        n = rscp_parse_response(&client->con, tab_response_play, (void*)&buf, 0, CFG_RSP_TIMEOUT);
+    }
+    
     if (n == RSCP_SUCCESS) {
         rmcr_play(client->media, (void*)&buf, &client->con);
     } else if (n == RSCP_RESPONSE_ERROR) {
