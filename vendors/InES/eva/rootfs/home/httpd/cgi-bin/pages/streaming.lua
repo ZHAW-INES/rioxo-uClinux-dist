@@ -148,8 +148,14 @@ function show(t)
                         t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
                         t.vid_port = tonumber(t.vid_port)
                         if (((t.aud_emb_port - t.vid_port) >= 6) or ((t.vid_port - t.aud_emb_port) >= 6))  then
-                            hdoip.pipe.setParam(hdoip.pipe.REG_TEMP1, t.aud_emb_port)
-                            pages.restart.show(t)
+                            t.aud_board_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_BOARD_PORT)
+                            t.aud_board_port = tonumber(t.aud_board_port)
+                            if (((t.aud_emb_port - t.aud_board_port) >= 2) or ((t.aud_board_port - t.aud_emb_port) >= 6))  then
+                                hdoip.pipe.setParam(hdoip.pipe.REG_TEMP1, t.aud_emb_port)
+                                pages.restart.show(t)
+                            else
+                                hdoip.html.AddError(t, label.err_aud_port_cross_aud_port)
+                            end
                         else
                             hdoip.html.AddError(t, label.err_aud_port_cross_vid_port)
                         end
@@ -172,9 +178,20 @@ function show(t)
                 t.aud_board_port = tonumber(t.aud_board_port)
                 if((t.aud_board_port >= 0) and (t.aud_board_port < 65536)) then
                     if ((t.aud_board_port % 2) == 0) then
-                        -- TODO check collision with video and audio embedded port number
-                        hdoip.pipe.setParam(hdoip.pipe.REG_TEMP5, t.aud_board_port)
-                        pages.restart.show(t)
+                        t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
+                        t.vid_port = tonumber(t.vid_port)
+                        if (((t.aud_board_port - t.vid_port) >= 6) or ((t.vid_port - t.aud_board_port) >= 2)) then
+                            t.aud_emb_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_EMB_PORT)
+                            t.aud_emb_port = tonumber(t.aud_emb_port)
+                            if (((t.aud_board_port - t.aud_emb_port) >= 6) or ((t.aud_emb_port - t.aud_board_port) >= 2)) then
+                                hdoip.pipe.setParam(hdoip.pipe.REG_TEMP5, t.aud_board_port)
+                                pages.restart.show(t)
+                            else
+                                hdoip.html.AddError(t, label.err_aud_port_cross_aud_port)
+                            end
+                        else
+                            hdoip.html.AddError(t, label.err_aud_port_cross_vid_port)
+                        end
                     else
                         hdoip.html.AddError(t, label.err_aud_port_not_even)
                     end
@@ -196,8 +213,14 @@ function show(t)
                         t.aud_emb_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_EMB_PORT)
                         t.aud_emb_port = tonumber(t.aud_emb_port)
                         if (((t.aud_emb_port - t.vid_port) >= 6) or ((t.vid_port - t.aud_emb_port) >= 6)) then
-                            hdoip.pipe.setParam(hdoip.pipe.REG_TEMP2, t.vid_port)
-                            pages.restart.show(t)
+                            t.aud_board_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_BOARD_PORT)
+                            t.aud_board_port = tonumber(t.aud_board_port)
+                            if (((t.aud_board_port - t.vid_port) >= 6) or ((t.vid_port - t.aud_board_port) >= 2)) then
+                                hdoip.pipe.setParam(hdoip.pipe.REG_TEMP2, t.vid_port)
+                                pages.restart.show(t)
+                            else
+                                hdoip.html.AddError(t, label.err_vid_port_cross_aud_port)
+                            end
                         else
                             hdoip.html.AddError(t, label.err_vid_port_cross_aud_port)
                         end

@@ -58,6 +58,7 @@ label = {
     err_vid_port_not_number = "Video port is not a number";
     err_vid_port_not_even = "Video port must be even";
     err_aud_port_cross_vid_port = "Audio port must not be in range (video port - 4) .. (video port + 4)";
+    err_aud_port_cross_aud_port = "Audio port must not be in range (audio port - 4) .. (audio port + 4)";
     err_vid_port_cross_aud_port = "Video port must not be in range (audio port - 4) .. (audio port + 4)";
     err_rscp_port_not_in_range = "RSCP port is not in range (0 .. 65535)";
     err_hello_port_not_in_range = "HELLO port is not in range (0 .. 65535)";
