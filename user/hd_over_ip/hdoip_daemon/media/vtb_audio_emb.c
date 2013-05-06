@@ -290,7 +290,7 @@ int vtb_audio_emb_event(t_rscp_media *media, uint32_t event)
         case EVENT_AUDIO_IN0_ON:
             if (rscp_media_splaying(media)) {
                 vtb_audio_emb_pause(media);
-                rscp_server_update(media, EVENT_AUDIO_IN0_ON);
+                rscp_server_update(media, EVENT_AUDIO_IN0_OFF);
             }
             rscp_server_update(media, EVENT_AUDIO_IN0_ON);
             return RSCP_PAUSE;

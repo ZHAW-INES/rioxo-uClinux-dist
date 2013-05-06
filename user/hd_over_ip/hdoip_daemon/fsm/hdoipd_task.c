@@ -204,18 +204,24 @@ void task_get_fec_status(char** p)
 {
     t_hoi_msg_fecstat *stat;
     hoi_drv_fecstat(&stat);
-    sprintf(buf, "VID (pkg: %i mis: %i fix: %i en: %i buf: %i/%i)\nAUD (pkg: %i mis: %i fix: %i en: %i buf: %i/%i))",
+    sprintf(buf, "VID       (pkg: %i mis: %i fix: %i en: %i buf: %i/%i)\nAUD_EMB   (pkg: %i mis: %i fix: %i en: %i buf: %i/%i)\nAUD_BOARD (pkg: %i mis: %i fix: %i en: %i buf: %i/%i))",
             stat->vid_pkg_cnt,
             stat->vid_mis_cnt,
             stat->vid_fix_cnt,
             stat->vid_fec_en,
             stat->vid_buf,
             stat->buf_size,
-            stat->aud_pkg_cnt,
-            stat->aud_mis_cnt,
-            stat->aud_fix_cnt,
-            stat->aud_fec_en,
-            stat->aud_buf,
+            stat->aud_emb_pkg_cnt,
+            stat->aud_emb_mis_cnt,
+            stat->aud_emb_fix_cnt,
+            stat->aud_emb_fec_en,
+            stat->aud_emb_buf,
+            stat->buf_size,
+            stat->aud_board_pkg_cnt,
+            stat->aud_board_mis_cnt,
+            stat->aud_board_fix_cnt,
+            stat->aud_board_fec_en,
+            stat->aud_board_buf,
             stat->buf_size);
     *p = buf;
 }

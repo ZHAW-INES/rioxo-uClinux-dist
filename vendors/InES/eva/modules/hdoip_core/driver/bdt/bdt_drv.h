@@ -50,7 +50,7 @@ typedef struct {
 uint32_t bdt_return_video_device(t_bdt* handle);
 uint32_t bdt_return_audio_device(t_bdt* handle);
 void bdt_drv_read_video_id(t_bdt* handle, t_i2c* p_i2c);
-void bdt_drv_read_audio_id(t_bdt* handle, t_aso* aso);
+void bdt_drv_read_audio_id(t_bdt* handle, void* p_aso);
 void bdt_drv_set_video_mux(t_bdt* handle, void* p_video_mux);
 int  bdt_drv_get_reset_to_default(t_bdt* handle, void* p_video_mux);
 void bdt_drv_clear_reset_0(void* p_video_mux);

@@ -92,7 +92,7 @@ int hoi_drv_msg_buf(t_hoi* handle, t_hoi_msg_buf* msg)
     eto_drv_set_aud_buf(&handle->eto, msg->aud_tx_buf, msg->aud_tx_len - MAX_FRAME_LENGTH);
 
     // fec memory offset
-    fec_rx_set_address_offset(handle->p_fec_memory_interface, (uint32_t)msg->vid_tx_buf);
+    fec_rx_set_address_offset(handle->p_fec_memory_interface, (uint32_t)msg->fec_rx_buf);
 
     // set descriptors and burst size in fec block
     fec_drv_set_descriptors(handle->p_fec_tx, msg->vid_tx_buf, msg->aud_tx_buf, msg->vid_tx_len, msg->aud_tx_len, 0x08);
@@ -240,18 +240,12 @@ int hoi_drv_msg_ethstat(t_hoi* handle, t_hoi_msg_ethstat* msg)
     msg->rx_aud_board_cnt = eti_get_aud_board_packet_cnt(handle->p_esi);
     msg->rx_vid_cnt = eti_get_vid_packet_cnt(handle->p_esi);
     msg->rx_inv_cnt = eti_get_inv_packet_cnt(handle->p_esi);
-    msg->debug = eti_get_debug_reg(handle->p_esi);
 
     msg->tx_cpu_cnt = eto_get_cpu_packet_cnt(handle->p_eso);
     msg->tx_aud_emb_cnt = eto_get_aud_emb_packet_cnt(handle->p_eso);
     msg->tx_aud_board_cnt = 0; // TODO
     msg->tx_vid_cnt = eto_get_vid_packet_cnt(handle->p_eso);
     msg->tx_inv_cnt = eto_get_inv_packet_cnt(handle->p_eso);
-
-printk("\n act  %i   %i", aso_get_clk_div_act(handle->p_aso[0]), aso_get_clk_div_act(handle->p_aso[1]));
-printk("\n base %i   %i", aso_get_clk_div_base(handle->p_aso[0]), aso_get_clk_div_base(handle->p_aso[1]));
-printk("\n diff %i   %i", aso_get_clk_div_diff(handle->p_aso[0]), aso_get_clk_div_diff(handle->p_aso[1]));
-printk("\n cfg  %i   %i \n", aso_get_clk_config(handle->p_aso[0]), aso_get_clk_config(handle->p_aso[1]));
 
     return SUCCESS;
 }
@@ -516,7 +510,7 @@ int hoi_drv_msg_aso(t_hoi* handle, t_hoi_msg_aso* msg)
         init_fec_rx_ip_audio_emb(handle->p_fec_ip_rx, 1, &handle->fec_rx);
     }
     if (msg->stream_nr == AUD_STREAM_NR_IF_BOARD) {
-        init_fec_rx_ip_audio_board(handle->p_fec_ip_rx, 1);
+        init_fec_rx_ip_audio_board(handle->p_fec_ip_rx, 1, &handle->fec_rx);
     }
 
     // sync...
@@ -938,7 +932,12 @@ int hoi_drv_msg_get_stime(t_hoi* handle, t_hoi_msg_stime* msg)
 
 int hoi_drv_msg_get_fs(t_hoi* handle, t_hoi_msg_param* msg)
 {
-    msg->value = asi_drv_get_detected_fs(&handle->asi, AUD_STREAM_NR_EMBEDDED);
+
+    if (asi_drv_get_detected_ch_map(&handle->asi, AUD_STREAM_NR_EMBEDDED)) {
+        msg->value = asi_drv_get_detected_fs(&handle->asi, AUD_STREAM_NR_EMBEDDED);
+    } else {
+        msg->value = 0;
+    }
     return SUCCESS;
 }
 

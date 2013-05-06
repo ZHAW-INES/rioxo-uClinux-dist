@@ -12,11 +12,14 @@
 typedef struct
 {
     uint32_t    valid_packets_vid;
-    uint32_t    valid_packets_aud;
+    uint32_t    valid_packets_aud_emb;
+    uint32_t    valid_packets_aud_board;
     uint32_t    missing_packets_vid;
-    uint32_t    missing_packets_aud;
+    uint32_t    missing_packets_aud_emb;
+    uint32_t    missing_packets_aud_board;
     uint32_t    fixed_packets_vid;
-    uint32_t    fixed_packets_aud;
+    uint32_t    fixed_packets_aud_emb;
+    uint32_t    fixed_packets_aud_board;
 } t_fec_rx;
 
 #endif /* FEC_RX_STRUCT_H_ */

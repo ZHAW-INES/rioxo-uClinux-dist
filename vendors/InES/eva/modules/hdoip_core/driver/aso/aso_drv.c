@@ -148,21 +148,40 @@ int aso_drv_update(t_aso* aso, struct hdoip_aud_params* aud_params, uint32_t aud
  */
 int aso_drv_handler(t_aso* aso, t_queue* event_queue)
 {
- //   uint32_t status = 0;
+    uint32_t status = 0;
 
- //   status = aso_get_status(aso->p_aso, ASO_STATUS_FRAME_SIZE_ERROR | ASO_STATUS_FIFO_EMPTY | ASO_STATUS_FIFO_FULL);
-
-
- //   if((status & ASO_STATUS_FIFO_FULL) != 0) {
- //       if((aso->stream_status & ASO_DRV_STATUS_FIFO_FULL) == 0) {
- //           queue_put(event_queue, E_ASO_FIFO_FULL);
- //       }
- //       aso->stream_status |= ASO_DRV_STATUS_FIFO_FULL;
- //   } else {
- //       aso->stream_status &=  ~ASO_DRV_STATUS_FIFO_FULL;
- //   }
+    status = aso_get_status(aso->p_aso, ASO_STATUS_TIMESTAMP_ERROR | ASO_STATUS_FIFO_EMPTY | ASO_STATUS_FIFO_FULL);
 
 
+    if((status & ASO_STATUS_TIMESTAMP_ERROR) != 0) {
+        if((aso->stream_status & ASO_DRV_STATUS_TIMESTAMP_ERROR) == 0) {
+            if (aso->stream_nr==0) queue_put(event_queue, E_ASO_EMB_TS_ERROR);
+            else                   queue_put(event_queue, E_ASO_BOARD_TS_ERROR);
+        }
+        aso->stream_status |= ASO_DRV_STATUS_TIMESTAMP_ERROR;
+    } else {
+        aso->stream_status &=  ~ASO_DRV_STATUS_TIMESTAMP_ERROR;
+    }
+
+    if((status & ASO_STATUS_FIFO_EMPTY) != 0) {
+        if((aso->stream_status & ASO_DRV_STATUS_FIFO_EMPTY) == 0) {
+            if (aso->stream_nr==0) queue_put(event_queue, E_ASO_EMB_FIFO_EMPTY);
+            else                   queue_put(event_queue, E_ASO_BOARD_FIFO_EMPTY);
+        }
+        aso->stream_status |= ASO_DRV_STATUS_FIFO_EMPTY;
+    } else {
+        aso->stream_status &=  ~ASO_DRV_STATUS_FIFO_EMPTY;
+    }
+
+    if((status & ASO_STATUS_FIFO_FULL) != 0) {
+        if((aso->stream_status & ASO_DRV_STATUS_FIFO_FULL) == 0) {
+            if (aso->stream_nr==0) queue_put(event_queue, E_ASO_EMB_FIFO_FULL);
+            else                   queue_put(event_queue, E_ASO_BOARD_FIFO_FULL);
+        }
+        aso->stream_status |= ASO_DRV_STATUS_FIFO_FULL;
+    } else {
+        aso->stream_status &=  ~ASO_DRV_STATUS_FIFO_FULL;
+    }
 
     return ERR_ASO_SUCCESS;
 }
@@ -297,7 +316,7 @@ int aso_drv_get_aud_delay(t_aso* aso, uint32_t* aud_delay_us)
  * @param aso pointer to the audio stream out handle struct
  * @return audio board id
  */
-uint32_t aso_drv_get_aud_id(t_aso* aso)
+uint32_t aso_drv_get_aud_id(void* p_aso)
 {
-    return aso_get_aud_id(aso->p_aso) & 0x03;
+    return aso_get_aud_id(p_aso) & 0x03;
 }

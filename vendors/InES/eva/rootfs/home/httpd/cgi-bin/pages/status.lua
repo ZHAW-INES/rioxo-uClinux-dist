@@ -25,7 +25,7 @@ end
 
 local function get_stream_param(str)
     local value, type, dir = "", nil, nil;
-    string.gsub(str, "[%b  ]%a+", function(c) value = value .. c end)
+    string.gsub(str, " %a+", function(c) value = c end)
     string.gsub(str, "(%a+)", function(c) type = c end)
     string.gsub(str, "{(%a+)}", function(c) dir = c end)
     return value, type, dir
@@ -102,6 +102,7 @@ function show(t)
             hdoip.html.Text(t[i].state);                                            hdoip.html.TableInsElement(1);   
         end
     end
+
     hdoip.html.TableBottom()
     hdoip.html.Bottom(t)
 end

@@ -28,10 +28,9 @@
 #define ASO_DRV_STATUS_ACTIV                (0x00000001)
 #define ASO_DRV_STATUS_AUD_PARAMS_SET       (0x00000002)
 #define ASO_DRV_STATUS_AUD_DELAY_SET        (0x00000004)
-#define ASO_DRV_STATUS_SIZE_ERROR           (0x00000008)
+#define ASO_DRV_STATUS_TIMESTAMP_ERROR      (0x00000008)
 #define ASO_DRV_STATUS_FIFO_EMPTY           (0x00000010)
 #define ASO_DRV_STATUS_FIFO_FULL            (0x00000020)
-#define ASO_DRV_STATUS_RAM_FULL             (0x00000040)
 
 typedef struct {
     uint32_t                    stream_status;

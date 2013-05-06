@@ -87,7 +87,8 @@ function show(t)
 
     local str = hdoip.pipe.getParam(hdoip.pipe.REG_STATUS_FEC)
     local vid_str = get_str(str, "VID", ")")
-    local aud_str = get_str(str, "AUD", ")")
+    local aud_emb_str = get_str(str, "AUD_EMB", ")")
+    local aud_board_str = get_str(str, "AUD_BOARD", ")")
 
     local stat_vid_pkg = get_str(vid_str, "pkg: ", " ")
     local stat_vid_mis = get_str(vid_str, "mis: ", " ")
@@ -97,30 +98,39 @@ function show(t)
     local stat_vid_buf_total = get_str(stat_vid_buf, "/", " ")
     local stat_vid_buf_percent = math.floor(tonumber(stat_vid_buf_entries) * 100 / tonumber(stat_vid_buf_total))
 
-    local stat_aud_pkg = get_str(aud_str, "pkg: ", " ")
-    local stat_aud_mis = get_str(aud_str, "mis: ", " ")
-    local stat_aud_fix = get_str(aud_str, "fix: ", " ")
-    local stat_aud_buf = get_str(aud_str, "buf: ", " ")
-    local stat_aud_buf_entries = get_str(stat_aud_buf, " ", "/")
-    local stat_aud_buf_total = get_str(stat_aud_buf, "/", " ")
-    local stat_aud_buf_percent = math.floor(tonumber(stat_aud_buf_entries) * 100 / tonumber(stat_aud_buf_total))
+    local stat_aud_emb_pkg = get_str(aud_emb_str, "pkg: ", " ")
+    local stat_aud_emb_mis = get_str(aud_emb_str, "mis: ", " ")
+    local stat_aud_emb_fix = get_str(aud_emb_str, "fix: ", " ")
+    local stat_aud_emb_buf = get_str(aud_emb_str, "buf: ", " ")
+    local stat_aud_emb_buf_entries = get_str(stat_aud_emb_buf, " ", "/")
+    local stat_aud_emb_buf_total = get_str(stat_aud_emb_buf, "/", " ")
+    local stat_aud_emb_buf_percent = math.floor(tonumber(stat_aud_emb_buf_entries) * 100 / tonumber(stat_aud_emb_buf_total))
 
-
+    local stat_aud_board_pkg = get_str(aud_board_str, "pkg: ", " ")
+    local stat_aud_board_mis = get_str(aud_board_str, "mis: ", " ")
+    --local stat_aud_board_fix = get_str(aud_board_str, "fix: ", " ")
+    local stat_aud_board_fix = label.p_fec_not_available
+    local stat_aud_board_buf = get_str(aud_board_str, "buf: ", " ")
+    local stat_aud_board_buf_entries = get_str(stat_aud_board_buf, " ", "/")
+    local stat_aud_board_buf_total = get_str(stat_aud_board_buf, "/", " ")
+    local stat_aud_board_buf_percent = math.floor(tonumber(stat_aud_board_buf_entries) * 100 / tonumber(stat_aud_board_buf_total))
 
     hdoip.html.Header(t, label.page_name .. label.page_fec, script_path)
     hdoip.html.FormHeader(script_path, main_form)
     hdoip.html.Title(label.page_fec)
-    hdoip.html.TableHeader(3)
+    hdoip.html.TableHeader(4)
 
     hdoip.html.Text(label.p_fec_media)                                                                                                                                      hdoip.html.TableInsElement(1);
     hdoip.html.Text(label.p_fec_video)                                                                                                                                      hdoip.html.TableInsElement(1);
-    hdoip.html.Text(label.p_fec_audio)                                                                                                                                      hdoip.html.TableInsElement(1);
+    hdoip.html.Text(label.p_fec_audio_emb)                                                                                                                                  hdoip.html.TableInsElement(1);
+    hdoip.html.Text(label.p_fec_audio_board)                                                                                                                                hdoip.html.TableInsElement(1);
 
     if(t.mode_vtb) then   
 
         hdoip.html.Text(label.p_fec_enable);                                                                                                                                hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("fec_video_en", 1, "", tonumber(t.fec_video_en))                                                                                            hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("fec_audio_en", 1, "", tonumber(t.fec_audio_en))                                                                                            hdoip.html.TableInsElement(1);
+        hdoip.html.Text("-");                                                                                                                                               hdoip.html.TableInsElement(1);
 
        -- hdoip.html.Text(label.p_fec_l);                                                                                                                                     hdoip.html.TableInsElement(1);
        -- hdoip.html.DropdownBox10("fec_video_l", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, t.fec_video_l)                                                                               hdoip.html.TableInsElement(1);
@@ -133,6 +143,7 @@ function show(t)
         hdoip.html.Text(label.p_fec_matrix);                                                                                                                                hdoip.html.TableInsElement(1);
         hdoip.html.DropdownBox9("fec_video_matrix", 2, 3, 4, 5, 6, 7, 8, 9, 10, t.fec_video_matrix)                                                                         hdoip.html.TableInsElement(1);
         hdoip.html.DropdownBox9("fec_audio_matrix", 2, 3, 4, 5, 6, 7, 8, 9, 10, t.fec_audio_matrix)                                                                         hdoip.html.TableInsElement(1);
+        hdoip.html.Text("-");                                                                                                                                               hdoip.html.TableInsElement(1);
 
        -- hdoip.html.Text(label.p_fec_interleave);                                                                                                                            hdoip.html.TableInsElement(1);
        -- hdoip.html.DropdownBox3("fec_video_interleave", label.p_fec_interleave_off, label.p_fec_interleave_style2, label.p_fec_interleave_style1, t.fec_video_interleave)   hdoip.html.TableInsElement(1);
@@ -145,28 +156,34 @@ function show(t)
         hdoip.html.Text(label.p_fec_column_only);                                                                                                                           hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("fec_video_column_only", 1, "", tonumber(t.fec_video_column_only))                                                                          hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("fec_audio_column_only", 1, "", tonumber(t.fec_audio_column_only))                                                                          hdoip.html.TableInsElement(1);
+        hdoip.html.Text("-");                                                                                                                                               hdoip.html.TableInsElement(1);
 
         hdoip.html.Text(label.p_fec_overhead);                                                                                                                              hdoip.html.TableInsElement(1);
         hdoip.html.Text(math.floor(overhead_video + 0.5) .. " %");                                                                                                          hdoip.html.TableInsElement(1);
         hdoip.html.Text(math.floor(overhead_audio + 0.5) .. " %");                                                                                                          hdoip.html.TableInsElement(1);
+        hdoip.html.Text("-");                                                                                                                                               hdoip.html.TableInsElement(1);
 
     else
 
         hdoip.html.Text(label.p_fec_received_packets)                                                                                                                       hdoip.html.TableInsElement(1);
         hdoip.html.Text(stat_vid_pkg)                                                                                                                                       hdoip.html.TableInsElement(1);
-        hdoip.html.Text(stat_aud_pkg)                                                                                                                                       hdoip.html.TableInsElement(1);
+        hdoip.html.Text(stat_aud_emb_pkg)                                                                                                                                   hdoip.html.TableInsElement(1);
+        hdoip.html.Text(stat_aud_board_pkg)                                                                                                                                 hdoip.html.TableInsElement(1);
 
         hdoip.html.Text(label.p_fec_lost_packets)                                                                                                                           hdoip.html.TableInsElement(1);
         hdoip.html.Text(stat_vid_mis)                                                                                                                                       hdoip.html.TableInsElement(1);
-        hdoip.html.Text(stat_aud_mis)                                                                                                                                       hdoip.html.TableInsElement(1);
+        hdoip.html.Text(stat_aud_emb_mis)                                                                                                                                   hdoip.html.TableInsElement(1);
+        hdoip.html.Text(stat_aud_board_mis)                                                                                                                                 hdoip.html.TableInsElement(1);
 
         hdoip.html.Text(label.p_fec_recovered_packets)                                                                                                                      hdoip.html.TableInsElement(1);
         hdoip.html.Text(stat_vid_fix)                                                                                                                                       hdoip.html.TableInsElement(1);
-        hdoip.html.Text(stat_aud_fix)                                                                                                                                       hdoip.html.TableInsElement(1);
+        hdoip.html.Text(stat_aud_emb_fix)                                                                                                                                   hdoip.html.TableInsElement(1);
+        hdoip.html.Text(stat_aud_board_fix)                                                                                                                                 hdoip.html.TableInsElement(1);
 
         hdoip.html.Text(label.p_fec_buffer_status)                                                                                                                          hdoip.html.TableInsElement(1);
         hdoip.html.Text(stat_vid_buf_percent .. " %")                                                                                                                       hdoip.html.TableInsElement(1);
-        hdoip.html.Text(stat_aud_buf_percent .. " %")                                                                                                                       hdoip.html.TableInsElement(1);
+        hdoip.html.Text(stat_aud_emb_buf_percent .. " %")                                                                                                                   hdoip.html.TableInsElement(1);
+        hdoip.html.Text(stat_aud_board_buf_percent .. " %")                                                                                                                 hdoip.html.TableInsElement(1);
 
     end
 

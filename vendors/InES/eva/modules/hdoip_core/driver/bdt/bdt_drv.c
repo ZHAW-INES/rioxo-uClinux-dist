@@ -36,10 +36,9 @@ void bdt_drv_read_video_id(t_bdt* handle, t_i2c* p_i2c)
     handle->device_video = (bdt_read(handle) >> 4) & 0x0F;
 }
 
-void bdt_drv_read_audio_id(t_bdt* handle, t_aso* aso)
+void bdt_drv_read_audio_id(t_bdt* handle, void* p_aso)
 {
-    handle->device_audio = 0x01; // TODO: aso_drv_get_aud_id(aso);
-    printk("\n\n\n\nAUDIO ID: %i    \n\n\n", aso_drv_get_aud_id(aso));
+    handle->device_audio = aso_drv_get_aud_id(p_aso);
 }
 
 void bdt_drv_set_video_mux(t_bdt* handle, void* p_video_mux)

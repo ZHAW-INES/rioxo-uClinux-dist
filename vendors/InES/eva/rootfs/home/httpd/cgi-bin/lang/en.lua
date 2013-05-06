@@ -132,7 +132,8 @@ label = {
     p_fec_transmitter_only = "only available on transmitter";
     p_fec_media = "Media type";
     p_fec_video = "Video";
-    p_fec_audio = "Audio";
+    p_fec_audio_emb = "Audio embedded";
+    p_fec_audio_board = "Audio board";
     p_fec_enable = "Enable";
     p_fec_interleave = "Interleaving";
     p_fec_interleave_off = "Off";
@@ -147,6 +148,7 @@ label = {
     p_fec_lost_packets = "Lost packets";
     p_fec_recovered_packets = "Recovered packets";
     p_fec_buffer_status = "Buffer status";
+    p_fec_not_available = "Not available";
 
     -- Page TEST
     p_usb_image = "Test Images";

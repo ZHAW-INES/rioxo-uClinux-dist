@@ -668,48 +668,48 @@ void alt_avalon_rtp_rx_get_msg_string(const alt_avalon_msg_fifo_entry* pMsg, cha
 {
    #ifdef ALTERA_AVALON_RTP_RX_SMALL_MSG_STRING_CONVERSION
       sprintf( String,
-               "Ch %3lu - Time 0x%08lx - Msg %2d - Data 0x%08lx",
+               "Ch %3u - Time 0x%08x - Msg %2d - Data 0x%08x",
                pMsg->Channel,
                pMsg->Time,
                pMsg->Code,
                pMsg->Data);
    #else
-      sprintf(String, "Ch %3lu - Time 0x%08lx - ", pMsg->Channel, pMsg->Time);
+      sprintf(String, "Ch %3u - Time 0x%08x - ", pMsg->Channel, pMsg->Time);
       String += strlen(String);
 
       switch(pMsg->Code)
       {
          case alt_avalon_rtp_rx_msg_input_req_ok:
             sprintf( String,
-                     "Input req OK,           SeqNum 0x%04lx, Base 0x%04lx",
+                     "Input req OK,           SeqNum 0x%04x, Base 0x%04x",
                      pMsg->Data&0xFFFF,
                      (pMsg->Data)>>16);
          break;
 
          case alt_avalon_rtp_rx_msg_input_req_out_of_range:
             sprintf( String,
-                     "Input req OUT OF RANGE, SeqNum 0x%04lx, Base 0x%04lx",
+                     "Input req OUT OF RANGE, SeqNum 0x%04x, Base 0x%04x",
                      pMsg->Data&0xFFFF,
                      (pMsg->Data)>>16);
          break;
 
          case alt_avalon_rtp_rx_msg_input_req_flush:
             sprintf( String,
-                     "Input req FLUSH,        SeqNum 0x%04lx, Base 0x%04lx",
+                     "Input req FLUSH,        SeqNum 0x%04x, Base 0x%04x",
                      pMsg->Data&0xFFFF,
                      (pMsg->Data)>>16);
          break;
 
          case alt_avalon_rtp_rx_msg_input_req_duplicate:
             sprintf( String,
-                     "Input req DUPLICATE,    SeqNum 0x%04lx, Base 0x%04lx",
+                     "Input req DUPLICATE,    SeqNum 0x%04x, Base 0x%04x",
                      pMsg->Data&0xFFFF,
                      (pMsg->Data)>>16);
          break;
 
          case alt_avalon_rtp_rx_msg_input_req_fec:
             sprintf( String,
-                     "%s FEC - SNBase 0x%04lx, NA 0x%02lx, Offset 0x%02lx",
+                     "%s FEC - SNBase 0x%04x, NA 0x%02x, Offset 0x%02x",
                      ((pMsg->Data >> 26) & 0x1) ? "Row" : "Col",
                      pMsg->Data&0xFFFF,
                      ((pMsg->Data)>>16)&0x1F,
@@ -723,14 +723,14 @@ void alt_avalon_rtp_rx_get_msg_string(const alt_avalon_msg_fifo_entry* pMsg, cha
 
          case alt_avalon_rtp_rx_msg_input_update:
             sprintf( String,
-                     "Input update,  Depth %3lu,              Base 0x%04lx",
+                     "Input update,  Depth %3u,              Base 0x%04x",
                      pMsg->Data&0xFFFF,
                      (pMsg->Data)>>16);
          break;
 
          case alt_avalon_rtp_rx_msg_input_update_reorder:
             sprintf( String,
-                     "Input update, SeqNum reordered,        Base 0x%04lx",
+                     "Input update, SeqNum reordered,        Base 0x%04x",
                      (pMsg->Data)>>16);
          break;
 
@@ -741,45 +741,45 @@ void alt_avalon_rtp_rx_get_msg_string(const alt_avalon_msg_fifo_entry* pMsg, cha
 
          case alt_avalon_rtp_rx_msg_input_length:
             sprintf( String,
-                     "New input length %lu",
+                     "New input length %u",
                      (pMsg->Data) & 0xFFFF);
          break;
 
          case alt_avalon_rtp_rx_msg_output_req_missing:
             sprintf( String,
-                     "Missing                 SeqNum 0x%04lx",
+                     "Missing                 SeqNum 0x%04x",
                      (pMsg->Data) & 0xFFFF);
          break;
 
          case alt_avalon_rtp_rx_msg_output_req_ok:
             sprintf( String,
-                     "Output req OK,          SeqNum 0x%04lx",
+                     "Output req OK,          SeqNum 0x%04x",
                      pMsg->Data&0xFFFF);
          break;
 
          case alt_avalon_rtp_rx_msg_output_update:
             sprintf( String,
-                     "Output update, Depth %3lu,              Base 0x%04lx",
+                     "Output update, Depth %3u,              Base 0x%04x",
                      pMsg->Data&0xFFFF,
                      (pMsg->Data)>>16);
          break;
 
          case alt_avalon_rtp_rx_msg_fec_update:
             sprintf( String,
-                     "FEC fix for missing SeqNum 0x%04lx",
+                     "FEC fix for missing SeqNum 0x%04x",
                      pMsg->Data&0xFFFF);
          break;
 
          case alt_avalon_rtp_rx_msg_fec_update_problem:
             sprintf( String,
-                     "FEC problem (code %lu), SeqNum 0x%04lx",
+                     "FEC problem (code %u), SeqNum 0x%04x",
                      ((pMsg->Data)>>16) & 0x3,
                      pMsg->Data&0xFFFF);
          break;
 
          default:
             sprintf( String,
-                     "Message code %d, Data 0x%08lx",
+                     "Message code %d, Data 0x%08x",
                      pMsg->Code,
                      pMsg->Data);
          break;
@@ -972,18 +972,19 @@ void init_fec_rx_ip_audio_emb(void *p, int enable, t_fec_rx *counter_values)
 
     if (enable == 1) {
         // reset statistic counters
-        counter_values->valid_packets_aud = 0;
-        counter_values->missing_packets_aud = 0;
-        counter_values->fixed_packets_aud = 0;
+        counter_values->valid_packets_aud_emb = 0;
+        counter_values->missing_packets_aud_emb = 0;
+        counter_values->fixed_packets_aud_emb = 0;
         // statistic counter start on first call of this routine
         alt_avalon_rtp_rx_get_statistics(&dev, 1, &stats);
     }
 }
 
-void init_fec_rx_ip_audio_board(void *p, int enable)
+void init_fec_rx_ip_audio_board(void *p, int enable, t_fec_rx *counter_values)
 {
     alt_avalon_rtp_rx_dev dev;
     alt_avalon_rtp_rx_channel_settings settings;
+    alt_avalon_rtp_rx_stats stats;
 
     dev.base = p;
     dev.MsgFIFODepth = 0;
@@ -993,17 +994,27 @@ void init_fec_rx_ip_audio_board(void *p, int enable)
     settings.RTPBypass = 0;
 
     alt_avalon_rtp_rx_set_channel_config(&dev, 2, &settings);
+
+    if (enable == 1) {
+        // reset statistic counters
+        counter_values->valid_packets_aud_board = 0;
+        counter_values->missing_packets_aud_board = 0;
+        counter_values->fixed_packets_aud_board = 0;
+        // statistic counter start on first call of this routine
+        alt_avalon_rtp_rx_get_statistics(&dev, 2, &stats);
+    }
 }
 
 void fec_rx_statistics(void *p, t_fec_rx *counter_values, t_hoi_msg_fecstat* msg)
 {
     alt_avalon_rtp_rx_dev               dev;
     alt_avalon_rtp_rx_stats             stats_vid;
-    alt_avalon_rtp_rx_stats             stats_aud;
+    alt_avalon_rtp_rx_stats             stats_aud_emb;
     alt_avalon_rtp_rx_stats             stats_aud_board;
     alt_avalon_rtp_rx_design_parameters parameters;
     alt_avalon_rtp_rx_channel_settings  settings_vid;
-    alt_avalon_rtp_rx_channel_settings  settings_aud;
+    alt_avalon_rtp_rx_channel_settings  settings_aud_emb;
+    alt_avalon_rtp_rx_channel_settings  settings_aud_board;
 
     dev.base = p;
     dev.MsgFIFODepth = 0;
@@ -1012,31 +1023,40 @@ void fec_rx_statistics(void *p, t_fec_rx *counter_values, t_hoi_msg_fecstat* msg
     // get values
     alt_avalon_rtp_rx_get_parameters(&dev, &parameters);
     alt_avalon_rtp_rx_get_statistics(&dev, 0, &stats_vid);
-    alt_avalon_rtp_rx_get_statistics(&dev, 1, &stats_aud);
+    alt_avalon_rtp_rx_get_statistics(&dev, 1, &stats_aud_emb);
     alt_avalon_rtp_rx_get_statistics(&dev, 2, &stats_aud_board);
     alt_avalon_rtp_rx_get_channel_config(&dev, 0, &settings_vid);
-    alt_avalon_rtp_rx_get_channel_config(&dev, 1, &settings_aud);
+    alt_avalon_rtp_rx_get_channel_config(&dev, 1, &settings_aud_emb);
+    alt_avalon_rtp_rx_get_channel_config(&dev, 2, &settings_aud_board);
 
     // statistic registers are set to zero after read -> build sum of all values read
     counter_values->valid_packets_vid += stats_vid.ValidPacketCount;
     counter_values->missing_packets_vid += stats_vid.MissingPacketCount;
     counter_values->fixed_packets_vid += stats_vid.FixedPacketCount;
-    counter_values->valid_packets_aud += stats_aud.ValidPacketCount;
-    counter_values->missing_packets_aud += stats_aud.MissingPacketCount;
-    counter_values->fixed_packets_aud += stats_aud.FixedPacketCount;
+    counter_values->valid_packets_aud_emb += stats_aud_emb.ValidPacketCount;
+    counter_values->missing_packets_aud_emb += stats_aud_emb.MissingPacketCount;
+    counter_values->fixed_packets_aud_emb += stats_aud_emb.FixedPacketCount;
+    counter_values->valid_packets_aud_board += stats_aud_board.ValidPacketCount;
+    counter_values->missing_packets_aud_board += stats_aud_board.MissingPacketCount;
+    counter_values->fixed_packets_aud_board += stats_aud_board.FixedPacketCount;
 
-    msg->vid_pkg_cnt    = counter_values->valid_packets_vid;
-    msg->vid_mis_cnt    = counter_values->missing_packets_vid;
-    msg->vid_fix_cnt    = counter_values->fixed_packets_vid;
-    msg->vid_fec_en     = settings_vid.Enable;
-    msg->vid_buf        = alt_avalon_rtp_rx_get_buffer_depth(&dev, 0);
-    msg->aud_pkg_cnt    = counter_values->valid_packets_aud;
-    msg->aud_mis_cnt    = counter_values->missing_packets_aud;
-    msg->aud_fix_cnt    = counter_values->fixed_packets_aud;
-    msg->aud_fec_en     = settings_aud.Enable;
-    msg->aud_buf        = alt_avalon_rtp_rx_get_buffer_depth(&dev, 1);
+    msg->vid_pkg_cnt        = counter_values->valid_packets_vid;
+    msg->vid_mis_cnt        = counter_values->missing_packets_vid;
+    msg->vid_fix_cnt        = counter_values->fixed_packets_vid;
+    msg->vid_fec_en         = settings_vid.Enable;
+    msg->vid_buf            = alt_avalon_rtp_rx_get_buffer_depth(&dev, 0);
+
+    msg->aud_emb_pkg_cnt    = counter_values->valid_packets_aud_emb;
+    msg->aud_emb_mis_cnt    = counter_values->missing_packets_aud_emb;
+    msg->aud_emb_fix_cnt    = counter_values->fixed_packets_aud_emb;
+    msg->aud_emb_fec_en     = settings_aud_emb.Enable;
+    msg->aud_emb_buf        = alt_avalon_rtp_rx_get_buffer_depth(&dev, 1);
+
+    msg->aud_board_pkg_cnt  = counter_values->valid_packets_aud_board;
+    msg->aud_board_mis_cnt  = counter_values->missing_packets_aud_board;
+    msg->aud_board_fix_cnt  = counter_values->fixed_packets_aud_board;
+    msg->aud_board_fec_en   = settings_aud_board.Enable;
+    msg->aud_board_buf      = alt_avalon_rtp_rx_get_buffer_depth(&dev, 2);
+
     msg->buf_size       = parameters.FrameBufferEntriesPerChannel;
-
-    printk("\nCount: %i , buffer: %i\n", stats_aud_board.ValidPacketCount, alt_avalon_rtp_rx_get_buffer_depth(&dev, 2));
-
 }

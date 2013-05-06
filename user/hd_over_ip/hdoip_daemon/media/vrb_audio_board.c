@@ -163,10 +163,10 @@ int vrb_audio_board_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connect
     report(aud_source);
     
     mic_boost_str = reg_get("audio-mic-boost");
-    if(mic_boost_str[0] == '0') mic_boost = AIC23B_ADC_MICBOOST_0DB;    //just to choose between 0 and 20dB mic-boost
+    if (mic_boost_str[0] == '0') mic_boost = AIC23B_ADC_MICBOOST_0DB;    //just to choose between 0 and 20dB mic-boost
     else                        mic_boost = AIC23B_ADC_MICBOOST_20DB;
 
-    if(strcmp(aud_source, "mic"))
+    if (strcmp(aud_source, "mic"))
         hoi_drv_aic23b_adc(AIC23B_ENABLE, AIC23B_ADC_SRC_LINE, volume, mic_boost, &aud);
     else
         hoi_drv_aic23b_adc(AIC23B_ENABLE, AIC23B_ADC_SRC_MIC, volume, mic_boost, &aud);
@@ -176,7 +176,7 @@ int vrb_audio_board_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connect
     report(INFO "\naudio if_board streaming started(fs = %d Hz, bitwidth = %d Bit, channel_map = 0x%x)", m->format.value, m->format.compress, m->format.value2);
 #endif
 
-  //  hoi_drv_asi(AUD_STREAM_NR_IF_BOARD, &eth, &aud, &fec);
+    hoi_drv_asi(AUD_STREAM_NR_IF_BOARD, &eth, &aud, &fec);
 
     hdoipd_set_vtb_state(VTB_AUDIO_BOARD);
 

@@ -114,7 +114,6 @@
 #define eti_get_vid_packet_cnt(p)		    HOI_RD32((p), ETI_VID_PACKET_CNT_REG)
 #define eti_get_cpu_packet_cnt(p)		    HOI_RD32((p), ETI_CPU_PACKET_CNT_REG)
 #define eti_get_inv_packet_cnt(p)		    HOI_RD32((p), ETI_INV_PACKET_CNT_REG)
-#define eti_get_debug_reg(p)			    HOI_RD32((p), ETI_DEBUG_REG)
 
 #define eti_get_status_fifo_empty(p)		HOI_REG_TST(p, ETI_STATUS_REG, ETI_STATUS_FIFO_EMPTY)
 #define eti_get_status_fsm_idle(p)		    HOI_REG_TST(p, ETI_STATUS_REG, ETI_STATUS_FSM_IDLE)

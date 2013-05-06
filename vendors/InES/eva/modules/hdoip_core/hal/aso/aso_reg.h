@@ -40,7 +40,7 @@
 #define ASO_CFG_RUN                     (1<<0)
 #define ASO_CFG_OE                      (1<<1)
 #define ASO_STATUS_IDLE                 (1<<0)
-#define ASO_STATUS_FRAME_SIZE_ERROR     (1<<1)
+#define ASO_STATUS_TIMESTAMP_ERROR      (1<<1)
 #define ASO_STATUS_FIFO_EMPTY           (1<<2)
 #define ASO_STATUS_FIFO_FULL            (1<<3)
 #define ASO_STATUS_ALL                  0x0F

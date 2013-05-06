@@ -36,7 +36,6 @@
 #define ETI_AES_SESSION_KEY3_REG    108
 #define ETI_AES_RIV0_REG            112
 #define ETI_AES_RIV1_REG            116
-#define ETI_DEBUG_REG               124
 #define ETI_AUD_EMB_PACKET_CNT_REG  136
 #define ETI_VID_PACKET_CNT_REG      140
 #define ETI_CPU_PACKET_CNT_REG      144

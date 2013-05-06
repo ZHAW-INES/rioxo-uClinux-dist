@@ -861,9 +861,9 @@ void hdoipd_event(uint32_t event)
                 hoi_drv_new_audio(buff);
             }
         break;
-        case E_ASO_EMB_SIZE_ERROR:
+        case E_ASO_EMB_TS_ERROR:
         break;
-        case E_ASO_BOARD_SIZE_ERROR:
+        case E_ASO_BOARD_TS_ERROR:
         break;
         case E_ASO_EMB_FIFO_EMPTY:
         break;
@@ -872,10 +872,6 @@ void hdoipd_event(uint32_t event)
         case E_ASO_EMB_FIFO_FULL:
         break;
         case E_ASO_BOARD_FIFO_FULL:
-        break;
-        case E_ASO_EMB_RAM_FULL:
-        break;
-        case E_ASO_BOARD_RAM_FULL:
         break;
 
         case E_VIO_JD0ENC_OOS:
@@ -955,7 +951,8 @@ void hdoipd_start()
 }
 
 #define FEC_IP_BUFFER_SIZE  ((3*1024+62)*1540)
-#define AUD_TX_SIZE         (512*1024)
+#define VID_TX_SIZE         (256*1024)
+#define AUD_TX_SIZE         (256*1024)
 
 bool hdoipd_init(int drv)
 {
@@ -981,7 +978,8 @@ bool hdoipd_init(int drv)
     hdoipd.hdcp.enc_state = 0;
 
     // set ringbuffer addresses
-    void* vid = malloc(FEC_IP_BUFFER_SIZE);
+    void* fec_rx = malloc(FEC_IP_BUFFER_SIZE);
+    void* vid_tx = malloc(VID_TX_SIZE);
     void* aud_tx = malloc(AUD_TX_SIZE);
 
     hdoipd_set_default();
@@ -1073,21 +1071,26 @@ bool hdoipd_init(int drv)
 
         report("setup buffers...");
 
-        if (!vid) {
+        if (!fec_rx) {
             report("malloc(FEC_IP_BUFFER_SIZE) failed");
             unlock("hdoipd_init");
             return false;
         }
 
+        if (!vid_tx) {
+            report("malloc(VID_TX_SIZE) failed");
+            unlock("hdoipd_init");
+            return false;
+        }
         if (!aud_tx) {
             report("malloc(AUD_TX_SIZE) failed");
             unlock("hdoipd_init");
             return false;
         }
 
-        hdoipd.img_buff = vid;
+        hdoipd.img_buff = fec_rx;
 
-        if (hoi_drv_buf(aud_tx, AUD_TX_SIZE, vid, FEC_IP_BUFFER_SIZE)) {
+        if (hoi_drv_buf(aud_tx, AUD_TX_SIZE, vid_tx, VID_TX_SIZE, fec_rx, FEC_IP_BUFFER_SIZE)) {
             report("set buffers failed");
             unlock("hdoipd_init");
             return false;

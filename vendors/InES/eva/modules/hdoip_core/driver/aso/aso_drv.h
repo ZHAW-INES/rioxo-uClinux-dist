@@ -24,6 +24,6 @@ int aso_drv_set_aud_params(t_aso* handle, struct hdoip_aud_params* aud_params);
 int aso_drv_get_aud_params(t_aso* handle, struct hdoip_aud_params* aud_params);
 int aso_drv_set_aud_delay(t_aso* handle,  uint32_t aud_delay_us);
 int aso_drv_get_aud_delay(t_aso* handle,  uint32_t* aud_delay_us);
-uint32_t aso_drv_get_aud_id(t_aso* handle);
+uint32_t aso_drv_get_aud_id(void* p_aso);
 
 #endif /* ASO_DRV_H_ */

@@ -48,7 +48,7 @@ void gs2972_driver_init(t_gs2972 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     bdt_drv_clear_reset_1(video_mux_ptr);
 
     // enable all ioproc functions / disable conversion to SMPTE 372M
-    spi_write_reg_16(handle->p_spi, GS2972_IOPROC, IOPROC_RW_DEFAULT | IOPROC_RW_CONV_372);
+    spi_write_reg_16(handle->p_spi, GS2972_IOPROC, IOPROC_RW_DEFAULT | IOPROC_RW_CONV_372 | IOPROC_RW_SMPTE_325M_INS);
 
     // set drive strength to min
     spi_write_reg_16(handle->p_spi, GS2972_DRIVE_STRENGTH, DRIVE_STRENGTH_RW_4_MA);

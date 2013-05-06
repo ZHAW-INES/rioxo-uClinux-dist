@@ -19,7 +19,7 @@
 const char* event_str(uint32_t e);
 
 int hoi_drv_ldrv(uint32_t drivers);
-int hoi_drv_buf(void* at, size_t atl, void* vt, size_t vtl);
+int hoi_drv_buf(void* at, size_t atl, void* vt, size_t vtl, void* ft, size_t ftl);
 int hoi_drv_hdcp(uint32_t* hdcp_keys);
 int hoi_drv_hdcpstat(uint32_t *eto_hdcp_audio,uint32_t *eto_hdcp_video,uint32_t *eti_hdcp_audio, uint32_t *eti_hdcp_video);
 

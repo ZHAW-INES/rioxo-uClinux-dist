@@ -229,6 +229,8 @@ typedef struct {
     size_t              vid_tx_len;     //! < buffer size
     void*               aud_tx_buf;     //! < physical address
     size_t              aud_tx_len;     //! < buffer size
+    void*               fec_rx_buf;     //! < physical address
+    size_t              fec_rx_len;     //! < buffer size
 } t_hoi_msg_buf;
 
 #define hoi_msg_buf_init(p) hoi_msg_init(p, HOI_MSG_BUF, t_hoi_msg_buf)
@@ -257,7 +259,6 @@ typedef struct {
     uint32_t            rx_aud_emb_cnt;
     uint32_t            rx_aud_board_cnt;
     uint32_t            rx_inv_cnt;
-    uint32_t            debug;
 } t_hoi_msg_ethstat;
 
 #define hoi_msg_ethstat_init(p) hoi_msg_init(p, HOI_MSG_ETHSTAT, t_hoi_msg_ethstat)
@@ -269,11 +270,16 @@ typedef struct {
     uint32_t            vid_fix_cnt;
     uint32_t            vid_fec_en;
     uint32_t            vid_buf;
-    uint32_t            aud_pkg_cnt;
-    uint32_t            aud_mis_cnt;
-    uint32_t            aud_fix_cnt;
-    uint32_t            aud_fec_en;
-    uint32_t            aud_buf;
+    uint32_t            aud_emb_pkg_cnt;
+    uint32_t            aud_emb_mis_cnt;
+    uint32_t            aud_emb_fix_cnt;
+    uint32_t            aud_emb_fec_en;
+    uint32_t            aud_emb_buf;
+    uint32_t            aud_board_pkg_cnt;
+    uint32_t            aud_board_mis_cnt;
+    uint32_t            aud_board_fix_cnt;
+    uint32_t            aud_board_fec_en;
+    uint32_t            aud_board_buf;
     uint32_t            buf_size;
 } t_hoi_msg_fecstat;
 

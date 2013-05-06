@@ -14,7 +14,6 @@
 #include "aso_reg.h"
 
 /* constants of hardware */
-#define ASO_REORDERING_RAM_SIZE             (1024)
 #define ASO_DATA_FIFO_SIZE                  (256)   /* in 32 bit words */
 
 /* macros */
@@ -33,7 +32,6 @@
 #define aso_set_aud_delay(p, v)             HOI_WR32((p), ASO_OFF_AUD_DELAY, (v))
 #define aso_get_aud_delay(p)                HOI_RD32((p), ASO_OFF_AUD_DELAY)
 #define aso_get_clk_diff(p)                 HOI_RD32((p), ASO_OFF_CLK_CTRL_DIFF_RO)
-#define aso_get_frames_buffered(p)          HOI_RD32((p), ASO_OFF_FRAMES_BUFFERED_RO)
 #define aso_set_clk_div_base(p, v)          HOI_WR32((p), ASO_OFF_CLK_DIV_BASE, (v))
 #define aso_get_clk_div_base(p)             HOI_RD32((p), ASO_OFF_CLK_DIV_BASE)
 #define aso_set_clk_div_kp(p, v)            HOI_WR32((p), ASO_OFF_CLK_DIV_KP, (v))
@@ -51,6 +49,7 @@
 #define aso_set_clk_config(p, v)            HOI_WR32((p), ASO_OFF_CLK_CONFIG, (v))
 #define aso_get_clk_config(p)               HOI_RD32((p), ASO_OFF_CLK_CONFIG)
 #define aso_set_denominator(p, v)           HOI_WR32((p), ASO_OFF_DENOMINATOR, (v))
+#define aso_get_denominator(p)              HOI_RD32((p), ASO_OFF_DENOMINATOR)
 
 static inline void aso_set_aud_params(void* p, struct hdoip_aud_params* aud_params)
 {
@@ -66,10 +65,6 @@ static inline void aso_set_aud_params(void* p, struct hdoip_aud_params* aud_para
 }
 static inline void aso_get_aud_params(void* p, struct hdoip_aud_params* aud_params)
 {
-    uint16_t ch_cnt_left, ch_cnt_right;//remove
-
-    ch_cnt_left = HOI_RD32(p,  ASO_OFF_CH_CNT_LEFT);
-    ch_cnt_right = HOI_RD32(p,  ASO_OFF_CH_CNT_RIGHT);
     aud_params->sample_width = aud_container_to_bits(HOI_RD32(p,  ASO_OFF_CONTAINER));
 }
 

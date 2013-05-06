@@ -64,15 +64,14 @@
 
 /* ASO events */
 #define E_ASO_ID                (0x60000000)
-#define E_ASO_CNT               8
-#define E_ASO_EMB_SIZE_ERROR    (E_ASO_ID + 0x00000001)
-#define E_ASO_BOARD_SIZE_ERROR  (E_ASO_ID + 0x00000002)
+#define E_ASO_CNT               6
+#define E_ASO_EMB_TS_ERROR      (E_ASO_ID + 0x00000001)
+#define E_ASO_BOARD_TS_ERROR    (E_ASO_ID + 0x00000002)
 #define E_ASO_EMB_FIFO_EMPTY    (E_ASO_ID + 0x00000003)
 #define E_ASO_BOARD_FIFO_EMPTY  (E_ASO_ID + 0x00000004)
 #define E_ASO_EMB_FIFO_FULL     (E_ASO_ID + 0x00000005)
 #define E_ASO_BOARD_FIFO_FULL   (E_ASO_ID + 0x00000006)
-#define E_ASO_EMB_RAM_FULL      (E_ASO_ID + 0x00000007)
-#define E_ASO_BOARD_RAM_FULL    (E_ASO_ID + 0x00000008)
+
 
 /* ETI events */
 #define E_ETI_ID                (0x70000000)

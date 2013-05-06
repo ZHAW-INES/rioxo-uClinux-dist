@@ -310,32 +310,10 @@ int aic23b_set_power_down(t_tlv320aic23b *codec, bool down, bool adc) {
 	/* we dont power individual blocks, we just shut all up or down */
 	if (down)
 		if (adc)    //ADC Configuration
-            reg =   TI_POWER_DOWN_OUT \
-                  | TI_POWER_DOWN_DAC
-                  | TI_POWER_DOWN_CLK;// \
-                  | TI_POWER_DOWN_OSC;// \
-                //reg = 0;//TI_POWER_DOWN_CLK;
-                    /*CLKOUT off*/
-                    /*HEAD & LINEOUT off*/
-                    /*DAC off*/
+            reg =   TI_POWER_DOWN_OUT | TI_POWER_DOWN_DAC | TI_POWER_DOWN_CLK;
 
         else        //DAC Configuration
-            reg =   TI_POWER_DOWN_ADC \ 
-                  | TI_POWER_DOWN_MIC;// \
-                  | TI_POWER_DOWN_CLK \
-                  | TI_POWER_DOWN_OSC;// \
-                    | TI_POWER_DOWN_OUT \
-                  | TI_POWER_DOWN_DAC;// \
-                  | TI_POWER_DOWN_MIC \
-                  | TI_POWER_DOWN_LINE;     //dont power down LINE, unknown error
-
-                //reg = 0;//TI_POWER_DOWN_LINE;
-    
-                    /*CLKOUT off*/
-                    /*OSC (XTO) off*/
-                    /*ADC off*/
-                    /*MIC IN off*/
-                    /*LINE IN off*/
+            reg =   TI_POWER_DOWN_ADC | TI_POWER_DOWN_MIC;
      
 	else
 		reg = 0;    //power ON for all

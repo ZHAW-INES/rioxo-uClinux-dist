@@ -64,7 +64,7 @@ void hoi_drv_init(t_hoi* handle)
     // read video card id
     bdt_drv_read_video_id(&handle->bdt, &handle->i2c_tag_vid);
     // read audio card id
-    bdt_drv_read_audio_id(&handle->bdt, &handle->aso[AUD_STREAM_NR_IF_BOARD]);
+    bdt_drv_read_audio_id(&handle->bdt, handle->p_aso[AUD_STREAM_NR_IF_BOARD]);
 
     // set video card multiplexer
     bdt_drv_set_video_mux(&handle->bdt, handle->p_video_mux);
@@ -149,7 +149,7 @@ void hoi_drv_reset(t_hoi* handle, uint32_t rv)
     if (rv & DRV_RST_AUD_BOARD_OUT) {
         REPORT(INFO, "reset aso/eti (board)");
         // deactivate FEC RX block
-        init_fec_rx_ip_audio_board(handle->p_fec_ip_rx, 0);
+        init_fec_rx_ip_audio_board(handle->p_fec_ip_rx, 0, &handle->fec_rx);
         fec_rx_disable_audio_board_out(handle->p_fec_rx); 
         aso_drv_stop(&handle->aso[AUD_STREAM_NR_IF_BOARD]);
         aso_drv_flush_buf(&handle->aso[AUD_STREAM_NR_IF_BOARD]);
