@@ -32,6 +32,12 @@ int vtb_audio_board_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_conne
 
     set_multicast_enable(reg_test("multicast_en", "true"));
 
+    if (reg_test("multicast_en", "true")){
+        report(" ? cant stream audio board when in multicast mode");
+        rscp_err_multicast(rsp);
+        return RSCP_SUCCESS;
+    }
+
     if (!hdoipd_state(HOID_VTB)) {
         report(" ? not in state vtb");
         rscp_err_no_vtb(rsp);

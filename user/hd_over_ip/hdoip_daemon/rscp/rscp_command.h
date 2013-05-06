@@ -17,6 +17,7 @@
 #define rscp_err_no_source(x)       rscp_response_error(x, 406, "No Input")
 #define rscp_err_def_source(x)      rscp_response_error(x, 407, "No Audio Input")
 #define rscp_err_hdcp(x)            rscp_response_error(x, 408, "HDCP error")
+#define rscp_err_multicast(x)       rscp_response_error(x, 409, "Audio board in multicast")
 
 void rscp_response_line(t_rscp_connection* msg, int code, char* reason);
 void rscp_response_error(t_rscp_connection* msg, int code, char* reason);

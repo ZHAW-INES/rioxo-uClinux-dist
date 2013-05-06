@@ -240,6 +240,8 @@ int vrb_audio_board_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rs
                             alive_check_start_vrb_alive();
             	        }
                         break;
+            case 409:   media->result = RSCP_RESULT_SERVER_MULTICAST;
+                        break;
             case 400:
             default:    media->result = RSCP_RESULT_SERVER_ERROR;
                         break;

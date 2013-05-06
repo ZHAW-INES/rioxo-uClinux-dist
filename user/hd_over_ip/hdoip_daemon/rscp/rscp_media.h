@@ -46,7 +46,8 @@ typedef enum {
     RSCP_RESULT_SERVER_NO_VTB,
     RSCP_RESULT_SERVER_TRY_LATER,
     RSCP_RESULT_SERVER_NO_VIDEO_IN,
-    RSCP_RESULT_SERVER_HDCP_ERROR
+    RSCP_RESULT_SERVER_HDCP_ERROR,
+    RSCP_RESULT_SERVER_MULTICAST
 } e_rscp_media_result;
 
 typedef int (frscpm)(void* media, void* msg, void* rsp);
