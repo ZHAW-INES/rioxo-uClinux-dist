@@ -52,8 +52,11 @@ const char* event_str(uint32_t e)
         case E_ETO_LINK_DOWN: return "Ethernet Output Link DOWN";
         case E_ETO_VIDEO_ON: return "Ethernet Video stream out started";
         case E_ETO_VIDEO_OFF: return "Ethernet Video stream out stopped";
-        case E_ETO_AUDIO_ON: return "Ethernet Audio stream out started";
-        case E_ETO_AUDIO_OFF: return "Ethernet Audio stream out stopped";
+
+        case E_ETO_AUDIO_EMB_ON: return "Ethernet Audio embedded stream out started";
+        case E_ETO_AUDIO_EMB_OFF: return "Ethernet Audio embedded stream out stopped";
+        case E_ETO_AUDIO_BOARD_ON: return "Ethernet Audio board stream out started";
+        case E_ETO_AUDIO_BOARD_OFF: return "Ethernet Audio board stream out stopped";
         case E_ETI_VIDEO_ON: return "Ethernet Video stream in started";
         case E_ETI_VIDEO_OFF: return "Ethernet Video stream in stopped";
         case E_ETI_AUDIO_EMB_ON: return "Ethernet Audio embedded stream in started";

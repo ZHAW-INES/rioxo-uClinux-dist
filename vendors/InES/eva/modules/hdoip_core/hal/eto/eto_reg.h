@@ -50,6 +50,8 @@
 #define ETO_TF_DIVIDER                  184
 #define ETO_TF_MULTIPLIER               188
 
+#define ETO_AUD_BOARD_PACKET_CNT_REG    208
+
 #define ETO_PRIORITY_CONFIG_REG         256
 #define ETO_CPU_PRIORITY_REG            260	
 #define ETO_AUD_PRIORITY_REG            264	

@@ -243,7 +243,7 @@ int hoi_drv_msg_ethstat(t_hoi* handle, t_hoi_msg_ethstat* msg)
 
     msg->tx_cpu_cnt = eto_get_cpu_packet_cnt(handle->p_eso);
     msg->tx_aud_emb_cnt = eto_get_aud_emb_packet_cnt(handle->p_eso);
-    msg->tx_aud_board_cnt = 0; // TODO
+    msg->tx_aud_board_cnt = eto_get_aud_board_packet_cnt(handle->p_eso);
     msg->tx_vid_cnt = eto_get_vid_packet_cnt(handle->p_eso);
     msg->tx_inv_cnt = eto_get_inv_packet_cnt(handle->p_eso);
 

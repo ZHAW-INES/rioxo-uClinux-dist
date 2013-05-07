@@ -547,6 +547,7 @@ int vio_drv_plainin(t_vio* handle, uint32_t device)
     // store config
     vio_drv_change_mode(handle, VIO_CONFIG_PLAININ);
 
+
     // stop everything
     vio_reset(handle->p_vio);
 

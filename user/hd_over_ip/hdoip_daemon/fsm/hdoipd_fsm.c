@@ -795,11 +795,15 @@ void hdoipd_event(uint32_t event)
                 hoi_drv_set_led_status(NO_STREAM_ACTIVE);
             }
         break;
-        case E_ETO_AUDIO_ON:
+        case E_ETO_AUDIO_EMB_ON:
             hdoipd_set_rsc(RSC_EAO);
         break;
-        case E_ETO_AUDIO_OFF:
+        case E_ETO_AUDIO_EMB_OFF:
             hdoipd_clr_rsc(RSC_EAO);
+        break;
+        case E_ETO_AUDIO_BOARD_ON:
+        break;
+        case E_ETO_AUDIO_BOARD_OFF:
         break;
         case E_HDCP_STREAMING_ERROR:   // restart VTB if Kernel detects HDCP streaming error
         	report(INFO "*********** HDCP streaming error ***********");

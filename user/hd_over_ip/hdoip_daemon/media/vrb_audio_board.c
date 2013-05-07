@@ -63,29 +63,8 @@ int vrb_audio_board_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_conne
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, aud);
 
-    // do not output HDCP encrypted content on SDI
-    if ((m->hdcp.hdcp_on == 1) && (hdoipd.drivers & DRV_GS2972)) {
-        report(INFO "encrypted audio output on SDI is not allowed");
-        osd_permanent(true);
-        osd_printf("encrypted audio output on SDI is not allowed\n");
-        rscp_client_set_teardown(client);
-        return RSCP_REQUEST_ERROR;
-    }
-
-    /*start hdcp session key exchange if necessary */
-    report("Check if HDCP is necessary and start ske");
-    hdoipd.hdcp.enc_state = m->hdcp.hdcp_on;
-
-    if ((m->hdcp.hdcp_on == 1) && !(hdoipd.hdcp.ske_executed)){
-		if (rscp_client_hdcp(client) != RSCP_SUCCESS){
-			report(" ? Session key exchange failed");
-			//rscp_err_hdcp(rsp);  DONT CALL THIS AT VRB!!!!!!!!!!!!!!!
-			return RSCP_REQUEST_ERROR;
-		}
-    }
-
 #ifdef ETI_PATH
-    hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, 0, hdoipd.local.aud_port);
+    hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, 0, htons(reg_get_int("audio-port-board")));
 #endif
 
     hdoipd_set_vtb_state(VTB_AUD_BOARD_IDLE);
@@ -233,13 +212,6 @@ int vrb_audio_board_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rs
                         break;
             case 406:   media->result = RSCP_RESULT_SERVER_NO_VIDEO_IN;
                         break;
-            case 408:   media->result = RSCP_RESULT_SERVER_HDCP_ERROR;
-            			rscp_client_set_teardown(client);
-	    				// start sending alive packets
-            	        if(hdoipd.auto_stream) {
-                            alive_check_start_vrb_alive();
-            	        }
-                        break;
             case 409:   media->result = RSCP_RESULT_SERVER_MULTICAST;
                         break;
             case 400:
@@ -332,7 +304,7 @@ int vrb_audio_board_dosetup(t_rscp_media *media, void* UNUSED m, void* UNUSED rs
     t_rscp_client *client = media->creator;
     t_rscp_hdcp hdcp;
 
-    hdcp.hdcp_on = reg_test("hdcp-force", "true");
+    hdcp.hdcp_on = 0; // no HDCP
 
     report(VRB_METHOD "vrb_audio_board_dosetup");
 

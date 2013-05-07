@@ -481,7 +481,7 @@ function DropdownBox4(name, label1, label2, label3, label4, selected)
     html_str = html_str .. "</select>\n"
 end
 
-function DropdownBox9(name, label1, label2, label3, label4, label5, label6, label7, label8, label9, selected)
+function DropdownBox7(name, label1, label2, label3, label4, label5, label6, label7, selected)
     if(tonumber(selected) ~= nil) then
         selected = tonumber(selected)
     end
@@ -528,16 +528,5 @@ function DropdownBox9(name, label1, label2, label3, label4, label5, label6, labe
     end
     html_str = html_str .. "> "..label7.." </option>\n"
 
-    html_str = html_str .. "<option value=7"
-    if((selected ~= nil) and (selected == 7))then
-        html_str = html_str .." selected"
-    end
-    html_str = html_str .. "> "..label8.." </option>\n"
-
-    html_str = html_str .. "<option value=8"
-    if((selected ~= nil) and (selected == 8))then
-        html_str = html_str .." selected"
-    end
-    html_str = html_str .. "> "..label9.." </option>\n"
     html_str = html_str .. "</select>\n"
 end

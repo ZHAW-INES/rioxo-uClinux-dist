@@ -244,8 +244,10 @@ int eto_drv_init(t_eto* handle, void* ptr)
     handle->link_state = 0;
     handle->vtx = 0;
     handle->atx = 0;
+    handle->abtx = 0;
     handle->vcnt = 0;
     handle->acnt = 0;
+    handle->abcnt = 0;
     handle->traffic_shaping_enable = 0;
 
 	eto_drv_stop(handle);
@@ -279,6 +281,7 @@ int eto_drv_handler(t_eto* handle, t_queue* event_queue)
     uint32_t reg = eto_get_config_reg(handle->ptr) & ETO_CONFIG_FSM_EN;
     uint32_t vtx = eto_get_vid_packet_cnt(handle->ptr);
     uint32_t atx = eto_get_aud_emb_packet_cnt(handle->ptr);
+    uint32_t abtx = eto_get_aud_board_packet_cnt(handle->ptr);
 
     if(reg != handle->link_state) {
         if(reg > 0) {   /* link up */
@@ -307,15 +310,30 @@ int eto_drv_handler(t_eto* handle, t_queue* event_queue)
     if (atx != handle->atx) {
         handle->atx = atx;
         if (!handle->acnt) {
-            queue_put(event_queue, E_ETO_AUDIO_ON);
+            queue_put(event_queue, E_ETO_AUDIO_EMB_ON);
         }
         handle->acnt = ETO_LINK_COUNT;
     } else {
         if (handle->acnt == 1) {
-            queue_put(event_queue, E_ETO_AUDIO_OFF);
+            queue_put(event_queue, E_ETO_AUDIO_EMB_OFF);
         }
         if (handle->acnt) {
             handle->acnt--;
+        }
+    }
+
+    if (abtx != handle->abtx) {
+        handle->abtx = abtx;
+        if (!handle->abcnt) {
+            queue_put(event_queue, E_ETO_AUDIO_BOARD_ON);
+        }
+        handle->abcnt = ETO_LINK_COUNT;
+    } else {
+        if (handle->abcnt == 1) {
+            queue_put(event_queue, E_ETO_AUDIO_BOARD_OFF);
+        }
+        if (handle->abcnt) {
+            handle->abcnt--;
         }
     }
 

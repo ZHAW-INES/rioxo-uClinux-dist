@@ -123,7 +123,8 @@
 #define eto_get_aes_riv_1(p) 			        HOI_RD32((p), ETO_AES_RIV1_REG)
 
 #define eto_get_status_frame_err(p) 		    HOI_REG_TST(p, ETO_STATUS_REG, ETO_STATUS_FRAME_ERROR)
-#define eto_get_aud_emb_packet_cnt(p) 		    HOI_RD32((p), ETO_AUD_EMB_PACKET_CNT_REG)
+#define eto_get_aud_emb_packet_cnt(p)           HOI_RD32((p), ETO_AUD_EMB_PACKET_CNT_REG)
+#define eto_get_aud_board_packet_cnt(p)         HOI_RD32((p), ETO_AUD_BOARD_PACKET_CNT_REG)
 #define eto_get_vid_packet_cnt(p) 		        HOI_RD32((p), ETO_VID_PACKET_CNT_REG)
 #define eto_get_cpu_packet_cnt(p) 		        HOI_RD32((p), ETO_CPU_PACKET_CNT_REG)
 #define eto_get_inv_packet_cnt(p) 		        HOI_RD32((p), ETO_INV_PACKET_CNT_REG)

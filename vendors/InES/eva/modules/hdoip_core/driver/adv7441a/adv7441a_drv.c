@@ -641,8 +641,8 @@ int adv7441a_get_analog_video_timing(t_adv7441a* handle)
 int adv7441a_get_hdcp_status(t_adv7441a* handle)
 {
     int i, ret;
-  /*  uint32_t time;
-TODO: remove comment
+    uint32_t time;
+
     for(i=0;i<100;i++) {
         time = jiffies;
         while ((time + HZ/100) >= jiffies); // wait ~1000ms until bit is valid
@@ -652,8 +652,8 @@ TODO: remove comment
             break;
         }
     }
-*/
-    return 0; ret;
+
+    return ret;
 }
 
 

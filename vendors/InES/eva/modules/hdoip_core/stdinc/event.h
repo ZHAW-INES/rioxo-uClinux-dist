@@ -87,14 +87,15 @@
 
 /* ETO events */
 #define E_ETO_ID                (0x80000000)
-#define E_ETO_CNT               6
+#define E_ETO_CNT               8
 #define E_ETO_LINK_UP           (E_ETO_ID + 0x00000001)
 #define E_ETO_LINK_DOWN         (E_ETO_ID + 0x00000002)
 #define E_ETO_VIDEO_ON          (E_ETO_ID + 0x00000003)
 #define E_ETO_VIDEO_OFF         (E_ETO_ID + 0x00000004)
-#define E_ETO_AUDIO_ON          (E_ETO_ID + 0x00000005)
-#define E_ETO_AUDIO_OFF         (E_ETO_ID + 0x00000006)
-
+#define E_ETO_AUDIO_EMB_ON      (E_ETO_ID + 0x00000005)
+#define E_ETO_AUDIO_EMB_OFF     (E_ETO_ID + 0x00000006)
+#define E_ETO_AUDIO_BOARD_ON    (E_ETO_ID + 0x00000007)
+#define E_ETO_AUDIO_BOARD_OFF   (E_ETO_ID + 0x00000008)
 
 /* VIO events */
 #define E_VIO_ID                (0x30000000)

@@ -10,7 +10,6 @@
 #include "hdoipd_fsm.h"
 #include "box_sys.h"
 #include "rscp_server.h"
-#include "hdcp.h"
 #include "multicast.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
@@ -25,7 +24,6 @@ int vtb_audio_board_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connect
 
 int vtb_audio_board_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
 {
-    int hdcp;
     t_multicast_cookie* cookie = media->cookie;
 
     report(VTB_METHOD "vtb_audio_board_setup");
@@ -70,12 +68,6 @@ int vtb_audio_board_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_conne
         hdoipd_set_vtb_state(VTB_AUD_BOARD_IDLE);
     }
 
-    //check if hdcp is forced by HDMI, user or client (over RSCP)
-    if (reg_test("hdcp-force", "true") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
-    	m->hdcp.hdcp_on = 1;
-    	hdoipd.hdcp.enc_state = HDCP_ENABLED;
-    }
-
     cookie->remote.address = rsp->address;
     cookie->remote.aud_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.aud_port, hdoipd.local.aud_port);
@@ -98,7 +90,7 @@ int vtb_audio_board_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_conne
 int vtb_audio_board_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connection* rsp)
 {
 
-    int n, hdcp;
+    int n;
     t_rscp_rtp_format fmt;
     struct hdoip_eth_params eth;
     struct hdoip_aud_params aud;
