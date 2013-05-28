@@ -955,7 +955,7 @@ void hdoipd_start()
 }
 
 #define FEC_IP_BUFFER_SIZE  ((3*1024+62)*1540)
-#define VID_TX_SIZE         (256*1024)
+#define VID_TX_SIZE         (1024*1024)
 #define AUD_TX_SIZE         (256*1024)
 
 bool hdoipd_init(int drv)

@@ -167,16 +167,16 @@ void edid_merge_display_dsc(uint8_t *edid, uint8_t *dscs1, uint8_t *dscs2, bool 
         ptr3[2]  = 0x00;
         ptr3[3]  = 0xFC;
         ptr3[4]  = 0x00;
-        ptr3[5]  = 'R';
-        ptr3[6]  = 'I';
-        ptr3[7]  = 'O';
-        ptr3[8]  = 'X';
-        ptr3[9]  = 'O';
-        ptr3[10] = 0x0A;
-        ptr3[11] = 0x20;
-        ptr3[12] = 0x20;
-        ptr3[13] = 0x20;
-        ptr3[14] = 0x20;
+        ptr3[5]  = 'B';
+        ptr3[6]  = 'L';
+        ptr3[7]  = 'A';
+        ptr3[8]  = 'C';
+        ptr3[9]  = 'K';
+        ptr3[10] = ' ';
+        ptr3[11] = 'B';
+        ptr3[12] = 'O';
+        ptr3[13] = 'X';
+        ptr3[14] = 0x0A;
         ptr3[15] = 0x20;
         ptr3[16] = 0x20;
         ptr3[17] = 0x20;
@@ -237,7 +237,7 @@ void edid_merge(t_edid *edid1, t_edid *edid2)
     strncpy(sn,   &(tmp[6]), 8);
     sn[8] = '\0';
 
-    edid.id_manufacturer    = 0x0F4B; // RXO  0xA315; // EMC
+    edid.id_manufacturer    = 0x5808; //BBX         0x0F4B; // RXO        0xA315; // EMC        0x5808; // BBX
     edid.id_product_code    = 10;
     edid.id_serial_number   = atoi(sn);
     edid.year               = (uint8_t)(atoi(year) - 1990);

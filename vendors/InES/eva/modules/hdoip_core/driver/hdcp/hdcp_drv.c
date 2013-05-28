@@ -41,9 +41,9 @@ int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv98
     	//check if audio encryption status is okay, otherwise stop audio
     	if (!((h_adv9889->hdcp_state & HDCP_VID_ACTIVE_LOOP) || (h_adv9889->hdcp_state & HDCP_VID_ACTIVE))  && (audio_enc_en_eti) && (h_aso->stream_status & ASO_DRV_STATUS_ACTIV))
     	{
-    	   	aso_drv_stop(h_aso);    //stop transmitting video
-    	   	REPORT(INFO, "HDMI AUDIO SINK CHANGED, HDCP ERROR!");
-            queue_put(event_queue, E_HDCP_STREAMING_ERROR);
+    	   	aso_drv_stop(h_aso);    //stop transmitting audio
+    	   	// REPORT(INFO, "HDMI AUDIO SINK CHANGED, HDCP ERROR!");
+            // queue_put(event_queue, E_HDCP_STREAMING_ERROR);
     	}
     }
 
