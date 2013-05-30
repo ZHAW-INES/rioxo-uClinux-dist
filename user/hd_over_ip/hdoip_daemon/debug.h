@@ -32,21 +32,20 @@
 
 // main log file
 #define MAIN_LOG
-#undef REPORT_RSCP
-#undef REPORT_RSCP_CLIENT
-#undef REPORT_RSCP_SERVER
-#undef REPORT_RSCP_HELLO
-#undef REPORT_RSCP_RX
+#undef REPORT_RTSP
+#undef REPORT_RTSP_CLIENT
+#undef REPORT_RTSP_SERVER
+#undef REPORT_RTSP_GET_PARAMETER
+#undef REPORT_RTSP_RX
 #undef REPORT_PTHREAD
-#undef REPORT_RSCP_UPDATE
-#undef REPORT_ALIVE_HELLO
+#undef REPORT_RTSP_UPDATE
 
-// RSCP log file
-#undef RSCP_LOG
-#undef REPORT_RSCP_PACKETS
+// RTSP log file
+#undef RTSP_LOG
+#undef REPORT_RTSP_PACKETS
 
 #define DBGCONSOLE
-#define DBGCONSOLERSCP
+#define DBGCONSOLERTSP
 
 #define EDID_WRITE_HEX_FILE
 #undef REPORT_EDID
@@ -70,7 +69,9 @@
 // #define VRB_METHOD  " M "
 #define VRB_METHOD  "------------------------------------------------------------- \n M "
 
-#define UNUSED __attribute__((__unused__))
+#define UNUSED		__attribute__((unused))
+#define MAYBE_UNUSED	__attribute__((unused))
+
 /*
 #define report(...) { \
     hdoip_report(&hdoipd.main_log, __VA_ARGS__); \
@@ -98,7 +99,7 @@
 #ifdef REPORT_PTHREAD
     #define report2(...) report(__VA_ARGS__)
 #else
-    #define report2(...) {;}
+    #define report2(...) do { } while(0)
 #endif
 
 #endif /* DEBUG_H_ */

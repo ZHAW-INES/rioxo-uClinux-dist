@@ -8,8 +8,8 @@
 #ifndef VTB_AUDIO_BOARD_H_
 #define VTB_AUDIO_BOARD_H_
 
-#include "rscp_include.h"
+#include "rtsp_media.h"
 
-extern t_rscp_media vtb_audio_board;
+extern t_rtsp_media vtb_audio_board;
 
 #endif /* VTB_AUDIO_BOARD_H_ */

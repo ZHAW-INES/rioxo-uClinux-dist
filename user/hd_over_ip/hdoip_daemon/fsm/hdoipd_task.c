@@ -9,9 +9,11 @@
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "multicast.h"
-#include "rscp_listener.h"
+#include "rtsp_listener.h"
+#include "rtsp_client.h"
 #include "hoi_cfg.h"
 #include "usb.h"
+#include "rtsp_media.h"
 #include "testimage.h"
 
 #include "vrb_video.h"
@@ -29,21 +31,56 @@ enum {
 	HOID_TSK_UPD_SYS_MAC 		= 0x00000004,
 	HOID_TSK_UPD_SYS_DNS        = 0x00000008,
 	HOID_TSK_UPD_REMOTE_URI 	= 0x00000010,
-	HOID_TSK_UPD_HELLO_URI 		= 0x00000020,
+	// empty					= 0x00000020,
 	HOID_TSK_UPD_MODE_START 	= 0x00000040,
 	HOID_TSK_UPD_AUTO_STREAM    = 0x00000080,
 	HOID_TSK_UPD_AMX            = 0x00000100,
-    HOID_TSK_UPD_ALIVE          = 0x00000200,
+    // empty                    = 0x00000200,
     HOID_TSK_UPD_MULTICAST      = 0x00000400,
 	HOID_TSK_UPD_DHCP           = 0x00000800,
 	HOID_TSK_UPD_USB_MODE       = 0x00001000,
 	HOID_TSK_EXEC_GOTO_READY	= 0x01000000,
 	HOID_TSK_EXEC_START			= 0x02000000,
 	HOID_TSK_EXEC_RESTART		= 0x03000000,
-	HOID_TSK_EXEC_HELLO			= 0x04000000,
+	// empty					= 0x04000000,
 	HOID_TSK_EXEC_RESTART_VRB   = 0x10000000,
 	HOID_TSK_EXEC_RESTART_VTB   = 0x20000000
 };
+
+char* task_conv_rtsp_state(int state)
+{
+    switch(state) {
+        case RTSP_RESULT_IDLE                   : return "idle";
+        case RTSP_RESULT_READY                  : return "ready";
+        case RTSP_RESULT_PLAYING                : return "playing";
+        case RTSP_RESULT_TEARDOWN               : return "teardown";
+        case RTSP_RESULT_TEARDOWN_Q             : return "teardown_q";
+        case RTSP_RESULT_PAUSE                  : return "pause";
+        case RTSP_RESULT_PAUSE_Q                : return "pause_q";
+        case RTSP_RESULT_NO_VIDEO_IN            : return "no video in";
+        case RTSP_RESULT_SERVER_ERROR           : return "server error";
+        case RTSP_RESULT_SERVER_BUSY            : return "server busy";
+        case RTSP_RESULT_SERVER_NO_VTB          : return "server no vtb";
+        case RTSP_RESULT_SERVER_TRY_LATER       : return "server try later";
+        case RTSP_RESULT_SERVER_NO_VIDEO_IN     : return "server no video in";
+        default                                 :
+        case RTSP_RESULT_CONNECTION_REFUSED     : return "connection refused";
+    }
+}
+
+char *buf_ptr;
+void task_stream_printer(char UNUSED *key, char* value, void UNUSED *data)
+{
+  t_rtsp_media *media = NULL;
+  if (value == NULL)
+    return;
+
+  media = (t_rtsp_media*)value;
+  if (media->name == NULL || strlen(media->name) == 0)
+    return;
+
+  buf_ptr += sprintf(buf_ptr, "stream %02d {in} : %s (%s)\n", hdoipd.client->nr, task_conv_rtsp_state(media->result), media->name);
+}
 
 void task_get_drivers(char** p)
 {
@@ -228,8 +265,8 @@ void task_get_fec_status(char** p)
 
 void task_get_multicast_client(char ** p)
 {
-    report_available_clients();
-    sprintf(buf, "multicast enable: %i", (int) get_multicast_enable());
+    multicast_client_report();
+    sprintf(buf, "multicast enable: %i", (int) multicast_get_enabled());
     *p = buf;
 }
 
@@ -327,6 +364,7 @@ void task_get_system_state(char** p)
 void task_get_system_update(char** p)
 {
 	int state;
+	bool streaming = false;
 	if(update_vector != 0) {
 
 		// -------------------------------------------------------------
@@ -342,6 +380,7 @@ void task_get_system_update(char** p)
 
 			if (hdoipd_state(HOID_VRB|HOID_VTB)) {
 				report("set device into ready state...");
+				streaming = vrb_video.state == RTSP_STATE_PLAYING || vrb_audio_emb.state == RTSP_STATE_PLAYING || vrb_audio_board.state == RTSP_STATE_PLAYING;
 				hdoipd_goto_ready();
 	    	}
 		}
@@ -395,11 +434,6 @@ void task_get_system_update(char** p)
 			report("Updating remote URI...");
 		}
 
-		/* hello URI  */
-		if(update_vector & HOID_TSK_UPD_HELLO_URI) {
-			report("Updating hello URI...");
-		}
-
 		/* AMX update */
 		if(update_vector & HOID_TSK_UPD_AMX) {
 		    report("Updating AMX...");
@@ -424,15 +458,6 @@ void task_get_system_update(char** p)
 		    report("Updating multicast...");
         }
 
-        /* vrb alive check */
-        if(update_vector & HOID_TSK_UPD_ALIVE) {
-		    report("Updating alive check...");
-        //    is updated at same time with rscp-port and this needs a restart of the device
-        //    alive_check_server_close(&hdoipd.alive_check);
-        //    hdoipd.alive_check.init_done = false;
-        //    alive_check_init_msg_vrb_alive();
-        }
-
 		// -------------------------------------------------------------
 		// System commands (after update)
 
@@ -447,20 +472,11 @@ void task_get_system_update(char** p)
 				case HOID_VTB : hdoipd_goto_vtb();
 								break;
 				case HOID_VRB : hdoipd_goto_vrb();
-			    				// start sending alive packets
-                                if(hdoipd.auto_stream) {
-                                    alive_check_start_vrb_alive();
-                                }
+				                hdoipd_start_vrb(streaming || hdoipd.auto_stream);
 								break;
 				default 	  :
 								break;
 			}
-		}
-
-		/* send hello */
-		if(update_vector & HOID_TSK_EXEC_HELLO) {
-			report("send hello packets...");
-			hdoipd_hello();
 		}
 
 		update_vector = 0;
@@ -472,45 +488,32 @@ void task_get_system_update(char** p)
 	*p = buf;
 }
 
-char* task_conv_rscp_state(int state)
+void task_get_rtsp_sessions(char *key, char* value, void* fd)
 {
-    switch(state) {
-        case RSCP_RESULT_IDLE                   : return "idle";
-        case RSCP_RESULT_READY                  : return "ready";
-        case RSCP_RESULT_PLAYING                : return "playing";
-        case RSCP_RESULT_TEARDOWN               : return "teardown";
-        case RSCP_RESULT_TEARDOWN_Q             : return "teardown_q";
-        case RSCP_RESULT_PAUSE                  : return "pause";
-        case RSCP_RESULT_PAUSE_Q                : return "pause_q";
-        case RSCP_RESULT_NO_VIDEO_IN            : return "no video in";
-        case RSCP_RESULT_SERVER_ERROR           : return "server error";
-        case RSCP_RESULT_SERVER_BUSY            : return "server busy";
-        case RSCP_RESULT_SERVER_NO_VTB          : return "server no vtb";
-        case RSCP_RESULT_SERVER_TRY_LATER       : return "server try later";
-        case RSCP_RESULT_SERVER_NO_VIDEO_IN     : return "server no video in";
-        default                                 : 
-        case RSCP_RESULT_CONNECTION_REFUSED     : return "connection refused";
-    }
-}
+    t_rtsp_media* media = NULL;
+    int *cnt = (int *) fd;
 
-char *buf_ptr;
-void task_get_rscp_sessions(char UNUSED *key, char* value, void* fd)
-{
-    int *cnt = (int *) fd; 
-    t_rscp_media* media = (t_rscp_media*) value;
-    buf_ptr += sprintf(buf_ptr, "stream %02d {out}: %s (%s)\n", *cnt, task_conv_rscp_state(media->result), media->owner->name);
+    if (key == NULL || value == NULL || fd == NULL)
+        return;
+
+    t_rtsp_server* server = (t_rtsp_server*)value;
+    if ((media = rtsp_server_get_media_by_session(server, key)) == NULL ||
+        media->name == NULL || strlen(media->name) == 0)
+      return;
+
+    buf_ptr += sprintf(buf_ptr, "stream %02d {out}: %s (%s)\n", *cnt, task_conv_rtsp_state(media->result), media->owner->name);
     *cnt += 1;
 }
 
-void task_get_rscp_state(char** s)
+void task_get_rtsp_state(char** s)
 {
     t_video_timing vid_timing;
     uint32_t advcnt;
     uint32_t image_freq, image_pixel;
     int cnt = 0;
-    
+
     buf_ptr = buf;
-    
+
     buf_ptr += sprintf(buf_ptr, "\nvideo sink     : ");
     if(hdoipd.rsc_state & RSC_VIDEO_SINK) {
         buf_ptr += sprintf(buf_ptr, "connected\n");
@@ -540,15 +543,14 @@ void task_get_rscp_state(char** s)
         buf_ptr += sprintf(buf_ptr, "resolution     : (only visible at transmitter box)\n");
     }
 
-    t_rscp_client* client;
-    LIST_FOR(client, hdoipd.client) {
-        buf_ptr += sprintf(buf_ptr, "stream %02d {in} : %s (%s)\n",client->nr, task_conv_rscp_state(client->media->result), client->media->name);
-    }
+    // print all the active streams
+    if (hdoipd.client != NULL)
+        bstmap_traverse(hdoipd.client->media, task_stream_printer, NULL);
 
     if(hdoipd.listener.sessions) {
         unlock("task_get_stream_state");
-        rscp_listener_session_traverse(&hdoipd.listener, task_get_rscp_sessions, &cnt);
-        lock("task_get_stream_state"); 
+        rtsp_listener_session_traverse(&hdoipd.listener, task_get_rtsp_sessions, &cnt);
+        lock("task_get_stream_state");
     }
 
     *s = buf;
@@ -558,12 +560,12 @@ void task_get_vrb_is_playing(char** p)
 {
     *p = "false";
     switch(vrb_video.state) {
-        case RSCP_PLAYING:  *p = "true";
+        case RTSP_STATE_PLAYING:  *p = "true";
                             break;
     }
 
     switch(vrb_audio_board.state) {
-        case RSCP_PLAYING:  *p = "true";
+        case RTSP_STATE_PLAYING:  *p = "true";
                             break;
     }
 }
@@ -580,7 +582,7 @@ void task_get_aud_board(char** p){
 	}
 }
 
-int task_ready()
+int task_ready(void)
 {
     int state = hdoipd.state;
     if (hdoipd_state(HOID_VRB|HOID_VTB)) {
@@ -597,11 +599,11 @@ void task_restart(int state)
     }
 }
 
-void task_set_bw(char* p)
+void task_set_bw(char *p UNUSED)
 {
     t_video_timing timing;
     uint32_t advcnt_old;
-    uint32_t bw     = reg_get_int("bandwidth");             // bandwidth in byte/s 
+    uint32_t bw     = reg_get_int("bandwidth");             // bandwidth in byte/s
     uint32_t chroma = reg_get_int("chroma-bandwidth");      // percent of chroma bandwidth (0 .. 100)
     report("update bandwidth: %d Byte/s %d%% Chroma", bw, chroma);
     //bw = bw - bw / 20; // 5% overhead approx.
@@ -640,67 +642,62 @@ void task_set_bw(char* p)
     if (bw) hoi_drv_bw(bw, chroma);
 }
 
-void task_set_traffic_shaping(char* p)
+void task_set_traffic_shaping(char* p UNUSED)
 {
     update_vector |= HOID_TSK_EXEC_RESTART_VTB;
 }
 
-void task_set_system_dns1(char* p)
+void task_set_system_dns1(char *p UNUSED)
 {
     if(!hdoipd.dhcp) {
         update_vector |= HOID_TSK_UPD_SYS_DNS | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
     }
 }
 
-void task_set_system_dns2(char* p)
+void task_set_system_dns2(char *p UNUSED)
 {
     if(!hdoipd.dhcp) {
         update_vector |= HOID_TSK_UPD_SYS_DNS | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
     }
 }
 
-void task_set_ip(char* p)
+void task_set_ip(char *p UNUSED)
 {
     if(!hdoipd.dhcp) {
         update_vector |= HOID_TSK_UPD_SYS_IP | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
     }
 }
 
-void task_set_subnet(char* p)
+void task_set_subnet(char *p UNUSED)
 {
     if(!hdoipd.dhcp) {
         update_vector |= HOID_TSK_UPD_SYS_SUBNET | HOID_TSK_UPD_AMX;
     }
 }
 
-void task_set_gateway(char* p)
+void task_set_gateway(char *p UNUSED)
 {
     if(!hdoipd.dhcp) {
         update_vector |= HOID_TSK_UPD_SYS_GATEWAY | HOID_TSK_UPD_AMX;
     }
 }
 
-void task_set_mac(char* p)
+void task_set_mac(char *p UNUSED)
 {
 	update_vector |= HOID_TSK_UPD_SYS_MAC | HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX;
 }
 
-void task_set_remote(char* p)
+void task_set_remote(char *p UNUSED)
 {
 	update_vector |= HOID_TSK_UPD_REMOTE_URI | HOID_TSK_EXEC_RESTART_VRB;
 }
 
-void task_set_hello(char* p)
-{
-	update_vector |= HOID_TSK_UPD_HELLO_URI | HOID_TSK_EXEC_HELLO | HOID_TSK_UPD_ALIVE;
-}
-
-void task_set_mode_start(char* p)
+void task_set_mode_start(char *p UNUSED)
 {
 	update_vector |= HOID_TSK_UPD_MODE_START; //    | HOID_TSK_EXEC_RESTART;  restart not necessary because device must be rebooted after this change
 }
 
-void task_set_mode_media(char* p)
+void task_set_mode_media(char *p UNUSED)
 {
 	update_vector |= HOID_TSK_EXEC_RESTART_VRB;
 }
@@ -783,24 +780,19 @@ void task_set_audio_source(char* p){
     hoi_drv_aic23b_adc(AIC23B_ENABLE, source, volume, mic_boost, &aud);
 }
 
-void task_set_amx_update(char* p)
+void task_set_amx_update(char *p UNUSED)
 {
     update_vector |= HOID_TSK_UPD_AMX;
 }
 
-void task_set_auto_stream(char* p)
+void task_set_auto_stream(char *p UNUSED)
 {
     update_vector |= HOID_TSK_UPD_AUTO_STREAM | HOID_TSK_EXEC_RESTART_VRB;
 }
 
-void task_set_multicast_update(char* p)
+void task_set_multicast_update(char *p UNUSED)
 {
     update_vector |= HOID_TSK_UPD_MULTICAST | HOID_TSK_EXEC_RESTART_VTB;
-}
-
-void task_set_alive_update(char* p)
-{
-    update_vector |= HOID_TSK_UPD_ALIVE;
 }
 
 void task_set_led_instruction(char* p)
@@ -820,12 +812,12 @@ void task_set_osd_time(char* p)
     }
 }
 
-void task_set_usb_mode(char* p)
+void task_set_usb_mode(char *p UNUSED)
 {
     update_vector |= HOID_TSK_UPD_USB_MODE;
 }
 
-void task_set_test_image(char* p)
+void task_set_test_image(char *p)
 {
     int a = atoi(p);
     if reg_test("mode-start", "vrb") {
@@ -847,27 +839,28 @@ void task_set_test_image(char* p)
     reg_set("test-image", "0");
 }
 
-void task_set_network_delay(char* p)
+void task_set_network_delay(char *p UNUSED)
 {
     update_vector |= HOID_TSK_EXEC_RESTART_VRB;
 }
 
-void task_set_av_delay(char* p)
+void task_set_av_delay(char *p UNUSED)
 {
     update_vector |= HOID_TSK_EXEC_RESTART_VRB;
 }
 
-void task_set_dhcp(char *p)
+void task_set_dhcp(char *p UNUSED)
 {
     update_vector |= HOID_TSK_EXEC_RESTART | HOID_TSK_UPD_AMX | HOID_TSK_UPD_DHCP;
 }
 
-void task_set_edid_mode(char *p)
+void task_set_edid_mode(char *p UNUSED)
 {
-    rscp_listener_teardown_all(&hdoipd.listener);
+    rtsp_listener_teardown_all(&hdoipd.listener);
+    rtsp_listener_close_all(&hdoipd.listener);
 }
 
-void task_set_fps_divide(char *p)
+void task_set_fps_divide(char *p UNUSED)
 {
     hoi_drv_set_fps_reduction(reg_get_int("fps_divide"));
 }
@@ -915,7 +908,7 @@ void hdoipd_register_task()
     get_listener("aso-status", task_get_aso_status);
     get_listener("hdcp-status", task_get_hdcp_status);
     get_listener("sync-delay", task_get_sync_delay);
-    get_listener("stream-state", task_get_rscp_state);
+    get_listener("stream-state", task_get_rtsp_state);
     get_listener("multicast", task_get_multicast_client);
     get_listener("vrb_is_playing", task_get_vrb_is_playing);
     get_listener("audio-board", task_get_aud_board);
@@ -942,7 +935,6 @@ void hdoipd_register_task()
     set_listener("audio-mic-boost", task_set_audio_mic_boost);
     set_listener("audio-source", task_set_audio_source);
     set_listener("remote-uri", task_set_remote);
-    set_listener("hello-uri", task_set_hello);
     set_listener("auto-stream", task_set_auto_stream);
     set_listener("amx-en", task_set_amx_update);
     set_listener("amx-hello-ip", task_set_amx_update);
@@ -950,9 +942,6 @@ void hdoipd_register_task()
     set_listener("amx-hello-interval", task_set_amx_update);
     set_listener("multicast_en", task_set_multicast_update);
     set_listener("multicast_group", task_set_multicast_update);
-    set_listener("alive-check", task_set_alive_update);
-    set_listener("alive-check-interval", task_set_alive_update);
-    set_listener("alive-check-port", task_set_alive_update);
     set_listener("led_instruction", task_set_led_instruction);
     set_listener("osd-time", task_set_osd_time);
     set_listener("usb-mode", task_set_usb_mode);

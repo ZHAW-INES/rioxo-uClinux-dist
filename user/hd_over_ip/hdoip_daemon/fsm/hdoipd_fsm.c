@@ -12,19 +12,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <asm-nios2/nios2.h>
+#include <pthread.h>
+
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 
 #include "hoi_drv_user.h"
 #include "hoi_image.h"
 #include "hoi_res.h"
+#include "rtsp_client.h"
+#include "rtsp_error.h"
+#include "rtsp_string.h"
 #include "hoi_cfg.h"
 #include "hdoipd_callback.h"
 #include "hdoipd_msg.h"
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "hdoipd_task.h"
-#include "rscp_include.h"
-#include "rscp_string.h"
 #include "edid.h"
 #include "usb.h"
 #include "version.h"
@@ -36,6 +43,8 @@
 #include "vtb_audio_emb.h"
 #include "vtb_audio_board.h"
 #include "box_sys.h"
+#include "box_sys_vrb.h"
+#include "box_sys_vtb.h"
 #include "usb_media.h"
 
 const char* statestr(int state)
@@ -202,14 +211,17 @@ bool hdoipd_goto_ready()
             return false;
         break;
         case HOID_VTB:
-            rscp_listener_teardown_all(&hdoipd.listener);
-            rscp_listener_free_media(&hdoipd.listener);
+            rtsp_listener_teardown_all(&hdoipd.listener);
+            rtsp_listener_close_all(&hdoipd.listener);
+            rtsp_listener_free_media(&hdoipd.listener);
             hdoipd_off(true);
         break;
         case HOID_VRB:
             // shut down VRB
-            rscp_client_deactivate(hdoipd.client);
-            rscp_listener_free_media(&hdoipd.listener);
+            rtsp_client_teardown(hdoipd.client, NULL);
+            rtsp_client_close(hdoipd.client, true);
+            hdoipd.client = NULL;
+            rtsp_listener_free_media(&hdoipd.listener);
             hdoipd_off(true);
         break;
         case HOID_READY:
@@ -236,10 +248,11 @@ void hdoipd_force_ready()
 {
     switch (hdoipd.state) {
         case HOID_VRB:
-            rscp_client_force_close(hdoipd.client);
+            rtsp_client_close(hdoipd.client, true);
+            hdoipd.client = NULL;
         break;
         case HOID_VTB:
-            rscp_listener_close_all(&hdoipd.listener);
+            rtsp_listener_close_all(&hdoipd.listener);
         break;
     }
 
@@ -251,7 +264,7 @@ void hdoipd_force_ready()
 
 /* Activate VTB
  *
- * First goto ready then goto VTB. Loads all media source for RSCPX.
+ * First goto ready then goto VTB. Loads all media source for RTSP.
  *
  */
 void hdoipd_goto_vtb()
@@ -265,11 +278,11 @@ void hdoipd_goto_vtb()
                 hoi_drv_timer(DRV_TMR_CFG_T1_MASTER | DRV_TMR_CFG_T2_SLAVE_0 |
                               DRV_TMR_CFG_T3_MASTER | DRV_TMR_CFG_T4_MASTER);
 
-                rscp_listener_add_media(&hdoipd.listener, &vtb_audio_board);
-                rscp_listener_add_media(&hdoipd.listener, &vtb_audio_emb);
-                rscp_listener_add_media(&hdoipd.listener, &vtb_video);
-                rscp_listener_add_media(&hdoipd.listener, &box_sys);
-                rscp_listener_add_media(&hdoipd.listener, &usb_media);
+                rtsp_listener_add_media(&hdoipd.listener, &vtb_audio_board);
+                rtsp_listener_add_media(&hdoipd.listener, &vtb_audio_emb);
+                rtsp_listener_add_media(&hdoipd.listener, &vtb_video);
+                rtsp_listener_add_media(&hdoipd.listener, &box_sys_vtb);
+                rtsp_listener_add_media(&hdoipd.listener, &usb_media);
                 hdoipd_set_state(HOID_VTB);
             }
         } else {
@@ -282,7 +295,7 @@ void hdoipd_goto_vtb()
 
 /* Activate VRB
  *
- * First goto ready then goto VRB. Loads all media source for RSCPX.
+ * First goto ready then goto VRB. Loads all media source for RTSP.
  *
  * !!! Info: <hdoipd> must be locked to prevent state inconsistency !!!
  */
@@ -297,24 +310,14 @@ int hdoipd_goto_vrb()
                 hoi_drv_timer(DRV_TMR_CFG_T1_MASTER | DRV_TMR_CFG_T2_SLAVE_0 |
                               DRV_TMR_CFG_T3_SLAVE_1 | DRV_TMR_CFG_T4_SLAVE_1);
 
-                rscp_listener_add_media(&hdoipd.listener, &box_sys);
-                rscp_listener_add_media(&hdoipd.listener, &usb_media);
-
+                rtsp_listener_add_media(&hdoipd.listener, &box_sys_vrb);
+                rtsp_listener_add_media(&hdoipd.listener, &usb_media);
+                
                 if(hdoipd.auto_stream) hdoipd_set_state(HOID_VRB);
-
-                // register remote for "hello"
-                //box_sys_set_remote(reg_get("remote-uri"));
-                // first thing to try is setup a new connection based on registry
-
-                //if(hdoipd.auto_stream) {
-                //    hdoipd_set_task_start_vrb();
-                //}
-                //hdoipd.alive_check.init_done = 0;
-                //alive_check_start_vrb_alive();
             }
         } else {
-            report(ERROR "already in state vrb");
-            return -1;
+            report(INFO "already in state vrb");
+            return 0;
         }
     } else {
         report(ERROR "ethernet down");
@@ -327,11 +330,10 @@ int hdoipd_goto_vrb()
  *
  * activates a media client.
  */
-int hdoipd_vrb_setup(t_rscp_media* media, void UNUSED *d)
+int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
 {
-    t_rscp_client* client;
     int ret;
-    char tmp[200];
+    char *uri;
 
     report(CHANGE "vrb_setup(%s)", media->name);
 
@@ -341,30 +343,49 @@ int hdoipd_vrb_setup(t_rscp_media* media, void UNUSED *d)
     }
 
     // test if we are ready to start media
-    if (rscp_media_ready(media) != RSCP_SUCCESS) {
-        //if no SINK available
-        report(ERROR "hdoipd_vrb_setup() media-client not ready");
+    if (rtsp_media_ready(media) != RTSP_SUCCESS) {
+        //report(ERROR "hdoipd_vrb_setup() media-client not ready");
         return -1;
     }
 
-    // open media (currently all source defined by "remote-uri" + media->name)
-    sprintf(tmp, "%s/%s", reg_get("remote-uri"), media->name);
-    client = rscp_client_open(hdoipd.client, media, tmp);
+    uri = reg_get("remote-uri");
+
+    // we can't always make sure that hdoipd.client is set to NULL
+    // after freeing it so we instead free it here.
+    if (hdoipd.client != NULL && !hdoipd.client->open)
+    {
+        report(" ? freeing old RTSP Client [%d]", hdoipd.client->nr);
+        free(hdoipd.client);
+        hdoipd.client = NULL;
+    }
+
+    // don't create client if it's already running
+    if (hdoipd.client == NULL) {
+        // new connection = new hdcp-key exchange
+        hdoipd.hdcp.ske_executed = 0;
+        hdoipd.client = rtsp_client_open(uri, &box_sys_vrb);
+    }
+
+    if (hdoipd.client != NULL)
+        rtsp_client_add_media(hdoipd.client, media);
 
     // try to start only when not usb
     if (strcmp(media->name, "usb")) {
-        if (client){
+        if (hdoipd.client) {
             // try to setup a connection
-            ret = rscp_media_setup(media);
-            if (ret == RSCP_SUCCESS) {
-                rscp_media_play(media);
+            ret = rtsp_media_setup(media);
+            if (ret == RTSP_SUCCESS) {
+                rtsp_media_play(media);
             } else {
-                report(ERROR "hdoipd_vrb_setup() rscp_media_setup failed");
-                rscp_client_close(client);
+                report(ERROR "hdoipd_vrb_setup() rtsp_media_setup failed (%d)", ret);
+                rtsp_client_close(hdoipd.client, true);
+                hdoipd.client = NULL;
+                return -1;
             }
         } else {
-            report(ERROR "hdoipd_vrb_setup() rscp_client_open failed");
-            osd_printf("VTB(%s) not found. Waiting for %s\n", media->name, tmp);
+            report(ERROR "hdoipd_vrb_setup() rtsp_client_open failed");
+            //osd_printf("VTB(%s) not found. Waiting for %s\n", media->name, uri);
+            return -1;
         }
     }
 
@@ -375,7 +396,7 @@ int hdoipd_vrb_setup(t_rscp_media* media, void UNUSED *d)
  *
  * When in VRB state this starts the stream
  */
-int hdoipd_vrb_play(t_rscp_media *media, void UNUSED *d)
+int hdoipd_vrb_play(t_rtsp_media *media, void UNUSED *d)
 {
     report(CHANGE "vrb_play(%s)", media->name);
 
@@ -383,7 +404,7 @@ int hdoipd_vrb_play(t_rscp_media *media, void UNUSED *d)
         report(ERROR "hdoipd_vrb_play() only valid in state VRB");
         return -1;
     }
-    return rscp_media_play(media);
+    return rtsp_media_play(media);
 }
 
 void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps)
@@ -404,19 +425,36 @@ void hdoipd_canvas(uint32_t width, uint32_t height, uint32_t fps)
     }
 }
 
+int hdoipd_start_vrb(bool force)
+{
+  if (!hdoipd_state(HOID_VRB))
+    return RTSP_CLIENT_ERROR;
+
+  if ((hdoipd.client != NULL && hdoipd.client->open) || (hdoipd.task_commands & TASK_START_VRB))
+    return RTSP_CLIENT_ERROR;
+
+  if (!force && !hdoipd.auto_stream)
+    return RTSP_CLIENT_ERROR;
+
+  hdoipd_set_task_start_vrb();
+}
+
 /** Restarts VRB when already in VRB state
  *
  * @return 0 on state change, other when state not changed
  */
-int hdoipd_start_vrb_cb(t_rscp_media* media, void* d)
+int hdoipd_init_vrb_cb(t_rtsp_media* media, void* d)
 {
     int ret = 0;
     uint32_t dev_id;
 
     // USB
     if (!strcmp(media->name, "usb")) {
-    	hdoipd_vrb_setup(media, d);
-        return 0;
+        if (hdoipd_vrb_setup(media, d) < 0) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     // detect connected video card
@@ -427,26 +465,27 @@ int hdoipd_start_vrb_cb(t_rscp_media* media, void* d)
         hdoipd_set_rsc(RSC_VIDEO_SINK);
     }
 
-    if (rscp_media_sinit(media)) {
-        if(hdoipd_vrb_setup(media, d) == -1) {
+    if (rtsp_media_sinit(media)) {
+        if(hdoipd_vrb_setup(media, d) < 0) {
             ret = 1;
         }
-    } else if (rscp_media_sready(media)) {
-        if(hdoipd_vrb_play(media, d) == -1) {
+    } else if (rtsp_media_sready(media)) {
+        if(hdoipd_vrb_play(media, d) < 0) {
             ret = 1;
         }
     } else {
-        return 0;
+        ret = 1;
     }
     return ret;
 }
 
-int hdoipd_start_vrb(void *d)
+int hdoipd_init_vrb(void *d)
 {
     int failed = 0;
     report(CHANGE "attempt to start vrb");
+
     if (hdoipd_state(HOID_VRB)) {
-        failed = hdoipd_media_callback(d, hdoipd_start_vrb_cb, 0);
+        failed = hdoipd_media_callback(d, hdoipd_init_vrb_cb, 0);
     } else {
         report(ERROR "attempt to start vrb when not in state vrb");
     }
@@ -458,7 +497,6 @@ int hdoipd_start_vrb(void *d)
 void hdoipd_set_task_start_vrb(void)
 {
     // stop sending alive packets
-    alive_check_stop_vrb_alive();
     hdoipd.task_commands |= TASK_START_VRB;
     hdoipd.task_timeout = 1;
     hdoipd.task_repeat = 2;
@@ -471,7 +509,7 @@ void hdoipd_task(void)
         if(hdoipd.task_timeout) {
             hdoipd.task_timeout--;
         } else {
-            if(hdoipd_start_vrb(0)) {
+            if(hdoipd_init_vrb(0)) {
             	report(ERROR "task hdoipd_start_vrb() repeat (%d)",hdoipd.task_repeat);
                 if(hdoipd.task_repeat > 0) {
                     hdoipd.task_timeout = 50;
@@ -508,21 +546,20 @@ void hdoipd_fsm_vrb(uint32_t event)
             // plug in the cable is a start point for the VRB to
             // work when video or embedded audio is desired ...
             if(hdoipd.auto_stream) {
-                if (hdoipd_tstate(VTB_AUDIO_BOARD)){
-                    hdoipd_set_task_start_vrb();
-                }
+                if (hdoipd.client != NULL && hdoipd.client->open)
+                	rtsp_client_event(hdoipd.client, EVENT_VIDEO_SINK_ON);
                 else
-                    alive_check_start_vrb_alive();
+                    hdoipd_start_vrb(false);
             }
         break;
         case E_ADV9889_CABLE_OFF:
-            rscp_client_event(hdoipd.client, EVENT_VIDEO_SINK_OFF);
+            rtsp_client_event(hdoipd.client, EVENT_VIDEO_SINK_OFF);
         break;
         case E_ETI_VIDEO_OFF:
-            rscp_client_event(hdoipd.client, EVENT_VIDEO_STIN_OFF);
+            rtsp_client_event(hdoipd.client, EVENT_VIDEO_STIN_OFF);
         break;
         case E_ETI_AUDIO_EMB_OFF:
-            rscp_client_event(hdoipd.client, EVENT_AUDIO_STIN_OFF);
+            rtsp_client_event(hdoipd.client, EVENT_AUDIO_STIN_OFF);
         break;
         case E_ETI_AUDIO_BOARD_OFF:
             // TODO
@@ -545,27 +582,27 @@ void hdoipd_fsm_vtb(uint32_t event)
 {
     switch (event) {
         case E_GS2971_VIDEO_ON:
-            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
+            rtsp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
         break;
         case E_GS2971_VIDEO_OFF:
-            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
+            rtsp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
         break;
         case E_ADV7441A_NC:
             //shut down audio before video to prevent problems with hdcp 
-            rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_OFF);
-            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
+            rtsp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_OFF);
+            rtsp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_OFF);
         break;
         case E_ADV7441A_NEW_HDMI_RES:
-            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
+            rtsp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
         break;
         case E_ADV7441A_NEW_VGA_RES:
-            rscp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
+            rtsp_listener_event(&hdoipd.listener, EVENT_VIDEO_IN_ON);
         break;
         case E_ADV7441A_NO_AUDIO:
-            rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_OFF);
+            rtsp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_OFF);
         break;
         case E_ASI_NEW_FS:
-            rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_ON);
+            rtsp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN0_ON);
         break;
     }
 }
@@ -719,7 +756,7 @@ void hdoipd_event(uint32_t event)
                 // enable HDCP on AD9889 for loopback
                 hoi_drv_hdcp_adv9889en();
             }
-            if (!hdoipd_rsc(RSC_VIDEO_IN)) { 
+            if (!hdoipd_rsc(RSC_VIDEO_IN)) {
                 hdoipd_set_rsc(RSC_VIDEO_IN);
                 hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
                 hdoipd_set_rsc(RSC_AUDIO_EMB_IN);
@@ -794,6 +831,7 @@ void hdoipd_event(uint32_t event)
             if(hdoipd_rsc(RSC_ETH_LINK)) {
                 hoi_drv_set_led_status(NO_STREAM_ACTIVE);
             }
+            rtsp_client_event(hdoipd.client, EVENT_VIDEO_STIN_OFF);
         break;
         case E_ETO_AUDIO_EMB_ON:
             hdoipd_set_rsc(RSC_EAO);
@@ -917,30 +955,8 @@ void hdoipd_event(uint32_t event)
     unlock("hdoipd_event");
 }
 
-void hdoipd_hello()
-{
-    t_rscp_client *client;
-    char *s;
-
-    s = reg_get("hello-uri");
-    if (s) {
-        client = rscp_client_open(hdoipd.client, 0, s);
-
-        if (client) {
-            report(INFO "say hello to %s", s);
-            rscp_client_hello(client);
-            rscp_client_close(client);
-        } else {
-            report(ERROR "could not say hello to %s", s);
-        }
-    }
-
-}
-
 void hdoipd_start()
 {
-    //hdoipd_hello();
-
     char *s = reg_get("mode-start");
     if (strcmp(s, "vtb") == 0) {
         hdoipd_goto_vtb();
@@ -967,16 +983,16 @@ bool hdoipd_init(int drv)
     pthread_mutexattr_t attr;
 
     hdoipd.drv = drv;
-    hdoipd.drivers = 0;
     hdoipd.set_listener = 0;
     hdoipd.get_listener = 0;
+    hdoipd.drivers = 0;
     hdoipd.verify = 0;
     hdoipd.registry = 0;
     hdoipd.state = HOID_IDLE;
     hdoipd.rsc_state = 0;
     hdoipd.vtb_state = VTB_OFF;
     hdoipd.vrb_state = VRB_OFF;
-    hdoipd.client = list_create();
+    hdoipd.client = NULL;
     hdoipd.auto_stream = false;
     hdoipd.hdcp.ske_executed = 0;
     hdoipd.hdcp.enc_state = 0;
@@ -990,7 +1006,7 @@ bool hdoipd_init(int drv)
 
     hdoipd_register_task();
 
-    // if reset button was not pressed longer than 5sec, load config 
+    // if reset button was not pressed longer than 5sec, load config
     hoi_drv_get_reset_to_default(&reset_to_default);
     hoi_cfg_read(CFG_FILE, (bool) reset_to_default);
 
@@ -1013,6 +1029,8 @@ bool hdoipd_init(int drv)
     hdoipd.local.aud_port = htons(reg_get_int("audio-port"));
     hdoipd.ethernet_init = false;
 
+    multicast_initialize();
+
     // detect connected video card
     hoi_drv_get_video_device_id(&dev_id);
 
@@ -1032,13 +1050,13 @@ bool hdoipd_init(int drv)
         hdoipd.drivers |= DRV_AIC23B_ADC | DRV_AIC23B_DAC;
         hdoipd_set_rsc(RSC_AUDIO_BOARD_IN);
         hdoipd_set_rsc(RSC_AUDIO_BOARD_OUT);
-        rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN1_ON);
+        rtsp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN1_ON);
     }
     else{
         report("No audio card detected");
         hdoipd_clr_rsc(RSC_AUDIO_BOARD_IN);
         hdoipd_clr_rsc(RSC_AUDIO_BOARD_OUT);
-        rscp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN1_OFF);
+        rtsp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN1_OFF);
     }
 
 // activate red LED on used video-board connectors 
@@ -1086,6 +1104,7 @@ bool hdoipd_init(int drv)
             unlock("hdoipd_init");
             return false;
         }
+
         if (!aud_tx) {
             report("malloc(AUD_TX_SIZE) failed");
             unlock("hdoipd_init");
@@ -1109,7 +1128,7 @@ bool hdoipd_init(int drv)
     }
     unlock("hdoipd_init");
 
-    rscp_listener_start(&hdoipd.listener, reg_get_int("rscp-server-port"));
+    rtsp_listener_start(&hdoipd.listener, reg_get_int("rtsp-server-port"));
 
 #ifdef USE_OSD_TIMER
     hdoipd_osd_timer_start();

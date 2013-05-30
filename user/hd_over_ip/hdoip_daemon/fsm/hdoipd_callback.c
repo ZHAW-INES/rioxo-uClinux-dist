@@ -5,6 +5,10 @@
  *      Author: alda
  */
 
+#include <string.h>
+#include <time.h>
+
+#include "hdoipd.h"
 #include "hdoipd_callback.h"
 
 
@@ -33,12 +37,11 @@ bool strscmp(char **p, char *s)
     return 0;
 }
 
-
 /** Callback each required media
  *
  * @param media 0: choose from registry, 1: active, 2: all, ptr*: one specific
  */
-int hdoipd_media_callback(t_rscp_media* media, int (*f)(t_rscp_media*, void*), void* d)
+int hdoipd_media_callback(t_rtsp_media* media, int (*f)(t_rtsp_media*, void*), void* d)
 {
     char *s;
     int ret = 0;
@@ -56,9 +59,9 @@ int hdoipd_media_callback(t_rscp_media* media, int (*f)(t_rscp_media*, void*), v
     } else if (media == (void*)1) {
     	report("hdoipd_media_callback() media = 1");
         // Choose all active media
-        if (rscp_media_active(&vrb_video)) ret |= f(&vrb_video, d);
-        if (rscp_media_active(&vrb_audio_board)) ret |= f(&vrb_audio_board, d);
-        if (rscp_media_active(&vrb_audio_emb)) ret |= f(&vrb_audio_emb, d);
+        if (rtsp_media_active(&vrb_video)) ret |= f(&vrb_video, d);
+        if (rtsp_media_active(&vrb_audio_board)) ret |= f(&vrb_audio_board, d);
+        if (rtsp_media_active(&vrb_audio_emb)) ret |= f(&vrb_audio_emb, d);
     } else if (media == (void*)2) {
     	report("hdoipd_media_callback() media = 2");
         // Choose all media

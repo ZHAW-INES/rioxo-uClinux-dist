@@ -20,7 +20,7 @@
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "hdoipd_task.h"
-#include "rscp_include.h"
+#include "rtsp_media.h"
 
 #include "vrb_video.h"
 #include "vtb_video.h"
@@ -30,6 +30,6 @@
 #include "vtb_audio_board.h"
 #include "box_sys.h"
 
-int hdoipd_media_callback(t_rscp_media* media, int (*f)(t_rscp_media*, void*), void* d);
+int hdoipd_media_callback(t_rtsp_media* media, int (*f)(t_rtsp_media*, void*), void* d);
 
 #endif /* HDOIPD_CALLBACK_H_ */

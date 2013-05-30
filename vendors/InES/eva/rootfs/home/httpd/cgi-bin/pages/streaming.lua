@@ -12,8 +12,7 @@ local REG_ST_OSD_LABEL = "osd_time"
 local REG_ST_VID_PORT_LABEL = "vid_port"
 local REG_ST_AUD_EMB_PORT_LABEL = "aud_emb_port"
 local REG_ST_AUD_BOARD_PORT_LABEL = "aud_board_port"
-local REG_ST_RSCP_PORT_LABEL = "rscp_port"
-local REG_ST_HELLO_PORT_LABEL = "hello_port"
+local REG_ST_RTSP_PORT_LABEL = "rtsp_port"
 
 local MEDIA_SEL_AUD_BOARD = "audio_board"
 local MEDIA_SEL_AUD_EMB = "audio_emb"
@@ -37,19 +36,17 @@ function show(t)
 
     if(t.sent == nil) then
         t.st_uri = hdoip.pipe.getParam(hdoip.pipe.REG_ST_URI)
-        t.st_uri = string.sub(t.st_uri, string.len("rscp://")+1, string.len(t.st_uri))
+        t.st_uri = string.sub(t.st_uri, string.len("rtsp://")+1, string.len(t.st_uri))
         --t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3 = hdoip.network.text2IpValues(string.sub(str, 8))
         
         t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
         t.aud_emb_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_EMB_PORT)
         t.aud_board_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_AUD_BOARD_PORT)
-        t.rscp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RSCP_PORT)
-        t.hello_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT)
+        t.rtsp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RTSP_PORT)
         t.edit_vid_port = 0
         t.edit_aud_emb_port = 0
         t.edit_aud_board_port = 0
-        t.edit_rscp_port = 0
-        t.edit_hello_port = 0
+        t.edit_rtsp_port = 0
 
         if(hdoip.pipe.getParam(hdoip.pipe.REG_FORCE_HDCP) == "true") then
             t.hdcp_force = 1
@@ -123,7 +120,7 @@ function show(t)
     else
         --if(hdoip.network.checkIp(t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3) == 1) then
         if(t.st_uri ~= nil) then
-            local uri = "rscp://"..t.st_uri
+            local uri = "rtsp://"..t.st_uri
             hdoip.pipe.setParam(hdoip.pipe.REG_ST_URI, uri)
             hdoip.pipe.setParam(hdoip.pipe.REG_ST_HELLO_URI, uri)
         else
@@ -237,36 +234,20 @@ function show(t)
             t.vid_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_VID_PORT)
         end
 
-        if(t.save_rscp_port ~= nil) then 
-            if(tonumber(t.rscp_port) ~= nil) then
-                t.rscp_port = tonumber(t.rscp_port)
-                if((t.rscp_port >= 0) and (t.rscp_port < 65536)) then
-                    hdoip.pipe.setParam(hdoip.pipe.REG_TEMP3, t.rscp_port)
+        if(t.save_rtsp_port ~= nil) then 
+            if(tonumber(t.rtsp_port) ~= nil) then
+                t.rtsp_port = tonumber(t.rtsp_port)
+                if((t.rtsp_port >= 0) and (t.rtsp_port < 65536)) then
+                    hdoip.pipe.setParam(hdoip.pipe.REG_TEMP3, t.rtsp_port)
                     pages.restart.show(t)
                 else
-                    hdoip.html.AddError(t, label.err_rscp_port_not_in_range)
+                    hdoip.html.AddError(t, label.err_rtsp_port_not_in_range)
                 end
             else
-                hdoip.html.AddError(t, label.err_rscp_port_not_number)
+                hdoip.html.AddError(t, label.err_rtsp_port_not_number)
             end
         else
-            t.rscp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RSCP_PORT)
-        end
-
-        if(t.save_hello_port ~= nil) then 
-            if(tonumber(t.hello_port) ~= nil) then
-                t.hello_port = tonumber(t.hello_port)
-                if((t.hello_port >= 0) and (t.hello_port < 65536)) then
-                    hdoip.pipe.setParam(hdoip.pipe.REG_TEMP4, t.hello_port)
-                    pages.restart.show(t)
-                else
-                    hdoip.html.AddError(t, label.err_hello_port_not_in_range)
-                end
-            else
-                hdoip.html.AddError(t, label.err_hello_port_not_number)
-            end
-        else
-            t.hello_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT)
+            t.rtsp_port = hdoip.pipe.getParam(hdoip.pipe.REG_ST_RTSP_PORT)
         end
 
         if(t.mode_vtb) then
@@ -400,8 +381,7 @@ function show(t)
         t.aud_emb_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP1)
         t.aud_board_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP5)
         t.vid_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP2)
-        t.rscp_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP3)
-        t.hello_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP4)
+        t.rtsp_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP3)
 
         if(t.aud_emb_port_changed ~= nil) then 
             if(t.aud_emb_port_changed ~= "") then
@@ -418,14 +398,9 @@ function show(t)
                 hdoip.pipe.setParam(hdoip.pipe.REG_ST_VID_PORT, t.vid_port_changed)
             end
         end
-        if(t.rscp_port_changed ~= nil) then
-            if(t.rscp_port_changed ~= "") then
-                hdoip.pipe.setParam(hdoip.pipe.REG_ST_RSCP_PORT, t.rscp_port_changed)
-            end
-        end
-        if(t.hello_port_changed ~= nil) then
-            if(t.hello_port_changed ~= "") then
-                hdoip.pipe.setParam(hdoip.pipe.REG_ST_ALIVE_CHECK_PORT, t.hello_port_changed)
+        if(t.rtsp_port_changed ~= nil) then
+            if(t.rtsp_port_changed ~= "") then
+                hdoip.pipe.setParam(hdoip.pipe.REG_ST_RTSP_PORT, t.rtsp_port_changed)
             end
         end
 
@@ -491,24 +466,14 @@ function show(t)
 
         end
 
-        hdoip.html.Text(label.p_st_rscp_port);                                                          hdoip.html.TableInsElement(1);
-        if((t.edit_rscp_port ~= nil) and (t.edit_rscp_port == "1")) then
-            hdoip.html.FormText(REG_ST_RSCP_PORT_LABEL, t.rscp_port, 5, 0);                             hdoip.html.TableInsElement(1);
-            hdoip.html.FormHidden("save_rscp_port", 1)
+        hdoip.html.Text(label.p_st_rtsp_port);                                                          hdoip.html.TableInsElement(1);
+        if((t.edit_rtsp_port ~= nil) and (t.edit_rtsp_port == "1")) then
+            hdoip.html.FormText(REG_ST_RTSP_PORT_LABEL, t.rtsp_port, 5, 0);                             hdoip.html.TableInsElement(1);
+            hdoip.html.FormHidden("save_rtsp_port", 1)
             hdoip.html.Text(label.u_decimal);                                                           hdoip.html.TableInsElement(1);
         else
-            hdoip.html.Text(t.rscp_port)                                                                hdoip.html.TableInsElement(1);
-            hdoip.html.FormCheckbox("edit_rscp_port", 1, label.button_edit, t.edit_rscp_port,0)         hdoip.html.TableInsElement(1);
-        end
-
-        hdoip.html.Text(label.p_st_hello_port);                                                         hdoip.html.TableInsElement(1);
-        if((t.edit_hello_port ~= nil) and (t.edit_hello_port == "1")) then
-            hdoip.html.FormText(REG_ST_HELLO_PORT_LABEL, t.hello_port, 5, 0);                           hdoip.html.TableInsElement(1);
-            hdoip.html.FormHidden("save_hello_port", 1)
-            hdoip.html.Text(label.u_decimal);                                                           hdoip.html.TableInsElement(1);
-        else
-            hdoip.html.Text(t.hello_port)                                                               hdoip.html.TableInsElement(1);
-            hdoip.html.FormCheckbox("edit_hello_port", 1, label.button_edit, t.edit_hello_port,0)       hdoip.html.TableInsElement(1);
+            hdoip.html.Text(t.rtsp_port)                                                                hdoip.html.TableInsElement(1);
+            hdoip.html.FormCheckbox("edit_rtsp_port", 1, label.button_edit, t.edit_rtsp_port,0)         hdoip.html.TableInsElement(1);
         end
 
         -- VTB specific fields

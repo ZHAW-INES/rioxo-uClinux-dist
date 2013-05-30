@@ -7,7 +7,8 @@
 #include "hdoipd.h"
 #include "hoi_cfg.h"
 
-#define CFGTAG "config-version"
+#define CFGTAG      "config-version"
+#define CFGVERSION  "v0.6"
 
 void hdoipd_set_default()
 {
@@ -32,8 +33,7 @@ void hdoipd_set_default()
     reg_set("audio-mic-boost","0");
     reg_set("mode-sync", "streamsync");
     reg_set("sync-target", "video");
-    reg_set("remote-uri", "rscp://192.168.1.201");
-    reg_set("hello-uri", "rscp://192.168.1.201");
+    reg_set("remote-uri", RTSP_SCHEME "://192.168.1.201");
     reg_set("compress", "jp2k");
     reg_set("bandwidth", "10485760");
     reg_set("chroma-bandwidth", "100");
@@ -45,7 +45,8 @@ void hdoipd_set_default()
     reg_set("network-timeout", "3");
     reg_set("video-port", "3400");
     reg_set("audio-port", "3406");
-    reg_set("rscp-server-port", "554");
+    reg_set("rtsp-server-port", "554");
+    reg_set("rtsp-timeout", "5");
 
     reg_set("hdcp-force", "false");
 
@@ -61,9 +62,6 @@ void hdoipd_set_default()
 
     reg_set("multicast_en", "false");
     reg_set("multicast_group", "224.0.1.0");
-    reg_set("alive-check", "true");
-    reg_set("alive-check-interval", "5");
-    reg_set("alive-check-port", "554");
 
     reg_set("led_instruction", "0");
     reg_set("osd-time", "5");
@@ -163,6 +161,66 @@ static void update_0_3_to_0_4()
     report(INFO "updated registry from version 0.3 to 0.4");
 }
 
+static void update_0_4_to_0_5()
+{
+    size_t length = 0;
+    char *p, *tmp;
+
+    // update remote-uri
+    p = reg_get("remote-uri");
+    if (p && strstr(p, "rscp://") == p)
+    {
+        length = strlen(p);
+        tmp = (char*)malloc(length + 1);
+        if (tmp)
+        {
+          length = sprintf(tmp, "%s://%s", RTSP_SCHEME, p + 7);
+          tmp[length] = '\0';
+          reg_set("remote-uri", tmp);
+
+          free(tmp);
+        }
+    }
+
+    // update hello-uri
+    p = reg_get("hello-uri");
+    if (p && strstr(p, "rscp://") == p)
+    {
+        length = strlen(p);
+        tmp = (char*)malloc(length + 1);
+        if (tmp)
+        {
+          length = sprintf(tmp, "%s://%s", RTSP_SCHEME, p + 7);
+          tmp[length] = '\0';
+          reg_set("hello-uri", tmp);
+
+          free(tmp);
+        }
+    }
+
+    // update rscp-server-port to rtsp-server-port
+    p = reg_get("rscp-server-port");
+    if (p)
+    {
+        reg_set("rtsp-server-port", p);
+        reg_del("rscp-server-port");
+    }
+
+    reg_set(CFGTAG, "v0.5");
+}
+
+static void update_0_5_to_0_6()
+{
+    if (reg_get("alive-check") != NULL)
+        reg_del("alive-check");
+    if (reg_get("alive-check-interval") != NULL)
+        reg_del("alive-check-interval");
+    if (reg_get("alive-check-port") != NULL)
+        reg_del("alive-check-port");
+
+    reg_set(CFGTAG, "v0.6");
+}
+
 /** upgrade config
  *
  * upgrades from one version to the next until the newest version is
@@ -180,7 +238,7 @@ void hdoipd_registry_update()
     }
 
     if (reg_test(CFGTAG, "origin")) {
-        reg_set(CFGTAG, "v0.4");
+        reg_set(CFGTAG, CFGVERSION);
         update = true;
     }
 
@@ -199,13 +257,23 @@ void hdoipd_registry_update()
         update = true;
     }
 
+    if (reg_test(CFGTAG, "v0.4")) {
+        update_0_4_to_0_5();
+        update = true;
+    }
+
+    if (reg_test(CFGTAG, "v0.5")) {
+        update_0_5_to_0_6();
+        update = true;
+    }
+
     // when update store the result
     if (update) {
         report(INFO "store updated config");
         hoi_cfg_write(CFG_FILE);
     }
 
-    if (!reg_test(CFGTAG, "v0.4")) {
+    if (!reg_test(CFGTAG, CFGVERSION)) {
         report(INFO "unknown config version");
     }
 }

@@ -11,7 +11,8 @@
 #include "hdoipd_fsm.h"
 #include "hoi_image.h"
 #include "hoi_res.h"
-#include "rscp_string.h"
+#include "rtsp_string.h"
+#include "rtsp_client.h"
 #include "hdoip_log.h"
 #include "multicast.h"
 
@@ -101,26 +102,28 @@ void* hdoipd_osd_timer(void UNUSED *d)
         lock("hdoipd_tick_timer");
         // AMX handler
         alive_check_client_handler(&hdoipd.amx, reg_get("amx-hello-msg"));
-        // initialize alive check if socket not exists
-        alive_check_init_msg_vrb_alive();
-        alive_check_handle_msg_vrb_alive(&hdoipd.alive_check);
+
+        if (hdoipd_state(HOID_VRB)) {
+            // check if we should try to connect to the transmitter
+            hdoipd_start_vrb(false);
+        }
 
         // USB handler
         usb_device_handler(&hdoipd.usb_devices);
 
         // Multicast Handler
-        if (get_multicast_enable()) {
+        if (hdoipd_state(HOID_VTB) && multicast_get_enabled()) {
             multicast_handler();
         }
 
         hdoipd.tick++;
 #ifdef USE_SYS_TICK
-        rscp_client_event(hdoipd.client, EVENT_TICK);
-        rscp_listener_event(&hdoipd.listener, EVENT_TICK);
+        rtsp_client_event(hdoipd.client, EVENT_TICK);
+        rtsp_listener_event(&hdoipd.listener, EVENT_TICK);
 #endif
         // Log file handler
         hdoip_log_handler(&hdoipd.main_log);
-        hdoip_log_handler(&hdoipd.rscp_log);
+        hdoip_log_handler(&hdoipd.rtsp_log);
 
         unlock("hdoipd_tick_timer");
 

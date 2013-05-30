@@ -5,13 +5,16 @@
  *      Author: buan
  */
 
+#define _GNU_SOURCE	/* for getline() */
 #include <stdio.h>
+#include <stdlib.h>
+#include <linux/input.h>
+
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
+#include "rtsp_error.h"
 #include "usb.h"
 #include "usb_media.h"
-
-#include <linux/input.h>
 
 /** Load USB driver
  *
@@ -40,13 +43,13 @@ void usb_load_driver(char* mode)
 
 /** Bind an USB device to USBIP
  *
- *  Device is been attached to USBIP and a message is sent via RSCP that an USB device is connected to host. 
+ *  Device is been attached to USBIP and a message is sent via RTSP that an USB device is connected to host.
  *
  */
-void bind_usb_dev(char* s)
+static void bind_usb_dev(char* s)
 {
     char tmp[256];
-    
+
     // bind device to usbip
     sprintf(tmp, "usbip bind -b %s", s);
     report(INFO "%s", tmp);
@@ -242,36 +245,36 @@ int detect_device(char* node_param)
     return device_count;
 }
 
-/** Send an RSCP Message that a new usb device has connected
+/** Send an RTSP Message that a new usb device has connected
  *
  */
-int usb_connect_device(t_rscp_usb* usb)
+int usb_connect_device(t_rtsp_usb* usb)
 {
     int ret;
-    t_rscp_media* media;
-    t_rscp_usb* usb_clone;
+    t_rtsp_media* media;
+    t_rtsp_usb* usb_clone;
 
     media = &usb_media;
 
-    usb_clone = (t_rscp_usb*) malloc(sizeof(t_rscp_usb));
-    memcpy(usb_clone, usb, sizeof(t_rscp_usb));
+    usb_clone = (t_rtsp_usb*) malloc(sizeof(t_rtsp_usb));
+    memcpy(usb_clone, usb, sizeof(t_rtsp_usb));
 
     // start connection for usb if it doesnt exists
     if (!media->creator) {
-        hdoipd_start_vrb_cb(media, 0);
+        hdoipd_init_vrb_cb(media, 0);
     }
 
-    ret = RSCP_SUCCESS;
+    ret = RTSP_SUCCESS;
 
     // do usb setup
-    if (media->state == RSCP_INIT) {
+    if (rtsp_media_sinit(media)) {
         if (media->dosetup) {
             ret = media->dosetup(media, 0, 0);
         }
     }
 
     // do usb play
-    if (ret == RSCP_SUCCESS) {
+    if (ret == RTSP_SUCCESS) {
         if (media->doplay) {
             ret = media->doplay(media, usb_clone, 0);
         }
@@ -282,23 +285,24 @@ int usb_connect_device(t_rscp_usb* usb)
     return ret;
 }
 
-/** Send an RSCP Message if there are connected devices
+/** Send an RTSP Message if there are connected devices
  *
  */
 void usb_try_to_connect_device(t_usb_devices* old_values)
 {
-    t_rscp_media* media;
-    t_rscp_usb* usb_clone;
+    t_rtsp_media* media;
+    t_rtsp_usb* usb_clone;
     int i, ret;
 
     if (old_values->device_count > 0) {
 
         media = &usb_media;
-        usb_clone = (t_rscp_usb*) malloc(sizeof(t_rscp_usb));
+        usb_clone = (t_rtsp_usb*) malloc(sizeof(t_rtsp_usb));
+	    if (!usb_clone) return;
 
-        sprintf(usb_clone->mouse,      "");
-        sprintf(usb_clone->keyboard,   "");
-        sprintf(usb_clone->storage,    "");
+        usb_clone->mouse[0] = '\0';
+        usb_clone->keyboard[0] = '\0';
+        usb_clone->storage[0] = '\0';
 
         // bind available devices to USBIP
         for (i=0; i<old_values->device_count; i++) {
@@ -319,20 +323,20 @@ void usb_try_to_connect_device(t_usb_devices* old_values)
         if (strcmp(usb_clone->mouse, "") || strcmp(usb_clone->keyboard, "") || strcmp(usb_clone->storage, "")) {
             // start connection for usb if it doesnt exists
             if (!media->creator) {
-                hdoipd_start_vrb_cb(media, 0);
+                hdoipd_init_vrb_cb(media, 0);
             }
 
-            ret = RSCP_SUCCESS;
+            ret = RTSP_SUCCESS;
 
             // do usb setup
-            if (media->state == RSCP_INIT) {
+            if (rtsp_media_sinit(media)) {
                 if (media->dosetup) {
                     ret = media->dosetup(media, 0, 0);
                 }
             }
 
             // do usb play
-            if (ret == RSCP_SUCCESS) {
+            if (ret == RTSP_SUCCESS) {
                 if (media->doplay) {
                     ret = media->doplay(media, usb_clone, 0);
                 }
@@ -344,13 +348,13 @@ void usb_try_to_connect_device(t_usb_devices* old_values)
 }
 
 
-/** Send an RSCP Message that an usb device is lost
+/** Send an RTSP Message that an usb device is lost
  *
  */
 int usb_teardown_device(void)
 {
-    int ret = RSCP_NULL_POINTER;
-    t_rscp_media* media;
+    int ret = RTSP_NULL_POINTER;
+    t_rtsp_media* media;
 
     media = &usb_media;
 
@@ -387,7 +391,7 @@ void usb_attach_device(t_usb_devices* old_values, char* ip, char* device, char* 
             } else {
                 report(INFO "connect unknown device");
             }
-        }        
+        }
     }
 }
 
@@ -419,7 +423,7 @@ void usb_device_handler(t_usb_devices* old_values)
     char zerostring[] = "         ";
     char *s;
     bool active = false;
-    t_rscp_usb usb;
+    t_rtsp_usb usb;
 
     // load drivers and start usbip on first call
     // if usbip-device is started to early, there are some problems with vhci driver
@@ -451,9 +455,9 @@ void usb_device_handler(t_usb_devices* old_values)
                 // if new device
                 if (old_values->device_count < device_count) {
 
-                    sprintf(usb.mouse,      "");
-                    sprintf(usb.keyboard,   "");
-                    sprintf(usb.storage,    "");
+                    usb.mouse[0] = '\0';
+                    usb.keyboard[0] = '\0';
+                    usb.storage[0] = '\0';
 
                     // check if devices are already in list
                     for (i=0; i<device_count; i++) {
@@ -500,9 +504,9 @@ void usb_device_handler(t_usb_devices* old_values)
                 // if device is lost
                 if (old_values->device_count > device_count) {
 
-                    sprintf(usb.mouse,      "");
-                    sprintf(usb.keyboard,   "");
-                    sprintf(usb.storage,    "");
+                    usb.mouse[0] = '\0';
+                    usb.keyboard[0] = '\0';
+                    usb.storage[0] = '\0';
 
                    // check if devices is missing in list
                     for (i=0; i<device_count; i++) {
@@ -545,7 +549,7 @@ void usb_device_handler(t_usb_devices* old_values)
                     }
 
                     usb_teardown_device();
-                }  
+                }
             }
 
             if (reg_test("usb-mode", "device")) {
@@ -571,7 +575,7 @@ void usb_device_handler(t_usb_devices* old_values)
                 }
                 old_values->device_queue_mouse = old_values->device_queue_mouse >> 1;
                 old_values->device_queue_keyboard = old_values->device_queue_keyboard >> 1;
-            }   
+            }
         }
     }
 }

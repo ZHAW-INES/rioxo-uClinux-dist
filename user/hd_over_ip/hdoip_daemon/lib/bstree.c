@@ -18,6 +18,7 @@ static inline void bst_depth(t_bstn* root)
 {
     int a, b;
 
+    if (root == NULL) return;
     if (root->left) a = root->left->depth + 1; else a = 0;
     if (root->right) b = root->right->depth + 1; else b = 0;
     if (a > b) root->depth = a; else root->depth = b;
@@ -27,6 +28,7 @@ static inline int bst_diff(t_bstn* root)
 {
     int a, b;
 
+    if (root == NULL) return 0;
     if (root->left) a = root->left->depth + 1; else a = 0;
     if (root->right) b = root->right->depth + 1; else b = 0;
 
@@ -35,7 +37,7 @@ static inline int bst_diff(t_bstn* root)
 
 void bst_rotate_right(t_bstn** root)
 {
-    if (!(*root) || !(*root)->left) return;
+    if (!root || !(*root) || !(*root)->left) return;
     t_bstn* tmp = (*root)->left;
     (*root)->left = tmp->right;
     tmp->right = *root;
@@ -45,7 +47,7 @@ void bst_rotate_right(t_bstn** root)
 
 void bst_rotate_left(t_bstn** root)
 {
-    if (!(*root) || !(*root)->right) return;
+    if (!root || !(*root) || !(*root)->right) return;
     t_bstn* tmp = (*root)->right;
     (*root)->right = tmp->left;
     tmp->left = *root;
@@ -56,7 +58,7 @@ void bst_rotate_left(t_bstn** root)
 void bst_balance(t_bstn** root)
 {
     int b;
-    if (!(*root) || !root) return;
+    if (!root || !(*root)) return;
     b = bst_diff(*root);
     if (b > 1 ) { // left side is deeper
         // balance to the right
@@ -83,7 +85,7 @@ void* bst_add(t_bstn** root, void* e, bstc* f)
 {
     void* ret;
 
-    if (!f) return 0;
+    if (!f || !root) return 0;
 
     if (!(*root)) {
         // new bstn
@@ -123,14 +125,17 @@ void* bst_remove_left(t_bstn** root)
 {
     void* ret = 0;
 
-    if ((*root)->left) {
-        ret = bst_remove_left(&(*root)->left);
-        bst_balance(root);
-    } else {
-        ret = (*root)->elem;
-        t_bstn* tmp = (*root)->right;
-        free(*root);
-        *root = tmp;
+    if (root != NULL)
+    {
+        if ((*root)->left) {
+            ret = bst_remove_left(&(*root)->left);
+            bst_balance(root);
+        } else {
+            ret = (*root)->elem;
+            t_bstn* tmp = (*root)->right;
+            free(*root);
+            *root = tmp;
+        }
     }
 
     return ret;
@@ -140,14 +145,17 @@ void* bst_remove_right(t_bstn** root)
 {
     void* ret = 0;
 
-    if ((*root)->right) {
-        ret = bst_remove_right(&(*root)->right);
-        bst_balance(root);
-    } else {
-        ret = (*root)->elem;
-        t_bstn* tmp = (*root)->left;
-        free(*root);
-        *root = tmp;
+    if (root != NULL)
+    {
+        if ((*root)->right) {
+            ret = bst_remove_right(&(*root)->right);
+            bst_balance(root);
+        } else {
+            ret = (*root)->elem;
+            t_bstn* tmp = (*root)->left;
+            free(*root);
+            *root = tmp;
+        }
     }
 
     return ret;
@@ -157,11 +165,7 @@ void* bst_remove(t_bstn** root, void* e, bstc* f)
 {
     void* ret;
 
-    if (!f) return 0;
-
-    if (!(*root)) {
-        return 0;
-    }
+    if (!f || !root || !(*root)) return 0;
 
     int c = f(e, (*root)->elem);
 

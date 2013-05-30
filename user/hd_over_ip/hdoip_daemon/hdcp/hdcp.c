@@ -6,23 +6,27 @@
  * Created on: 28.04.2011
  * Author: itin
  */
-#include <debug.h>
+
+#include "debug.h"
 #include "hdcp.h"
-#include "rsaes-oaep/rsaes.h"
-#include "rsassa_pkcs1/rsassa.h"
-#include "aes128/aes_encrypt.h"
-#include "sha256/sha256.h"
-#include "protocol/protocol.h"
-#include "bcrypt/b_main.h"
 #include "hdoipd_fsm.h"
 #include "hoi_drv_user.h"
+#include "rtsp_command.h"
+#include "rtsp_error.h"
+
+#include "aes128/aes_encrypt.h"
+#include "bcrypt/b_main.h"
+#include "rsaes-oaep/rsaes.h"
+#include "rsassa_pkcs1/rsassa.h"
+#include "protocol/protocol.h"
+#include "sha256/sha256.h"
 
 /** State machine for session key exchange (server side)
  *  Responds to client requests. If successful, client and server share
  *  the same session key.
  *
  * */
-int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
+int hdcp_ske_s(t_rtsp_media* media, t_rtsp_req_hdcp* m, t_rtsp_connection* rsp)
 {
     report(INFO "ID: %s CONTENT: %s",m->id, m->content);
     char enc_km[257];
@@ -39,30 +43,30 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
 	        	media->hdcp_state = HDCP_SEND_RTX;
 	            hdcp_decrypt_flash_keys();/* Get the encrypted HDCP keys from flash and decrypt them*/
 	        	hdcp_generate_random_nr(media->hdcp_var.rtx);
-	            rscp_response_hdcp(rsp, media->sessionid, id[2], media->hdcp_var.rtx); //respond to setup message
+	            rtsp_response_hdcp(rsp, media->sessionid, id[2], media->hdcp_var.rtx); //respond to setup message
 	            report(INFO "RTX: %s", media->hdcp_var.rtx);
-	            return RSCP_SUCCESS;
+	            return RTSP_SUCCESS;
 	        break;
 	        case HDCP_AKE_SEND_CERT:	/* check certificate */
-	        	if (media->hdcp_state != HDCP_SEND_RTX) return RSCP_HDCP_ERROR;
+	        	if (media->hdcp_state != HDCP_SEND_RTX) return RTSP_HDCP_ERROR;
 	        	report(INFO "CERTIFICATE: %s", m->content);
 	            if (hdcp_check_certificate(m->content, &media->hdcp_var.repeater, media->hdcp_var.km, enc_km)!=1)
-	        		return RSCP_HDCP_ERROR;
-	            rscp_response_hdcp(rsp, media->sessionid, id[4], enc_km); //respond message to setup message
+	        		return RTSP_HDCP_ERROR;
+	            rtsp_response_hdcp(rsp, media->sessionid, id[4], enc_km); //respond message to setup message
 	            report(INFO "repeater: %d enc_km: %s", media->hdcp_var.repeater, enc_km);
 	            media->hdcp_state = HDCP_VERIFY_CERT;
-	            return RSCP_SUCCESS;
+	            return RTSP_SUCCESS;
 	        break;
 	        case HDCP_AKE_SEND_RRX:		/* receive rrx and acknowledge */
-	        	if (media->hdcp_state != HDCP_VERIFY_CERT) return RSCP_HDCP_ERROR;
+	        	if (media->hdcp_state != HDCP_VERIFY_CERT) return RTSP_HDCP_ERROR;
 	        	strcpy(media->hdcp_var.rrx, m->content); //save rrx
-	            rscp_response_hdcp(rsp, media->sessionid, id[0], null); //respond message to setup message
+	            rtsp_response_hdcp(rsp, media->sessionid, id[0], null); //respond message to setup message
 	            report(INFO "Received rrx: %s", media->hdcp_var.rrx);
 	            media->hdcp_state = HDCP_RECEIVE_RRX;
-	            return RSCP_SUCCESS;
+	            return RTSP_SUCCESS;
 	        break;
 	        case HDCP_AKE_SEND_HPRIME: /* compare received and generated H */
-	        	if (media->hdcp_state != HDCP_RECEIVE_RRX) return RSCP_HDCP_ERROR;
+	        	if (media->hdcp_state != HDCP_RECEIVE_RRX) return RTSP_HDCP_ERROR;
 	        	//check if H is valid
 	        	hdcp_calculate_h(media->hdcp_var.rtx, &media->hdcp_var.repeater, HL, media->hdcp_var.km, media->hdcp_var.kd);  //calculate own H
 	        	//report(INFO "kd: %s", media->hdcp_var.kd);
@@ -70,15 +74,15 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
 	        	report(INFO "Received H: %s", m->content);
 	        	if(strcmp(HL,m->content) != 0) {					//compare received and own H
 	        		report(INFO "HMAC of H is wrong!");
-	        		return RSCP_HDCP_ERROR;
+	        		return RTSP_HDCP_ERROR;
 	        	}
 	        	hdcp_generate_random_nr(media->hdcp_var.rn);
-	            rscp_response_hdcp(rsp, media->sessionid, id[9], media->hdcp_var.rn); 	//respond message LC_Init
+	            rtsp_response_hdcp(rsp, media->sessionid, id[9], media->hdcp_var.rn); 	//respond message LC_Init
 	            media->hdcp_state = HDCP_RECEIVE_H;
-	            return RSCP_SUCCESS;
+	            return RTSP_SUCCESS;
 	        break;
 	        case HDCP_LC_SEND_LPRIME: /* start locality check */
-	        	if (media->hdcp_state != HDCP_RECEIVE_H) return RSCP_HDCP_ERROR;
+	        	if (media->hdcp_state != HDCP_RECEIVE_H) return RTSP_HDCP_ERROR;
 	            report(INFO "rn: %s", media->hdcp_var.rn);
 	            report(INFO "rrx: %s", media->hdcp_var.rrx);
 	        	hdcp_calculate_l(media->hdcp_var.rn, media->hdcp_var.rrx, media->hdcp_var.kd, HL);
@@ -86,7 +90,7 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
 	        	report(INFO "Received L: %s", m->content);
 	        	if(strcmp(HL,m->content) != 0) {		//compare received and own L
 	        		report(INFO "HMAC of L is wrong!");
-	        		return RSCP_HDCP_ERROR;
+	        		return RTSP_HDCP_ERROR;
 	        	}
 
 	        	/*For multicast: riv and ks are static for VTB, check if generated previously*/
@@ -100,7 +104,7 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
 		        	    	report(INFO "Couldn't generate TRN for ks! Try PRNG!");
 		        	        if (pseudo_random_nr(temp)==1) {
 		        	        	report(INFO "Couldn't generate PRN for ks! EXIT!");
-		        	        	return RSCP_HDCP_ERROR;
+		        	        	return RTSP_HDCP_ERROR;
 		        	        }
 		        	    }
 		        	    strcat(hdoipd.hdcp.ks,temp);
@@ -113,7 +117,7 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
 	            report(INFO "RIV: %s", hdoipd.hdcp.riv);
 	        	/* concatenate and send enc session key and riv back */
 	            strcat(Edkey_ks,hdoipd.hdcp.riv);
-	        	rscp_response_hdcp(rsp, media->sessionid, id[11], Edkey_ks); 	//respond message SKE_Send_Eks
+	        	rtsp_response_hdcp(rsp, media->sessionid, id[11], Edkey_ks); 	//respond message SKE_Send_Eks
 	        	//report(INFO "THE SESSION KEY: %s", hdoipd.hdcp.ks); //SECRET VALUE, SHOW ONLY TO DEBUG
 	        	/* xor session key with lc128 */
 	        	xor_strings(hdoipd.hdcp.ks, hdoipd.hdcp.lc128, hdoipd.hdcp.ks_x_lc128,32);
@@ -122,13 +126,13 @@ int hdcp_ske_s(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
 	        	/*for (i=0;i<6;i++){  //SECRET VALUES, SHOW ONLY TO DEBUG
 	        		report(INFO "THE KEYS: %08x",  hdoipd.hdcp.keys[i]);
 	        	}*/
-	        	report(INFO "SESSION KEY EXCHANGE SUCCESSFUL!")
+                report(INFO "SESSION KEY EXCHANGE SUCCESSFUL!");
 	        	hdoipd.hdcp.ske_executed = HDCP_SKE_EXECUTED;
 		    	media->hdcp_state = HDCP_SEND_KS;
-	            return RSCP_SUCCESS;
+	            return RTSP_SUCCESS;
 	        break;
 	}
-	return RSCP_HDCP_ERROR;
+	return RTSP_HDCP_ERROR;
 }
 
 /* Generate random number
@@ -143,10 +147,10 @@ int hdcp_generate_random_nr(char* number){
 	report(INFO "Couldn't generate TRN! Try PRNG!");
     if (pseudo_random_nr(number)==1) {
       report(INFO "Couldn't generate PRN! EXIT!");
-      return RSCP_HDCP_ERROR;
+      return RTSP_HDCP_ERROR;
     }
   }
-  return RSCP_SUCCESS;
+  return RTSP_SUCCESS;
 }
 
 /* Convert the string with the session key and riv to 6 integers
@@ -176,7 +180,7 @@ int hdcp_convert_sk_char_int(char* ks, char* riv, uint32_t* keys){
 	    temp[8]='\0';
 	    keys[j+4]=strtoul(temp, NULL, 16);
 	}
-	return RSCP_SUCCESS;
+	return RTSP_SUCCESS;
 }
 
 /** Check receiver certificate, encrypt km if certificate is valid
@@ -278,7 +282,7 @@ int hdcp_ske_enc_ks(char* rn, char* km, char* rrx, char* rtx, char* ks, char* Ed
 	    	report(INFO "Couldn't generate TRN for ks! Try PRNG!");
 	        if (pseudo_random_nr(temp)==1) {
 	        	report(INFO "Couldn't generate PRN for ks! EXIT!");
-	        	return RSCP_HDCP_ERROR;
+	        	return RTSP_HDCP_ERROR;
 	        }
 	    }
 	    strcat(ks,temp);
@@ -291,7 +295,7 @@ int hdcp_ske_enc_ks(char* rn, char* km, char* rrx, char* rtx, char* ks, char* Ed
 	aes_128(key2,plaintext3,dkey2);
 	xor_strings(dkey2, rrx, xor_val, 64);
 	xor_strings(ks, xor_val,Edkey_ks,32);
-	return RSCP_SUCCESS;
+	return RTSP_SUCCESS;
 }
 
 /** Calculate H (HMAC value to check if km was successfully decrypted)
@@ -328,7 +332,7 @@ int hdcp_calculate_h(char* rtx, uint32_t* repeater, char* H, char* km, char* kd)
     strcat(kd,dkey0);
     strcat(kd,dkey1);
     hmac(rtx,kd,H,repeater_s);
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
 /** Calculate L (HMAC value for locality check)
@@ -348,7 +352,7 @@ int hdcp_calculate_l(char* rn, char* rrx, char* kd, char* L){
     strcat(rrx_pad,rrx);
     xor_strings(rrx_pad, kd, key_l, 64);
     hmac(rn,key_l,L,no_repeater);
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
 /** Decrypt session key (client function)
@@ -374,7 +378,7 @@ int hdcp_ske_dec_ks(char* rn, char* ks, char* Edkey_ks, char* rtx, char* rrx, ch
 	aes_128(key2,plaintext3,dkey2);
 	xor_strings(dkey2, rrx, xor_val, 64);
 	xor_strings(Edkey_ks, xor_val, ks, 32);  //ks is now the encrypted session key
-	return RSCP_SUCCESS;
+	return RTSP_SUCCESS;
 }
 
 /** Get the encrypted HDCP keys from flash and decrypt them
@@ -445,7 +449,7 @@ int hdcp_decrypt_flash_keys(){
 	//report(INFO "lc128: %s", hdoipd.hdcp.lc128); //SECRET VALUE, SHWO ONLY TO DEBUG
 
 	free(str);
-	return RSCP_SUCCESS;
+	return RTSP_SUCCESS;
 }
 
 /** Check if hdcp is enabled in HW (audio or video)

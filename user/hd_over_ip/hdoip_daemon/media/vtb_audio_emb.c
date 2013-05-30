@@ -4,35 +4,59 @@
  *  Created on: 06.01.2011
  *      Author: alda
  */
-#include "hdoipd.h"
-#include "hoi_drv_user.h"
-#include "vtb_audio_emb.h"
-#include "hdoipd_fsm.h"
+
 #include "box_sys.h"
-#include "rscp_server.h"
+#include "box_sys_vtb.h"
 #include "hdcp.h"
+#include "hdoipd.h"
+#include "hdoipd_fsm.h"
+#include "hoi_drv_user.h"
 #include "multicast.h"
+#include "rtsp_command.h"
+#include "rtsp_server.h"
+#include "vtb_audio.h"
 
 #define TICK_TIMEOUT_MULTICAST          (hdoipd.eth_timeout * 2)
 #define TICK_TIMEOUT_UNICAST            (hdoipd.eth_timeout)
 #define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
 
-int vtb_audio_emb_hdcp(t_rscp_media* media, t_rscp_req_hdcp* m, t_rscp_connection* rsp)
+int vtb_audio_emb_describe(t_rtsp_media *media, void *_data, t_rtsp_connection *con)
+{
+    t_rtsp_req_describe *data = _data;
+    int ret;
+
+    if (!data)
+        return -1;
+
+    ret = rtsp_handle_describe_generic(media, data, con);
+    if (ret)
+        return ret;
+
+    /* Add media specific content */
+/*
+    msgprintf(con, "m=audio 0 RTP/AVP 97\r\n");
+    msgprintf(con, "a=control:/device/1/audio/1/\r\n");
+    msgprintf(con, "a=fmtp:97 line_out/head_out; line_in/mic; bit=16; fs=48000\r\n");
+    msgprintf(con, "m=audio 0 RTP/AVP 97\r\n");
+    msgprintf(con, "a=control:/device/1/audio/2/\r\n");
+    msgprintf(con, "a=fmtp:97 video-audio; fs=48000\r\n");             //TODO*/
+
+    rtsp_send(con);
+
+    return 0;
+}
+
+int vtb_audio_emb_hdcp(t_rtsp_media* media, t_rtsp_req_hdcp* m, t_rtsp_connection* rsp)
 {
 	int ret;
 
-	t_multicast_cookie* cookie = media->cookie;
     ret = hdcp_ske_s(media, m, rsp);
-
-    cookie->timeout = 0;
-    cookie->alive_ping = 1;
-
+    ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
     return ret;
 }
 
-int vtb_audio_emb_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connection* rsp)
+int vtb_audio_emb_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_connection* rsp)
 {
-    int hdcp;
     t_multicast_cookie* cookie = media->cookie;
 
     report(VTB_METHOD "vtb_audio_emb_setup");
@@ -41,37 +65,53 @@ int vtb_audio_emb_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connect
 
     if (!hdoipd_state(HOID_VTB)) {
         report(" ? not in state vtb");
-        rscp_err_no_vtb(rsp);
-        return RSCP_REQUEST_ERROR;
+        rtsp_err_no_vtb(rsp);
+        return RTSP_REQUEST_ERROR;
     }
 
     // get own MAC address
-    if (net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac) != RSCP_SUCCESS) {
+    if (net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac) != RTSP_SUCCESS) {
         report(" ? net_get_local_hwaddr failed");
-        rscp_err_server(rsp);
-        return RSCP_REQUEST_ERROR;
+        rtsp_err_server(rsp);
+        return RTSP_REQUEST_ERROR;
     }
 
     // get own IP address
-    if (net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address) != RSCP_SUCCESS) {
+    if (net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address) != RTSP_SUCCESS) {
         report(" ? net_get_local_addr failed");
-        rscp_err_server(rsp);
-        return RSCP_REQUEST_ERROR;
+        rtsp_err_server(rsp);
+        return RTSP_REQUEST_ERROR;
     }
 
     // get MAC address of next in rout
-    if (net_get_remote_hwaddr(hdoipd.listener.sockfd, "eth0", rsp->address, (uint8_t*)&cookie->remote.mac) != RSCP_SUCCESS) {
+    if (net_get_remote_hwaddr(hdoipd.listener.sockfd, "eth0", rsp->address, (uint8_t*)&cookie->remote.mac) != RTSP_SUCCESS) {
         report(" ? net_get_remote_hwaddr failed");
-        rscp_err_retry(rsp);
-        return RSCP_REQUEST_ERROR;
+        rtsp_err_retry(rsp);
+        return RTSP_REQUEST_ERROR;
+    }
+
+	if(!strcmp(media->name,"audio_emb")){
+		if (!multicast_get_enabled() && hdoipd_tstate(VTB_AUDIO_EMB) ) {
+		    report(ERROR "already streaming audio embedded");
+		    rtsp_response_error(rsp, RTSP_STATUS_INTERNAL_SERVER_ERROR, "Already Streaming");
+		    return RTSP_REQUEST_ERROR;
+		}
+	}
+
+    // only set the EDID if it has been passed as a header value
+    if (rtsp_server_handle_setup((t_rtsp_server*)media->creator, &(m->edid), media) !=0) {
+        report(ERROR "setting up audio input failed");
+        rtsp_err_no_source(rsp);
+        unlock("audio_setup");
+        return RTSP_REQUEST_ERROR;
     }
 
     // reserve resource
-    if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
+    if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
         hdoipd_set_vtb_state(VTB_AUD_EMB_IDLE);
     }
 
-    //check if hdcp is forced by HDMI, user or client (over RSCP)
+    //check if hdcp is forced by HDMI, user or client (over RTSP)
     if (reg_test("hdcp-force", "true") || hdoipd_rsc(RSC_VIDEO_IN_HDCP) || (m->hdcp.hdcp_on==1)) {
     	m->hdcp.hdcp_on = 1;
     	hdoipd.hdcp.enc_state = HDCP_ENABLED;
@@ -80,24 +120,22 @@ int vtb_audio_emb_setup(t_rscp_media* media, t_rscp_req_setup* m, t_rscp_connect
     cookie->remote.address = rsp->address;
     cookie->remote.aud_port = PORT_RANGE_START(m->transport.client_port);
     m->transport.server_port = PORT_RANGE(hdoipd.local.aud_port, hdoipd.local.aud_port);
-    m->transport.multicast = get_multicast_enable();
+    m->transport.multicast = multicast_get_enabled();
 
-    rscp_response_setup(rsp, &m->transport, media->sessionid, &m->hdcp);
+    rtsp_response_setup(rsp, &m->transport, media->sessionid, media->name, &m->hdcp);
 
     REPORT_RTX("TX", hdoipd.local, "->", cookie->remote, aud);
 
-    media->result = RSCP_RESULT_READY;
+    media->result = RTSP_RESULT_READY;
+    ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
 
-    cookie->timeout = 0;
-    cookie->alive_ping = 1;
-
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vtb_audio_emb_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_connection* rsp)
+int vtb_audio_emb_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_connection* rsp)
 {
-    int n, hdcp;
-    t_rscp_rtp_format fmt;
+    int n;
+    t_rtsp_rtp_format fmt;
     struct hdoip_eth_params eth;
     struct hdoip_aud_params aud;
     char dst_mac[6];
@@ -106,23 +144,23 @@ int vtb_audio_emb_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_co
 
     t_multicast_cookie* cookie = media->cookie;
 
-    media->result = RSCP_RESULT_PLAYING;
+    media->result = RTSP_RESULT_PLAYING;
 
     report(VTB_METHOD "vtb_audio_emb_play");
 
     if (!hdoipd_state(HOID_VTB)) {
         // we don't have the resource reserved
         report(" ? require state VTB");
-        rscp_err_server(rsp);
-        return RSCP_REQUEST_ERROR;
+        rtsp_err_server(rsp);
+        return RTSP_REQUEST_ERROR;
     }
 
     if (!hdoipd_rsc(RSC_AUDIO_EMB_IN)) {
         // currently no audio input active
         report(" ? require active audio input");
-        rscp_err_no_source(rsp);
+        rtsp_err_no_source(rsp);
         hdoipd_set_vtb_state(VTB_AUD_EMB_IDLE);
-        return RSCP_REQUEST_ERROR;
+        return RTSP_REQUEST_ERROR;
     }
 
     //check if audio HDCP status is unchanged, else return ERROR
@@ -135,13 +173,13 @@ int vtb_audio_emb_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_co
     	}
     	else {
     		report(" ? Audio HDCP status has changed after SKE");
-    		rscp_err_hdcp(rsp);
-    		return RSCP_REQUEST_ERROR;
+    		rtsp_err_hdcp(rsp);
+    		return RTSP_REQUEST_ERROR;
     	}
     }
 
     // network settings
-    if(get_multicast_enable()) {
+    if(multicast_get_enabled()) {
         eth.ipv4_dst_ip = inet_addr(reg_get("multicast_group"));
         convert_ip_to_multicast_mac(inet_addr(reg_get("multicast_group")), dst_mac);
         report(INFO "sending multicast to : %s", reg_get("multicast_group"));
@@ -163,6 +201,7 @@ int vtb_audio_emb_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_co
     eth.udp_src_port = hdoipd.local.aud_port;
 
     // asi parameters (TODO: restrict audio channel based on registry)
+    // read parameters from gateware
     t_hoi_msg_info *nfo;
     hoi_drv_info_all(&nfo);
     memcpy(&aud, &(nfo->aud_params[AUD_STREAM_NR_EMBEDDED]), sizeof(struct hdoip_aud_params));
@@ -175,8 +214,8 @@ int vtb_audio_emb_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_co
     if ( ((aud.sample_width < 8) || (aud.sample_width > 32)) ||
          ((aud.fs < 32000) || (aud.fs > 192000)) ||
          ((aud.ch_map < 0x0001) || (aud.ch_map > 0x00FF)) ) {
-          rscp_err_def_source(rsp);
-          return RSCP_REQUEST_ERROR;
+          rtsp_err_def_source(rsp);
+          return RTSP_REQUEST_ERROR;
     }
 
     // fec settings (convert from ascii to integer)
@@ -193,33 +232,34 @@ int vtb_audio_emb_play(t_rscp_media* media, t_rscp_req_play UNUSED *m, t_rscp_co
     fec.audio_col_only = fec_setting[9] - 48;
 
     // send timing
-    rscp_response_play(rsp, media->sessionid, &fmt, 0);
+    rtsp_response_play(rsp, media->sessionid, &fmt, 0);
 
-    if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
+    if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
         // activate asi
 #ifdef AUD_IN_PATH
         hoi_drv_asi(AUD_STREAM_NR_EMBEDDED, &eth, &aud, &fec);
         report(INFO "\naudio embedded streaming started(fs = %d Hz, bitwidth = %d Bit, ch_map = 0x%02X)", aud.fs, aud.sample_width, aud.ch_map);
 #endif
+
         // We are streaming Audio now...
         hdoipd_set_vtb_state(VTB_AUDIO_EMB);
     }
 
-    add_client_to_vtb(MEDIA_IS_AUDIO, cookie->remote.address);
+    multicast_client_add(MEDIA_IS_AUDIO, (t_rtsp_server*)media->creator);
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vtb_audio_emb_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t_rscp_connection* rsp)
+int vtb_audio_emb_teardown(t_rtsp_media* media, t_rtsp_req_teardown UNUSED *m, t_rtsp_connection* rsp)
 {
-    t_multicast_cookie* cookie = media->cookie;
+    t_rtsp_server* server = (t_rtsp_server*)media->creator;    
 
     report(VTB_METHOD "vtb_audio_emb_teardown");
 
-    media->result = RSCP_RESULT_TEARDOWN;
+    media->result = RTSP_RESULT_TEARDOWN;
 
     if (hdoipd_tstate(VTB_AUD_EMB_MASK)) {
-        if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+        if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
 #ifdef AUD_IN_PATH
             hdoipd_hw_reset(DRV_RST_AUD_EMB_IN);
 #endif
@@ -228,27 +268,24 @@ int vtb_audio_emb_teardown(t_rscp_media* media, t_rscp_req_teardown UNUSED *m, t
     }
 
     if (rsp) {
-        rscp_response_teardown(rsp, media->sessionid);
+        rtsp_response_teardown(rsp);
     }
 
-    cookie->timeout = 0;
-    cookie->alive_ping = 1;
+    server->timeout.timeout = 0;
+    report(VTB_METHOD "vtb_audio_teardown: remove media");
+    multicast_client_remove(MEDIA_IS_AUDIO, server);
 
-    remove_client_from_vtb(MEDIA_IS_AUDIO, cookie->remote.address);
-
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-void vtb_audio_emb_pause(t_rscp_media *media)
+void vtb_audio_emb_pause(t_rtsp_media *media)
 {
-    t_multicast_cookie* cookie = media->cookie;
-
     report(VTB_METHOD "vtb_audio_emb_pause");
 
-    media->result = RSCP_RESULT_PAUSE_Q;
+    media->result = RTSP_RESULT_PAUSE_Q;
 
     if (hdoipd_tstate(VTB_AUDIO_EMB)) {
-        if ((!get_multicast_enable()) || (check_client_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+        if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_AUDIO) == CLIENT_AVAILABLE_ONLY_ONE)) {
 #ifdef AUD_IN_PATH
             hdoipd_hw_reset(DRV_RST_AUD_EMB_IN);
 #endif
@@ -256,94 +293,54 @@ void vtb_audio_emb_pause(t_rscp_media *media)
         }
     }
 
-    remove_client_from_vtb(MEDIA_IS_AUDIO, cookie->remote.address);
+    multicast_client_remove(MEDIA_IS_AUDIO, (t_rtsp_server*)media->creator);
 }
 
-int vtb_audio_emb_ext_pause(t_rscp_media* media, void* UNUSED m, t_rscp_connection* rsp)
+int vtb_audio_emb_ext_pause(t_rtsp_media* media, void* UNUSED m, t_rtsp_connection* rsp)
 {
     vtb_audio_emb_pause(media);
-    rscp_response_pause(rsp, media->sessionid);
+    rtsp_response_pause(rsp, media->sessionid);
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vtb_audio_emb_update(t_rscp_media UNUSED *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
+int vtb_audio_emb_event(t_rtsp_media *media, uint32_t event)
 {
-    t_multicast_cookie* cookie = media->cookie;
-
-    switch (m->event) {
-        case EVENT_TICK:
-            // reset timeout
-            cookie->timeout = 0;
-        break;
-    }
-
-    return RSCP_SUCCESS;
-}
-
-int vtb_audio_emb_event(t_rscp_media *media, uint32_t event)
-{
-    t_multicast_cookie* cookie = media->cookie;
-    uint32_t timeout;
+    if (rtsp_media_sinit(media))
+        return RTSP_WRONG_STATE;
 
     switch (event) {
         case EVENT_AUDIO_IN0_ON:
-            if (rscp_media_splaying(media)) {
+            if (rtsp_media_splaying(media)) {
                 vtb_audio_emb_pause(media);
-                rscp_server_update(media, EVENT_AUDIO_IN0_OFF);
+                rtsp_server_update_media(media, EVENT_AUDIO_IN0_OFF);
             }
-            rscp_server_update(media, EVENT_AUDIO_IN0_ON);
-            return RSCP_PAUSE;
+            rtsp_server_update_media(media, EVENT_AUDIO_IN0_ON);
+            return RTSP_PAUSE;
         break;
         case EVENT_AUDIO_IN0_OFF:
-            if (rscp_media_splaying(media)) {
+            if (rtsp_media_splaying(media)) {
                 vtb_audio_emb_pause(media);
-                rscp_server_update(media, EVENT_AUDIO_IN0_OFF);
+                rtsp_server_update_media(media, EVENT_AUDIO_IN0_OFF);
             }
-            return RSCP_PAUSE;
-        break;
-        case EVENT_TICK:
-            if (cookie->alive_ping) {
-                cookie->alive_ping--;
-            } else {
-                cookie->alive_ping = TICK_SEND_ALIVE;
-                // send tick we are alive (until something like rtcp is used)
-       //         if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
-                rscp_server_update(media, EVENT_TICK);
-       //         }
-            }
-
-            if (get_multicast_enable()) {
-                timeout = TICK_TIMEOUT_MULTICAST;
-            } else {
-                timeout = TICK_TIMEOUT_UNICAST;
-            }
-
-            if (cookie->timeout <= timeout) {
-                cookie->timeout++;
-            } else {
-                report(INFO "vtb_audio_emb_event: timeout");
-                // timeout -> kill connection
-                // server cannot kill itself -> add to kill list
-                // (will be executed after all events are processed)
-                cookie->timeout = 0;
-                rscp_listener_add_kill(&hdoipd.listener, media);
-            }
+            return RTSP_PAUSE;
         break;
     }
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-t_rscp_media vtb_audio_emb = {
+t_rtsp_media vtb_audio_emb = {
     .name = "audio_emb",
     .owner = 0,
     .cookie = 0,
-    .hdcp = (frscpm*)vtb_audio_emb_hdcp,
+    .options = (frtspm*)box_sys_options,
+    .describe = vtb_audio_emb_describe,
+    .get_parameter = (frtspm*)box_sys_vtb_get_parameter,
+    .hdcp = (frtspm*)vtb_audio_emb_hdcp,
     .cookie_size = sizeof(t_multicast_cookie),
-    .setup = (frscpm*)vtb_audio_emb_setup,
-    .play = (frscpm*)vtb_audio_emb_play,
-    .pause = (frscpm*)vtb_audio_emb_ext_pause,
-    .teardown = (frscpm*)vtb_audio_emb_teardown,
-    .update = (frscpm*)vtb_audio_emb_update,
-    .event = (frscpe*)vtb_audio_emb_event
+    .setup = (frtspm*)vtb_audio_emb_setup,
+    .play = (frtspm*)vtb_audio_emb_play,
+    .pause = (frtspm*)vtb_audio_emb_ext_pause,
+    .teardown = (frtspm*)vtb_audio_emb_teardown,
+    .event = (frtspe*)vtb_audio_emb_event
 };

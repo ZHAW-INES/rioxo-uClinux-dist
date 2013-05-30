@@ -5,14 +5,18 @@
  *      Author: alda
  */
 
-#include "hoi_drv_user.h"
-#include "hdoipd.h"
 #include "box_sys.h"
-#include "vrb_audio_emb.h"
-#include "hdoipd_osd.h"
-#include "hdoipd_fsm.h"
 #include "hdcp.h"
+#include "hdoipd.h"
+#include "hdoipd_fsm.h"
+#include "hdoipd_osd.h"
+#include "hoi_drv_user.h"
 #include "multicast.h"
+#include "rtsp_client.h"
+#include "rtsp_error.h"
+#include "rtsp_net.h"
+#include "rtsp_command.h"
+#include "vrb_audio.h"
 
 #define PROCESSING_DELAY_CORRECTION     (6000)
 #define TICK_TIMEOUT                    (hdoipd.eth_timeout)
@@ -26,17 +30,35 @@ static struct {
     bool                multicast_en;
 } vrb;
 
-int vrb_audio_emb_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connection* rsp)
+int vrb_audio_emb_describe(t_rtsp_media *media, void *_data, t_rtsp_connection *con)
+{
+    t_rtsp_req_describe *data = _data;
+
+    if (!data)
+        return -1;
+
+    rtsp_handle_describe_generic(media, data, con);
+
+    /* Add media specific content */
+
+    /* TODO: List all available media controls */
+
+    rtsp_send(con);
+
+    return 0;
+}
+
+int vrb_audio_emb_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection* rsp)
 {
     int n;
-    t_rscp_client* client = media->creator;
+    t_rtsp_client* client = media->creator;
     report(VRB_METHOD "vrb_audio_emb_setup");
 
-    if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RSCP_SUCCESS) {
+    if ((n = net_get_local_hwaddr(hdoipd.listener.sockfd, "eth0", (uint8_t*)&hdoipd.local.mac)) != RTSP_SUCCESS) {
         return n;
     }
 
-    if ((n = net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address)) != RSCP_SUCCESS) {
+    if ((n = net_get_local_addr(hdoipd.listener.sockfd, "eth0", &hdoipd.local.address)) != RTSP_SUCCESS) {
         return n;
     }
 
@@ -47,8 +69,8 @@ int vrb_audio_emb_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connect
     vrb.multicast_en = m->transport.multicast;
 
     if (vrb.multicast_en) {
-        vrb.dst_ip = m->transport.multicast_group;
-        join_multicast_group(vrb.dst_ip);
+        vrb.dst_ip = m->transport.destination;
+        multicast_group_join(vrb.dst_ip);
     }
     else {
         vrb.dst_ip = hdoipd.local.address;
@@ -61,8 +83,9 @@ int vrb_audio_emb_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connect
         report(INFO "encrypted audio output on SDI is not allowed");
         osd_permanent(true);
         osd_printf("encrypted audio output on SDI is not allowed\n");
-        rscp_client_set_teardown(client);
-        return RSCP_REQUEST_ERROR;
+        rtsp_client_set_teardown(client);
+		rtsp_client_set_kill(client);
+        return RTSP_REQUEST_ERROR;
     }
 
     /*start hdcp session key exchange if necessary */
@@ -70,10 +93,10 @@ int vrb_audio_emb_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connect
     hdoipd.hdcp.enc_state = m->hdcp.hdcp_on;
 
     if ((m->hdcp.hdcp_on == 1) && !(hdoipd.hdcp.ske_executed)){
-		if (rscp_client_hdcp(client) != RSCP_SUCCESS){
+		if (rtsp_client_hdcp(client) != RTSP_SUCCESS){
 			report(" ? Session key exchange failed");
-			//rscp_err_hdcp(rsp);  DONT CALL THIS AT VRB!!!!!!!!!!!!!!!
-			return RSCP_REQUEST_ERROR;
+			//rtsp_err_hdcp(rsp);  DONT CALL THIS AT VRB!!!!!!!!!!!!!!!
+			return RTSP_REQUEST_ERROR;
 		}
     }
 
@@ -83,15 +106,14 @@ int vrb_audio_emb_setup(t_rscp_media *media, t_rscp_rsp_setup* m, t_rscp_connect
 
     hdoipd_set_vtb_state(VTB_AUD_EMB_IDLE);
 
-    media->result = RSCP_RESULT_READY;
+    media->result = RTSP_RESULT_READY;
     vrb.alive_ping = 1;
     vrb.timeout = 0;
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-
-int vrb_audio_emb_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connection UNUSED *rsp)
+int vrb_audio_emb_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UNUSED *rsp)
 {
     uint32_t compress = 0;
     report(VRB_METHOD "vrb_audio_emb_play");
@@ -111,11 +133,11 @@ int vrb_audio_emb_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connectio
 		}
 		else {
 			report(INFO "No valid HDCP ske executed!");
-			return RSCP_ERRORNO;
+			return RTSP_ERRORNO;
 		}
 	}
 
-    media->result = RSCP_RESULT_PLAYING;
+    media->result = RTSP_RESULT_PLAYING;
 
     // set slave timer when not already synced to video or audio_embedded
     if (!hdoipd_rsc(RSC_VIDEO_SYNC) && !hdoipd_rsc(RSC_AUDIO_EMB_SYNC)) {
@@ -131,7 +153,7 @@ int vrb_audio_emb_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connectio
 
 #ifdef AUD_OUT_PATH
     hoi_drv_aso(AUD_STREAM_NR_EMBEDDED, m->format.value, m->format.compress, m->format.value2, reg_get_int("network-delay"),reg_get_int("av-delay"), compress, 1);
-    report(INFO "\naudio embedded streaming started(fs = %d Hz, bitwidth = %d Bit, channel_map = 0x%x)", m->format.value, m->format.compress, m->format.value2); 
+    report(INFO "\naudio embedded streaming started(fs = %d Hz, bitwidth = %d Bit, channel_map = 0x%x)", m->format.value, m->format.compress, m->format.value2);
 #endif
 
     hdoipd_set_vtb_state(VTB_AUDIO_EMB);
@@ -149,14 +171,14 @@ int vrb_audio_emb_play(t_rscp_media *media, t_rscp_rsp_play* m, t_rscp_connectio
 
     hoi_drv_set_led_status(SDI_OUT_WITH_AUDIO);
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vrb_audio_emb_teardown(t_rscp_media *media, t_rscp_req_teardown UNUSED *m, t_rscp_connection *rsp)
+int vrb_audio_emb_teardown(t_rtsp_media *media, t_rtsp_req_teardown UNUSED *m, t_rtsp_connection *rsp)
 {
     report(VRB_METHOD "vrb_audio_emb_teardown");
 
-    media->result = RSCP_RESULT_TEARDOWN;
+    media->result = RTSP_RESULT_TEARDOWN;
 
     if (hdoipd_tstate(VTB_AUDIO_EMB|VTB_AUD_EMB_IDLE)) {
 #ifdef AUD_OUT_PATH
@@ -167,7 +189,7 @@ int vrb_audio_emb_teardown(t_rscp_media *media, t_rscp_req_teardown UNUSED *m, t
     }
 
     if (vrb.multicast_en) {
-        leave_multicast_group(vrb.dst_ip);
+        multicast_group_leave(vrb_emb.dst_ip);
     }
 
     osd_printf("vrb-audio embedded connection lost...\n");
@@ -177,48 +199,44 @@ int vrb_audio_emb_teardown(t_rscp_media *media, t_rscp_req_teardown UNUSED *m, t
 
     hoi_drv_set_led_status(SDI_OUT_OFF);
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vrb_audio_emb_error(t_rscp_media *media, intptr_t m, t_rscp_connection* rsp)
+int vrb_audio_emb_error(t_rtsp_media *media, intptr_t m, t_rtsp_connection* rsp)
 {
-	t_rscp_client *client = media->creator;
+	t_rtsp_client *client = media->creator;
 
     if(rsp) {
         report(" ? client failed (%d): %d - %s", m, rsp->ecode, rsp->ereason);
         osd_printf("vrb-audio (embedded) streaming could not be established: %d - %s\n", rsp->ecode, rsp->ereason);
         switch(rsp->ecode) {
-            case 300:   media->result = RSCP_RESULT_SERVER_TRY_LATER;
+            case 300:   media->result = RTSP_RESULT_SERVER_TRY_LATER;
                         break;
-            case 404:   media->result = RSCP_RESULT_SERVER_BUSY;
+            case 404:   media->result = RTSP_RESULT_SERVER_BUSY;
                         break;
-            case 405:   media->result = RSCP_RESULT_SERVER_NO_VTB;
+            case 405:   media->result = RTSP_RESULT_SERVER_NO_VTB;
                         break;
-            case 406:   media->result = RSCP_RESULT_SERVER_NO_VIDEO_IN;
+            case 406:   media->result = RTSP_RESULT_SERVER_NO_VIDEO_IN;
                         break;
-            case 408:   media->result = RSCP_RESULT_SERVER_HDCP_ERROR;
-            			rscp_client_set_teardown(client);
-	    				// start sending alive packets
-            	        if(hdoipd.auto_stream) {
-                            alive_check_start_vrb_alive();
-            	        }
+            case 408:   media->result = RTSP_RESULT_SERVER_HDCP_ERROR;
+            			rtsp_client_set_teardown(client);
                         break;
-            case 400:
-            default:    media->result = RSCP_RESULT_SERVER_ERROR;
+            case 409:   break;
+            case RTSP_STATUS_INTERNAL_SERVER_ERROR:
+            default:    media->result = RTSP_RESULT_SERVER_ERROR;
                         break;
         }
     } else {
         osd_printf("vrb-audio (embedded) streaming could not be established: connection refused\n");
-        media->result = RSCP_RESULT_CONNECTION_REFUSED;
+        media->result = RTSP_RESULT_CONNECTION_REFUSED;
     }
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-
-void vrb_audio_emb_pause(t_rscp_media *media)
+void vrb_audio_emb_pause(t_rtsp_media *media)
 {
 	report(INFO "vrb_audio_emb_pause");
-    media->result = RSCP_RESULT_PAUSE_Q;
+    media->result = RTSP_RESULT_PAUSE_Q;
     report(VRB_METHOD "vrb_audio_emb_pause");
 
     if (hdoipd_tstate(VTB_AUDIO_EMB)) {
@@ -236,14 +254,14 @@ void vrb_audio_emb_pause(t_rscp_media *media)
     hoi_drv_set_led_status(SDI_OUT_OFF);
 }
 
-int vrb_audio_emb_ext_pause(t_rscp_media* media, void* UNUSED m, t_rscp_connection* rsp)
+int vrb_audio_emb_ext_pause(t_rtsp_media* media, void* UNUSED m, t_rtsp_connection* rsp)
 {
     vrb_audio_emb_pause(media);
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vrb_audio_emb_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_connection UNUSED *rsp)
+int vrb_audio_emb_update(t_rtsp_media *media, t_rtsp_req_update *m, t_rtsp_connection UNUSED *rsp)
 {
     switch (m->event) {
 
@@ -254,121 +272,111 @@ int vrb_audio_emb_update(t_rscp_media *media, t_rscp_req_update *m, t_rscp_conne
 
         case EVENT_AUDIO_IN0_ON:
             // No multicast for now...simply stop before starting new
-            if (!rscp_media_splaying(media)) {
+            if (!rtsp_media_splaying(media)) {
                 vrb_audio_emb_pause(media);
                 // restart
-                rscp_client_set_play(media->creator);
-                return RSCP_PAUSE;
+                rtsp_client_set_play(media->creator);
+                return RTSP_PAUSE;
             }
         break;
         case EVENT_AUDIO_IN0_OFF:
             vrb_audio_emb_pause(media);
             osd_printf("vtb.audio (embedded) stopped streaming - no audio input\n");
             report(ERROR "vtb.audio (embedded) stopped streaming - no audio input");
-            return RSCP_PAUSE;
+            return RTSP_PAUSE;
         break;
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vrb_audio_emb_ready(t_rscp_media UNUSED *media)
+int vrb_audio_emb_ready(t_rtsp_media UNUSED *media)
 {
-    //if (hdoipd_tstate(VTB_AUD_MASK)) {
-    //    // not ready ->
-    //    return RSCP_ERRORNO;
-    //}
     if (!hdoipd_rsc(RSC_VIDEO_SINK)) {
         //no video sink
-        return RSCP_ERRORNO;
+        return RTSP_ERRORNO;
     }
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-int vrb_audio_emb_dosetup(t_rscp_media *media, void* UNUSED m, void* UNUSED rsp)
+int vrb_audio_emb_dosetup(t_rtsp_media *media, void* UNUSED m, void* UNUSED rsp)
 {
     int port;
-    t_rscp_transport transport;
-    t_rscp_client *client = media->creator;
-    t_rscp_hdcp hdcp;
+    t_rtsp_transport transport;
+    t_rtsp_client *client = media->creator;
+    t_rtsp_hdcp hdcp;
 
     hdcp.hdcp_on = reg_test("hdcp-force", "true");
 
     report(VRB_METHOD "vrb_audio_emb_dosetup");
 
-    if (!client) return RSCP_NULL_POINTER;
+    if (!client) return RTSP_NULL_POINTER;
 
-    rscp_default_transport(&transport); // TODO: daemon transport configuration
+    rtsp_default_transport(&transport); // TODO: daemon transport configuration
     port = reg_get_int("audio-port");
     transport.client_port = PORT_RANGE(htons(port), htons(port+1));
 
-    return rscp_client_setup(client, &transport, 0, &hdcp);
+    return rtsp_client_setup(client, media, &transport, NULL, &hdcp);
 }
 
-int vrb_audio_emb_doplay(t_rscp_media *media, void* UNUSED m, void* UNUSED rsp)
+int vrb_audio_emb_doplay(t_rtsp_media *media, void* UNUSED m, void* UNUSED rsp)
 {
-    t_rscp_rtp_format fmt;
-    t_rscp_client *client = media->creator;
+    t_rtsp_client *client = media->creator;
 
     report(VRB_METHOD "vrb_audio_emb_doplay");
 
-    if (!client) return RSCP_NULL_POINTER;
+    if (!client) return RTSP_NULL_POINTER;
 
-    memset(&fmt, 0, sizeof(fmt));
-    hoi_drv_get_mtime(&fmt.rtptime);
-
-    return rscp_client_play(client, &fmt);
+    return rtsp_client_play(client, NULL, media->name);
 }
 
-int vrb_audio_emb_event(t_rscp_media *media, uint32_t event)
+int vrb_audio_emb_event(t_rtsp_media *media, uint32_t event)
 {
-    t_rscp_client *client = media->creator;
+    t_rtsp_client *client = media->creator;
+    int ret;
 
     switch (event) {
-        case EVENT_TICK:
-            if (vrb.alive_ping) {
-                vrb.alive_ping--;
-            } else {
-                vrb.alive_ping = TICK_SEND_ALIVE;
-                // send tick we are alive (until something like rtcp is used)
-         //       if (hdoipd_tstate(VTB_AUDIO)) { // only if audio stream = active
-                rscp_client_update(client, EVENT_TICK);
-         //       }
+        case EVENT_VIDEO_SINK_ON:
+            if (!rtsp_media_sinit(media))
+                return RTSP_WRONG_STATE;
+
+            ret = rtsp_media_setup(media);
+            if (ret == RTSP_SUCCESS)
+              rtsp_media_play(media);
+            else {
+                report(ERROR "vrb_audio_event() rtsp_media_setup failed (%d)", ret);
+                rtsp_client_set_kill(client);
+                return ret;
             }
-            if (vrb.timeout <= TICK_TIMEOUT) {
-                vrb.timeout++;
-            } else {
-                report(INFO "vrb_audio_event: timeout audio embedded");
-                // timeout -> kill connection
-                vrb.timeout = 0;
-                rscp_client_set_kill(client);
-                osd_printf("vrb-audio connection lost...\n");
-            }
-        break;
+            break;
 
         case EVENT_VIDEO_SINK_OFF:
+            if (rtsp_media_sinit(media))
+                return RTSP_WRONG_STATE;
+
             // Note: after teardown call media/client is not anymore a valid struct
-            rscp_client_set_teardown(client);
-            client = 0;
-        break;
+            rtsp_client_set_teardown(client);
+            break;
     }
 
-    return RSCP_SUCCESS;
+    return RTSP_SUCCESS;
 }
 
-t_rscp_media vrb_audio_emb = {
+t_rtsp_media vrb_audio_emb = {
     .name = "audio_emb",
     .owner = 0,
     .cookie = 0,
-    .setup = (frscpm*)vrb_audio_emb_setup,
-    .play = (frscpm*)vrb_audio_emb_play,
-    .pause = (frscpm*)vrb_audio_emb_ext_pause,
-    .teardown = (frscpm*)vrb_audio_emb_teardown,
-    .error = (frscpm*)vrb_audio_emb_error,
-    .update = (frscpm*)vrb_audio_emb_update,
+    .options = (frtspm*)box_sys_options,
+    .describe = vrb_audio_emb_describe,
+    .setup = (frtspm*)vrb_audio_emb_setup,
+    .play = (frtspm*)vrb_audio_emb_play,
+    .pause = (frtspm*)vrb_audio_emb_ext_pause,
+    .teardown = (frtspm*)vrb_audio_emb_teardown,
+    .error = (frtspm*)vrb_audio_emb_error,
+    .update = (frtspm*)vrb_audio_emb_update,
 
-    .ready = (frscpl*)vrb_audio_emb_ready,
-    .dosetup = (frscpm*)vrb_audio_emb_dosetup,
-    .doplay = (frscpm*)vrb_audio_emb_doplay,
-    .event = (frscpe*)vrb_audio_emb_event
+    .ready = (frtspl*)vrb_audio_emb_ready,
+    .dosetup = (frtspm*)vrb_audio_emb_dosetup,
+    .doplay = (frtspm*)vrb_audio_emb_doplay,
+    .event = (frtspe*)vrb_audio_emb_event
 };

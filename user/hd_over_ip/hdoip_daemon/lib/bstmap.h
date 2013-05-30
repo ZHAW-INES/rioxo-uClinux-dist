@@ -18,6 +18,8 @@ typedef struct {
 
 typedef t_bstn t_bstmap;
 
+int bstmap_empty(t_bstmap* root);
+
 void bstmap_set(t_bstmap** root, char* key, char* value);
 char* bstmap_get(t_bstmap* root, char* key);
 void bstmap_remove(t_bstmap** root, char* key);

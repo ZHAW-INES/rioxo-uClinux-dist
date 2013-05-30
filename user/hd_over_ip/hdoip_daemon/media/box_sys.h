@@ -8,9 +8,13 @@
 #ifndef BOX_SYS_H_
 #define BOX_SYS_H_
 
-#include "rscp_include.h"
+#include "debug.h"
+#include "rtsp_connection.h"
+#include "rtsp_media.h"
 
-extern t_rscp_media box_sys;
+int box_sys_options(t_rtsp_media *media UNUSED, void *data, t_rtsp_connection *rsp);
+int box_sys_get_parameter(t_rtsp_media *media, t_rtsp_req_get_parameter *data, t_rtsp_connection *rsp);
+int box_sys_set_parameter(t_rtsp_media *media, t_rtsp_req_set_parameter *data, t_rtsp_connection *rsp);
 
 int box_sys_set_remote(char* address);
 

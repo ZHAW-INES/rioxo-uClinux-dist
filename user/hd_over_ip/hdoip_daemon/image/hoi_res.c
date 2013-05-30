@@ -56,7 +56,7 @@ const t_video_timing VFORMAT[] = {
 
 };
 
-inline int intabs(int a, int b)
+static int intabs(int a, int b)
 {
     int c = a - b;
     if (c<0) c=-c;

@@ -15,11 +15,12 @@
 #include <pthread.h>
 
 #include "debug.h"
-#include "rscp_include.h"
 #include "bstmap.h"
 #include "alive_check.h"
 #include "usb.h"
 #include "led_drv_instructions.h"
+#include "rtsp_listener.h"
+#include "rtsp_client.h"
 
 #define CFG_FILE                    "/mnt/config/hdoipd.cfg"
 #define CFG_RSP_TIMEOUT             15
@@ -196,24 +197,23 @@ typedef struct {
     pthread_mutex_t     mutex;          // mutex of the structure
 
     void*               canvas;         // pointer to picture
-    t_rscp_listener     listener;       // RSCP listener
-    t_node*             client;         // list of all RSCP clients
+    t_rtsp_listener     listener;       // RTSP listener
+    t_rtsp_client*      client;         // RTSP client
     t_hdoip_eth         local;          // local mac, ip, video port and audio port
     int                 osd_timeout;    // time till osd will be deactivate (in seconds)
-    bool                ethernet_init;  // if ethernet is or was connected 
+    bool                ethernet_init;  // if ethernet is or was connected
     uint64_t            tick;           // counts the EVENT_TICKS, UNUSED!
-    int                 eth_alive;      // amount of ticks (EVENT_TICK) till rscp alive packet is sent
+    int                 eth_alive;      // amount of ticks (EVENT_TICK) till rtsp alive packet is sent
     int                 eth_timeout;    // amount of ticks till connection timeout is detected
 
     bool                auto_stream;    // flag if device should do auto stream after boot
-    t_hdcp 				hdcp;
+    t_hdcp              hdcp;
     t_alive_check       amx;            // AMX control releated structure
-    t_alive_check		alive_check;    // structure to test if server is running
     t_usb_devices       usb_devices;    // list of connected usb devices
     bool                dhcp;           // flag if DHCP client is used
 
     t_hdoip_log         main_log;
-    t_hdoip_log         rscp_log;
+    t_hdoip_log         rtsp_log;
 
     uint32_t*           img_buff;       // pointer to test-image buffer
 } t_hdoipd;
@@ -327,13 +327,13 @@ static inline void get_call(char* n, char** k)
     } \
 }
 
-static inline void lock(const char* s)
+static inline void lock(const char *s MAYBE_UNUSED)
 {
     if (pthread_mutex_lock(&hdoipd.mutex)) perrno("hdoipd:pthread_mutex_lock() failed");
     report2("hdoipd:pthread_mutex_lock(%d, %s)", pthread_self(), s);
 }
 
-static inline void unlock(const char* s)
+static inline void unlock(const char *s MAYBE_UNUSED)
 {
     report2("hdoipd:pthread_mutex_unlock(%d, %s)", pthread_self(), s);
     if (pthread_mutex_unlock(&hdoipd.mutex)) perrno("hdoipd:pthread_mutex_unlock() failed");
