@@ -836,12 +836,6 @@ int rtsp_client_event(t_rtsp_client* client, uint32_t event)
 
   //client->uri immer Transmitter
 
-
-  if (event == EVENT_VIDEO_STIN_OFF)
-    n = rtsp_client_teardown(client, NULL);
-
-
-
   if (client->task & E_RTSP_CLIENT_TEARDOWN)
     n = rtsp_client_teardown(client, NULL);
   if (client->task & E_RTSP_CLIENT_KILL)

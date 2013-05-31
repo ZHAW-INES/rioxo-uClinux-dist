@@ -526,27 +526,27 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid, t_rtsp_me
   }
 
   // unicast
-//  if (!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
+  if (!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
     // read old edid
-//    ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
-//    if (ret != -1) {
-//      edid_merge((t_edid *)edid_table, (t_edid *)edid_table); // modify edid
+    ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
+    if (ret != -1) {
+      edid_merge((t_edid *)edid_table, (t_edid *)edid_table); // modify edid
       // write edid only when it has changed
       // no previous E-EDID exists
-//      if (ret == -2){
-//        edid_write_function((t_edid *)edid_table, multicast_get_enabled() ? "multicast first edid" : "unicast first edid");
-//      }
+      if (ret == -2){
+        edid_write_function((t_edid *)edid_table, multicast_get_enabled() ? "multicast first edid" : "unicast first edid");
+      }
       // a previous E-EDID exists
-//      else {
+      else {
         // check if edid has changed
-//        if (multicast_edid_compare(&edid_old, (t_edid *)edid_table)){
-//          edid_write_function((t_edid *)edid_table, multicast_get_enabled() ? "unicast edid changed" : "unicast edid changed");
-//        }
-//      }
-//    }
-//    else
-//      report(ERROR "Failed to read file: %s", EDID_PATH_VIDEO_IN);
-//  }
+        if (multicast_edid_compare(&edid_old, (t_edid *)edid_table)){
+          edid_write_function((t_edid *)edid_table, multicast_get_enabled() ? "unicast edid changed" : "unicast edid changed");
+        }
+      }
+    }
+    else
+      report(ERROR "Failed to read file: %s", EDID_PATH_VIDEO_IN);
+  }
 
   // response only when not already streaming
   if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO_EMB | VTB_AUDIO_BOARD)) {

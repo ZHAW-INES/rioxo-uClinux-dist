@@ -383,7 +383,7 @@ void multicast_handler()
                     else if (multicast_edid_compare(&edid, &edid_old)) {
                         // the EDID has changed, we have to close all existing connections
                         // so that they can be re-started with the new resolution
-                        /*while (count_client_list(&multicast.client_list_edid)) {
+                        while (count_client_list(&multicast.client_list_edid)) {
                             client = get_first_client_and_remove_it_from_list(&multicast.client_list_edid);
                             // only TEARDOWN and close the clients that are not in the start list
                             // as for those the SETUP will fail anyway
@@ -391,7 +391,7 @@ void multicast_handler()
                             if (search_client_in_list(client->ip, client->sessionid, &multicast.client_list_start) == CLIENT_IS_NOT_IN_LIST){
                                 rtsp_listener_close_connection(&hdoipd.listener, client_ip, true);
                             }
-                        }*/
+                        }
                         // use the new EDID
                         edid_write_function(&edid, "multicast edid changed");
 
@@ -456,11 +456,10 @@ void multicast_edid_add(t_edid* new_edid, t_rtsp_server* server)
     if (search_client_in_list(server->con.address, server->con.common.session, &multicast.client_list_edid) == CLIENT_IS_NOT_IN_LIST) {
         if ((edid = (t_edid*)malloc(sizeof(t_edid))) == NULL){
             report(ERROR "Cant allocate memory for EDID");
-        }
-        else {
+        } else {
             memcpy(edid, new_edid, sizeof(t_edid));
             add_client_to_list(server->con.address, server->con.common.session, &multicast.client_list_edid, edid);
-            }
+        }
     }
     list_unlock("multicast_edid_add");
 }
