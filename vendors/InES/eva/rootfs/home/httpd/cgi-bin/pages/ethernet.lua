@@ -76,6 +76,15 @@ function show(t)
        
     t.sys_mac = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_MAC)
 
+    t.sys_dhcp = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DHCP)
+    if(t.sys_dhcp == "true") then
+        t.sys_dhcp = 1
+        t.sys_dhcp_str = "true"
+    else 
+        t.sys_dhcp = 0
+        t.sys_dhcp_str = "false"
+    end 
+
     if(t.sent == nil) then
         t.sys_mode = t_sys_mode_reg[hdoip.pipe.getParam(hdoip.pipe.REG_MODE_START)]
         t.sys_hostname = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_HOST_NAME)
@@ -83,13 +92,8 @@ function show(t)
         
         get_network(t)
         
-        t.sys_dhcp = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DHCP)
-        if(t.sys_dhcp == "true") then
-            t.sys_dhcp = 1
-        else 
-            t.sys_dhcp = 0
-        end 
-        
+        t.edit_ip = "undefined"
+
         if(hdoip.pipe.getParam(hdoip.pipe.REG_IDENTIFICATION) == "14") then
             t.identification = 1;
         else 
@@ -103,14 +107,6 @@ function show(t)
         t.sys_caption = hdoip.html.unescape(t.sys_caption)
         hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DEV_CAPTION, t.sys_caption)
         
-        if(t.sys_dhcp == "1") then
-            t.sys_dhcp_str = "true"
-            t.sys_dhcp = 1
-        else
-            t.sys_dhcp_str = "false"
-            t.sys_dhcp = 0
-        end
-        
         if(t.identification ~= nil) then
            hdoip.pipe.setParam(hdoip.pipe.REG_IDENTIFICATION, "14")
            t.identification = 1
@@ -119,7 +115,14 @@ function show(t)
            t.identification = 0 
         end
 
-        hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DHCP, t.sys_dhcp_str)
+
+        if (t.edit_ip == nil )then
+            hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DHCP, "false")
+        end
+
+        if (t.edit_ip == "1") then
+            hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DHCP, "true")
+        end
 
         -- Set network parameter if not in DHCP mode
         if(t.sys_dhcp == 0) then
@@ -197,7 +200,15 @@ function show(t)
             hdoip.html.FormHeader(script_path, main_form)
             hdoip.html.Title(label.page_ethernet);           
             hdoip.html.TableHeader(2)
-            hdoip.html.FormRadio(REG_SYS_DHCP, t_sys_ip, 2, t.sys_dhcp)                                             hdoip.html.TableInsElement(2);
+
+            -- ability to set IP address before DHCP is disabled
+            if((t.edit_ip ~= nil) and (t.edit_ip == "0") ) then
+                hdoip.html.Text(label.p_eth_ip_static);                                                             hdoip.html.TableInsElement(2);
+                hdoip.html.FormIP(REG_SYS_IP_LABEL,t.sys_ip0,t.sys_ip1,t.sys_ip2,t.sys_ip3, 0);                     hdoip.html.TableInsElement(2);
+            else
+                hdoip.html.FormRadio("edit_ip", t_sys_ip, 2, t.sys_dhcp)                                            hdoip.html.TableInsElement(2);
+            end
+
             hdoip.html.Text(label.p_eth_mac);                                                                       hdoip.html.TableInsElement(1);
             hdoip.html.Text(t.sys_mac);                                                                             hdoip.html.TableInsElement(1);
             hdoip.html.Text(label.p_eth_ip);                                                                        hdoip.html.TableInsElement(1);

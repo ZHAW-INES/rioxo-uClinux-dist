@@ -121,8 +121,8 @@ function show(t)
         --if(hdoip.network.checkIp(t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3) == 1) then
         if(t.st_uri ~= nil) then
             local uri = "rtsp://"..t.st_uri
-            hdoip.pipe.setParam(hdoip.pipe.REG_ST_URI, uri)
-            hdoip.pipe.setParam(hdoip.pipe.REG_ST_HELLO_URI, uri)
+            hdoip.pipe.setParam(hdoip.pipe.REG_TEMP4, uri)
+            pages.restart.show(t)
         else
             hdoip.html.AddError(t, label.err_ip_not_valid)
         end
@@ -382,6 +382,7 @@ function show(t)
         t.aud_board_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP5)
         t.vid_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP2)
         t.rtsp_port_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP3)
+        t.st_uri_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP4)
 
         if(t.aud_emb_port_changed ~= nil) then 
             if(t.aud_emb_port_changed ~= "") then
@@ -401,6 +402,12 @@ function show(t)
         if(t.rtsp_port_changed ~= nil) then
             if(t.rtsp_port_changed ~= "") then
                 hdoip.pipe.setParam(hdoip.pipe.REG_ST_RTSP_PORT, t.rtsp_port_changed)
+            end
+        end
+        if(t.st_uri_changed ~= nil) then
+            if(t.st_uri_changed ~= "") then
+                hdoip.pipe.setParam(hdoip.pipe.REG_ST_URI, t.st_uri_changed)
+                hdoip.pipe.setParam(hdoip.pipe.REG_ST_HELLO_URI, t.st_uri_changed)
             end
         end
 
