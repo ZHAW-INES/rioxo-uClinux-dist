@@ -175,9 +175,6 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
     t_multicast_cookie* cookie = media->cookie;
 
     report(VTB_METHOD "vtb_video_play");
-    report(INFO "Con_ip: %03i\n",((rsp->address & 0xFF000000)>>24));
-
-    media->result = RTSP_RESULT_PLAYING;
 
     if (!hdoipd_state(HOID_VTB)) {
         // we don't have the resource reserved
@@ -193,6 +190,12 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
         rtsp_err_no_source(rsp);
         //hdoipd_set_vtb_state(VTB_VID_OFF);
         hdoipd_set_vtb_state(VTB_VID_IDLE);
+        return RTSP_REQUEST_ERROR;
+    }
+
+    if (!multicast_get_enabled() && hdoipd_tstate(VTB_VIDEO)) {
+        report(ERROR "already streaming video");
+        rtsp_response_error(rsp, RTSP_STATUS_SERVICE_UNAVAILABLE, "Already Streaming");
         return RTSP_REQUEST_ERROR;
     }
 
@@ -222,7 +225,8 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
     else {
         eth.ipv4_dst_ip = cookie->remote.address;
         for(n=0;n<6;n++) dst_mac[n] = cookie->remote.mac[n];
-        report(INFO "sending unicast to : %s", reg_get("remote-uri"));
+        report(INFO "sending unicast to : %i.%i.%i.%i", ((cookie->remote.address) & 0xff), ((cookie->remote.address >> 8) & 0xff), ((cookie->remote.address >> 16) & 0xff), ((cookie->remote.address >> 24) & 0xff));
+
     }
 
     eth.ipv4_src_ip = hdoipd.local.address;
@@ -294,6 +298,7 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
         hdoipd_set_vtb_state(VTB_VIDEO);
     }
 
+    media->result = RTSP_RESULT_PLAYING;
     multicast_client_add(MEDIA_IS_VIDEO, (t_rtsp_server*)media->creator);
 
     osd_permanent(false);

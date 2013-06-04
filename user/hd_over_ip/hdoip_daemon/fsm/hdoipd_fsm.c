@@ -831,7 +831,7 @@ void hdoipd_event(uint32_t event)
             if(hdoipd_rsc(RSC_ETH_LINK)) {
                 hoi_drv_set_led_status(NO_STREAM_ACTIVE);
             }
-            rtsp_client_event(hdoipd.client, EVENT_VIDEO_STIN_OFF);
+//            rtsp_client_event(hdoipd.client, EVENT_VIDEO_STIN_OFF);
         break;
         case E_ETO_AUDIO_EMB_ON:
             hdoipd_set_rsc(RSC_EAO);

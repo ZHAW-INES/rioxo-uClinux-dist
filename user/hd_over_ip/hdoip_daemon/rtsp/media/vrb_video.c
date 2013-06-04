@@ -144,8 +144,6 @@ int vrb_video_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UN
         }
 	}
 
-    media->result = RTSP_RESULT_PLAYING;
-
     osd_permanent(false);
 
     // join multicast group
@@ -184,6 +182,7 @@ int vrb_video_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UN
     osd_printf("Streaming%svideo %d x %d from %s\n", stream_type, m->timing.width, m->timing.height, inet_ntoa(a1));
 
     hoi_drv_set_led_status(SDI_OUT_NO_AUDIO);
+    media->result = RTSP_RESULT_PLAYING;
 
     return RTSP_SUCCESS;
 }

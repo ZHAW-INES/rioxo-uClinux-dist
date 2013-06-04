@@ -11,7 +11,6 @@
 #include "hdoipd_fsm.h"
 #include "hdoipd_osd.h"
 #include "hoi_drv_user.h"
-#include "multicast.h"
 #include "rtsp_client.h"
 #include "rtsp_error.h"
 #include "rtsp_net.h"
@@ -27,7 +26,6 @@ static struct {
     int                 timeout;
     int                 alive_ping;
     uint32_t            dst_ip;
-    bool                multicast_en;
 } vrb;
 
 
@@ -74,15 +72,7 @@ int vrb_audio_board_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_conne
         return RTSP_REQUEST_ERROR;
     }
 
-    vrb.multicast_en = m->transport.multicast;
-
-    if (vrb.multicast_en) {
-        vrb.dst_ip = m->transport.destination;
-        multicast_group_join(vrb.dst_ip);
-    }
-    else {
-        vrb.dst_ip = hdoipd.local.address;
-    }
+    vrb.dst_ip = hdoipd.local.address;
 
     REPORT_RTX("RX", hdoipd.local, "<-", vrb.remote, aud);
 
@@ -112,7 +102,7 @@ int vrb_audio_board_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connect
     int n;
 
     eth.ipv4_dst_ip = vrb.remote.address;
-    report(INFO "sending unicast to : %s", reg_get("remote-uri"));
+    report(INFO "sending unicast to : %i.%i.%i.%i", ((vrb.remote.address) & 0xff), ((vrb.remote.address >> 8) & 0xff), ((vrb.remote.address >> 16) & 0xff), ((vrb.remote.address >> 24) & 0xff));
 
     eth.ipv4_src_ip = hdoipd.local.address;
     eth.ipv4_tos = 0;
@@ -123,8 +113,6 @@ int vrb_audio_board_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connect
     for(n=0;n<6;n++) eth.dst_mac[n] = vrb.remote.mac[n];
     eth.udp_dst_port = hdoipd.local.aud_port;
     eth.udp_src_port = hdoipd.local.aud_port;
-
-    media->result = RTSP_RESULT_PLAYING;
 
     hoi_drv_set_stime(1 /*slave_nr*/, m->format.rtptime+PROCESSING_DELAY_CORRECTION-21000); //TODO: set slave timer correctly
 
@@ -184,6 +172,7 @@ int vrb_audio_board_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connect
     osd_printf("Streaming unicast Audio %ikHz %i channel from %s\n", m->format.value, aud_chmap2cnt(m->format.value2), inet_ntoa(a1));
 
     hoi_drv_set_led_status(SDI_OUT_WITH_AUDIO);
+    media->result = RTSP_RESULT_PLAYING;
 
     return RTSP_SUCCESS;
 }
@@ -201,10 +190,6 @@ int vrb_audio_board_teardown(t_rtsp_media *media, t_rtsp_req_teardown UNUSED *m,
 #endif
         hdoipd_clr_rsc(RSC_AUDIO_IF_BOARD_SYNC);
         hdoipd_set_vtb_state(VTB_AUD_BOARD_OFF);
-    }
-
-    if (vrb.multicast_en) {
-        multicast_group_leave(vrb.dst_ip);
     }
 
     osd_printf("vrb-audio board connection lost...\n");

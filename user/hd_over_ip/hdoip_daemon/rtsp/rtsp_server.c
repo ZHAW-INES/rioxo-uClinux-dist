@@ -291,7 +291,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
     report(INFO "RTSP Server [%d] started", handle->nr);
 #endif
 
-//    lock("rtsp_server_thread");
+    lock("rtsp_server_thread");
 
     // getting box_sys_vtb media control for this server
     media = rtsp_listener_get_media(handle->owner, "");
@@ -311,7 +311,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
         media = NULL;
     }
 
-//    unlock("rtsp_server_thread");
+    unlock("rtsp_server_thread");
 
     // receive request line
     while (handle->open) {
@@ -380,7 +380,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
             continue;
         }
 
-//        lock("rtsp_server_thread");
+        lock("rtsp_server_thread");
 
         if (media_new && media->creator == NULL)
             media->creator = handle;
@@ -401,12 +401,12 @@ int rtsp_server_thread(t_rtsp_server* handle)
         if (media_new)
           media->creator = NULL;
 
-//        unlock("rtsp_server_thread");
+        unlock("rtsp_server_thread");
     }
-//    lock("rtsp_server_thread");
+    lock("rtsp_server_thread");
     traverse(handle, NULL, NULL, traverse_remove);
     remove_media_all(handle);
-//    unlock("rtsp_server_thread");
+    unlock("rtsp_server_thread");
 
     handle->kill = true;
 

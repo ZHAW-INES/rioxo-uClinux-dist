@@ -8,7 +8,6 @@
 #include "std.h"
 #include "hoi_drv.h"
 
-#include "adv7441a_drv_edid.h" // TODO no edid for init
 #include "adv7441a_drv.h"
 #include "gs2971_drv.h"
 #include "sdi_edid.h"
@@ -28,7 +27,6 @@
 
 #include "wdg_hal.h"
 #include "hdcp_hal.h"
-#include "sdi_edid.h"
 #include "../hal/aud/stdaud.h"
 //------------------------------------------------------------------------------
 // Load driver

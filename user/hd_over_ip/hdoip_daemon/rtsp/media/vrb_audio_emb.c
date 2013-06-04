@@ -137,8 +137,6 @@ int vrb_audio_emb_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connectio
 		}
 	}
 
-    media->result = RTSP_RESULT_PLAYING;
-
     // set slave timer when not already synced to video or audio_embedded
     if (!hdoipd_rsc(RSC_VIDEO_SYNC) && !hdoipd_rsc(RSC_AUDIO_EMB_SYNC)) {
         hoi_drv_set_stime(0 /*slave_nr*/, m->format.rtptime+PROCESSING_DELAY_CORRECTION-21000);
@@ -170,6 +168,7 @@ int vrb_audio_emb_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connectio
     osd_printf("Streaming%saudio from video board %ikHz %i channel from %s\n", stream_type, m->format.value, aud_chmap2cnt(m->format.value2), inet_ntoa(a1));
 
     hoi_drv_set_led_status(SDI_OUT_WITH_AUDIO);
+    media->result = RTSP_RESULT_PLAYING;
 
     return RTSP_SUCCESS;
 }

@@ -119,12 +119,18 @@ function show(t)
 
     else
         --if(hdoip.network.checkIp(t.st_uri0, t.st_uri1, t.st_uri2, t.st_uri3) == 1) then
-        if(t.st_uri ~= nil) then
+
+
+        local st_uri_read = hdoip.pipe.getParam(hdoip.pipe.REG_ST_URI)
+        if (st_uri_read == nil) then
+            st_uri_read = "rtsp://dummy"
+        end
+        st_uri_read = string.sub(st_uri_read, 8)
+
+        if((t.st_uri ~= nil) and (t.st_uri ~= st_uri_read))  then
             local uri = "rtsp://"..t.st_uri
             hdoip.pipe.setParam(hdoip.pipe.REG_TEMP4, uri)
             pages.restart.show(t)
-        else
-            hdoip.html.AddError(t, label.err_ip_not_valid)
         end
         
         t.hdcp_force = tonumber(t.hdcp_force)
@@ -407,7 +413,6 @@ function show(t)
         if(t.st_uri_changed ~= nil) then
             if(t.st_uri_changed ~= "") then
                 hdoip.pipe.setParam(hdoip.pipe.REG_ST_URI, t.st_uri_changed)
-                hdoip.pipe.setParam(hdoip.pipe.REG_ST_HELLO_URI, t.st_uri_changed)
             end
         end
 
@@ -425,9 +430,6 @@ function show(t)
         -- Common fields
         if(t.mode_vtb) then 
             hdoip.html.FormRadioSingle("multicast_en", "false", label.p_st_unicast, t.unicast_en)       hdoip.html.TableInsElement(3);
-            hdoip.html.Text(label.p_st_connect);                                                        hdoip.html.TableInsElement(1);
-            hdoip.html.FormText(REG_ST_URI_LABEL, t.st_uri, 40, 0);                                     hdoip.html.TableInsElement(2);
-        
             hdoip.html.FormRadioSingle("multicast_en", "true", label.p_st_multicast, t.multicast_en)    hdoip.html.TableInsElement(3);
             hdoip.html.Text(label.p_st_multicast_group);                                                hdoip.html.TableInsElement(1);
             hdoip.html.FormText("multicast_group", t.multicast_group, 40, 0);                           hdoip.html.TableInsElement(2);

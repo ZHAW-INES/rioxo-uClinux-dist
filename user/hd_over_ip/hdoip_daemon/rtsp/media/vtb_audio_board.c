@@ -91,13 +91,11 @@ int vtb_audio_board_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_conne
         return RTSP_REQUEST_ERROR;
     }
 
-	if(!strcmp(media->name,"audio_board")){
-		if (!multicast_get_enabled() && hdoipd_tstate(VTB_AUDIO_BOARD) ) {
-	        report(ERROR "already streaming audio board");
-	        rtsp_response_error(rsp, RTSP_STATUS_INTERNAL_SERVER_ERROR, "Already Streaming");
-	        return RTSP_REQUEST_ERROR;
-	    }
-	}
+    if (!multicast_get_enabled() && hdoipd_tstate(VTB_AUDIO_BOARD) ) {
+        report(ERROR "already streaming audio board");
+        rtsp_response_error(rsp, RTSP_STATUS_INTERNAL_SERVER_ERROR, "Already Streaming");
+        return RTSP_REQUEST_ERROR;
+    }
 
     // reserve resource
     if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
@@ -135,8 +133,6 @@ int vtb_audio_board_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_
 
     t_multicast_cookie* cookie = media->cookie;
 
-    media->result = RTSP_RESULT_PLAYING;
-
     report(VTB_METHOD "vtb_audio_board_play");
 
     if (!hdoipd_state(HOID_VTB)) {
@@ -154,6 +150,12 @@ int vtb_audio_board_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_
         return RTSP_REQUEST_ERROR;
     }
 
+    if (!multicast_get_enabled() && hdoipd_tstate(VTB_AUDIO_BOARD) ) {
+        report(ERROR "already streaming audio board");
+        rtsp_response_error(rsp, RTSP_STATUS_INTERNAL_SERVER_ERROR, "Already Streaming");
+        return RTSP_REQUEST_ERROR;
+    }
+
     // network settings
     // SETTINGS FOR BIDIRECTIONAL -> receive!!
     if(multicast_get_enabled()) {
@@ -164,7 +166,7 @@ int vtb_audio_board_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_
     else {
         eth.ipv4_dst_ip = cookie->remote.address;
         for(n=0;n<6;n++) dst_mac[n] = cookie->remote.mac[n];
-        report(INFO "sending unicast to : %s", reg_get("remote-uri"));
+        report(INFO "sending unicast to : %i.%i.%i.%i", ((cookie->remote.address) & 0xff), ((cookie->remote.address >> 8) & 0xff), ((cookie->remote.address >> 16) & 0xff), ((cookie->remote.address >> 24) & 0xff));
     }
 
     eth.ipv4_src_ip = hdoipd.local.address;
@@ -245,6 +247,7 @@ int vtb_audio_board_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_
         hdoipd_set_vtb_state(VTB_AUDIO_BOARD);
     }
 
+    media->result = RTSP_RESULT_PLAYING;
     multicast_client_add(MEDIA_IS_AUDIO, (t_rtsp_server*)media->creator);
 
     return RTSP_SUCCESS;
