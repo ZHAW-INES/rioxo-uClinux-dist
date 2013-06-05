@@ -385,7 +385,7 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
         } else {
             report(ERROR "hdoipd_vrb_setup() rtsp_client_open failed");
             //osd_printf("VTB(%s) not found. Waiting for %s\n", media->name, uri);
-            return -1;
+            return -2;
         }
     }
 
@@ -445,13 +445,13 @@ int hdoipd_start_vrb(bool force)
  */
 int hdoipd_init_vrb_cb(t_rtsp_media* media, void* d)
 {
-    int ret = 0;
+    int ret = -1;
     uint32_t dev_id;
 
     // USB
     if (!strcmp(media->name, "usb")) {
         if (hdoipd_vrb_setup(media, d) < 0) {
-            return 1;
+            return -1;
         } else {
             return 0;
         }
@@ -466,15 +466,11 @@ int hdoipd_init_vrb_cb(t_rtsp_media* media, void* d)
     }
 
     if (rtsp_media_sinit(media)) {
-        if(hdoipd_vrb_setup(media, d) < 0) {
-            ret = 1;
+        ret = hdoipd_vrb_setup(media, d);
+    } else { 
+        if (rtsp_media_sready(media)) {
+            ret = hdoipd_vrb_play(media, d);
         }
-    } else if (rtsp_media_sready(media)) {
-        if(hdoipd_vrb_play(media, d) < 0) {
-            ret = 1;
-        }
-    } else {
-        ret = 1;
     }
     return ret;
 }

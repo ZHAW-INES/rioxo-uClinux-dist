@@ -329,11 +329,11 @@ void* rtsp_client_req_thread(void* _client)
     pthread_setcanceltype  (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 
-    //lock("rtsp_client_req_thread-start");
+    lock("rtsp_client_req_thread-start");
 #ifdef REPORT_RTSP_CLIENT
     report(" + RTSP Client [%d] receiving requests", client->nr);
 #endif
-    //unlock("rtsp_client_req_thread-start");
+    unlock("rtsp_client_req_thread-start");
 
     while (!(client->task & E_RTSP_CLIENT_KILL)) {
         memset(&buf, 0, sizeof(u_rtsp_header));
@@ -352,7 +352,7 @@ void* rtsp_client_req_thread(void* _client)
             continue;
         }
 
-//        lock("rtsp_client_req_thread");
+        lock("rtsp_client_req_thread");
 
         if(!(client->task & E_RTSP_CLIENT_KILL)) {
 #ifdef REPORT_RTSP_RX
@@ -364,19 +364,19 @@ void* rtsp_client_req_thread(void* _client)
             n = ((frtspm*)method->fnc)(media, (void*)&buf, &client->con);
             if (n != RTSP_SUCCESS) {
                 report(" ? RTSP Client [%d] execute method \"%s\" error (%d) media (%s)", client->nr, common.rq.method, n, media->name);
-//                unlock("rtsp_client_req_thread");
+                unlock("rtsp_client_req_thread");
                 break;
             }
         }
-//        unlock("rtsp_client_req_thread");
+        unlock("rtsp_client_req_thread");
 
     }
 
-    //lock("rtsp_client_req_thread-close");
+    lock("rtsp_client_req_thread-close");
 #ifdef REPORT_RTSP_CLIENT
     report(" - RTSP Client [%d] request thread ended", client->nr);
 #endif
-    //unlock("rtsp_client_req_thread-close");
+    unlock("rtsp_client_req_thread-close");
 
     return 0;
 }

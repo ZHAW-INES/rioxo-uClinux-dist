@@ -55,6 +55,10 @@ int hdoipd_media_callback(t_rtsp_media* media, int (*f)(t_rtsp_media*, void*), v
             else if (strscmp(&s, "audio_board")) ret |= f(&vrb_audio_board, d);
             else if (strscmp(&s, "audio_emb")) ret |= f(&vrb_audio_emb, d);
             else { report("unsupported media: %s", s); break; }
+            // if connection is failed (there is no host)-> break off
+            if (ret == -2) {
+                break;
+            }
         }
     } else if (media == (void*)1) {
     	report("hdoipd_media_callback() media = 1");
