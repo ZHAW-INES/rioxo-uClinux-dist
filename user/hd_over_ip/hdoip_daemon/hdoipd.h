@@ -120,9 +120,10 @@ enum {
     RSC_AUDIO_IF_BOARD_SYNC = 0x040000,     // sync running on audio (board)
     RSC_SYNC        = 0x070000,     // sync running
     RSC_EVI         = 0x100000,     // ethernet video input
-    RSC_EAI         = 0x200000,     // ethernet audio input
-    RSC_EVO         = 0x400000,     // ethernet video output
-    RSC_EAO         = 0x800000      // ethernet audio output
+    RSC_EAEI         = 0x200000,     // ethernet audio embedded input
+    RSC_EABI        = 0x400000,     // ethernet audio board input
+    RSC_EVO         = 0x800000,     // ethernet video output
+    RSC_EAO         = 0xc00000      // ethernet audio output
 };
 
 // events
@@ -215,7 +216,9 @@ typedef struct {
     t_hdoip_log         main_log;
     t_hdoip_log         rtsp_log;
 
-    uint32_t*           img_buff;       // pointer to test-image buffer
+    uint32_t*           img_buff;       // pointer to test-image buffer (also FEC buffer)
+    uint32_t*           aud_tx_buff;    // pointer to audio transmit buffer
+    uint32_t*           vid_tx_buff;    // pointer to video transmit buffer
 } t_hdoipd;
 
 extern t_hdoipd                 hdoipd;

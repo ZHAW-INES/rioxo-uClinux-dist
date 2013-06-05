@@ -97,8 +97,22 @@ function show(t)
         hdoip.html.TableBottom()
     end
 
-    hdoip.html.Title(label.p_fw_upload)                                             
-    hdoip.html.UploadForm(t, script_path, "image_files", "*")                  
+    hdoip.html.Title(label.p_fw_upload)
+                 
+    if (t.upload_en ~= nil) then
+        hdoip.pipe.free_buffer()
+        hdoip.html.UploadForm(t, script_path, "image_files", "*")        
+    else
+        hdoip.html.FormHeader(script_path, main_form)
+        hdoip.html.TableHeader(2)
+        hdoip.html.Text(label.p_fw_select_file);                                     hdoip.html.TableInsElement(1)
+        hdoip.html.FormCheckbox("upload_en", 1, "", 0)                               hdoip.html.TableInsElement(1)
+        hdoip.html.TableBottom()
+        hdoip.html.TableHeader(1)
+        hdoip.html.Text(label.p_fw_note);                                            hdoip.html.TableInsElement(1)
+        hdoip.html.TableBottom()
+        hdoip.html.FormBottom(t)
+    end
 
     hdoip.html.Bottom(t)
 end

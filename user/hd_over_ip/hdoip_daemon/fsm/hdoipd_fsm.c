@@ -498,8 +498,8 @@ void hdoipd_set_task_start_vrb(void)
 {
     // stop sending alive packets
     hdoipd.task_commands |= TASK_START_VRB;
-    hdoipd.task_timeout = 1;
-    hdoipd.task_repeat = 2;
+    hdoipd.task_timeout = 200;
+    hdoipd.task_repeat = 0;
 }
 
 void hdoipd_task(void)
@@ -512,7 +512,7 @@ void hdoipd_task(void)
             if(hdoipd_init_vrb(0)) {
             	report(ERROR "task hdoipd_start_vrb() repeat (%d)",hdoipd.task_repeat);
                 if(hdoipd.task_repeat > 0) {
-                    hdoipd.task_timeout = 50;
+                    hdoipd.task_timeout = 200;
                     hdoipd.task_repeat--;
                 } else {
                     hdoipd.task_commands &= ~TASK_START_VRB;
@@ -807,20 +807,20 @@ void hdoipd_event(uint32_t event)
             }
         break;
         case E_ETI_AUDIO_EMB_ON:
-            hdoipd_set_rsc(RSC_EAI);
+            hdoipd_set_rsc(RSC_EAEI);
             hoi_drv_set_led_status(DVI_OUT_CONNECTED_WITH_AUDIO);
         break;
         case E_ETI_AUDIO_EMB_OFF:
-            hdoipd_clr_rsc(RSC_EAI);
+            hdoipd_clr_rsc(RSC_EAEI);
             if(hdoipd_rsc(RSC_VIDEO_SINK)) {
                 hoi_drv_set_led_status(DVI_OUT_CONNECTED_NO_AUDIO);
             }
         break;
         case E_ETI_AUDIO_BOARD_ON:
-            // TODO
+            hdoipd_set_rsc(RSC_EABI);
         break;
         case E_ETI_AUDIO_BOARD_OFF:
-            // TODO
+            hdoipd_clr_rsc(RSC_EABI);
         break;
         case E_ETO_VIDEO_ON:
             hdoipd_set_rsc(RSC_EVO);
@@ -1112,6 +1112,8 @@ bool hdoipd_init(int drv)
         }
 
         hdoipd.img_buff = fec_rx;
+        hdoipd.vid_tx_buff = vid_tx;
+        hdoipd.aud_tx_buff = aud_tx;
 
         if (hoi_drv_buf(aud_tx, AUD_TX_SIZE, vid_tx, VID_TX_SIZE, fec_rx, FEC_IP_BUFFER_SIZE)) {
             report("set buffers failed");

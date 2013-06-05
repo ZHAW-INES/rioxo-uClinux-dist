@@ -211,8 +211,6 @@ int usb_doteardown(t_rtsp_media *media, t_rtsp_usb *m UNUSED, void *rsp UNUSED)
         ret = RTSP_CLIENT_ERROR;
     }
 
-    rtsp_client_close(client, false);
-
     // TODO: correct handling of mouse and keyboard and storage teardown separate
     // also in rmsq teardown for device side
     media->state = RTSP_STATE_INIT;

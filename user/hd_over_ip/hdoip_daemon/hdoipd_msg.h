@@ -59,6 +59,7 @@
 #define HOIC_FMT_OUT            (0x34000008)
 #define HOIC_FMT_PROC           (0x34000009)
 #define HOIC_READ               (0x3400000a)
+#define HOIC_FREE_BUFFER        (0x3400000b)
 
 // E-EDID
 #define HOIC_GET_EDID           (0x35000001)
@@ -139,7 +140,7 @@ static inline void hoic_sw(int fd, uint32_t id)
 #define hoic_repair(fd) hoic_sw(fd, HOIC_REPAIR)
 #define hoic_factory_default(fd) hoic_sw(fd, HOIC_FACTORY_DEFAULT)
 #define hoic_debug(fd) hoic_sw(fd, HOIC_DEBUG)
-
+#define hoic_free_buffer(fd) hoic_sw(fd, HOIC_FREE_BUFFER)
 
 
 //------------------------------------------------------------------------------
