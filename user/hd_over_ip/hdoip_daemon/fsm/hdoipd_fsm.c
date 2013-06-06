@@ -755,7 +755,6 @@ void hdoipd_event(uint32_t event)
             if (!hdoipd_rsc(RSC_VIDEO_IN)) {
                 hdoipd_set_rsc(RSC_VIDEO_IN);
                 hdoipd_clr_rsc(RSC_VIDEO_IN_VGA);
-                hdoipd_set_rsc(RSC_AUDIO_EMB_IN);
                 hoi_drv_set_led_status(DVI_IN_CONNECTED_WITH_AUDIO);
                 hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
                 show_local_ip_address_on_osd();
@@ -850,7 +849,6 @@ void hdoipd_event(uint32_t event)
         case E_GS2971_VIDEO_ON:
             hdoipd_set_rsc(RSC_VIDEO_IN);
             hdoipd_set_rsc(RSC_VIDEO_IN_SDI);
-            hdoipd_set_rsc(RSC_AUDIO_EMB_IN);
             s = reg_get("mode-start"); // hdoipd_state(HOID_VTB) is not set yet, when sdi input is active on startup
             if (strcmp(s, "vtb") == 0) {
                 hoi_drv_set_led_status(SDI_IN_CONNECTED_WITH_AUDIO);
@@ -891,10 +889,12 @@ void hdoipd_event(uint32_t event)
             //hoi_drv_repair();
         break;
         case E_ASI_NEW_FS:
+        	hdoipd_set_rsc(RSC_AUDIO_EMB_IN);
             hoi_drv_get_fs(&buff);
             if (buff == 0) {
                 event = event & ~E_ASI_NEW_FS;                          // clear event to prevent that audio will be started in hdoipd_fsm_vtb
                 event = event | E_ADV7441A_NO_AUDIO;                    // set event to stop audio
+            	hdoipd_clr_rsc(RSC_AUDIO_EMB_IN);
             } else {
                 hoi_drv_new_audio(buff);
             }
