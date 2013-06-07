@@ -309,6 +309,8 @@ int vtb_audio_emb_ext_pause(t_rtsp_media* media, void* UNUSED m, t_rtsp_connecti
 
 int vtb_audio_emb_event(t_rtsp_media *media, uint32_t event)
 {
+    int ret = RTSP_SUCCESS;
+
     if (rtsp_media_sinit(media))
         return RTSP_WRONG_STATE;
 
@@ -317,19 +319,19 @@ int vtb_audio_emb_event(t_rtsp_media *media, uint32_t event)
             if (rtsp_media_splaying(media)) {
                 vtb_audio_emb_pause(media);
     //            rtsp_server_update_media(media, EVENT_AUDIO_IN0_OFF);
+                ret = RTSP_PAUSE;
             }
             rtsp_server_update_media(media, EVENT_AUDIO_IN0_ON);
-            return RTSP_PAUSE;
         break;
         case EVENT_AUDIO_IN0_OFF:
             if (rtsp_media_splaying(media)) {
                 vtb_audio_emb_pause(media);
                 rtsp_server_update_media(media, EVENT_AUDIO_IN0_OFF);
+                ret = RTSP_PAUSE;
             }
-            return RTSP_PAUSE;
         break;
     }
-    return RTSP_SUCCESS;
+    return ret;
 }
 
 t_rtsp_media vtb_audio_emb = {

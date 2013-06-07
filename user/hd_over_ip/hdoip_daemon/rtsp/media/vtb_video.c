@@ -332,7 +332,6 @@ int vtb_video_teardown(t_rtsp_media* media, t_rtsp_req_teardown UNUSED *m, t_rts
     }
 
     server->timeout.timeout = 0;   
-    multicast_edid_remove(server);
     multicast_client_remove(MEDIA_IS_VIDEO, server);
 
     return RTSP_SUCCESS;
@@ -371,6 +370,8 @@ int vtb_video_ext_pause(t_rtsp_media *media, void *m UNUSED, t_rtsp_connection *
 
 int vtb_video_event(t_rtsp_media *media, uint32_t event)
 {
+    int ret = RTSP_SUCCESS;
+
     if (rtsp_media_sinit(media))
         return RTSP_WRONG_STATE;
 
@@ -380,9 +381,9 @@ int vtb_video_event(t_rtsp_media *media, uint32_t event)
             if (rtsp_media_splaying(media)) {
                 vtb_video_pause(media);
      //           rtsp_server_update_media(media, EVENT_VIDEO_IN_OFF);
+                ret = RTSP_PAUSE;
             }
             rtsp_server_update_media(media, EVENT_VIDEO_IN_ON);
-            return RTSP_PAUSE;
             break;
         case EVENT_VIDEO_IN_OFF:
         	report(INFO "EVENT VIDEO IN OFF");
@@ -392,12 +393,12 @@ int vtb_video_event(t_rtsp_media *media, uint32_t event)
                 hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
                 osd_permanent(true);
                 osd_printf("vtb.video no input...\n");
-
+                ret = RTSP_PAUSE;
             }
             break;
     }
 
-    return RTSP_SUCCESS;
+    return ret;
 }
 
 t_rtsp_media vtb_video = {

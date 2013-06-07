@@ -38,13 +38,6 @@ bool multicast_set_enabled(bool enable);
 bool multicast_get_enabled();
 
 void multicast_initialize();
-void multicast_handler();
-int multicast_connection_add(t_rtsp_server* server);
-void multicast_edid_add(t_edid* new_edid, t_rtsp_server* server);
-void multicast_edid_remove(t_rtsp_server* server);
 bool multicast_edid_compare(t_edid* edid1, t_edid* edid2);
-void multicast_edid_report();
-void multicast_start_remove(t_rtsp_server* server);
-int multicast_check_client_list(uint32_t client_ip, char* sessionid);
 
 #endif /* MULTICAST_H_ */

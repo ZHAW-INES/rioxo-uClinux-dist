@@ -168,6 +168,7 @@
 #define VIO_PLL_CFG_READ            (0x01)
 #define VIO_PLL_CFG_WRITE           (0x02)
 #define VIO_PLL_CFG_RECONFIG        (0x04)
+#define VIO_PLL_CFG_RESET           (0x08)
 // VIO_OFF_PLL_STATUS
 #define VIO_PLL_STA_BUSY            (0x01)
 #define VIO_PLL_STA_DRIFT_MASK      (0x7e)

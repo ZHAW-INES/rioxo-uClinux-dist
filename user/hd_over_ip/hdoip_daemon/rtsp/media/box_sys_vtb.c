@@ -92,7 +92,6 @@ static int box_sys_vtb_event(t_rtsp_media *media, uint32_t event)
         if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
             hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
             osd_permanent(true);
-        printf("\n\n\n CONNECTION LOST \n\n\n");
             osd_printf("connection lost...\n");
         }
       }

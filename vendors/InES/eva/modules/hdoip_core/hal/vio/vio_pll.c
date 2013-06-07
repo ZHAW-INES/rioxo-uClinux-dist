@@ -25,6 +25,8 @@ void vio_pll_drift(void* p, int ppm, int64_t fvco);
  */
 void vio_pll_write(void* p, int o, int v)
 {
+    int timeout = 0;
+
     v = v & 0x1ff;
     
     // Set Type & Param
@@ -34,7 +36,18 @@ void vio_pll_write(void* p, int o, int v)
     
     // Write...
     HOI_WR32(p, VIO_OFF_PLL_CONFIG, VIO_PLL_CFG_WRITE);
-    while (HOI_RD32(p, VIO_OFF_PLL_STATUS) & VIO_PLL_STA_BUSY);
+
+    while (HOI_RD32(p, VIO_OFF_PLL_STATUS) & VIO_PLL_STA_BUSY) {
+        msleep(10);
+        if (timeout >= 100) {
+            REPORT(ERROR, "PLL reconfiguration block is crashed -> do reset");
+            // Reset PLL reconfiguration block
+            HOI_WR32(p, VIO_OFF_PLL_CONFIG, VIO_PLL_CFG_RESET);
+            break;
+        } else {
+            timeout++;
+        }
+    }
 }
 
 /** Read Value from PLL (cached)
@@ -45,12 +58,24 @@ void vio_pll_write(void* p, int o, int v)
  */
 int vio_pll_read(void* p, int o)
 {
+    int timeout = 0;
+
     // Set Type & Param
     HOI_WR32(p, VIO_OFF_PLL_TYPEPARAM, o);
     
     // Read...
     HOI_WR32(p, VIO_OFF_PLL_CONFIG, VIO_PLL_CFG_READ);
-    while (HOI_RD32(p, VIO_OFF_PLL_STATUS) & VIO_PLL_STA_BUSY);
+    while (HOI_RD32(p, VIO_OFF_PLL_STATUS) & VIO_PLL_STA_BUSY) {
+        msleep(10);
+        if (timeout >= 100) {
+            REPORT(ERROR, "PLL reconfiguration block is crashed -> do reset");
+            // Reset PLL reconfiguration block
+            HOI_WR32(p, VIO_OFF_PLL_CONFIG, VIO_PLL_CFG_RESET);
+            break;
+        } else {
+            timeout++;
+        }
+    }
     
     // Get Data
     return HOI_RD32(p, VIO_OFF_PLL_DATA);    
@@ -87,8 +112,21 @@ void vio_pll_counter(void* p, int cnt, int v)
  */
 void vio_pll_reconfig(void* p)
 {
+    int timeout = 0;
+
     HOI_WR32(p, VIO_OFF_PLL_CONFIG, VIO_PLL_CFG_RECONFIG);
-    while (HOI_RD32(p, VIO_OFF_PLL_STATUS) & VIO_PLL_STA_BUSY);
+
+    while (HOI_RD32(p, VIO_OFF_PLL_STATUS) & VIO_PLL_STA_BUSY) {
+        msleep(10);
+        if (timeout >= 100) {
+            REPORT(ERROR, "PLL reconfiguration block is crashed -> do reset");
+            // Reset PLL reconfiguration block
+            HOI_WR32(p, VIO_OFF_PLL_CONFIG, VIO_PLL_CFG_RESET);
+            break;
+        } else {
+            timeout++;
+        }
+    }
 }
 
 /** Shift PLL output

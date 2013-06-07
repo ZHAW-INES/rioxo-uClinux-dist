@@ -87,7 +87,7 @@ void* rtsp_listener_run_server(t_rtsp_server* _server)
 	rtsp_server_thread(server);
 
     // remove from list & delete server
-//    lock("rtsp_listener_run_server");
+    lock("rtsp_listener_run_server");
 		listener_lock(listener, "rtsp_listener_run_server");
             list_remove(server->idx);
 			if (server->con.fdr != -1) {
@@ -99,7 +99,7 @@ void* rtsp_listener_run_server(t_rtsp_server* _server)
             rtsp_listener_remove_sessions_from_server(listener, server);
 			free(server);
 		listener_unlock(listener, "rtsp_listener_run_server");
-//    unlock("rtsp_listener_run_server");
+    unlock("rtsp_listener_run_server");
     report("shut down server");
     return 0;
 }
@@ -321,10 +321,10 @@ int rtsp_listener_add_session(t_rtsp_listener* handle, char* id, void* owner)
  */
 int rtsp_listener_remove_session(t_rtsp_listener* handle, char* id)
 {
-  //  listener_lock(handle, "rtsp_listener_remove_session");    
+    listener_lock(handle, "rtsp_listener_remove_session");    
     bstmap_removep(&handle->sessions, id);
     report(DEL "RTSP Listener [%d] remove session %s", handle->nr, id);
-  //  listener_unlock(handle, "rtsp_listener_remove_session");
+    listener_unlock(handle, "rtsp_listener_remove_session");
     return RTSP_SUCCESS;
 }
 
@@ -481,7 +481,7 @@ void rtsp_listener_close_connection(t_rtsp_listener* handle, uint32_t remote_add
   // try to find the server matching the given remote address
   node = list_find(handle->cons, (f_node_compare*)find_connection_by_ip, &remote_address);
   if (node == NULL || node->elem == NULL){
- //   listener_unlock(handle, "rtsp_listener_close_connection");
+    listener_unlock(handle, "rtsp_listener_close_connection");
     return;
   }
 
