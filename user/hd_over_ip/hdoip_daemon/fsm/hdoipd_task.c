@@ -634,9 +634,9 @@ void task_set_bw(char *p UNUSED)
         bw = (uint32_t)((uint64_t)(60+60*chroma/100)*(1048576)/8);
     }
 
-    // limit bandwidth to 50Mbit/s for 576i and 480i
-    if ((timing.width == 720) && ((timing.height == 240) || (timing.height == 243) || (timing.height == 244) || (timing.height == 288)) && (bw > (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8))) {
-        bw = (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8);
+    // limit bandwidth to 30Mbit/s for 576i and 480i
+    if ((timing.width == 720) && ((timing.height == 240) || (timing.height == 243) || (timing.height == 244) || (timing.height == 288)) && (bw > (uint32_t)((uint64_t)(15+15*chroma/100)*(1048576)/8))) {
+        bw = (uint32_t)((uint64_t)(15+15*chroma/100)*(1048576)/8);
     }
 
     if (bw) hoi_drv_bw(bw, chroma);

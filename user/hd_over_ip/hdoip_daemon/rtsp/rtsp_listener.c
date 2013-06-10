@@ -321,10 +321,10 @@ int rtsp_listener_add_session(t_rtsp_listener* handle, char* id, void* owner)
  */
 int rtsp_listener_remove_session(t_rtsp_listener* handle, char* id)
 {
-    listener_lock(handle, "rtsp_listener_remove_session");    
+//    listener_lock(handle, "rtsp_listener_remove_session");    
     bstmap_removep(&handle->sessions, id);
     report(DEL "RTSP Listener [%d] remove session %s", handle->nr, id);
-    listener_unlock(handle, "rtsp_listener_remove_session");
+//    listener_unlock(handle, "rtsp_listener_remove_session");
     return RTSP_SUCCESS;
 }
 

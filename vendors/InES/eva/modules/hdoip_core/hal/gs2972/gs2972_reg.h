@@ -124,7 +124,12 @@
 
 
 // SD Audio Core Registers
-#define GS2972_A_CFG_AUD                          (0x400)
+//-------------------------------------------------------
+#define GS2972_A_CFG_AUD                        (0x400)
+//-------------------------------------------------------
+#define A_CFG_AUD_DEFAULT                       (0x1684)
+#define A_CFG_AUD_24_BIT                        (0x0100)
+
 #define GS2972_A_FIFO_BUF_SIDE                    (0x401)
 #define GS2972_A_AES_EBU_ERR_STATUS               (0x402)
 #define GS2972_A_CHANNEL_STAT_REGEN               (0x403)

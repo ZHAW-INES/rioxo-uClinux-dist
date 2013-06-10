@@ -266,9 +266,9 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
         bandwidth = (uint32_t)((uint64_t)(60+60*chroma/100)*(1048576)/8);
     }
 
-    // limit bandwidth to 50Mbit/s for 576i and 480i
-    if ((timing.width == 720) && ((timing.height == 240) || (timing.height == 243) || (timing.height == 244) || (timing.height == 288)) && (bandwidth > (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8))) {
-        bandwidth = (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8);
+    // limit bandwidth to 30Mbit/s for 576i and 480i
+    if ((timing.width == 720) && ((timing.height == 240) || (timing.height == 243) || (timing.height == 244) || (timing.height == 288)) && (bandwidth > (uint32_t)((uint64_t)(15+15*chroma/100)*(1048576)/8))) {
+        bandwidth = (uint32_t)((uint64_t)(15+15*chroma/100)*(1048576)/8);
     }
 
     // fec settings (convert from ascii to integer)

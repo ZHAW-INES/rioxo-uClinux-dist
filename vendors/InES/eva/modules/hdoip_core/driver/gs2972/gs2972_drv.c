@@ -53,6 +53,9 @@ void gs2972_driver_init(t_gs2972 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     // set drive strength to min
     spi_write_reg_16(handle->p_spi, GS2972_DRIVE_STRENGTH, DRIVE_STRENGTH_RW_4_MA);
     spi_write_reg_16(handle->p_spi, GS2972_DRIVE_STRENGTH2, DRIVE_STRENGTH2_RW_4_MA);
+
+    // set 24bit audio
+    spi_write_reg_16(handle->p_spi, GS2972_A_CFG_AUD, A_CFG_AUD_DEFAULT | A_CFG_AUD_24_BIT);
 }
 
 void gs2972_handler(t_gs2972 *handle, t_queue *event_queue)
