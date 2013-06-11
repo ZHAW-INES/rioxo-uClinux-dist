@@ -373,11 +373,7 @@ void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, t_fec_setti
     v = (timing->height + timing->vfront + timing->vpulse + timing->vback);
     period_10ns = (uint32_t)(((uint64_t)100000000*h*v)/timing->pfreq);
 
-    // if interlaced, there are 2 fields per image
-    if (timing->interlaced) {
-        period_10ns = period_10ns * 2;
-    }
-
+    // calculate overhead packets due to FEC
     if (fec->video_enable) {
         if (fec->video_col_only) {
             packet_divider = d;
@@ -389,6 +385,16 @@ void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, t_fec_setti
     } else {
         packet_divider = 1;
         packet_multiplier = 0;
+    }
+
+    // reduce the fraction
+    if ((packet_divider % packet_multiplier) == 0) {
+        packet_divider = packet_divider / packet_multiplier;
+        packet_multiplier = 1;
+    }
+    if ((packet_divider % (packet_multiplier / 2)) == 0) {
+        packet_divider = packet_divider / (packet_multiplier / 2);
+        packet_multiplier = 2;
     }
 
     // set correction factor to modify count of packets

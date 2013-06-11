@@ -166,7 +166,7 @@ int vrb_video_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UN
 
 #ifdef VID_OUT_PATH
     // start vso (20 ms max. network delay)
-    hoi_drv_vso(compress, 0, &m->timing, m->format.value, reg_get_int("network-delay"));
+    hoi_drv_vso(compress, 0, &m->timing, m->format.value, reg_get_int("network-delay"), m->traffic_shaping);
 #endif
 
     hdoipd_set_vtb_state(VTB_VIDEO);

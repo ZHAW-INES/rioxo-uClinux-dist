@@ -345,6 +345,7 @@ typedef struct {
     uint32_t            compress;   //!< [15:0] use jpeg2000 compressor, [31:16]: cfg
     uint32_t            encrypt;    //!< (wr) encryption key or '0'
     t_video_timing      timing;     //!< timing of video
+    int                 traffic_shaping;
     uint32_t            advcnt;     //!< adv count when compression = true
     uint32_t            delay_ms;
 } t_hoi_msg_vso;

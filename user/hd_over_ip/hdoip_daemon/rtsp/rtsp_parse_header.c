@@ -130,6 +130,17 @@ int rtsp_parse_timing(char* line, t_video_timing* timing)
     return RTSP_SUCCESS;
 }
 
+int rtsp_parse_traffic_shaping(char* line, int* traffic_shaping)
+{
+	int a;
+	char* token;
+
+	next(token, line);
+	*traffic_shaping = atoi(token);
+
+    return RTSP_SUCCESS;
+}
+
 int rtsp_parse_rtp_format(char* line, t_rtsp_rtp_format* p)
 {
     char* token;

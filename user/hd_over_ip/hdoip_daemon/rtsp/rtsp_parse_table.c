@@ -79,10 +79,11 @@ const t_map_fnc tab_request_play[] = {
 };
 
 const t_map_fnc tab_response_play[] = {
-    { "CSeq",       rtsp_parse_ui32,        true,    offsetof(t_rtsp_rsp_play, cseq) },
-    { "Session",    rtsp_parse_str,         true,    offsetof(t_rtsp_rsp_play, session) },
-    { "Timing",     rtsp_parse_timing,      true,    offsetof(t_rtsp_rsp_play, timing) },
-    { "RTP-Format", rtsp_parse_rtp_format,  true,    offsetof(t_rtsp_rsp_play, format) },
+    { "CSeq",       	rtsp_parse_ui32,        	true,    offsetof(t_rtsp_rsp_play, cseq) },
+    { "Session",    	rtsp_parse_str,         	true,    offsetof(t_rtsp_rsp_play, session) },
+    { "Timing",     	rtsp_parse_timing,      	true,    offsetof(t_rtsp_rsp_play, timing) },
+    { "Traffic-shaping",rtsp_parse_traffic_shaping, true, 	 offsetof(t_rtsp_rsp_play, traffic_shaping) },
+    { "RTP-Format", 	rtsp_parse_rtp_format,  	true,    offsetof(t_rtsp_rsp_play, format) },
     MAP_FNC_NULL
 };
 

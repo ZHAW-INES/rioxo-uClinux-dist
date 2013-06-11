@@ -309,6 +309,11 @@ void rtsp_header_timing(t_rtsp_connection* msg, t_video_timing* timing)
             (timing->interlaced ? "I" : "P"));
 }
 
+void rtsp_header_traffic_shaping(t_rtsp_connection* msg, int traffic_shaping)
+{
+    msgprintf(msg, "Traffic-shaping: %d\r\n", traffic_shaping);
+}
+
 void rtsp_header_rtp_format(t_rtsp_connection* msg, t_rtsp_rtp_format* p)
 {
     // RTP-Format: compress[ value] rtptime
@@ -432,12 +437,13 @@ void rtsp_request_set_parameter(t_rtsp_connection* msg, char* uri, char* session
     rtsp_send(msg);
 }
 
-void rtsp_response_play(t_rtsp_connection* msg, char* session, t_rtsp_rtp_format* fmt, t_video_timing* timing)
+void rtsp_response_play(t_rtsp_connection* msg, char* session, t_rtsp_rtp_format* fmt, t_video_timing* timing, int traffic_shaping)
 {
     rtsp_response_line(msg, RTSP_STATUS_OK, "OK");
     rtsp_header_session(msg, session);
     rtsp_header_rtp_format(msg, fmt);
     if (timing) rtsp_header_timing(msg, timing);
+    // rtsp_header_traffic_shaping(msg, traffic_shaping);
     rtsp_eoh(msg);
     rtsp_send(msg);
 }

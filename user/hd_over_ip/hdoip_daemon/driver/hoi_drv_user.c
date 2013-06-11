@@ -258,7 +258,7 @@ int hoi_drv_vsi(uint32_t compress, uint32_t chroma, uint32_t encrypt, int bandwi
     return ret;
 }
 
-int hoi_drv_vso(uint32_t compress, uint32_t encrypt, t_video_timing* timing, uint32_t advcnt, uint32_t delay_ms)
+int hoi_drv_vso(uint32_t compress, uint32_t encrypt, t_video_timing* timing, uint32_t advcnt, uint32_t delay_ms, int traffic_shaping)
 {
     int ret;
     t_hoi_msg_vso msg;
@@ -269,6 +269,7 @@ int hoi_drv_vso(uint32_t compress, uint32_t encrypt, t_video_timing* timing, uin
     msg.delay_ms = delay_ms;
     msg.encrypt = encrypt;
     memcpy(&msg.timing, timing, sizeof(t_video_timing));
+    msg.traffic_shaping = traffic_shaping;
     ret = hoi_msg(&msg);
 
     return ret;

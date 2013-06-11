@@ -25,7 +25,7 @@ int hoi_drv_hdcpstat(uint32_t *eto_hdcp_audio,uint32_t *eto_hdcp_video,uint32_t 
 
 int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud, uint32_t vid, uint32_t aud_emb, uint32_t aud_board);
 int hoi_drv_vsi(uint32_t compress, uint32_t chroma, uint32_t encrypt, int bandwidth, hdoip_eth_params* eth, t_video_timing* timing, uint32_t* advcnt, int enable_traffic_shaping, t_fec_setting* fec);
-int hoi_drv_vso(uint32_t compress, uint32_t encrypt, t_video_timing* timing, uint32_t advcnt, uint32_t delay_ms);
+int hoi_drv_vso(uint32_t compress, uint32_t encrypt, t_video_timing* timing, uint32_t advcnt, uint32_t delay_ms, int traffic_shaping);
 int hoi_drv_asi(int unsigned stream_nr, struct hdoip_eth_params* eth, struct hdoip_aud_params* aud, t_fec_setting* fec);
 int hoi_drv_aso(int unsigned stream_nr, uint32_t fs, uint32_t width, uint16_t ch_map, uint32_t delay_ms, uint32_t av_delay, uint32_t cfg, uint16_t config);
 int hoi_drv_aic23b_adc(uint32_t enable, uint32_t source, int line_gain, uint32_t mic_boost, struct hdoip_aud_params* aud);

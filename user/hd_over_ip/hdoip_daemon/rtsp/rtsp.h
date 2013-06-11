@@ -249,6 +249,7 @@ typedef struct {
     uint32_t            cseq;
     char                session[50];
     t_video_timing      timing;
+    int                 traffic_shaping;
     t_rtsp_rtp_format   format;
 } t_rtsp_rsp_play;
 

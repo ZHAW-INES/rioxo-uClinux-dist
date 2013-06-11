@@ -398,6 +398,23 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
         delay += (2*vid);
     }
 
+    // TODO: maybe used
+    //if (msg->traffic_shaping) {
+    //    delay += (1*vid);
+    //}
+
+    // if 525i or 625i, increase delay (TODO: find out why ? / this is only needed if SDI)
+    if ((msg->timing.width == 720) && ((msg->timing.height == 240) || (msg->timing.height == 243) || (msg->timing.height == 244) || (msg->timing.height == 288))) {
+        delay += (2*vid);
+    }
+
+    // if 576p, increase delay (TODO: find out why ?)
+    if ((msg->timing.width == 720) && (msg->timing.height == 576)) {
+        delay += (7000);
+    }
+
+    REPORT(INFO, "calculated video delay: %i us", delay);
+
     scomm5 = vid * 1500;
     vsd = vid * 800;
     if ((n = vso_drv_update(&handle->vso, &msg->timing, delay, vsd, scomm5, 1000))) {
