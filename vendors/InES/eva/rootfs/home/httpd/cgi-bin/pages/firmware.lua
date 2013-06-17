@@ -59,9 +59,11 @@ function show(t)
                             return
                         else
                             t.err = t.err .. "This file is not valid for this hardware version<br>\n"
+                            os.execute("/bin/busybox rm "..firmware_image)
                         end
                     else
                         t.err = t.err .. "This firmware image is too old<br>\n"
+                        os.execute("/bin/busybox rm "..firmware_image)
                     end
                 end
             end

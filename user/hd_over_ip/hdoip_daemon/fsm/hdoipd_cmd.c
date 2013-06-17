@@ -242,9 +242,20 @@ void hdoipd_free_buffer(t_hoic_cmd UNUSED *cmd)
     //while ((hdoipd_rsc(RSC_EABI) || hdoipd_rsc(RSC_EAEI) || hdoipd_rsc(RSC_EVI)));
 
     // free buffer
-    free(hdoipd.img_buff);
-    free(hdoipd.vid_tx_buff);
-    free(hdoipd.aud_tx_buff);
+    if (hdoipd.img_buff) {
+        free(hdoipd.img_buff);
+        hdoipd.img_buff = 0;
+    }
+
+    if (hdoipd.vid_tx_buff) {
+        free(hdoipd.vid_tx_buff);
+        hdoipd.vid_tx_buff = 0;
+    }
+
+    if (hdoipd.aud_tx_buff) {
+        free(hdoipd.aud_tx_buff);
+        hdoipd.aud_tx_buff = 0;
+    }
 
     report("free video and audio buffer\n");
 }

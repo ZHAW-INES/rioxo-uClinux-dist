@@ -403,7 +403,7 @@ void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, t_fec_setti
 
     // period_10ns must not be longer than real refresh rate of video.
     // There can be a measurement error of 5% and it still works
-    period_10ns -= period_10ns / 20;
+    period_10ns -= period_10ns / 10;
 
     eto_set_frame_period_10ns(handle->ptr, period_10ns);
 

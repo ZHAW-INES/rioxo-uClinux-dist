@@ -15,6 +15,11 @@
 #include "hoi_msg.h"
 #include "io_expander_rx.h"
 
+/* LED board */
+#define BOARD_ID_OFFSET         (4)
+#define BOARD_ID                (0x1)
+#define LED_I2C_BOARD_ADDR      (0x0000004A)
+
 /* LED flashing constants */
 #define LED_T_HANDLE            (30)
 #define LED_T_1_SEC             (500)
@@ -28,6 +33,7 @@
 
 /* Mainboard (code 0x00 - 0xFF)*/
 #define LED_READ_REG            (HOI_RD32((handle->p_led), 0x00))
+#define LED_BOARD_ID            (HOI_RD32((handle->p_led), BOARD_ID_OFFSET))
 #define LED_SET_REG(m)		    (HOI_WR32((handle->p_led), 0x00, (m)))
 #define LED_MOTHER_RNG          (0x000000FF)
 
