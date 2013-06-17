@@ -380,7 +380,7 @@ int vtb_video_event(t_rtsp_media *media, uint32_t event)
         	report(INFO "EVENT VIDEO IN ON");
             if (rtsp_media_splaying(media)) {
                 vtb_video_pause(media);
-     //           rtsp_server_update_media(media, EVENT_VIDEO_IN_OFF);
+                rtsp_server_update_media(media, EVENT_VIDEO_IN_OFF);
                 ret = RTSP_PAUSE;
             }
             rtsp_server_update_media(media, EVENT_VIDEO_IN_ON);

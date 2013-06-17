@@ -318,7 +318,7 @@ int vtb_audio_emb_event(t_rtsp_media *media, uint32_t event)
         case EVENT_AUDIO_IN0_ON:
             if (rtsp_media_splaying(media)) {
                 vtb_audio_emb_pause(media);
-    //            rtsp_server_update_media(media, EVENT_AUDIO_IN0_OFF);
+                rtsp_server_update_media(media, EVENT_AUDIO_IN0_OFF);
                 ret = RTSP_PAUSE;
             }
             rtsp_server_update_media(media, EVENT_AUDIO_IN0_ON);

@@ -291,8 +291,6 @@ int asi_drv_handler(t_asi* asi, t_queue* event_queue)
         asi->detected_ch_map[AUD_STREAM_NR_EMBEDDED] = detected_ch_map;
         asi->detected_fs[AUD_STREAM_NR_EMBEDDED] = fs;
         queue_put(event_queue, E_ASI_NEW_FS);
-        // this event produces a new connection setup
-        queue_put(event_queue, E_ADV7441A_NO_AUDIO);
     }
     else if (asi->settings_changed) {
       asi->settings_changed++;
