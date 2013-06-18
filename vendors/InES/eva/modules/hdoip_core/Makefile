@@ -116,6 +116,9 @@ INCLUDE += driver/fec_rx
 INCLUDE += driver/tlv320aic23b
   FILES += driver/tlv320aic23b/tlv320aic23b_drv.o
 
+# we need version label from version.h
+INCLUDE += ../../../../../user/hd_over_ip/hdoip_daemon
+
 # +----------------------------------------------------------------------
 # | Module Object
 # +----------------------------------------------------------------------

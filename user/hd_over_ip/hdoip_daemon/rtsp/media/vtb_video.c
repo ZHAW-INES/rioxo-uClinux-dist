@@ -24,10 +24,6 @@
 #include "rtsp_server.h"
 #include "vtb_video.h"
 
-#define TICK_TIMEOUT_MULTICAST          (hdoipd.eth_timeout * 2)
-#define TICK_TIMEOUT_UNICAST            (hdoipd.eth_timeout)
-#define TICK_SEND_ALIVE                 (hdoipd.eth_alive)
-
 int vtb_video_describe(t_rtsp_media *media, void *_data, t_rtsp_connection *con)
 {
     t_rtsp_req_describe *data = _data;
@@ -50,7 +46,7 @@ int vtb_video_describe(t_rtsp_media *media, void *_data, t_rtsp_connection *con)
         compress = "Plain";
 
     msgprintf(con, "m=video 0 RTP/AVP 96\r\n");
-    msgprintf(con, "a=control:/device/video RTSP/1.0/\r\n");
+    msgprintf(con, "a=control:/video RTSP/1.0\r\n");
     msgprintf(con, "a=rtpmap:96 %s/1000000\r\n", compress);
     msgprintf(con, "a=fmtp:96 img_size=1920*1080; adv_div=4; FPS=60\r\n");
 

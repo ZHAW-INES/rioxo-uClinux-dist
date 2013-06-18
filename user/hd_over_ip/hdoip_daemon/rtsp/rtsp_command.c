@@ -207,7 +207,7 @@ void rtsp_header_session(t_rtsp_connection* msg, char* s)
 {
     msgprintf(msg, "Session: %s", s);
     if (hdoipd.eth_timeout != RTSP_DEFAULT_TIMEOUT) {
-        msgprintf(msg, " ; timeout = %d", hdoipd.eth_timeout);
+        msgprintf(msg, ";timeout=%d", hdoipd.eth_timeout);
     }
     msgprintf(msg, "\r\n");
 }

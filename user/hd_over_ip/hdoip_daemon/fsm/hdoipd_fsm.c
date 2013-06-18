@@ -1017,6 +1017,16 @@ bool hdoipd_init(int drv)
 
     hdoipd_registry_update();
 
+#ifdef VERSION_LABEL_RIOXO
+    reg_set("version_label", "rioxo");
+#elif defined VERSION_LABEL_EMCORE
+    reg_set("version_label", "emcore");
+#elif defined VERSION_LABEL_BLACKBOX
+    reg_set("version_label", "black box");
+#else
+    #error NO LABEL IS SELECTED IN FILE: "version.h"
+#endif
+
     hdoipd.dhcp = reg_test("system-dhcp", "true");
 
     hoi_cfg_system();

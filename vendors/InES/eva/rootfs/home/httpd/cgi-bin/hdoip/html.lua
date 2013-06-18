@@ -258,9 +258,17 @@ function Header(t, title, script_path, addon)
     html_str = "<html>\n<head>\n".. t.cookie .."<title>" .. title .. "</title>\n" .. addon .. css .. "</head>\n<body>\n"
    
     html_str = html_str .. '<div id="wrapper">\n<div id="main">\n<div id="box">\n<div id="header">\n'
-    --html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.emcore.com"><img src="/img/emcore_logo.png" alt="emcore"></a></h1>\n'
-    --html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.rioxo.ch"><img src="/img/rioxo_logo.png" alt="rioxo&reg;"></a></h1>\n'
-    html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.blackbox.com"><img src="/img/blackbox_logo.png" alt="blackbox&reg;"></a></h1>\n'
+
+    if (t.version_label == "rioxo") then
+        html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.rioxo.ch"><img src="/img/rioxo_logo.png" alt="rioxo&reg;"></a></h1>\n'
+    elseif (t.version_label == "emcore") then
+        html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.emcore.com"><img src="/img/emcore_logo.png" alt="emcore"></a></h1>\n'
+    elseif (t.version_label == "black box") then
+        html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.blackbox.com"><img src="/img/blackbox_logo.png" alt="blackbox&reg;"></a></h1>\n'
+    else
+        html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"></h1>\n'
+    end
+
     html_str = html_str .. '<div id="mainmenu">\n<ul class=\"menu\">\n'
     
     if((t.mode_vrb) and (t.login))then

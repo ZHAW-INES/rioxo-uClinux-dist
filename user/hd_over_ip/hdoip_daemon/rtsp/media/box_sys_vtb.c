@@ -33,13 +33,13 @@ static int box_sys_vtb_describe(t_rtsp_media *media, void *_data, t_rtsp_connect
 
     /* TODO: Implement dynamically */
     msgprintf(con, "m=video 0 RTP/AVP 96\r\n");
-    msgprintf(con, "a=control:/device/1/video/1/\r\n");
+    msgprintf(con, "a=control:/video\r\n");
     msgprintf(con, "m=audio 0 RTP/AVP 97\r\n");
-    msgprintf(con, "a=control:/device/1/audio/1/\r\n");
+    msgprintf(con, "a=control:/audio_emb\r\n");
     msgprintf(con, "m=audio 0 RTP/AVP 97\r\n");
-    msgprintf(con, "a=control:/device/1/audio/2/\r\n");
+    msgprintf(con, "a=control:/audio_board\r\n");
     msgprintf(con, "m=usb 0 TCP/USB over IP\r\n");
-    msgprintf(con, "a=control:/device/1/usb/1/\r\n");
+    msgprintf(con, "a=control:/usb\r\n");
 
     rtsp_send(con);
 

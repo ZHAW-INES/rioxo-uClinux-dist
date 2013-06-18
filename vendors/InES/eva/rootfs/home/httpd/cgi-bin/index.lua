@@ -101,6 +101,9 @@ else
     require("lang.en")
     label = lang.en.label
 end
+-----------------------------------------------
+-- version label (rioxo, emcore, black box, ...)
+query.version_label = hdoip.pipe.getParam(hdoip.pipe.REG_VERSION_LABEL)
 
 -----------------------------------------------
 -- Web authentification

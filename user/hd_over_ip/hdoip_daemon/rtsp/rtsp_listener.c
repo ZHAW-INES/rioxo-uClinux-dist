@@ -100,7 +100,6 @@ void* rtsp_listener_run_server(t_rtsp_server* _server)
 			free(server);
 		listener_unlock(listener, "rtsp_listener_run_server");
     unlock("rtsp_listener_run_server");
-    report("shut down server");
     return 0;
 }
 
@@ -308,9 +307,7 @@ void rtsp_listener_free_media(t_rtsp_listener* handle)
 int rtsp_listener_add_session(t_rtsp_listener* handle, char* id, void* owner)
 {
     listener_lock(handle, "rtsp_listener_add_session");
-        report("add session: handle->sessions @ %d from owner: %d", handle->sessions, owner);
         bstmap_setp(&handle->sessions, id, owner);
-        report("add session: handle->sessions @ %d", handle->sessions);
         report(NEW "RTSP Listener [%d] add session %s", handle->nr, id);
     listener_unlock(handle, "rtsp_listener_add_session");
     return RTSP_SUCCESS;
@@ -321,10 +318,8 @@ int rtsp_listener_add_session(t_rtsp_listener* handle, char* id, void* owner)
  */
 int rtsp_listener_remove_session(t_rtsp_listener* handle, char* id)
 {
-//    listener_lock(handle, "rtsp_listener_remove_session");    
     bstmap_removep(&handle->sessions, id);
     report(DEL "RTSP Listener [%d] remove session %s", handle->nr, id);
-//    listener_unlock(handle, "rtsp_listener_remove_session");
     return RTSP_SUCCESS;
 }
 
@@ -340,7 +335,6 @@ void* rtsp_listener_get_session(t_rtsp_listener* handle, char* id)
 void rtsp_listener_create_sessionid(t_rtsp_listener* handle, char* id)
 {
     do {
-       // memset(id, 0, sizeof(id));
         snprintf(id, 19, "%d", rand());
     } while (rtsp_listener_get_session(handle, id) != NULL);
 }

@@ -194,7 +194,6 @@ void request_play(t_rtsp_client* client, t_rtsp_media* media, void* data)
   n = rtsp_parse_response(&client->con, tab_response_play, (void*)&buf, 0, CFG_RSP_TIMEOUT);
 
   if (n == RTSP_SUCCESS) {
-      media->state = RTSP_STATE_PLAYING;
       rmcr_play(media, (void*)&buf, &client->con);
   } else if (n == RTSP_RESPONSE_ERROR) {
       if (media->error) media->error(media, (void*)n, &client->con);
@@ -809,9 +808,8 @@ int rtsp_client_get_parameter(t_rtsp_client* client, char* mediaName)
 
   request(client, mediaName, sessionid, get_sessionid);
 
-  rtsp_request_get_parameter(&client->con, client->uri, /*strlen(sessionid) > 0 ? sessionid :*/ NULL);
+  rtsp_request_get_parameter(&client->con, client->uri, strlen(sessionid) > 0 ? sessionid : NULL);
   rtsp_default_response((void*)&buf);
-  
   if ((ret = rtsp_parse_response(&client->con, tab_response_get_parameter, (void*)&buf, 0, hdoipd.eth_timeout)) != RTSP_SUCCESS)
   {
     rtsp_client_set_kill(client);

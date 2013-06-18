@@ -2,8 +2,10 @@
 module (..., package.seeall)
 
 label = {
-    page_name = "Black Box&reg; : ";
-    
+    page_name_rioxo = "Rioxo&reg; : ";
+    page_name_emcore = "Emcore : ";    
+    page_name_black_box = "Black Box&reg; : ";
+
     u_decimal = "[decimal]";
     u_mbps = "[MBit / s]";
     u_ms = "[ms]";

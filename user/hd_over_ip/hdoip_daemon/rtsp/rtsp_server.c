@@ -413,7 +413,6 @@ int rtsp_server_thread(t_rtsp_server* handle)
 #ifdef REPORT_RTSP_SERVER
     report(" - RTSP Server [%d] ended", handle->nr);
 #endif
-    report("good bye server: %d", n);
     return n;
 }
 

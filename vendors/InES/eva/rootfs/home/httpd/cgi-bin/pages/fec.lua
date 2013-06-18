@@ -115,7 +115,17 @@ function show(t)
     local stat_aud_board_buf_total = get_str(stat_aud_board_buf, "/", " ")
     local stat_aud_board_buf_percent = math.floor(tonumber(stat_aud_board_buf_entries) * 100 / tonumber(stat_aud_board_buf_total))
 
-    hdoip.html.Header(t, label.page_name .. label.page_fec, script_path)
+    if (t.version_label == "rioxo") then
+        page_name = label.page_name_rioxo
+    elseif (t.version_label == "emcore") then
+        page_name = label.page_name_emcore
+    elseif (t.version_label == "black box") then
+        page_name = label.page_name_black_box
+    else
+        page_name = ""
+    end
+
+    hdoip.html.Header(t, page_name .. label.page_fec, script_path)
     hdoip.html.FormHeader(script_path, main_form)
     hdoip.html.Title(label.page_fec)
     hdoip.html.TableHeader(4)

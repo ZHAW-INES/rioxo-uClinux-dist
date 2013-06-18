@@ -6,7 +6,17 @@ require("hdoip.pipe")
 REG_MODE_USB_LABEL = "usb_mode"
 
 function reboot(t)
-    hdoip.html.Header(t, label.page_name .. "Rebooting", script_path)
+    if (t.version_label == "rioxo") then
+        page_name = label.page_name_rioxo
+    elseif (t.version_label == "emcore") then
+        page_name = label.page_name_emcore
+    elseif (t.version_label == "black box") then
+        page_name = label.page_name_black_box
+    else
+        page_name = ""
+    end
+
+    hdoip.html.Header(t, page_name .. "Rebooting", script_path)
     hdoip.html.Title("Reboot")
     hdoip.html.Text("Please wait until device is rebooted.")
     hdoip.html.Text("<br>")
@@ -52,7 +62,17 @@ function show(t)
     hdoip.pipe.getUSB(t)
 
     if(t.show_restart == nil) then
-        hdoip.html.Header(t, label.page_name .. label.page_usb, script_path)
+        if (t.version_label == "rioxo") then
+            page_name = label.page_name_rioxo
+        elseif (t.version_label == "emcore") then
+            page_name = label.page_name_emcore
+        elseif (t.version_label == "black box") then
+            page_name = label.page_name_black_box
+        else
+            page_name = ""
+        end
+
+        hdoip.html.Header(t, page_name .. label.page_usb, script_path)
         hdoip.html.FormHeader(script_path, main_form)
         hdoip.html.Title(label.page_usb)
         hdoip.html.TableHeader(2)
