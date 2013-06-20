@@ -303,3 +303,65 @@ int gs2971_get_audio_config(t_gs2971 *handle)
 
     return 1;
 }
+
+int gs2971_get_audio_channel_status(t_gs2971 *handle, uint16_t *acs)
+{
+    int timeout = 0;
+    int video_format = (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_RATE_SEL_READBACK_MASK) >> RASTER_STRUC_4_RATE_SEL_READBACK_SHIFT;
+
+    if ((video_format == RATE_SEL_READBACK_SD_1) || (video_format == RATE_SEL_READBACK_SD_2)) {
+        spi_write_reg_16(handle->p_spi, GS2971_A_DBN_ERR, 0x0001);
+
+        while ((spi_read_reg_16(handle->p_spi, GS2971_A_DBN_ERR) & 0x01) != 0x01) {
+            msleep(1);
+            if (timeout >= 100) {
+                break;
+            } else {
+                timeout++;
+            }
+        }
+
+        acs[0]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE0_1);
+        acs[1]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE2_3);
+        acs[2]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE4_5);
+        acs[3]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE6_7);
+        acs[4]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE8_9);
+        acs[5]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE10_11);
+        acs[6]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE12_13);
+        acs[7]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE14_15);
+        acs[8]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE16_17);
+        acs[9]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE18_19);
+        acs[10] = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE20_21);
+        acs[11] = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE22);
+        return 1;
+
+    } else if ((video_format == RATE_SEL_READBACK_HD) || (video_format == RATE_SEL_READBACK_3G)) {
+        spi_write_reg_16(handle->p_spi, GS2971_B_ACS_DET, 0x0001);
+
+        while ((spi_read_reg_16(handle->p_spi, GS2971_B_ACS_DET) & 0x01) != 0x01) {
+            msleep(1);
+            if (timeout >= 100) {
+                break;
+            } else {
+                timeout++;
+            }
+        }
+
+        acs[0]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE0_1);
+        acs[1]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE2_3);
+        acs[2]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE4_5);
+        acs[3]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE6_7);
+        acs[4]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE8_9);
+        acs[5]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE10_11);
+        acs[6]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE12_13);
+        acs[7]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE14_15);
+        acs[8]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE16_17);
+        acs[9]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE18_19);
+        acs[10] = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE20_21);
+        acs[11] = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE22);
+        return 1;
+    }
+
+    return 0;
+}
+

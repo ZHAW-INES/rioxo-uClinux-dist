@@ -142,6 +142,19 @@ int hoi_drv_info_all(t_hoi_msg_info** nfo)
     return ret;
 }
 
+int hoi_drv_acs(uint16_t* acs)
+{
+    int ret;
+    t_hoi_msg_acs msg;
+
+    memcpy(msg.acs, acs, sizeof(uint16_t)*12);
+    hoi_msg_acs_init(&msg);
+    ret = hoi_msg(&msg);
+    memcpy(acs, msg.acs, sizeof(uint16_t)*12);
+
+    return ret;
+}
+
 #define HOI_GET_STAT(T)                         \
     int hoi_drv_##T(t_hoi_msg_##T **stat)       \
     {                                           \

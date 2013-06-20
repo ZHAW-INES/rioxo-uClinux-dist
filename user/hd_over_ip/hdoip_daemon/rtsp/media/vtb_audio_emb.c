@@ -139,6 +139,7 @@ int vtb_audio_emb_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_co
     char dst_mac[6];
     t_fec_setting fec;
     char *fec_setting;
+    uint16_t audio_channel_status[12];
 
     t_multicast_cookie* cookie = media->cookie;
 
@@ -233,8 +234,11 @@ int vtb_audio_emb_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_co
     fec.audio_interleaving = fec_setting[8] - 48;
     fec.audio_col_only = fec_setting[9] - 48;
 
+    // get audio channel status
+    hoi_drv_acs(audio_channel_status);
+
     // send timing
-    rtsp_response_play(rsp, media->sessionid, &fmt, 0, reg_test("traffic-shaping", "true"));
+    rtsp_response_play(rsp, media->sessionid, &fmt, 0, reg_test("traffic-shaping", "true"), audio_channel_status);
 
     if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
         // activate asi

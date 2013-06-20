@@ -46,7 +46,7 @@ void rtsp_request_usb_teardown(t_rtsp_connection* msg, char* uri, char* session)
 
 void rtsp_response_pause(t_rtsp_connection* msg, char* session);
 void rtsp_response_setup(t_rtsp_connection* msg, t_rtsp_transport* transport, char* session, char* media, t_rtsp_hdcp* hdcp);
-void rtsp_response_play(t_rtsp_connection* msg, char* session, t_rtsp_rtp_format* fmt, t_video_timing* timing, int traffic_shaping);
+void rtsp_response_play(t_rtsp_connection* msg, char* session, t_rtsp_rtp_format* fmt, t_video_timing* timing, int traffic_shaping, uint16_t* audio_channel_status);
 void rtsp_response_teardown(t_rtsp_connection* msg);
 void rtsp_response_hdcp(t_rtsp_connection* msg, char* session, char* id, char* content);
 void rtsp_response_usb_setup(t_rtsp_connection* msg, t_rtsp_transport* transport, char* session);

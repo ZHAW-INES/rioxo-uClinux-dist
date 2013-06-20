@@ -154,6 +154,9 @@ int vrb_audio_emb_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connectio
     report(INFO "\naudio embedded streaming started(fs = %d Hz, bitwidth = %d Bit, channel_map = 0x%x)", m->format.value, m->format.compress, m->format.value2);
 #endif
 
+    // set audio channel status
+    hoi_drv_acs(m->acs);
+
     hdoipd_set_vtb_state(VTB_AUDIO_EMB);
     hdoipd_set_rsc(RSC_AUDIO_EMB_OUT);
 

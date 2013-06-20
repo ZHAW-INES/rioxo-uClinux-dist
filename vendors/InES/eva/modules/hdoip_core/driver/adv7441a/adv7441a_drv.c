@@ -884,3 +884,35 @@ int adv7441a_poll_active_resolution(t_adv7441a* handle, void* p_vio)
     }
     return 0;
 }
+
+int adv7441_get_audio_channel_status(t_adv7441a* handle, uint16_t* acs)
+{
+    uint8_t* audio_channel_status = (uint8_t*)acs;
+
+    audio_channel_status[0] = adv7441a_hdmi_map_read(handle, ADV7441A_REG_CHANNEL_STATUS_DATA_0);
+    audio_channel_status[1] = adv7441a_hdmi_map_read(handle, ADV7441A_REG_CHANNEL_STATUS_DATA_1);
+    audio_channel_status[2] = adv7441a_hdmi_map_read(handle, ADV7441A_REG_CHANNEL_STATUS_DATA_2);
+    audio_channel_status[3] = adv7441a_hdmi_map_read(handle, ADV7441A_REG_CHANNEL_STATUS_DATA_3);
+    audio_channel_status[4] = adv7441a_hdmi_map_read(handle, ADV7441A_REG_CHANNEL_STATUS_DATA_4);
+    audio_channel_status[5] = 0x00;
+    audio_channel_status[6] = 0x00;
+    audio_channel_status[7] = 0x00;
+    audio_channel_status[8] = 0x00;
+    audio_channel_status[9] = 0x00;
+    audio_channel_status[10] = 0x00;
+    audio_channel_status[11] = 0x00;
+    audio_channel_status[12] = 0x00;
+    audio_channel_status[13] = 0x00;
+    audio_channel_status[14] = 0x00;
+    audio_channel_status[15] = 0x00;
+    audio_channel_status[16] = 0x00;
+    audio_channel_status[17] = 0x00;
+    audio_channel_status[18] = 0x00;
+    audio_channel_status[19] = 0x00;
+    audio_channel_status[20] = 0x00;
+    audio_channel_status[21] = 0x00;
+    audio_channel_status[22] = 0x00;
+    audio_channel_status[23] = 0x00;
+
+    return 0;
+}

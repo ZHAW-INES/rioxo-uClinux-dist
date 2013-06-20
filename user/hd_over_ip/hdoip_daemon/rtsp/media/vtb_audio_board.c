@@ -232,7 +232,7 @@ int vtb_audio_board_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_
     fec.audio_col_only = fec_setting[9] - 48;
 
     // send timing
-    rtsp_response_play(rsp, media->sessionid, &fmt, 0, reg_test("traffic-shaping", "true"));
+    rtsp_response_play(rsp, media->sessionid, &fmt, 0, reg_test("traffic-shaping", "true"), NULL);
 
     if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_AUDIO) == CLIENT_NOT_AVAILABLE)) {
         // activate asi

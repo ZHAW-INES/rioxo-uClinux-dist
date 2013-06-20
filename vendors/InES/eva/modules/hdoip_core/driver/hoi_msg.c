@@ -897,6 +897,27 @@ int hoi_drv_msg_info(t_hoi* handle, t_hoi_msg_info* msg)
     return SUCCESS;
 }
 
+int hoi_drv_msg_audio_channel_status(t_hoi* handle, t_hoi_msg_acs* msg)
+{
+
+    // set audio channel status registers on SDI chip
+    if (handle->drivers & DRV_GS2971) {
+        gs2972_set_audio_channel_status(&handle->gs2972, msg->acs);
+    }
+
+    // get audio channel status registers of HDMI chip
+    if (handle->drivers & DRV_ADV7441) {
+        adv7441_get_audio_channel_status(&handle->adv7441a, &msg->acs);
+    }
+
+    // get audio channel status registers of SDI chip
+    if (handle->drivers & DRV_GS2971) {
+        gs2971_get_audio_channel_status(&handle->gs2971, &msg->acs);
+    }
+
+
+    return SUCCESS;
+}
 
 //------------------------------------------------------------------------------
 // param read/write
@@ -1150,6 +1171,7 @@ int hoi_drv_message(t_hoi* handle, t_hoi_msg* msg)
         call(HOI_MSG_ETI,                   hoi_drv_msg_eti);
 
         call(HOI_MSG_INFO,                  hoi_drv_msg_info);
+        call(HOI_MSG_ACS,                   hoi_drv_msg_audio_channel_status);
 
         call(HOI_MSG_CAPTURE,               hoi_drv_msg_capture);
         call(HOI_MSG_SHOW,                  hoi_drv_msg_show);

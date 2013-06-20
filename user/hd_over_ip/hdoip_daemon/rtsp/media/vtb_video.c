@@ -281,7 +281,7 @@ int vtb_video_play(t_rtsp_media* media, t_rtsp_req_play* m, t_rtsp_connection* r
     fec.audio_col_only = fec_setting[9] - 48;
 
     // send timing
-    rtsp_response_play(rsp, media->sessionid, &fmt, &timing, traffic_shaping);
+    rtsp_response_play(rsp, media->sessionid, &fmt, &timing, traffic_shaping, NULL);
 
     if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_VIDEO) == CLIENT_NOT_AVAILABLE)) {
         // activate vsi

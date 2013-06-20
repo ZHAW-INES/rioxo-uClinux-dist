@@ -132,11 +132,21 @@ int rtsp_parse_timing(char* line, t_video_timing* timing)
 
 int rtsp_parse_traffic_shaping(char* line, int* traffic_shaping)
 {
-	int a;
 	char* token;
 
 	next(token, line);
 	*traffic_shaping = atoi(token);
+
+    return RTSP_SUCCESS;
+}
+
+int rtsp_parse_audio_channel_status(char* line, uint16_t* acs)
+{
+    uint8_t *audio_channel_status = (uint8_t*)acs;
+
+    for (int i=0;i<24;i++) {
+        audio_channel_status[i] = nextbyte(&line[2*i]);
+    }
 
     return RTSP_SUCCESS;
 }
@@ -408,12 +418,12 @@ static int rtsp_parse_header_common(const char *attrstr, const char *line,
                                     t_rtsp_header_common *common)
 {
     int ret = 0;
+    unsigned int i = 0;
 
     if (!common)
         return -1;
 
     if (strcmp(attrstr, "Session") == 0) {
-        int i = 0;
         strncpy(common->session, line, sizeof(common->session));
         /* If there is an optional timeout in the Session line, ignore it */
         for (i = 0; i < sizeof(common->session); i++) {

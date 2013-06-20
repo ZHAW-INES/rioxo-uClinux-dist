@@ -109,6 +109,7 @@
 #define HOI_MSG_HDCP_BLACK_OUTPUT   (0x70000116)
 #define HOI_MSG_OSD_CLR_BORDER      (0x70000117)
 #define HOI_MSG_FEC_TX              (0x70000118)
+#define HOI_MSG_ACS                 (0x70000119)
 
 // Driver Bit Mask
 #define DRV_NONE                    (0x00000000)
@@ -514,6 +515,16 @@ typedef struct {
 } t_hoi_msg_info;
 
 #define hoi_msg_info_init(p) hoi_msg_init(p, HOI_MSG_INFO, t_hoi_msg_info)
+
+//------------------------------------------------------------------------------
+// audio channel status
+
+typedef struct {
+    hoi_msg_extends;
+    uint16_t			acs[12];
+} t_hoi_msg_acs;
+
+#define hoi_msg_acs_init(p) hoi_msg_init(p, HOI_MSG_ACS, t_hoi_msg_acs)
 
 //------------------------------------------------------------------------------
 // hdcp init
