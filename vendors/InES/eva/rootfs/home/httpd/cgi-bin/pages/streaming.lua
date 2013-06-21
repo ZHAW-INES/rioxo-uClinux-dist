@@ -5,6 +5,7 @@ require("hdoip.pipe")
 
 local REG_ST_URI_LABEL = "st_uri"
 local REG_ST_BW_LABEL = "st_bw"
+local REG_ST_TTL_LABEL = "eth_ttl"
 local REG_ST_BW_CHROMA_LABEL = "st_bw_chroma"
 local REG_ST_NET_DELAY_LABEL = "net_delay"
 local REG_ST_AV_DELAY_LABEL = "av_delay"
@@ -57,6 +58,7 @@ function show(t)
         t.edit_aud_emb_port = 0
         t.edit_aud_board_port = 0
         t.edit_rtsp_port = 0
+        t.eth_ttl = hdoip.pipe.getParam(hdoip.pipe.REG_ST_ETH_TTL)
 
         if(hdoip.pipe.getParam(hdoip.pipe.REG_FORCE_HDCP) == "true") then
             t.hdcp_force = 1
@@ -152,6 +154,15 @@ function show(t)
             t.hdcp_force_str = "false"
         end 
         hdoip.pipe.setParam(hdoip.pipe.REG_FORCE_HDCP, t.hdcp_force_str)
+
+        if(tonumber(t.eth_ttl) ~= nil) then
+            t.eth_ttl = tonumber(t.eth_ttl)
+            if((t.eth_ttl >= 0) and (t.eth_ttl <= 255)) then
+                hdoip.pipe.setParam(hdoip.pipe.REG_ST_ETH_TTL, t.eth_ttl)
+            else
+                hdoip.html.AddError(t, label.err_ttl_not_in_range)
+            end
+        end
 
         if(t.save_aud_emb_port ~= nil) then 
             if(tonumber(t.aud_emb_port) ~= nil) then
@@ -504,6 +515,10 @@ function show(t)
             hdoip.html.Text(t.rtsp_port)                                                                hdoip.html.TableInsElement(1);
             hdoip.html.FormCheckbox("edit_rtsp_port", 1, label.button_edit, t.edit_rtsp_port,0)         hdoip.html.TableInsElement(1);
         end
+
+        hdoip.html.Text(label.p_st_ttl);                                                                hdoip.html.TableInsElement(1);
+        hdoip.html.FormText(REG_ST_TTL_LABEL, t.eth_ttl, 4, 0);
+        hdoip.html.Text(label.u_s);                                                                     hdoip.html.TableInsElement(2);
 
         -- VTB specific fields
         if(t.mode_vtb) then

@@ -195,7 +195,7 @@ int vtb_audio_emb_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_co
 
     eth.ipv4_src_ip = hdoipd.local.address;
     eth.ipv4_tos = 0;
-    eth.ipv4_ttl = 30;
+    eth.ipv4_ttl = reg_get_int("eth-ttl");
     eth.packet_size = 512;
     eth.rtp_ssrc = 0;
     for(n=0;n<6;n++) eth.src_mac[n] = hdoipd.local.mac[n];

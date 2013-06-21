@@ -106,7 +106,7 @@ int vrb_audio_board_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connect
 
     eth.ipv4_src_ip = hdoipd.local.address;
     eth.ipv4_tos = 0;
-    eth.ipv4_ttl = 30;
+    eth.ipv4_ttl = reg_get_int("eth-ttl");
     eth.packet_size = 512;
     eth.rtp_ssrc = 1;
     for(n=0;n<6;n++) eth.src_mac[n] = hdoipd.local.mac[n];

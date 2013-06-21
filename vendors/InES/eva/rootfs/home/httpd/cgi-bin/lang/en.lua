@@ -75,6 +75,7 @@ label = {
     err_av_delay_not_in_range = "Audio-video delay is not in range (-100 .. 100)";
     err_osd_time_not_number = "OSD time is not a number";
     err_osd_time_not_in_range = "OSD time is not in range (0 .. 100)";
+    err_ttl_not_in_range = "TTL is not in range (0 .. 255)";
 
     -- Page names
     page_streaming = "Stream configuration";
@@ -214,6 +215,7 @@ label = {
     p_st_unicast = "Unicast";
     p_st_multicast = "Multicast";
     p_osd_time = "OSD time";
+    p_st_ttl = "IP TTL (time to live)";
 
     -- Page audio
     p_aud_source_sel = "Audio source select";

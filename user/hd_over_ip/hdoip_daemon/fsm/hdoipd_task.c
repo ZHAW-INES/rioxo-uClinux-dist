@@ -887,6 +887,11 @@ void task_set_fec_setting (char *p)
     hoi_drv_set_fec_tx_params(&fec);
 }
 
+void task_set_eth_ttl (char *p)
+{
+    update_vector |= HOID_TSK_EXEC_RESTART;
+}
+
 void hdoipd_register_task()
 {
     get_listener("system-state", task_get_system_state);
@@ -949,5 +954,6 @@ void hdoipd_register_task()
     set_listener("edid-mode", task_set_edid_mode);
     set_listener("fps_divide", task_set_fps_divide);
     set_listener("fec_setting", task_set_fec_setting);
+    set_listener("eth-ttl", task_set_eth_ttl);
 }
 

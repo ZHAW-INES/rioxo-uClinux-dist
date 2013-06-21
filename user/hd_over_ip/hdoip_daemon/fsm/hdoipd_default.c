@@ -23,6 +23,7 @@ void hdoipd_set_default()
     reg_set("system-dns2", "");
     reg_set("system-dhcp", "false");
     reg_set("system-cmd", "");
+    reg_set("eth-ttl", "30");
 
     reg_set("auto-stream", "true");
     reg_set("mode-start", "none");
