@@ -126,16 +126,32 @@ function show(t)
         end
 
 
-        if (t.edit_ip == nil )then
+        if (t.edit_ip == nil) then
             hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DHCP, "false")
+            t.sys_dhcp = 0
         end
 
         if (t.edit_ip == "1") then
             hdoip.pipe.setParam(hdoip.pipe.REG_SYS_DHCP, "true")
+            t.sys_dhcp = 1
+        end
+
+
+
+        -- Set system ip if change from DHCP mode to fixed ip mode
+        if(t.edit_ip == nil) then
+            if(hdoip.network.checkIp(t.sys_ip0, t.sys_ip1, t.sys_ip2, t.sys_ip3) == 1) then   
+	            new_ip = 1;
+                -- TODO: page must be reloaded first before ip can be changed
+	            hdoip.pipe.setParam(hdoip.pipe.REG_SYS_IP, t.sys_ip0.."."..t.sys_ip1.."."..t.sys_ip2.."."..t.sys_ip3)      
+	        else 
+	            hdoip.html.AddError(t, label.err_ip_not_valid)
+	            err = err + 1
+	        end
         end
 
         -- Set network parameter if not in DHCP mode
-        if(t.sys_dhcp == 0) then
+        if(t.sys_dhcp == 0) and (t.edit_ip ~= nil) then
             -- Set system ip
             if(hdoip.network.checkIp(t.sys_ip0, t.sys_ip1, t.sys_ip2, t.sys_ip3) == 1) then   
 	            tmp0,tmp1,tmp2,tmp3 = hdoip.network.text2IpValues(hdoip.pipe.getParam(hdoip.pipe.REG_SYS_IP))
@@ -222,17 +238,20 @@ function show(t)
             hdoip.html.TableHeader(2)
 
             -- ability to set IP address before DHCP is disabled
-            if((t.edit_ip ~= nil) and (t.edit_ip == "0") ) then
-                hdoip.html.Text(label.p_eth_ip_static);                                                             hdoip.html.TableInsElement(2);
-                hdoip.html.FormIP(REG_SYS_IP_LABEL,t.sys_ip0,t.sys_ip1,t.sys_ip2,t.sys_ip3, 0);                     hdoip.html.TableInsElement(2);
-            else
+            if((t.edit_ip ~= "0") or (t.sys_dhcp ~= 1)) then
                 hdoip.html.FormRadio("edit_ip", t_sys_ip, 2, t.sys_dhcp)                                            hdoip.html.TableInsElement(2);
             end
 
             hdoip.html.Text(label.p_eth_mac);                                                                       hdoip.html.TableInsElement(1);
             hdoip.html.Text(t.sys_mac);                                                                             hdoip.html.TableInsElement(1);
             hdoip.html.Text(label.p_eth_ip);                                                                        hdoip.html.TableInsElement(1);
-            hdoip.html.FormIP(REG_SYS_IP_LABEL,t.sys_ip0,t.sys_ip1,t.sys_ip2,t.sys_ip3, t.sys_dhcp);                hdoip.html.TableInsElement(1);
+
+            if((t.edit_ip == "0") and (t.sys_dhcp == 1)) then
+                hdoip.html.FormIP(REG_SYS_IP_LABEL,t.sys_ip0,t.sys_ip1,t.sys_ip2,t.sys_ip3, 0);                     hdoip.html.TableInsElement(1);
+            else
+                hdoip.html.FormIP(REG_SYS_IP_LABEL,t.sys_ip0,t.sys_ip1,t.sys_ip2,t.sys_ip3, t.sys_dhcp);            hdoip.html.TableInsElement(1);
+            end
+
             hdoip.html.Text(label.p_eth_subnet);                                                                    hdoip.html.TableInsElement(1);
             hdoip.html.FormIP(REG_SYS_SUB_LABEL,t.sys_sub0,t.sys_sub1,t.sys_sub2,t.sys_sub3, t.sys_dhcp);           hdoip.html.TableInsElement(1);
             hdoip.html.Text(label.p_eth_gateway);                                                                   hdoip.html.TableInsElement(1);
@@ -249,7 +268,7 @@ function show(t)
             hdoip.html.FormRadio(REG_MODE_START_LABEL, t_sys_mode, 3, t.sys_mode)                                   hdoip.html.TableInsElement(1);
 
             hdoip.html.Text(label.p_eth_led);                                                                       hdoip.html.TableInsElement(1);
-            hdoip.html.FormCheckbox("identification", 1, "", t.identification,0)                                    hdoip.html.TableInsElement(2);
+            hdoip.html.FormCheckbox("identification", 1, "", t.identification, 0)                                   hdoip.html.TableInsElement(2);
 
             hdoip.html.TableBottom()
         
