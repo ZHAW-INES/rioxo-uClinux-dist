@@ -7,7 +7,7 @@
 #define VERSION_MINOR           (VERSION_SOFTWARE & 0xFFFF)
 
 // version tag (max. 50 letters)
-#define VERSION_TAG             "Audio channel status"
+#define VERSION_TAG             "DHCP Bugfix"
 
 // select one label
 #define VERSION_LABEL_RIOXO

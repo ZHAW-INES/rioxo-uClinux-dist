@@ -79,7 +79,7 @@ static inline void si598_write (t_i2c* handle, uint8_t reg, uint8_t data)
 
 void set_si598_output_register (t_si598 *handle);
 void set_si598_small_frequency_change (t_si598 *handle, uint64_t rfreq_i);
-void set_si598_output_frequency (t_si598 *handle, uint32_t frequency);
+void set_si598_output_frequency (t_si598 *handle, uint32_t frequency, int advcnt);
 void si598_clock_control_init (t_si598 *handle, t_i2c* i2c, void* ptr_vio);
 void si598_clock_control_activate (t_si598 *handle);
 void si598_clock_control_deactivate (t_si598 *handle);

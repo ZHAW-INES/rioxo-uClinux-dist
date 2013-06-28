@@ -140,8 +140,8 @@ int net_get_remote_hwaddr(int sock, char* ifn, uint32_t address, uint8_t* mac)
     }
 
     /* Switching to gateway */
-    str = reg_get("system-gateway");
-    gw = gethostbyname(str);
+    hoi_cfg_get_default_gw(buf);
+    gw = gethostbyname(buf);
 
     if (!gw) {
         perrno("net_get_remote_hwaddr() gethostbyname failed");

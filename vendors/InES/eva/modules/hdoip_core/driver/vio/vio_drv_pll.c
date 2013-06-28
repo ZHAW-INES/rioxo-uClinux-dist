@@ -75,7 +75,7 @@ int vio_drv_pll_setup(void* p, t_vio_pll* pll, t_si598* si598, int in, int out, 
 
         // fin = fout / set SI598 output frequency
         if (out != 0) {
-            set_si598_output_frequency (si598, (uint32_t)fout);
+            set_si598_output_frequency (si598, (uint32_t)fout, advcnt);
             pll->fin[0] = fout;
         }
 
