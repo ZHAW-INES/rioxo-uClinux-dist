@@ -64,6 +64,20 @@ REG_MODE_USB = "usb-mode"
 REG_FEC_SETTING = "fec_setting"
 REG_MODE_TEST_IMAGE = "test-image"
 REG_EDID_MODE = "edid-mode"
+REG_EDID_RESOLUTION = "edid-resolution"
+REG_EDID_PIXELCLOCK = "edid-pixelclock"
+REG_EDID_INTERLACED = "edid-interlaced"
+REG_EDID_H_ACTIVE = "edid-h-active"
+REG_EDID_V_ACTIVE = "edid-v-active"
+REG_EDID_H_BLANK = "edid-h-blank"
+REG_EDID_V_BLANK = "edid-v-blank"
+REG_EDID_H_OFFSET = "edid-h-offset"
+REG_EDID_V_OFFSET = "edid-v-offset"
+REG_EDID_H_PULSE = "edid-h-pulse"
+REG_EDID_V_PULSE = "edid-v-pulse"
+REG_EDID_AUDIO_CHANNELS = "edid-audio-channels"
+REG_EDID_AUDIO_BIT = "edid-audio-bit"
+REG_EDID_AUDIO_FS = "edid-audio-fs"
 REG_FPS_DIVIDE = "fps_divide"
 REG_VERSION_LABEL = "version_label"
 REG_TEMP1 = "temp1"
@@ -88,6 +102,7 @@ local PIPE_CMD_FACTORY_DEFAULT  = "3100000F"
 local PIPE_CMD_REBOOT           = "31000009"
 local PIPE_CMD_GETUSB           = "31000010"
 local PIPE_CMD_GET_HDCP_STATE   = "31000020"
+local PIPE_CMD_RELOAD_EDID      = "31000013"
 
 local fd_cmd, fd_rsp = nil, nil
 
@@ -316,4 +331,8 @@ end
 
 function free_buffer()
     simple_cmd(PIPE_CMD_FREE_BUFFER)
+end
+
+function reload_edid()
+    simple_cmd(PIPE_CMD_RELOAD_EDID)
 end

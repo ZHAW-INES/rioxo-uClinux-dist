@@ -70,9 +70,24 @@ void hdoipd_set_default()
     reg_set("serial-number", "00000000000000");
 
     reg_set("usb-mode", "off");
-    reg_set("edid-mode", "receiver");
     reg_set("traffic-shaping", "true");
     reg_set("fec_setting", "1441014410");     
+
+    reg_set("edid-mode", "receiver");
+    reg_set("edid-resolution", "12");
+    reg_set("edid-pixelclock", "74250");
+    reg_set("edid-interlaced", "0");
+    reg_set("edid-h-active", "1280");
+    reg_set("edid-v-active", "720");
+    reg_set("edid-h-blank", "370");
+    reg_set("edid-v-blank", "30");
+    reg_set("edid-h-offset", "110");
+    reg_set("edid-v-offset", "5");
+    reg_set("edid-h-pulse", "40");
+    reg_set("edid-v-pulse", "5");
+    reg_set("edid-audio-channels", "1");
+    reg_set("edid-audio-bit", "101");
+    reg_set("edid-audio-fs", "1110000");
 
     reg_set(CFGTAG, "origin");
 }

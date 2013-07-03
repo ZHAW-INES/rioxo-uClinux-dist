@@ -489,7 +489,7 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid, t_rtsp_me
 
   if (handle == NULL){
     return -1;
-   }
+  }
   multicast_set_enabled(reg_test("multicast_en", "true"));
 
   // if no EDID has been provided and edid-mode is not set to use
@@ -498,30 +498,20 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid, t_rtsp_me
       return 0;
 
   // use default edid if requested
-  if (reg_test("edid-mode", "default")) {
-    memcpy(edid_table, factory_edid, edid_length);
-  }
-  else
-    memcpy(edid_table, edid->edid, edid_length);
-
-  // multicast, only run this for non default EDID
-  if (multicast_get_enabled() && !reg_test("edid-mode", "default")) {
-    // we only need to do the edid merging if ...
-    // we don't use the default edid and
-    // the client has provided an edid and
-    // the input is not SDI
-    if (!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
-        // add connection to start list
-        strcpy(handle->con.common.session, media->sessionid);
-        
-        // this call will block until the multicast setup procedure has been finished
-//        if (multicast_connection_add(handle) != 0)
-//            return -2;
-//        multicast_edid_add((t_edid *)edid_table, handle);
-        
+  if (reg_test("edid-mode", "default") || multicast_get_enabled()) {
+    if (edid_read_file(&edid_table, "/mnt/config/edid.bin")) {
+      // fallback to factory edid if own edid fails
+      memcpy(edid_table, factory_edid, edid_length);
     }
+  } else {
+    memcpy(edid_table, edid->edid, edid_length);
+  }
 
-    return 0;
+  // dont reload edid if more than one multicast client
+  if (multicast_get_enabled()) {
+    if (!(multicast_client_check_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+      return 0;
+    }
   }
 
   // unicast

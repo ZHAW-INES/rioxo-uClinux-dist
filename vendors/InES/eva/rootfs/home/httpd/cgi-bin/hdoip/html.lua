@@ -106,41 +106,45 @@ function FormHidden(name, value)
     html_str = html_str .. "<input style=\"visibility:hidden\" name=\"" .. name .. "\" type=\"hidden\" value=\"" .. value .. "\">\n"
 end
 
-function FormPassword(name, value, size, disabled)
+function FormPassword(name, value, size, disable)
     if(value == nil) then
         value = ""
     end
 
-    if((disabled == 0) and (disabled ~= nil)) then
+    if((disable ~= nil) and (disable > 0))then
+        Text(value)
+    else
         html_str = html_str .. "<input class=\"inputbox\" name=\"" .. name .. "\" type=\"password\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
-    else
-        Text(value)
     end
 
 end
 
 
-function FormText(name, value, size, disabled)
+function FormText(name, value, size, disable)
     if(value == nil) then
         value = ""
     end
 
-    if((disabled == 0) and (disabled ~= nil)) then
-        html_str = html_str .. "<input class=\"inputbox\" name=\"" .. name .. "\" type=\"text\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
-    else
+    if((disable ~= nil) and (disable > 0))then
         Text(value)
+    else
+        html_str = html_str .. "<input class=\"inputbox\" name=\"" .. name .. "\" type=\"text\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
     end
 
 end
 
-function FormRadioSingle(name, value, label, checked)
+function FormRadioSingle(name, value, label, checked, disable)
     if((checked ~= nil) and (checked > 0)) then
         checked = ' checked'
     else 
         checked = ''
     end
 
-    html_str = html_str .. "<input type=\"radio\" name=\"" .. name .. "\" value=\"" .. value .. "\"".. checked .. ">" .. label .. "\n"
+    if((disable ~= nil) and (disable > 0))then
+        html_str = html_str .. "<input type=\"radio\" name=\"" .. name .. "\" value=\"" .. value .. "\" disabled" .. checked .. ">" .. label .. "\n"
+    else
+        html_str = html_str .. "<input type=\"radio\" name=\"" .. name .. "\" value=\"" .. value .. "\"".. checked .. ">" .. label .. "\n"
+    end
 end
 
 function FormRadio(name, values, size, selected)
@@ -178,8 +182,8 @@ function FormIP(name, value0, value1, value2, value3, disable)
     end
 end
 
-function FormCheckbox(name, value, label, checked, disabled)
-    if(disabled==1) then
+function FormCheckbox(name, value, label, checked, disable)
+    if((disable ~= nil) and (disable > 0))then
         html_str = html_str .. "<input type=\"checkbox\" name=\""..name.."\" value=\""..value.."\" disabled"
     else
         html_str = html_str .. "<input type=\"checkbox\" name=\""..name.."\" value=\""..value.."\""
@@ -539,3 +543,26 @@ function DropdownBox7(name, label1, label2, label3, label4, label5, label6, labe
 
     html_str = html_str .. "</select>\n"
 end
+
+function DropdownBoxEdid(name, label_list, item_count, selected, disable)
+    if(tonumber(selected) ~= nil) then
+        selected = tonumber(selected)
+    end
+
+    if((disable ~= nil) and (disable > 0))then
+        Text(label_list[selected])
+    else
+        html_str = html_str .. "<select name=\""..name.."\" size=1>\n"
+
+        for i=1, (item_count-1), 1 do
+            html_str = html_str .. "<option value=" .. i
+            if((selected ~= nil) and (selected == i))then
+                html_str = html_str .." selected"
+            end
+            html_str = html_str .. "> "..label_list[i].." </option>\n"
+        end
+
+        html_str = html_str .. "</select>\n"
+    end
+end
+

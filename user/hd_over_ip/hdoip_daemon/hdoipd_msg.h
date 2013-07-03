@@ -46,6 +46,7 @@
 #define HOIC_GET_HDCP_STATE     (0x31000020)
 #define HOIC_VRB_PAUSE          (0x31000011)
 #define HOIC_VRB_PAUSE_PLAY     (0x31000012)
+#define HOIC_RELOAD_EDID        (0x31000013)
 
 // Switches
 #define HOIC_OSD_ON             (0x32000005)

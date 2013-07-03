@@ -460,8 +460,8 @@ function show(t)
         
         -- Common fields
         if(t.mode_vtb) then 
-            hdoip.html.FormRadioSingle("multicast_en", "false", label.p_st_unicast, t.unicast_en)       hdoip.html.TableInsElement(3);
-            hdoip.html.FormRadioSingle("multicast_en", "true", label.p_st_multicast, t.multicast_en)    hdoip.html.TableInsElement(3);
+            hdoip.html.FormRadioSingle("multicast_en", "false", label.p_st_unicast, t.unicast_en, 0)    hdoip.html.TableInsElement(3);
+            hdoip.html.FormRadioSingle("multicast_en", "true", label.p_st_multicast, t.multicast_en, 0) hdoip.html.TableInsElement(3);
             hdoip.html.Text(label.p_st_multicast_group);                                                hdoip.html.TableInsElement(1);
             hdoip.html.FormText("multicast_group", t.multicast_group, 40, 0);                           hdoip.html.TableInsElement(2);
         elseif(t.mode_vrb) then

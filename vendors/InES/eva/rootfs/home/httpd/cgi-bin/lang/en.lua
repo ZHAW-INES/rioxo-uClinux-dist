@@ -160,7 +160,7 @@ label = {
     -- Page EDID
     p_edid_mode = "EDID - Extended display identification data";
     p_edid_mode_receiver = "Use EDID of receiver";
-    p_edid_mode_default = "Use default EDID";
+    p_edid_mode_default = "Use own EDID";
     p_edid_transmitter_only = "only available on transmitter";
 
     -- Page firmware

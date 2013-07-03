@@ -313,6 +313,18 @@ void hdoipd_debug(t_hoic_cmd UNUSED *cmd)
     hoi_drv_debug();
 }
 
+void hdoipd_reload_edid(t_hoic_cmd UNUSED *cmd)
+{
+    int edid_length = 256;
+    uint8_t edid_table[edid_length];
+
+    if (reg_test("edid-mode", "default") || multicast_get_enabled()) {
+        if (!edid_read_file(&edid_table, "/mnt/config/edid.bin")) {
+            edid_write_function((t_edid *)edid_table, multicast_get_enabled() ? "unicast edid changed" : "unicast edid changed");
+        }
+    }
+}
+
 void hdoipd_read_ram(t_hoic_kvparam* cmd, int UNUSED rsp)
 {
 	hoi_drv_read_ram(atoi(cmd->str));
@@ -349,6 +361,7 @@ void hdoipd_request(uint32_t* cmd, int rsp)
         hdoipdreq(HOIC_GET_EDID             , hdoipd_get_edid);
         hdoipdreq(HOIC_FACTORY_DEFAULT      , hdoipd_factory_default);
         hdoipdreq(HOIC_DEBUG                , hdoipd_debug);
+        hdoipdreq(HOIC_RELOAD_EDID          , hdoipd_reload_edid);
         hdoipdreq_rsp(HOIC_READ_RAM         , hdoipd_read_ram);
         hdoipdreq_rsp(HOIC_GETVERSION       , hdoipd_get_version);
         hdoipdreq_rsp(HOIC_GETUSB           , hdoipd_get_usb);
