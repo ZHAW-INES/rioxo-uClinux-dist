@@ -554,7 +554,7 @@ function DropdownBoxEdid(name, label_list, item_count, selected, disable)
     else
         html_str = html_str .. "<select name=\""..name.."\" size=1>\n"
 
-        for i=1, (item_count-1), 1 do
+        for i=0, (item_count-1), 1 do
             html_str = html_str .. "<option value=" .. i
             if((selected ~= nil) and (selected == i))then
                 html_str = html_str .." selected"

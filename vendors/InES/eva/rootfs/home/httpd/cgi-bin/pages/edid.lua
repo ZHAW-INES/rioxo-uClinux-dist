@@ -183,55 +183,6 @@ function show(t)
 
     else
 
-
-        if(t.own_interlaced ~= nil) then
-           t.own_interlaced = 1
-        else
-           t.own_interlaced = 0 
-        end   
-
-        -- set manufacturer id and display product name
-        if (t.version_label == "rioxo") then
-            edid[9]  = 0x4b
-            edid[10] = 0x0f
-            edid[78] = 0x52
-            edid[79] = 0x49
-            edid[80] = 0x4f
-            edid[81] = 0x58
-            edid[82] = 0x4f
-            edid[83] = 0x0a
-            edid[84] = 0x20
-            edid[85] = 0x20
-            edid[86] = 0x20
-            edid[87] = 0x20
-        elseif (t.version_label == "emcore") then
-            edid[9] =  0x15
-            edid[10] = 0xa3
-            edid[78] = 0x45
-            edid[79] = 0x4d
-            edid[80] = 0x43
-            edid[81] = 0x4f
-            edid[82] = 0x52
-            edid[83] = 0x45
-            edid[84] = 0x0a
-            edid[85] = 0x20
-            edid[86] = 0x20
-            edid[87] = 0x20
-        elseif (t.version_label == "black box") then
-            edid[9] =  0x08
-            edid[10] = 0x58
-            edid[78] = 0x42
-            edid[79] = 0x4c
-            edid[80] = 0x41
-            edid[81] = 0x43
-            edid[82] = 0x4b
-            edid[83] = 0x20
-            edid[84] = 0x42
-            edid[85] = 0x4f
-            edid[86] = 0x58
-            edid[87] = 0x0a
-        end
-
         if (t.resolution_0 == nil) then
             t.resolution_0 = hdoip.pipe.getParam(hdoip.pipe.REG_EDID_RESOLUTION)
         else
@@ -245,10 +196,9 @@ function show(t)
         end
 
         if (t.own_interlaced == nil) then
-            t.own_interlaced = hdoip.pipe.getParam(hdoip.pipe.REG_EDID_INTERLACED)
-        else
-            hdoip.pipe.setParam(hdoip.pipe.REG_EDID_INTERLACED, t.own_interlaced)
+            t.own_interlaced = 0
         end
+        hdoip.pipe.setParam(hdoip.pipe.REG_EDID_INTERLACED, t.own_interlaced)
 
         if (t.own_horizontal_active == nil) then
             t.own_horizontal_active = hdoip.pipe.getParam(hdoip.pipe.REG_EDID_H_ACTIVE)
@@ -304,39 +254,114 @@ function show(t)
             hdoip.pipe.setParam(hdoip.pipe.REG_EDID_AUDIO_CHANNELS, t.audio_channels)
         end
 
-        if ((t.audio_bit_16 == nil) or (t.audio_bit_20 == nil) or (t.audio_bit_24 == nil)) then
-            t.audio_bit_16 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_BIT), 1)
-            t.audio_bit_20 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_BIT), 2)
-            t.audio_bit_24 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_BIT), 3)
-        else
-            local string = "   "
-            string = set_character(string, 1, t.audio_bit_16)
-            string = set_character(string, 2, t.audio_bit_20)
-            string = set_character(string, 3, t.audio_bit_24)
-            hdoip.pipe.setParam(hdoip.pipe.REG_EDID_AUDIO_BIT, string)
+        if (t.audio_bit_16 == nil) then
+            t.audio_bit_16 = 0
+        end
+        if (t.audio_bit_20 == nil) then
+            t.audio_bit_20 = 0
+        end
+        if (t.audio_bit_24 == nil) then
+            t.audio_bit_24 = 0
+        end
+        local string = "   "
+        string = set_character(string, 1, t.audio_bit_16)
+        string = set_character(string, 2, t.audio_bit_20)
+        string = set_character(string, 3, t.audio_bit_24)
+        hdoip.pipe.setParam(hdoip.pipe.REG_EDID_AUDIO_BIT, string)
+
+        if (t.audio_frequency_32 == nil) then
+            t.audio_frequency_32 = 0
+        end
+        if (t.audio_frequency_44 == nil) then
+            t.audio_frequency_44 = 0
+        end
+        if (t.audio_frequency_48 == nil) then
+            t.audio_frequency_48 = 0
+        end
+        if (t.audio_frequency_88 == nil) then
+            t.audio_frequency_88 = 0
+        end
+        if (t.audio_frequency_96 == nil) then
+            t.audio_frequency_96 = 0
+        end
+        if (t.audio_frequency_176 == nil) then
+            t.audio_frequency_176 = 0
+        end
+        if (t.audio_frequency_192 == nil) then
+            t.audio_frequency_192 = 0
+        end
+        local string = "       "
+        string = set_character(string, 1, t.audio_frequency_32)
+        string = set_character(string, 2, t.audio_frequency_44)
+        string = set_character(string, 3, t.audio_frequency_48)
+        string = set_character(string, 4, t.audio_frequency_88)
+        string = set_character(string, 5, t.audio_frequency_96)
+        string = set_character(string, 6, t.audio_frequency_176)
+        string = set_character(string, 7, t.audio_frequency_192)
+        hdoip.pipe.setParam(hdoip.pipe.REG_EDID_AUDIO_FS, string)
+
+        -- set manufacturer id and display product name
+        if (t.version_label == "rioxo") then
+            edid[9]  = 0x4b
+            edid[10] = 0x0f
+            edid[78] = 0x52
+            edid[79] = 0x49
+            edid[80] = 0x4f
+            edid[81] = 0x58
+            edid[82] = 0x4f
+            edid[83] = 0x0a
+            edid[84] = 0x20
+            edid[85] = 0x20
+            edid[86] = 0x20
+            edid[87] = 0x20
+        elseif (t.version_label == "emcore") then
+            edid[9] =  0x15
+            edid[10] = 0xa3
+            edid[78] = 0x45
+            edid[79] = 0x4d
+            edid[80] = 0x43
+            edid[81] = 0x4f
+            edid[82] = 0x52
+            edid[83] = 0x45
+            edid[84] = 0x0a
+            edid[85] = 0x20
+            edid[86] = 0x20
+            edid[87] = 0x20
+        elseif (t.version_label == "black box") then
+            edid[9] =  0x08
+            edid[10] = 0x58
+            edid[78] = 0x42
+            edid[79] = 0x4c
+            edid[80] = 0x41
+            edid[81] = 0x43
+            edid[82] = 0x4b
+            edid[83] = 0x20
+            edid[84] = 0x42
+            edid[85] = 0x4f
+            edid[86] = 0x58
+            edid[87] = 0x0a
         end
 
-        if ((t.audio_frequency_32 == nil) or (t.audio_frequency_44 == nil) or (t.audio_frequency_48 == nil) or (t.audio_frequency_88 == nil) or (t.audio_frequency_96 == nil) or (t.audio_frequency_176 == nil) or (t.audio_frequency_192 == nil)) then
-            t.audio_frequency_32 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 1)
-            t.audio_frequency_44 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 2)
-            t.audio_frequency_48 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 3)
-            t.audio_frequency_88 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 4)
-            t.audio_frequency_96 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 5)
-            t.audio_frequency_176 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 6)
-            t.audio_frequency_192 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 7)
-        else
-            local string = "       "
-            string = set_character(string, 1, t.audio_frequency_32)
-            string = set_character(string, 2, t.audio_frequency_44)
-            string = set_character(string, 3, t.audio_frequency_48)
-            string = set_character(string, 4, t.audio_frequency_88)
-            string = set_character(string, 5, t.audio_frequency_96)
-            string = set_character(string, 6, t.audio_frequency_176)
-            string = set_character(string, 7, t.audio_frequency_192)
-            hdoip.pipe.setParam(hdoip.pipe.REG_EDID_AUDIO_FS, string)
+        -- set manufacturing date and serial number 
+        serial = hdoip.pipe.getParam(hdoip.pipe.REG_SERIAL)
+        year = string.sub(serial, 1, 4)
+        week = string.sub(serial, 5, 6)
+        serial = hdoip.convert.num2hex(tonumber(string.sub(serial, 7, 14))) 
+
+        -- expand string to 8 byte length
+        len = string.len(serial)
+        for i=len+1, 8, 1 do
+            serial = '0' .. serial
         end
 
-        -- detailed timing descriptor
+        edid[13] = tonumber(string.sub(serial, 7, 8), 16)
+        edid[14] = tonumber(string.sub(serial, 5, 6), 16)
+        edid[15] = tonumber(string.sub(serial, 3, 4), 16)
+        edid[16] = tonumber(string.sub(serial, 1, 2), 16)
+        edid[17] = tonumber(week)
+        edid[18] = tonumber(year)-1990
+
+        -- set detailed timing descriptor
         edid[55] = get_low_byte(timing[menu_items[tonumber(t.resolution_0)]][1] / 10)
         edid[56] = get_high_byte(timing[menu_items[tonumber(t.resolution_0)]][1] / 10)
         edid[57] = get_low_byte(timing[menu_items[tonumber(t.resolution_0)]][3])
@@ -356,7 +381,7 @@ function show(t)
         end
 
         -- basic audio support
-        if ((t.audio_frequency_32 == 1) and (t.audio_frequency_44 == 1) and (t.audio_frequency_48 == 1)) then
+        if ((tonumber(t.audio_frequency_32) == 1) and (tonumber(t.audio_frequency_44) == 1) and (tonumber(t.audio_frequency_48) == 1)) then
             edid[132] = 0xb0 + 64
         end
 
@@ -411,71 +436,78 @@ function show(t)
     hdoip.html.Header(t, page_name .. label.page_edid, script_path)
     hdoip.html.FormHeader(script_path, main_form)
 
-    hdoip.html.TableHeader(2)
-    hdoip.html.Title("EDID")                                                                                                                        hdoip.html.TableInsElement(2);
-    hdoip.html.FormRadioSingle("edid_mode_default", "receiver", label.p_edid_mode_receiver, tonumber(t.edid_mode_receiver), tonumber(multicast))    hdoip.html.TableInsElement(2);
-    hdoip.html.FormRadioSingle("edid_mode_default", "default", label.p_edid_mode_default, tonumber(t.edid_mode_default), tonumber(multicast))
-  
-    if(multicast == 1) then
-        hdoip.html.Text(" (enabled because of multicast)");
+    if(t.mode_vtb) then 
+        hdoip.html.TableHeader(2)
+        hdoip.html.Title("EDID")                                                                                                                        hdoip.html.TableInsElement(2);
+        hdoip.html.FormRadioSingle("edid_mode_default", "receiver", label.p_edid_mode_receiver, tonumber(t.edid_mode_receiver), tonumber(multicast))    hdoip.html.TableInsElement(2);
+        hdoip.html.FormRadioSingle("edid_mode_default", "default", label.p_edid_mode_default, tonumber(t.edid_mode_default), tonumber(multicast))
+      
+        if(multicast == 1) then
+            hdoip.html.Text(" (enabled because of multicast)");
+        end
+                                                                                                                                                        hdoip.html.TableInsElement(2);
+        hdoip.html.Title("Video")                                                                                                                       hdoip.html.TableInsElement(2);
+        hdoip.html.Text("Supported resolution");                                                                                                        hdoip.html.TableInsElement(1);
+        hdoip.html.DropdownBoxEdid("resolution_0", menu_items, menu_items_count, t.resolution_0, t.edid_mode_receiver)                                  hdoip.html.TableInsElement(1);
+        hdoip.html.TableBottom()
+
+        hdoip.html.TableHeader(3)
+        hdoip.html.Title("Own resolution:");                                                                                                            hdoip.html.TableInsElement(3);
+        hdoip.html.Text("");                                                                                                                            hdoip.html.TableInsElement(1);
+        hdoip.html.Text("Horizontal");                                                                                                                  hdoip.html.TableInsElement(1);
+        hdoip.html.Text("Vertical");                                                                                                                    hdoip.html.TableInsElement(1);
+        hdoip.html.Text("Active pixels/lines");                                                                                                         hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_horizontal_active", t.own_horizontal_active, 4, t.edid_mode_receiver);                                                 hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_vertical_active", t.own_vertical_active, 4, t.edid_mode_receiver);                                                     hdoip.html.TableInsElement(1);
+        hdoip.html.Text("Blanking pixels/lines");                                                                                                       hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_horizontal_blanking", t.own_horizontal_blanking, 4, t.edid_mode_receiver);                                             hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_vertical_blanking", t.own_vertical_blanking, 4, t.edid_mode_receiver);                                                 hdoip.html.TableInsElement(1);
+        hdoip.html.Text("Sync offset");                                                                                                                 hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_horizontal_offset", t.own_horizontal_offset, 4, t.edid_mode_receiver);                                                 hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_vertical_offset", t.own_vertical_offset, 4, t.edid_mode_receiver);                                                     hdoip.html.TableInsElement(1);
+        hdoip.html.Text("Pulse width");                                                                                                                 hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_horizontal_pulse", t.own_horizontal_pulse, 4, t.edid_mode_receiver);                                                   hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_vertical_pulse", t.own_vertical_pulse, 4, t.edid_mode_receiver);                                                       hdoip.html.TableInsElement(1);
+        hdoip.html.Text("Pixel clock");                                                                                                                 hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_pixelclock", t.own_pixelclock, 6, t.edid_mode_receiver);
+        hdoip.html.Text("kHz");                                                                                                                         hdoip.html.TableInsElement(2);
+        hdoip.html.Text("Interlaced");                                                                                                                  hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("own_interlaced", 1, "", tonumber(t.own_interlaced), t.edid_mode_receiver)                                              hdoip.html.TableInsElement(2);
+        hdoip.html.TableBottom()
+
+        hdoip.html.TableHeader(2)
+        hdoip.html.Title("Audio")                                                                                                                       hdoip.html.TableInsElement(2);
+        hdoip.html.Text("Channels");                                                                                                                    hdoip.html.TableInsElement(1);
+        hdoip.html.DropdownBoxEdid("audio_channels", channel_items, channel_items_count, t.audio_channels, t.edid_mode_receiver)                        hdoip.html.TableInsElement(1);
+        hdoip.html.Text("Bit rates");                                                                                                                   hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("audio_bit_16", 1, "", tonumber(t.audio_bit_16), t.edid_mode_receiver)
+        hdoip.html.Text("16");
+        hdoip.html.FormCheckbox("audio_bit_20", 1, "", tonumber(t.audio_bit_20), t.edid_mode_receiver)
+        hdoip.html.Text("20");
+        hdoip.html.FormCheckbox("audio_bit_24", 1, "", tonumber(t.audio_bit_24), t.edid_mode_receiver)
+        hdoip.html.Text("24");                                                                                                                          hdoip.html.TableInsElement(1);
+        hdoip.html.Text("Sampling frequencies");                                                                                                        hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("audio_frequency_32", 1, "", tonumber(t.audio_frequency_32), t.edid_mode_receiver)
+        hdoip.html.Text("32kHz");
+        hdoip.html.FormCheckbox("audio_frequency_44", 1, "", tonumber(t.audio_frequency_44), t.edid_mode_receiver)
+        hdoip.html.Text("44.1kHz");
+        hdoip.html.FormCheckbox("audio_frequency_48", 1, "", tonumber(t.audio_frequency_48), t.edid_mode_receiver)
+        hdoip.html.Text("48kHz");
+        hdoip.html.FormCheckbox("audio_frequency_88", 1, "", tonumber(t.audio_frequency_88), t.edid_mode_receiver)
+        hdoip.html.Text("88.2kHz");
+        hdoip.html.FormCheckbox("audio_frequency_96", 1, "", tonumber(t.audio_frequency_96), t.edid_mode_receiver)
+        hdoip.html.Text("96kHz");
+        hdoip.html.FormCheckbox("audio_frequency_176", 1, "", tonumber(t.audio_frequency_176), t.edid_mode_receiver)
+        hdoip.html.Text("176.4kHz");
+        hdoip.html.FormCheckbox("audio_frequency_192", 1, "", tonumber(t.audio_frequency_192), t.edid_mode_receiver)
+        hdoip.html.Text("192kHz");                                                                                                                      hdoip.html.TableInsElement(1);
+        hdoip.html.TableBottom()
+    else
+        hdoip.html.TableHeader(2)
+        hdoip.html.Title("EDID")                                                                                                                        hdoip.html.TableInsElement(2);
+        hdoip.html.Text(label.p_edid_transmitter_only)                                                                                                  hdoip.html.TableInsElement(2);
+        hdoip.html.TableBottom()
     end
-                                                                                                                                                    hdoip.html.TableInsElement(2);
-    hdoip.html.Title("Video")                                                                                                                       hdoip.html.TableInsElement(2);
-    hdoip.html.Text("Supported resolution");                                                                                                        hdoip.html.TableInsElement(1);
-    hdoip.html.DropdownBoxEdid("resolution_0", menu_items, menu_items_count, t.resolution_0, t.edid_mode_receiver)                                  hdoip.html.TableInsElement(1);
-    hdoip.html.TableBottom()
-
-    hdoip.html.TableHeader(3)
-    hdoip.html.Title("Own resolution:");                                                                                                            hdoip.html.TableInsElement(3);
-    hdoip.html.Text("");                                                                                                                            hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Horizontal");                                                                                                                  hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Vertical");                                                                                                                    hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Active pixels/lines");                                                                                                         hdoip.html.TableInsElement(1);
-    hdoip.html.FormText("own_horizontal_active", t.own_horizontal_active, 4, t.edid_mode_receiver);                                                 hdoip.html.TableInsElement(1);
-    hdoip.html.FormText("own_vertical_active", t.own_vertical_active, 4, t.edid_mode_receiver);                                                     hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Blanking pixels/lines");                                                                                                       hdoip.html.TableInsElement(1);
-    hdoip.html.FormText("own_horizontal_blanking", t.own_horizontal_blanking, 4, t.edid_mode_receiver);                                             hdoip.html.TableInsElement(1);
-    hdoip.html.FormText("own_vertical_blanking", t.own_vertical_blanking, 4, t.edid_mode_receiver);                                                 hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Sync offset");                                                                                                                 hdoip.html.TableInsElement(1);
-    hdoip.html.FormText("own_horizontal_offset", t.own_horizontal_offset, 4, t.edid_mode_receiver);                                                 hdoip.html.TableInsElement(1);
-    hdoip.html.FormText("own_vertical_offset", t.own_vertical_offset, 4, t.edid_mode_receiver);                                                     hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Pulse width");                                                                                                                 hdoip.html.TableInsElement(1);
-    hdoip.html.FormText("own_horizontal_pulse", t.own_horizontal_pulse, 4, t.edid_mode_receiver);                                                   hdoip.html.TableInsElement(1);
-    hdoip.html.FormText("own_vertical_pulse", t.own_vertical_pulse, 4, t.edid_mode_receiver);                                                       hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Pixel clock");                                                                                                                 hdoip.html.TableInsElement(1);
-    hdoip.html.FormText("own_pixelclock", t.own_pixelclock, 6, t.edid_mode_receiver);
-    hdoip.html.Text("kHz");                                                                                                                         hdoip.html.TableInsElement(2);
-    hdoip.html.Text("Interlaced");                                                                                                                  hdoip.html.TableInsElement(1);
-    hdoip.html.FormCheckbox("own_interlaced", 1, "", tonumber(t.own_interlaced), t.edid_mode_receiver)                                              hdoip.html.TableInsElement(2);
-    hdoip.html.TableBottom()
-
-    hdoip.html.TableHeader(2)
-    hdoip.html.Title("Audio")                                                                                                                       hdoip.html.TableInsElement(2);
-    hdoip.html.Text("Channels");                                                                                                                    hdoip.html.TableInsElement(1);
-    hdoip.html.DropdownBoxEdid("audio_channels", channel_items, channel_items_count, t.audio_channels, t.edid_mode_receiver)                        hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Bit rates");                                                                                                                   hdoip.html.TableInsElement(1);
-    hdoip.html.FormCheckbox("audio_bit_16", 1, "", tonumber(t.audio_bit_16), t.edid_mode_receiver)
-    hdoip.html.Text("16");
-    hdoip.html.FormCheckbox("audio_bit_20", 1, "", tonumber(t.audio_bit_20), t.edid_mode_receiver)
-    hdoip.html.Text("20");
-    hdoip.html.FormCheckbox("audio_bit_24", 1, "", tonumber(t.audio_bit_24), t.edid_mode_receiver)
-    hdoip.html.Text("24");                                                                                                                          hdoip.html.TableInsElement(1);
-    hdoip.html.Text("Sampling frequencies");                                                                                                        hdoip.html.TableInsElement(1);
-    hdoip.html.FormCheckbox("audio_frequency_32", 1, "", tonumber(t.audio_frequency_32), t.edid_mode_receiver)
-    hdoip.html.Text("32kHz");
-    hdoip.html.FormCheckbox("audio_frequency_44", 1, "", tonumber(t.audio_frequency_44), t.edid_mode_receiver)
-    hdoip.html.Text("44.1kHz");
-    hdoip.html.FormCheckbox("audio_frequency_48", 1, "", tonumber(t.audio_frequency_48), t.edid_mode_receiver)
-    hdoip.html.Text("48kHz");
-    hdoip.html.FormCheckbox("audio_frequency_88", 1, "", tonumber(t.audio_frequency_88), t.edid_mode_receiver)
-    hdoip.html.Text("88.2kHz");
-    hdoip.html.FormCheckbox("audio_frequency_96", 1, "", tonumber(t.audio_frequency_96), t.edid_mode_receiver)
-    hdoip.html.Text("96kHz");
-    hdoip.html.FormCheckbox("audio_frequency_176", 1, "", tonumber(t.audio_frequency_176), t.edid_mode_receiver)
-    hdoip.html.Text("176.4kHz");
-    hdoip.html.FormCheckbox("audio_frequency_192", 1, "", tonumber(t.audio_frequency_192), t.edid_mode_receiver)
-    hdoip.html.Text("192kHz");                                                                                                                      hdoip.html.TableInsElement(1);
-    hdoip.html.TableBottom()
 
     hdoip.html.FormBottom(t)
     hdoip.html.Bottom(t)
