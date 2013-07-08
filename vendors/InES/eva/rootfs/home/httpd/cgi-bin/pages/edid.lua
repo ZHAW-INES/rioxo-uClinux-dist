@@ -114,9 +114,9 @@ function show(t)
                     0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0x00, 0x10, 
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x86, 
-                    0x02, 0x03, 0x12, 0xb0, 0x23, 0x0f, 0x04, 0x04, 
-                    0x67, 0x03, 0x0c, 0x00, 0x10, 0x00, 0x10, 0x1e, 
-                    0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                    0x02, 0x03, 0x12, 0xb1, 0x67, 0x03, 0x0c, 0x00, 
+                    0x10, 0x00, 0x10, 0x1e, 0x41, 0x00, 0x00, 0x00, 
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -139,6 +139,8 @@ function show(t)
         multicast = 0
     end
 
+    local vertical_pixels = 0
+
     if(t.sent == nil) then
 
         t.resolution_0 = hdoip.pipe.getParam(hdoip.pipe.REG_EDID_RESOLUTION)
@@ -155,12 +157,15 @@ function show(t)
         t.own_vertical_pulse = hdoip.pipe.getParam(hdoip.pipe.REG_EDID_V_PULSE)
 
         t.audio_channels = hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_CHANNELS)
-        t.audio_bit_16 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_BIT), 1)
+
+        t.basic_audio = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_BIT), 1)
+        t.audio_bit_16 = t.basic_audio
         t.audio_bit_20 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_BIT), 2)
         t.audio_bit_24 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_BIT), 3)
-        t.audio_frequency_32 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 1)
-        t.audio_frequency_44 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 2)
-        t.audio_frequency_48 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 3)
+
+        t.audio_frequency_32 = t.basic_audio
+        t.audio_frequency_44 = t.basic_audio
+        t.audio_frequency_48 = t.basic_audio
         t.audio_frequency_88 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 4)
         t.audio_frequency_96 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 5)
         t.audio_frequency_176 = get_character(hdoip.pipe.getParam(hdoip.pipe.REG_EDID_AUDIO_FS), 6)
@@ -254,13 +259,15 @@ function show(t)
             hdoip.pipe.setParam(hdoip.pipe.REG_EDID_AUDIO_CHANNELS, t.audio_channels)
         end
 
-        if (t.audio_bit_16 == nil) then
-            t.audio_bit_16 = 0
+        if (t.basic_audio == nil) then
+            t.basic_audio = 0
         end
-        if (t.audio_bit_20 == nil) then
+        t.audio_bit_16 = t.basic_audio
+
+        if ((t.audio_bit_20 == nil) or (t.basic_audio == 0)) then
             t.audio_bit_20 = 0
         end
-        if (t.audio_bit_24 == nil) then
+        if ((t.audio_bit_24 == nil) or (t.basic_audio == 0)) then
             t.audio_bit_24 = 0
         end
         local string = "   "
@@ -269,25 +276,20 @@ function show(t)
         string = set_character(string, 3, t.audio_bit_24)
         hdoip.pipe.setParam(hdoip.pipe.REG_EDID_AUDIO_BIT, string)
 
-        if (t.audio_frequency_32 == nil) then
-            t.audio_frequency_32 = 0
-        end
-        if (t.audio_frequency_44 == nil) then
-            t.audio_frequency_44 = 0
-        end
-        if (t.audio_frequency_48 == nil) then
-            t.audio_frequency_48 = 0
-        end
-        if (t.audio_frequency_88 == nil) then
+        t.audio_frequency_32 = t.basic_audio
+        t.audio_frequency_44 = t.basic_audio
+        t.audio_frequency_48 = t.basic_audio
+
+        if ((t.audio_frequency_88 == nil) or (t.basic_audio == 0)) then
             t.audio_frequency_88 = 0
         end
-        if (t.audio_frequency_96 == nil) then
+        if ((t.audio_frequency_96 == nil) or (t.basic_audio == 0)) then
             t.audio_frequency_96 = 0
         end
-        if (t.audio_frequency_176 == nil) then
+        if ((t.audio_frequency_176 == nil) or (t.basic_audio == 0)) then
             t.audio_frequency_176 = 0
         end
-        if (t.audio_frequency_192 == nil) then
+        if ((t.audio_frequency_192 == nil) or (t.basic_audio == 0)) then
             t.audio_frequency_192 = 0
         end
         local string = "       "
@@ -374,6 +376,18 @@ function show(t)
         edid[64] = get_low_byte(timing[menu_items[tonumber(t.resolution_0)]][8])
         edid[65] = (get_low_nibble(timing[menu_items[tonumber(t.resolution_0)]][9]) * 16) + get_low_nibble(timing[menu_items[tonumber(t.resolution_0)]][10])
         edid[66] = (get_high_byte(timing[menu_items[tonumber(t.resolution_0)]][7]) * 64) + (get_high_byte(timing[menu_items[tonumber(t.resolution_0)]][8]) * 16) + (get_high_nibble(timing[menu_items[tonumber(t.resolution_0)]][9]) * 4) + get_low_nibble(timing[menu_items[tonumber(t.resolution_0)]][10])
+
+        -- display size (aspect ratio = vertical pixels / horizontal pixels)
+        if ((timing[menu_items[tonumber(t.resolution_0)]][2]) == 1) then
+            -- if interlaced, vertical size = 2 * field
+            vertical_pixels = timing[menu_items[tonumber(t.resolution_0)]][4] * 2
+        else
+            vertical_pixels = timing[menu_items[tonumber(t.resolution_0)]][4]
+        end
+        edid[67] = get_low_byte(timing[menu_items[tonumber(t.resolution_0)]][3])
+        edid[68] = get_low_byte(vertical_pixels)
+        edid[69] = (get_high_byte(timing[menu_items[tonumber(t.resolution_0)]][3]) * 16) + get_high_byte(vertical_pixels)
+
         if ((timing[menu_items[tonumber(t.resolution_0)]][2]) == 1) then
             edid[72] = 0x9e
         else
@@ -381,19 +395,29 @@ function show(t)
         end
 
         -- basic audio support
-        if ((tonumber(t.audio_frequency_32) == 1) and (tonumber(t.audio_frequency_44) == 1) and (tonumber(t.audio_frequency_48) == 1)) then
-            edid[132] = 0xb0 + 64
+        if (tonumber(t.basic_audio) == 1) then
+            -- adjust size (+4 (size of audio block))
+            edid[131] = 0x12
+            -- set basic audio flag
+            edid[132] = 0xb1 + 64
+        else
+            edid[131] = 0x0e
+            edid[132] = 0xb1
         end
 
-        -- audio count of channels
-        edid[134] = t.audio_channels + 8
-        -- audio sampling frequencies
-        edid[135] = (t.audio_frequency_32) + (t.audio_frequency_44 * 2) + (t.audio_frequency_48 * 4) + (t.audio_frequency_88 * 8) + (t.audio_frequency_96 * 16) + (t.audio_frequency_176 * 32) + (t.audio_frequency_192 * 64)
-        -- audio bitrate
-        edid[136] = (t.audio_bit_16) + (t.audio_bit_20 * 2) + (t.audio_bit_24 * 4)
-
         -- short video descriptor (same as preferred timing)
-        edid[146] = timing[menu_items[tonumber(t.resolution_0)]][11]
+        edid[142] = timing[menu_items[tonumber(t.resolution_0)]][11]
+
+        -- audio data block (only if basic audio is supported)
+        if (tonumber(t.basic_audio) == 1) then
+            edid[143] = 0x23
+            -- audio count of channels
+            edid[144] = t.audio_channels + 8
+            -- audio sampling frequencies
+            edid[145] = (t.audio_frequency_32) + (t.audio_frequency_44 * 2) + (t.audio_frequency_48 * 4) + (t.audio_frequency_88 * 8) + (t.audio_frequency_96 * 16) + (t.audio_frequency_176 * 32) + (t.audio_frequency_192 * 64)
+            -- audio bitrate
+            edid[146] = (t.audio_bit_16) + (t.audio_bit_20 * 2) + (t.audio_bit_24 * 4)
+        end
 
         -- write generated EDID to flash
         file = io.open("/mnt/config/edid.bin", "w")
@@ -421,6 +445,12 @@ function show(t)
 	            t.edid_mode_receiver = 1 
 	        end
         end
+    end
+
+    if (tonumber(t.basic_audio) == 0) then
+        basic_audio_inverted = 1
+    else
+        basic_audio_inverted = 0
     end
 
     if (t.version_label == "rioxo") then
@@ -477,29 +507,32 @@ function show(t)
 
         hdoip.html.TableHeader(2)
         hdoip.html.Title("Audio")                                                                                                                       hdoip.html.TableInsElement(2);
+        hdoip.html.Text("Basic audio support");                                                                                                         hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("basic_audio", 1, "", tonumber(t.basic_audio), t.edid_mode_receiver)                                                    hdoip.html.TableInsElement(1);
+
         hdoip.html.Text("Channels");                                                                                                                    hdoip.html.TableInsElement(1);
         hdoip.html.DropdownBoxEdid("audio_channels", channel_items, channel_items_count, t.audio_channels, t.edid_mode_receiver)                        hdoip.html.TableInsElement(1);
         hdoip.html.Text("Bit rates");                                                                                                                   hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("audio_bit_16", 1, "", tonumber(t.audio_bit_16), t.edid_mode_receiver)
+        hdoip.html.FormCheckbox("audio_bit_16", 1, "", tonumber(t.audio_bit_16), 1)
         hdoip.html.Text("16");
-        hdoip.html.FormCheckbox("audio_bit_20", 1, "", tonumber(t.audio_bit_20), t.edid_mode_receiver)
+        hdoip.html.FormCheckbox("audio_bit_20", 1, "", tonumber(t.audio_bit_20), t.edid_mode_receiver + basic_audio_inverted)
         hdoip.html.Text("20");
-        hdoip.html.FormCheckbox("audio_bit_24", 1, "", tonumber(t.audio_bit_24), t.edid_mode_receiver)
+        hdoip.html.FormCheckbox("audio_bit_24", 1, "", tonumber(t.audio_bit_24), t.edid_mode_receiver + basic_audio_inverted)
         hdoip.html.Text("24");                                                                                                                          hdoip.html.TableInsElement(1);
         hdoip.html.Text("Sampling frequencies");                                                                                                        hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("audio_frequency_32", 1, "", tonumber(t.audio_frequency_32), t.edid_mode_receiver)
+        hdoip.html.FormCheckbox("audio_frequency_32", 1, "", tonumber(t.audio_frequency_32), 1)
         hdoip.html.Text("32kHz");
-        hdoip.html.FormCheckbox("audio_frequency_44", 1, "", tonumber(t.audio_frequency_44), t.edid_mode_receiver)
+        hdoip.html.FormCheckbox("audio_frequency_44", 1, "", tonumber(t.audio_frequency_44), 1)
         hdoip.html.Text("44.1kHz");
-        hdoip.html.FormCheckbox("audio_frequency_48", 1, "", tonumber(t.audio_frequency_48), t.edid_mode_receiver)
+        hdoip.html.FormCheckbox("audio_frequency_48", 1, "", tonumber(t.audio_frequency_48), 1)
         hdoip.html.Text("48kHz");
-        hdoip.html.FormCheckbox("audio_frequency_88", 1, "", tonumber(t.audio_frequency_88), t.edid_mode_receiver)
+        hdoip.html.FormCheckbox("audio_frequency_88", 1, "", tonumber(t.audio_frequency_88), t.edid_mode_receiver + basic_audio_inverted)
         hdoip.html.Text("88.2kHz");
-        hdoip.html.FormCheckbox("audio_frequency_96", 1, "", tonumber(t.audio_frequency_96), t.edid_mode_receiver)
+        hdoip.html.FormCheckbox("audio_frequency_96", 1, "", tonumber(t.audio_frequency_96), t.edid_mode_receiver + basic_audio_inverted)
         hdoip.html.Text("96kHz");
-        hdoip.html.FormCheckbox("audio_frequency_176", 1, "", tonumber(t.audio_frequency_176), t.edid_mode_receiver)
+        hdoip.html.FormCheckbox("audio_frequency_176", 1, "", tonumber(t.audio_frequency_176), t.edid_mode_receiver + basic_audio_inverted)
         hdoip.html.Text("176.4kHz");
-        hdoip.html.FormCheckbox("audio_frequency_192", 1, "", tonumber(t.audio_frequency_192), t.edid_mode_receiver)
+        hdoip.html.FormCheckbox("audio_frequency_192", 1, "", tonumber(t.audio_frequency_192), t.edid_mode_receiver + basic_audio_inverted)
         hdoip.html.Text("192kHz");                                                                                                                      hdoip.html.TableInsElement(1);
         hdoip.html.TableBottom()
     else
