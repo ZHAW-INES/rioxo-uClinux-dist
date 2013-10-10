@@ -350,6 +350,12 @@ function show(t)
         week = string.sub(serial, 5, 6)
         serial = hdoip.convert.num2hex(tonumber(string.sub(serial, 7, 14))) 
 
+        if tonumber(year) < 1990 then
+            year = 0
+        else
+            year = tonumber(year) - 1990
+        end
+
         -- expand string to 8 byte length
         len = string.len(serial)
         for i=len+1, 8, 1 do
@@ -361,7 +367,7 @@ function show(t)
         edid[15] = tonumber(string.sub(serial, 3, 4), 16)
         edid[16] = tonumber(string.sub(serial, 1, 2), 16)
         edid[17] = tonumber(week)
-        edid[18] = tonumber(year)-1990
+        edid[18] = year
 
         -- set detailed timing descriptor
         edid[55] = get_low_byte(timing[menu_items[tonumber(t.resolution_0)]][1] / 10)
@@ -444,6 +450,8 @@ function show(t)
 	            t.edid_mode_default = 0
 	            t.edid_mode_receiver = 1 
 	        end
+        else
+            t.edid_mode_receiver = 0
         end
     end
 
