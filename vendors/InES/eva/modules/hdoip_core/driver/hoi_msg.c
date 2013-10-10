@@ -199,9 +199,9 @@ int hoi_drv_msg_eti(t_hoi* handle, t_hoi_msg_eti* msg)
     if (msg->udp_port_aud_board) aso_drv_flush_buf(&handle->aso[AUD_STREAM_NR_IF_BOARD]);
 
     // activate ethernet input
-    if (msg->udp_port_vid) eti_drv_start_vid(&handle->eti);
-    if (msg->udp_port_aud_emb) eti_drv_start_aud_emb(&handle->eti);
-    if (msg->udp_port_aud_board) eti_drv_start_aud_board(&handle->eti);
+    if (msg->udp_port_vid) eti_drv_start_vid(&handle->eti, msg->fec_disable);
+    if (msg->udp_port_aud_emb) eti_drv_start_aud_emb(&handle->eti, msg->fec_disable);
+    if (msg->udp_port_aud_board) eti_drv_start_aud_board(&handle->eti, msg->fec_disable);
 
     return SUCCESS;
 }

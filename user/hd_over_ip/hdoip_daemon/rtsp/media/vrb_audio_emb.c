@@ -101,7 +101,7 @@ int vrb_audio_emb_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connect
     }
 
 #ifdef ETI_PATH
-    hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port, 0);
+    hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port, 0, reg_test("disable_rx_fec", "true"));
 #endif
 
     hdoipd_set_vtb_state(VTB_AUD_EMB_IDLE);
@@ -247,7 +247,7 @@ void vrb_audio_emb_pause(t_rtsp_media *media)
         hdoipd_hw_reset(DRV_RST_AUD_EMB_OUT);
 #endif
 #ifdef ETI_PATH
-        hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port, 0);
+        hoi_drv_eti(vrb.dst_ip, 0, vrb.remote.address, 0, hdoipd.local.aud_port, 0, reg_test("disable_rx_fec", "true"));
 #endif
         hdoipd_clr_rsc(RSC_AUDIO_EMB_OUT|RSC_AUDIO_EMB_SYNC);
         hdoipd_set_vtb_state(VTB_AUD_EMB_IDLE);

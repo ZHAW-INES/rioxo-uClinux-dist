@@ -95,7 +95,7 @@ int hoi_drv_hdcpstat(uint32_t *eto_hdcp_audio,uint32_t *eto_hdcp_video,uint32_t 
 }
 //-----------------------------------------------------------------------------
 
-int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud, uint32_t vid, uint32_t aud_emb, uint32_t aud_board)
+int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud, uint32_t vid, uint32_t aud_emb, uint32_t aud_board, bool fec_disable)
 {
     t_hoi_msg_eti msg;
 
@@ -106,6 +106,7 @@ int hoi_drv_eti(uint32_t addr_dst, uint32_t addr_src_vid, uint32_t addr_src_aud,
     msg.udp_port_aud_emb = aud_emb;
     msg.udp_port_vid = vid;
     msg.udp_port_aud_board = aud_board;
+    msg.fec_disable = fec_disable;
 
     return hoi_msg(&msg);
 

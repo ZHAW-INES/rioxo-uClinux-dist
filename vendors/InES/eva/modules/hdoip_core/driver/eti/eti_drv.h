@@ -28,11 +28,11 @@ int eti_drv_aes_aud_dis(t_eti* handle);
 int eti_drv_aes_stat(t_eti* handle, uint32_t *audio_enc_en, uint32_t *video_enc_en);
 int eti_drv_aes_vid_en(t_eti* handle);
 int eti_drv_aes_vid_dis(t_eti* handle);
-int eti_drv_start_aud_emb(t_eti* handle);
-int eti_drv_start_aud_board(t_eti* handle);
+int eti_drv_start_aud_emb(t_eti* handle, bool fec_disable);
+int eti_drv_start_aud_board(t_eti* handle, bool fec_disable);
 int eti_drv_stop_aud_emb(t_eti* handle);
 int eti_drv_stop_aud_board(t_eti* handle);
-int eti_drv_start_vid(t_eti* handle);
+int eti_drv_start_vid(t_eti* handle, bool fec_disable);
 int eti_drv_stop_vid(t_eti* handle);
 int eti_drv_set_filter(t_eti* handle, uint32_t dev_ip, uint32_t aud_src_ip, uint32_t vid_src_ip, uint16_t aud_emb_port, uint16_t aud_board_port, uint16_t vid_port);
 

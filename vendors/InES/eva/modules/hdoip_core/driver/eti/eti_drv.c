@@ -31,11 +31,16 @@ int eti_drv_stop(t_eti* handle)
  * @param handle pointer to the eti handle
  * @return error code
  */
-int eti_drv_start_aud_emb(t_eti* handle)
+int eti_drv_start_aud_emb(t_eti* handle, bool fec_disable)
 {
     eti_set_aud_emb_filter_mask(handle->ptr, ETI_AUD_EMB_FILTER_MASK);
-    eti_set_aud_emb_fec_col_filter_mask(handle->ptr, ETI_AUD_EMB_FEC_C_FILTER_MASK);
-    eti_set_aud_emb_fec_row_filter_mask(handle->ptr, ETI_AUD_EMB_FEC_R_FILTER_MASK);
+    if (fec_disable) {
+        eti_set_aud_emb_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+        eti_set_aud_emb_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    } else {
+        eti_set_aud_emb_fec_col_filter_mask(handle->ptr, ETI_AUD_EMB_FEC_C_FILTER_MASK);
+        eti_set_aud_emb_fec_row_filter_mask(handle->ptr, ETI_AUD_EMB_FEC_R_FILTER_MASK);
+    }
 
     return ERR_ETI_SUCCESS;
 }
@@ -45,7 +50,7 @@ int eti_drv_start_aud_emb(t_eti* handle)
  * @param handle pointer to the eti handle
  * @return error code
  */
-int eti_drv_start_aud_board(t_eti* handle)
+int eti_drv_start_aud_board(t_eti* handle, bool fec_disable)
 {
     eti_set_aud_board_filter_mask(handle->ptr, ETI_AUD_BOARD_FILTER_MASK);
     eti_set_aud_board_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
@@ -87,12 +92,18 @@ int eti_drv_stop_aud_board(t_eti* handle)
  * @param handle pointer to the eti handle
  * @return error code
  */
-int eti_drv_start_vid(t_eti* handle)
+int eti_drv_start_vid(t_eti* handle, bool fec_disable)
 {
     uint32_t tmp_ip;
     eti_set_vid_filter_mask(handle->ptr, ETI_VID_FILTER_MASK);
-    eti_set_vid_fec_col_filter_mask(handle->ptr, ETI_VID_FEC_C_FILTER_MASK);
-    eti_set_vid_fec_row_filter_mask(handle->ptr, ETI_VID_FEC_R_FILTER_MASK);
+printk("\n\n\n fec_disable: %x \n\n\n", fec_disable);
+    if (fec_disable) {
+        eti_set_vid_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+        eti_set_vid_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    } else {
+        eti_set_vid_fec_col_filter_mask(handle->ptr, ETI_VID_FEC_C_FILTER_MASK);
+        eti_set_vid_fec_row_filter_mask(handle->ptr, ETI_VID_FEC_R_FILTER_MASK);
+    }
 
     tmp_ip = eti_get_vid_src_ip(handle->ptr);
     REPORT(INFO, "[ETI] video ip : %pI4", &tmp_ip);
