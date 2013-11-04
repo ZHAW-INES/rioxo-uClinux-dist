@@ -13,7 +13,7 @@
  * @param all necessary handle pointer
  * @return
  */
-int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv9889* h_adv9889, t_vsi* h_vsi ,t_vso* h_vso, t_asi* h_asi, t_aso* h_aso, uint32_t* h_drivers, t_queue* event_queue)
+int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv9889* h_adv9889, t_vsi* h_vsi ,t_vso* h_vso, t_asi* h_asi, t_aso* h_aso, uint32_t* h_drivers, t_queue* event_queue, void* p_fec_rx)
 {
 	//get aes status
     uint32_t audio_enc_en_eto, video_enc_en_eto, audio_enc_en_eti, video_enc_en_eti;
@@ -34,7 +34,7 @@ int hdcp_drv_handler(t_eti* h_eti, t_eto* h_eto, t_adv7441a* h_adv7441a, t_adv98
     	//check if video encryption status is okay, otherwise stop video
     	if (!((h_adv9889->hdcp_state & HDCP_VID_ACTIVE_LOOP) || (h_adv9889->hdcp_state & HDCP_VID_ACTIVE)) && (video_enc_en_eti) && (h_vso->status & VSO_DRV_STATUS_ACTIV))
     	{
-    	   	vso_drv_stop(h_vso);    //stop transmitting video
+    	   	vso_drv_stop(h_vso, p_fec_rx);    //stop transmitting video
     	   	REPORT(INFO, "HDMI VIDEO SINK CHANGED, HDCP ERROR!");
             queue_put(event_queue, E_HDCP_STREAMING_ERROR);
     	}

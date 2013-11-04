@@ -7,7 +7,7 @@
 #define VERSION_MINOR           (VERSION_SOFTWARE & 0xFFFF)
 
 // version tag (max. 50 letters)
-#define VERSION_TAG             "stability fix"
+#define VERSION_TAG             "fec bugfix"
 
 // select one label
 #define VERSION_LABEL_RIOXO

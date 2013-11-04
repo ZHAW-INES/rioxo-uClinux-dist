@@ -81,7 +81,7 @@ void hoi_drv_init(t_hoi* handle)
     eto_drv_set_ptr(&handle->eto, handle->p_eso);
     vio_drv_init(&handle->vio, handle->p_vio, handle->p_adv212, &handle->si598);
     vsi_drv_init(&handle->vsi, handle->p_vsi);
-    vso_drv_init(&handle->vso, handle->p_vso);
+    vso_drv_init(&handle->vso, handle->p_vso, handle->p_fec_rx);
     asi_drv_init(&handle->asi, handle->p_asi);
     for (int st = 0; st < AUD_STREAM_CNT; st++)
         aso_drv_init(&handle->aso[st], handle->p_aso[st], st);
@@ -131,7 +131,7 @@ void hoi_drv_reset(t_hoi* handle, uint32_t rv)
         // deactivate FEC RX block
         init_fec_rx_ip_video(handle->p_fec_ip_rx, 0, &handle->fec_rx);
         fec_rx_disable_video_out(handle->p_fec_rx);
-        vso_drv_stop(&handle->vso);
+        vso_drv_stop(&handle->vso, handle->p_fec_rx);
         eti_drv_stop_vid(&handle->eti);
         eti_set_config_video_enc_dis(handle->p_esi);
         vso_drv_flush_buf(&handle->vso);
@@ -271,6 +271,7 @@ void hoi_drv_handler(t_hoi* handle)
     eti_drv_handler(&handle->eti, handle->event);
     bdt_drv_handler(handle->p_video_mux, handle->event);
     led_drv_handler(&handle->led);
+    fec_rx_handler(handle, handle->p_fec_ip_rx, handle->p_fec_rx, &handle->fec_rx, handle->event);
     stream_sync_slave_0(&handle->sync_slave_0);
     stream_sync_slave_1(&handle->sync_slave_1);
     
@@ -289,7 +290,7 @@ void hoi_drv_handler(t_hoi* handle)
         adv7441a_handler(&handle->adv7441a, handle->event);
     }
     if ((handle->drivers & DRV_ADV9889) && (handle->drivers & DRV_ADV7441)) {
-        hdcp_drv_handler(&handle->eti, &handle->eto, &handle->adv7441a, &handle->adv9889, &handle->vsi, &handle->vso, &handle->asi, &handle->aso[AUD_STREAM_NR_EMBEDDED], &handle->drivers, handle->event); //hdcp handler
+        hdcp_drv_handler(&handle->eti, &handle->eto, &handle->adv7441a, &handle->adv9889, &handle->vsi, &handle->vso, &handle->asi, &handle->aso[AUD_STREAM_NR_EMBEDDED], &handle->drivers, handle->event, handle->p_fec_rx); //hdcp handler
     }
     if (handle->drivers & DRV_GS2971) {
         gs2971_handler(&handle->gs2971, handle->event);

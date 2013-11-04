@@ -1060,3 +1060,33 @@ void fec_rx_statistics(void *p, t_fec_rx *counter_values, t_hoi_msg_fecstat* msg
 
     msg->buf_size       = parameters.FrameBufferEntriesPerChannel;
 }
+
+void fec_rx_handler(t_hoi* handle, void *p_fec_rx_ip, void *p_fec_rx, t_fec_rx *counter_values, t_queue* event_queue)
+{
+    alt_avalon_rtp_rx_dev   dev;
+    alt_avalon_rtp_rx_stats stats_vid;
+    alt_avalon_rtp_rx_channel_settings  settings_vid;
+    alt_avalon_rtp_rx_channel_settings  settings_aud_emb;
+    alt_avalon_rtp_rx_channel_settings  settings_aud_board;
+
+    dev.base = p_fec_rx_ip;
+    dev.MsgFIFODepth = 0;
+    dev.UseSoftwareMsgFIFODepth = 0;
+
+    alt_avalon_rtp_rx_get_statistics(&dev, 0, &stats_vid);
+    alt_avalon_rtp_rx_get_channel_config(&dev, 0, &settings_vid);
+    alt_avalon_rtp_rx_get_channel_config(&dev, 1, &settings_aud_emb);
+    alt_avalon_rtp_rx_get_channel_config(&dev, 2, &settings_aud_board);
+
+    if ((stats_vid.Flushed) && (settings_aud_board.Enable + settings_aud_emb.Enable + settings_vid.Enable)) {
+        queue_put(event_queue, E_FEC_CORRUPT);     
+
+        fec_rx_disable_video_out(p_fec_rx);
+        fec_rx_disable_audio_emb_out(p_fec_rx);
+        fec_rx_disable_audio_board_out(p_fec_rx);
+
+        fec_rx_enable_reset_hw(p_fec_rx);
+        printk("reset fec hardware\n");
+        fec_rx_disable_reset_hw(p_fec_rx);
+    }
+}

@@ -719,7 +719,11 @@ void hdoipd_event(uint32_t event)
                 osd_printf("Ethernet connection lost\n");
             }
         break;
-
+        case E_FEC_CORRUPT:
+            printf("fec error\n");
+            hdoipd_force_ready();
+            hdoipd_start();
+        break;
         // resource state
         case E_ADV9889_CABLE_ON:
             // interrupt appears sometimes often than one time

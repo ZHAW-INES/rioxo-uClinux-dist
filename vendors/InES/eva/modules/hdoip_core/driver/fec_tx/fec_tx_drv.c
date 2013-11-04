@@ -179,7 +179,7 @@ void change_setting_fec_ip_tx(void* p_fec_ip_tx, int enable_vid, int d_vid, int 
 
     switch (interleave_vid) {
         case 1:     fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_b;  break;
-        case 2:     fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_a;  break;
+  //      case 2:     fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_a;  break;        // doesn't work
         default:    fec_settings_channel_0.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_off;
     }
 
@@ -191,7 +191,7 @@ void change_setting_fec_ip_tx(void* p_fec_ip_tx, int enable_vid, int d_vid, int 
 
     switch (interleave_aud) {
         case 1:     fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_b;  break;
-        case 2:     fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_a;  break;
+  //      case 2:     fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_annex_a;  break;        // doesn't work
         default:    fec_settings_channel_1.InterleaveMode = alt_avalon_rtp_tx_interleave_mode_off;
     }
 

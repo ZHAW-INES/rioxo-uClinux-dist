@@ -35,6 +35,7 @@
 #include "fec_rx_hal.h"
 #include "fec_rx_struct.h"
 #include "hoi_msg.h"
+#include "hoi_drv.h"
 
 /* Used to set message FIFO to all channel mode */
 #define ALTERA_AVALON_RTP_RX_ALL_CHANNELS  (0x00010000)
@@ -185,6 +186,9 @@ typedef struct
    uint32_t BasePointer;
    uint32_t Entries;
 } alt_avalon_rtp_rx_fec_channel_debug_values;
+
+/* handler for crash detection */
+void fec_rx_handler(t_hoi* handle, void *p_fec_rx_ip, void *p_fec_rx, t_fec_rx *counter_values, t_queue* event_queue);
 
 /* statistic for FEC packets*/
 void fec_rx_statistics(void *p, t_fec_rx *counter_values, t_hoi_msg_fecstat* msg);

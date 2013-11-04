@@ -382,7 +382,7 @@ int hoi_drv_msg_vso(t_hoi* handle, t_hoi_msg_vso* msg)
     }
 
     // sync...
-    vso_drv_stop(&handle->vso);
+    vso_drv_stop(&handle->vso, handle->p_fec_rx);
     fec_rx_disable_video_out(handle->p_fec_rx);
 
     // if sdi, set output data rate
@@ -460,12 +460,12 @@ int hoi_drv_msg_vso_repaire(t_hoi* handle)
 // TODO: check if needed
 
     // stop/flush vso
-    vso_drv_stop(&handle->vso);
+    vso_drv_stop(&handle->vso, handle->p_fec_rx);
     vso_drv_flush_buf(&handle->vso);
 
     vio_drv_decode(&handle->vio, bdt_return_video_device(&handle->bdt));
 
-    vso_drv_stop(&handle->vso);
+    vso_drv_stop(&handle->vso, handle->p_fec_rx);
 
     // !!! workaround !!!
     // ADV212 chips are sensitive to timing

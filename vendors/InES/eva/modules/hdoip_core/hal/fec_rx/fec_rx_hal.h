@@ -47,10 +47,22 @@
 #define fec_rx_enable_video_out(base)                                       HOI_REG_SET((base), 0, 1)
 #define fec_rx_enable_audio_emb_out(base)                                   HOI_REG_SET((base), 0, 2)
 #define fec_rx_enable_audio_board_out(base)                                 HOI_REG_SET((base), 0, 4)
+#define fec_rx_enable_reset_hw(base)                                        HOI_REG_SET((base), 0, 8)
+#define fec_rx_enable_reset_fec_in(base)                                    HOI_REG_SET((base), 0, 16)
+#define fec_rx_enable_reset_fec_out(base)                                   HOI_REG_SET((base), 0, 32)
+#define fec_rx_enable_reset_vso(base)                                       HOI_REG_SET((base), 0, 64)
+#define fec_rx_enable_reset_eti(base)                                       HOI_REG_SET((base), 0, 128)
+#define fec_rx_enable_reset_vio(base)                                       HOI_REG_SET((base), 0, 256)
 
 #define fec_rx_disable_video_out(base)                                      HOI_REG_CLR((base), 0, 1)
 #define fec_rx_disable_audio_emb_out(base)                                  HOI_REG_CLR((base), 0, 2)
 #define fec_rx_disable_audio_board_out(base)                                HOI_REG_CLR((base), 0, 4)
+#define fec_rx_disable_reset_hw(base)                                       HOI_REG_CLR((base), 0, 8)
+#define fec_rx_disable_reset_fec_in(base)                                   HOI_REG_CLR((base), 0, 16)
+#define fec_rx_disable_reset_fec_out(base)                                  HOI_REG_CLR((base), 0, 32)
+#define fec_rx_disable_reset_vso(base)                                      HOI_REG_CLR((base), 0, 64)
+#define fec_rx_disable_reset_eti(base)                                      HOI_REG_CLR((base), 0, 128)
+#define fec_rx_disable_reset_vio(base)                                      HOI_REG_CLR((base), 0, 256)
 
 /* Registers of FEC RX IP */
 #define ALTERA_AVALON_RTP_RX_CHANNEL_REG                                    0

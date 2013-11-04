@@ -21,6 +21,11 @@
 /* HDCP events */
 #define E_HDCP_STREAMING_ERROR (E_ADV7441A_ID + 0x00000009)  /* HDCP Error, streaming without permission */
 
+/* FEC events */
+#define E_FEC_ID                (0xD0000000)
+#define E_FEC_CNT               1
+#define E_FEC_CORRUPT           (E_FEC_ID + 0x00000001)
+
 /* AD9889 events */
 #define E_ADV9889_ID            (0x90000000)
 #define E_ADV9889_CNT           4
