@@ -257,6 +257,9 @@ void hdoipd_free_buffer(t_hoic_cmd UNUSED *cmd)
         hdoipd.aud_tx_buff = 0;
     }
 
+    // we need free memory!!!
+    system("killall snmpd");
+
     report("free video and audio buffer\n");
 }
 
