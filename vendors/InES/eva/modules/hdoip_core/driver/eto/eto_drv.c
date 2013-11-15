@@ -384,7 +384,7 @@ void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, t_fec_setti
         }
     } else {
         packet_divider = 1;
-        packet_multiplier = 0;
+        packet_multiplier = 1;
     }
 
     // reduce the fraction
