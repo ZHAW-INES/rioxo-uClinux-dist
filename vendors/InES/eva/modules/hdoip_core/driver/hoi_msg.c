@@ -725,9 +725,9 @@ int hoi_drv_msg_bw(t_hoi* handle, t_hoi_msg_bandwidth* msg)
     return SUCCESS;
 }
 
-int hoi_drv_msg_led(t_hoi* handle, t_hoi_msg_param* msg)
+int hoi_drv_msg_led(t_hoi* handle, t_hoi_msg_led_status* msg)
 {
-    led_drv_set_status(&handle->led, msg->value);
+    led_drv_set_status(&handle->led, msg->status, msg->vrb);
     return SUCCESS;
 }
 

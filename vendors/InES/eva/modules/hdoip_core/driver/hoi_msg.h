@@ -602,7 +602,15 @@ static inline void _hoi_msg_init(t_hoi_msg* msg, uint32_t id, uint32_t size)
     msg->size = size;
 }
 
+//------------------------------------------------------------------------------
+//
 
+typedef struct {
+    hoi_msg_extends;
+    bool                vrb;
+    uint32_t            status;
+} t_hoi_msg_led_status;
 
+#define hoi_msg_set_led_status_init(p) hoi_msg_init(p, HOI_MSG_LED, t_hoi_msg_led_status)
 
 #endif /* HOI_MSG_H_ */
