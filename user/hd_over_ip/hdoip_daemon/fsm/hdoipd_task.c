@@ -699,6 +699,17 @@ void task_set_mode_start(char *p UNUSED)
 
 void task_set_mode_media(char *p UNUSED)
 {
+    char *s;
+
+    // change LED if audio board is available and activated
+    // (doesn't need a check for vrb, because this is called only on vrb)
+    s = reg_get("mode-media");
+    if (strstr(s, "audio_board")) {
+        hoi_drv_set_led_status(AUDIO_AVAILABLE);
+    } else {
+        hoi_drv_set_led_status(AUDIO_OFF);
+    }
+
 	update_vector |= HOID_TSK_EXEC_RESTART_VRB;
 }
 

@@ -40,6 +40,12 @@
 #define SDI_OUT_WITH_AUDIO              (0x00000019)
 #define SDI_OUT_OFF                     (0x0000001A)
 
+// Audio-Board
+#define AUDIO_AVAILABLE                 (0x00000020)
+#define AUDIO_PLAYING                   (0x00000021)
+#define AUDIO_ERROR                     (0x00000022)
+#define AUDIO_OFF                       (0x00000023)
+
 // Mixed
 #define FIRMWARE_START                  (0x00000011)    //do not change this (value is used in webinterface)
 #define IDENTIFICATION_ON               (0x0000000E)    //do not change this (value is used in webinterface)

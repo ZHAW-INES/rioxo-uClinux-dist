@@ -201,7 +201,6 @@ HOI_WRITE(ofmt, HOI_MSG_OFMT);
 HOI_WRITE(pfmt, HOI_MSG_PFMT);
 HOI_WRITE(set_mtime, HOI_MSG_SETMTIME);
 HOI_WRITE(timer, HOI_MSG_TIMER);
-HOI_WRITE(set_led_status, HOI_MSG_LED);
 HOI_WRITE(reset, HOI_MSG_OFF);
 HOI_WRITE(new_audio, HOI_MSG_NEW_AUDIO);
 HOI_WRITE(read_ram, HOI_MSG_DEBUG_READ_RAM);
@@ -218,6 +217,27 @@ HOI_READ(get_audio_device_id, HOI_MSG_GET_AUD_DEV_ID);
 HOI_READ(get_reset_to_default, HOI_MSG_GET_RESET_TO_DEFAULT);
 HOI_READ(get_encrypted_status, HOI_MSG_GET_ENCRYPTED_STATUS);
 HOI_READ(get_active_resolution, HOI_MSG_GET_ACTIVE_RESOLUTION);
+
+//------------------------------------------------------------------------------
+
+int hoi_drv_set_led_status(uint32_t status)
+{
+    char *s;
+    int ret;
+    t_hoi_msg_led_status msg;
+
+    hoi_msg_set_led_status_init(&msg);
+    msg.status = status;
+    s = reg_get("mode-start");
+    if (strcmp(s, "vtb") == 0) {
+        msg.vrb = false;
+    } else {
+        msg.vrb = true;
+    }
+    ret = hoi_msg(&msg);
+
+    return ret;
+}
 
 //------------------------------------------------------------------------------
 //

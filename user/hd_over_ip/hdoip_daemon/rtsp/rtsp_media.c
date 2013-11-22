@@ -357,7 +357,14 @@ int rmcr_teardown(t_rtsp_media* media, void* msg)
 {
     int ret = RTSP_SUCCESS;
 
-    if (media->teardown && !rtsp_media_sinit(media)) ret = media->teardown(media, msg, 0);
+    if (media->teardown && !rtsp_media_sinit(media)) {
+        ret = media->teardown(media, msg, 0);
+    } else {
+        if (media->remove) {
+            media->remove(media, msg, 0);
+        }
+    }
+
     media->state = RTSP_STATE_INIT;
     return ret;
 }

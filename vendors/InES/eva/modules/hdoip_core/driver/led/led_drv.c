@@ -13,38 +13,24 @@ int led_drv_tgl(t_led* handle, uint32_t mask)
     uint8_t old_val;
     handle->led_set = ((handle->led_set & mask) ^ mask) | (handle->led_set & ~mask);
 
-    if (handle->device_id == BDT_ID_HDMI_BOARD) {
-        if(LED_BOARD_ID == BOARD_ID){   //led-board detected use board LED I2C address
-            if (mask & LED_HDMI_RNG) {
-                old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
-                i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_HDMI_MASK) | ~(handle->led_set & LED_HDMI_MASK));
-            }
+    if (LED_BOARD_ID == BOARD_ID) { 
+        if (mask & LED_BOARD_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
+            i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_BOARD_MASK) | ~((handle->led_set >> LED_BOARD_BIT_SHIFT) & LED_BOARD_MASK));
         }
-        else {
+    } else {
+        if (handle->device_id == BDT_ID_HDMI_BOARD) {
             if (mask & LED_HDMI_RNG) {
                 old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_HDMI_ADDR);
                 i2c_drv_write(handle->p_vid_i2c, LED_I2C_HDMI_ADDR, (old_val & ~LED_HDMI_MASK) | ~(handle->led_set & LED_HDMI_MASK));
             }
         }
-    }
-
-    if (handle->device_id == BDT_ID_SDI8_BOARD) {
-        if (mask & LED_SDI_IN_RNG) {
-            if (LED_BOARD_ID == BOARD_ID) {
-                old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
-                i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_SDI_IN_MASK) | (~(handle->led_set >> LED_SDI_IN_BIT_SHIFT) & LED_SDI_IN_MASK));
-            }
-            else {
+        if (handle->device_id == BDT_ID_SDI8_BOARD) {
+            if (mask & LED_SDI_IN_RNG) {
                 old_val = io_exp_read_rx(handle->p_vid_i2c, IO_RX_OUT0);
                 io_exp_write_rx(handle->p_vid_i2c, IO_RX_OUT0, (old_val & ~LED_SDI_IN_MASK) | (~(handle->led_set >> LED_SDI_IN_BIT_SHIFT) & LED_SDI_IN_MASK));
             }
-        }
-        if (mask & LED_SDI_OUT_RNG) {
-            if(LED_BOARD_ID == BOARD_ID){   //led-board detected use board LED I2C address
-                old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
-                i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_SDI_OUT_MASK) | (~(handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_OUT_MASK));
-            }
-            else {  
+            if (mask & LED_SDI_OUT_RNG) {
                 old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR);
                 i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_OUT_MASK) | (~(handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_OUT_MASK));
             }
@@ -66,38 +52,24 @@ int led_drv_clr(t_led* handle, uint32_t mask)
     uint32_t update = (handle->led_set & mask);
     handle->led_set &= ~mask;
 
-    if (handle->device_id == BDT_ID_HDMI_BOARD) {
-        if(LED_BOARD_ID == BOARD_ID){   //led-board detected use board LED I2C address
-            if (update & LED_HDMI_RNG) {
-                old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
-                i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_HDMI_MASK) | ~(handle->led_set & LED_HDMI_MASK));
-            }
+    if (LED_BOARD_ID == BOARD_ID) { 
+        if (mask & LED_BOARD_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
+            i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_BOARD_MASK) | ~((handle->led_set >> LED_BOARD_BIT_SHIFT) & LED_BOARD_MASK));
         }
-        else {
+    } else {
+        if (handle->device_id == BDT_ID_HDMI_BOARD) {
             if (update & LED_HDMI_RNG) {
                 old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_HDMI_ADDR);
                 i2c_drv_write(handle->p_vid_i2c, LED_I2C_HDMI_ADDR, (old_val & ~LED_HDMI_MASK) | ~(handle->led_set & LED_HDMI_MASK));
             }
         }
-    }
-
-    if (handle->device_id == BDT_ID_SDI8_BOARD) {
-        if (mask & LED_SDI_IN_RNG) {
-            if (LED_BOARD_ID == BOARD_ID) {
-                old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
-                i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_SDI_IN_MASK) | (~(handle->led_set >> LED_SDI_IN_BIT_SHIFT) & LED_SDI_IN_MASK));
-            }
-            else {
+        if (handle->device_id == BDT_ID_SDI8_BOARD) {
+            if (mask & LED_SDI_IN_RNG) {
                 old_val = io_exp_read_rx(handle->p_vid_i2c, IO_RX_OUT0);
                 io_exp_write_rx(handle->p_vid_i2c, IO_RX_OUT0, (old_val & ~LED_SDI_IN_MASK) | (~(handle->led_set >> LED_SDI_IN_BIT_SHIFT) & LED_SDI_IN_MASK));
             }
-        }
-        if (mask & LED_SDI_OUT_RNG) {
-            if(LED_BOARD_ID == BOARD_ID){   //led-board detected use board LED I2C address
-                old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
-                i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_SDI_OUT_MASK) | (~(handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_OUT_MASK));
-            }
-            else {
+            if (mask & LED_SDI_OUT_RNG) {
                 old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR);
                 i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_OUT_MASK) | (~(handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_OUT_MASK));
             }
@@ -119,38 +91,24 @@ int led_drv_set(t_led* handle, uint32_t mask)
     uint32_t update = (handle->led_set | mask) - handle->led_set;
     handle->led_set |= mask;
 
-    if (handle->device_id == BDT_ID_HDMI_BOARD) {
-        if(LED_BOARD_ID == BOARD_ID){   //led-board detected use board LED I2C address
-            if(update & LED_HDMI_RNG) {
-                old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
-                i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_HDMI_MASK) | ~(handle->led_set & LED_HDMI_MASK));
-            }
+    if (LED_BOARD_ID == BOARD_ID) { 
+        if (mask & LED_BOARD_RNG) {
+            old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
+            i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_BOARD_MASK) | ~((handle->led_set >> LED_BOARD_BIT_SHIFT) & LED_BOARD_MASK));
         }
-        else {
+    } else {
+        if (handle->device_id == BDT_ID_HDMI_BOARD) {
             if(update & LED_HDMI_RNG) {
                 old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_HDMI_ADDR);
                 i2c_drv_write(handle->p_vid_i2c, LED_I2C_HDMI_ADDR, (old_val & ~LED_HDMI_MASK) | ~(handle->led_set & LED_HDMI_MASK));
             }
         }
-    }
-
-    if (handle->device_id == BDT_ID_SDI8_BOARD) {
-        if (mask & LED_SDI_IN_RNG) {
-            if (LED_BOARD_ID == BOARD_ID) {
-                old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
-                i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_SDI_IN_MASK) | (~(handle->led_set >> LED_SDI_IN_BIT_SHIFT) & LED_SDI_IN_MASK));
-            }
-            else {
+        if (handle->device_id == BDT_ID_SDI8_BOARD) {
+            if (mask & LED_SDI_IN_RNG) {
                 old_val = io_exp_read_rx(handle->p_vid_i2c, IO_RX_OUT0);
                 io_exp_write_rx(handle->p_vid_i2c, IO_RX_OUT0, (old_val & ~LED_SDI_IN_MASK) | (~(handle->led_set >> LED_SDI_IN_BIT_SHIFT) & LED_SDI_IN_MASK));
             }
-        }
-        if (mask & LED_SDI_OUT_RNG) {
-            if(LED_BOARD_ID == BOARD_ID){   //led-board detected use board LED I2C address
-                old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_BOARD_ADDR);
-                i2c_drv_write(handle->p_vid_i2c, LED_I2C_BOARD_ADDR, (old_val & ~LED_SDI_OUT_MASK) | (~(handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_OUT_MASK));
-            }
-            else {
+            if (mask & LED_SDI_OUT_RNG) {
                 old_val = i2c_drv_read(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR);
                 i2c_drv_write(handle->p_vid_i2c, LED_I2C_SDI_OUT_ADDR, (old_val & ~LED_SDI_OUT_MASK) | (~(handle->led_set >> LED_SDI_OUT_BIT_SHIFT) & LED_SDI_OUT_MASK));
             }
@@ -181,7 +139,7 @@ int led_drv_init(t_led* handle, t_i2c* p_vid_i2c, t_i2c* p_aud_i2c, void* p_led,
     handle->clr_mask        = 0;
     handle->device_id       = bdt_return_video_device(handle_bdt);
 
-    led_drv_set_status(handle, FIRMWARE_START);
+    led_drv_set_status(handle, FIRMWARE_START, false);
 
     return SUCCESS;
 }
@@ -273,177 +231,273 @@ void led_drv_control_set(t_led* handle, uint32_t led, uint32_t status)
  * @param instruction   instruction code
  * @return nothing
  */
-void led_drv_set_status(t_led* handle, uint32_t instruction)
+void led_drv_set_status(t_led* handle, uint32_t instruction, bool vrb)
 {
     switch (instruction){
 
         /* Main-Board */
-        case ETHERNET_ACTIVE                :   led_drv_control_set(handle, LED_ETH_STATUS,      LED_ON);
-                                                led_drv_control_set(handle, LED_POWER_GREEN,     LED_FLASHING_1S);
+        case ETHERNET_ACTIVE                :   led_drv_control_set(handle, LED_ETH_STATUS,         LED_ON);
+                                                led_drv_control_set(handle, LED_POWER_GREEN,        LED_FLASHING_1S);
                                                 break;
 
-        case ETHERNET_INACTIVE              :   led_drv_control_set(handle, LED_ETH_STATUS,      LED_OFF);
-                                                led_drv_control_set(handle, LED_POWER_GREEN,     LED_FLASHING_3S);
+        case ETHERNET_INACTIVE              :   led_drv_control_set(handle, LED_ETH_STATUS,         LED_OFF);
+                                                led_drv_control_set(handle, LED_POWER_GREEN,        LED_FLASHING_3S);
                                                 break;
 
-        case NO_STREAM_ACTIVE               :   led_drv_control_set(handle, LED_POWER_GREEN,     LED_FLASHING_1S);
+        case NO_STREAM_ACTIVE               :   led_drv_control_set(handle, LED_POWER_GREEN,        LED_FLASHING_1S);
                                                 break;
 
-        case STREAM_ACTIVE                  :   led_drv_control_set(handle, LED_POWER_GREEN,     LED_ON);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
+        case STREAM_ACTIVE                  :   led_drv_control_set(handle, LED_POWER_GREEN,        LED_ON);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
                                                 break;
 
         /* VIDEO-Board */
-        case DVI_IN_CONNECTED_NO_AUDIO      :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_FLASHING_3S);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
+        case DVI_IN_CONNECTED_NO_AUDIO      :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,      LED_FLASHING_3S);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_OFF);
+                                                if (!vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_FLASHING_3S);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                }
                                                 break;
 
-        case DVI_IN_CONNECTED_WITH_AUDIO    :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_ON);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
+        case DVI_IN_CONNECTED_WITH_AUDIO    :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,      LED_ON);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_OFF);
+                                                if (!vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_ON);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                }
                                                 break;
 
-        case DVI_IN_DISCONNECTED_VRB        :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
+        case DVI_IN_DISCONNECTED_VRB        :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,      LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_OFF);
+                                                if (!vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                }
                                                 break;
 
-        case DVI_IN_DISCONNECTED_VTB        :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_ON);
+        case DVI_IN_DISCONNECTED_VTB        :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,      LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_ON);
+                                                if (!vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_ON);
+                                                }
                                                 break;
 
-        case DVI_OUT_CONNECTED_NO_AUDIO     :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_FLASHING_3S);
-                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
+        case DVI_OUT_CONNECTED_NO_AUDIO     :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,     LED_FLASHING_3S);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_OFF);
+                                                if (vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_FLASHING_3S);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                }
                                                 break;
 
-        case DVI_OUT_CONNECTED_WITH_AUDIO   :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_ON);
-                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
+        case DVI_OUT_CONNECTED_WITH_AUDIO   :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,     LED_ON);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_OFF);
+                                                if (vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_ON);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                }
                                                 break;
 
-        case DVI_OUT_DISCONNECTED_VRB       :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_ON);
+        case DVI_OUT_DISCONNECTED_VRB       :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,     LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_ON);
+                                                if (vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_ON);
+                                                }
                                                 break;
 
-        case DVI_OUT_DISCONNECTED_VTB       :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
-                                                break;
-
-
-        case STREAM_ERROR_HDMI_IN           :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_ON);
-                                                break;
-
-        case STREAM_ERROR_HDMI_OUT          :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_ON);
-                                                break;
-
-        case CONFIGURE_VRB                  :   led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_ON);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_OFF);
+        case DVI_OUT_DISCONNECTED_VTB       :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,     LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_OFF);
+                                                if (vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                }
                                                 break;
 
 
-        case CONFIGURE_VTB                  :   led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_OFF);
+        case STREAM_ERROR_HDMI_IN           :   led_drv_control_set(handle, LED_HDMI_IN_GREEN,      LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_ON);
+                                                if (!vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_ON);
+                                                }
+                                                break;
+
+        case STREAM_ERROR_HDMI_OUT          :   led_drv_control_set(handle, LED_HDMI_OUT_GREEN,     LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_ON);
+                                                if (vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_ON);
+                                                }
+                                                break;
+
+        case CONFIGURE_VRB                  :   led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_ON);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,     LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,     LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_IN_RED,         LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_ON);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
+                                                break;
+
+        case CONFIGURE_VTB                  :   led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_IN_RED,         LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,       LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,     LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_ON);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
                                                 break;
 
         /* Mixed */
-        case FIRMWARE_START                 :   led_drv_control_set(handle, LED_BOOT,            LED_ON);
-                                                led_drv_control_set(handle, LED_ETH_STATUS,      LED_OFF);
-                                                led_drv_control_set(handle, LED_POWER_GREEN,     LED_FLASHING_3S);
-                                                led_drv_control_set(handle, LED_POWER_RED,       LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_IN_GREEN,   LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_OUT_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_OFF);
+        case FIRMWARE_START                 :   led_drv_control_set(handle, LED_BOOT,               LED_ON);
+                                                led_drv_control_set(handle, LED_ETH_STATUS,         LED_OFF);
+                                                led_drv_control_set(handle, LED_POWER_GREEN,        LED_FLASHING_3S);
+                                                led_drv_control_set(handle, LED_POWER_RED,          LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_GREEN,      LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_GREEN,     LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_IN_RED,         LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,     LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,     LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,     LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
                                                 break;
 
         case IDENTIFICATION_ON              :   
-                                                led_drv_control_set(handle, LED_POWER_RED,       LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_POWER_RED,       LED_FLASHING_1S);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_FLASHING_1S);
-                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_FLASHING_1S);
-                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_FLASHING_1S);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_FLASHING_1S);
-                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_FLASHING_1S);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_POWER_RED,          LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_IN_RED,         LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_POWER_RED,          LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_SDI_IN_RED,         LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,       LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_FLASHING_1S);
                                                 break;
 
-        case IDENTIFICATION_OFF             :   led_drv_control_set(handle, LED_POWER_RED,       LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_IN_RED,     LED_OFF);
-                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_IN_RED,      LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_OFF);
+        case IDENTIFICATION_OFF             :   led_drv_control_set(handle, LED_POWER_RED,          LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_OFF);
+                                                led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_IN_RED,         LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
                                                 break;
 
-
-
-        case SDI_IN_CONNECTED_NO_AUDIO      :   led_drv_control_set(handle, LED_SDI_IN_RED,      LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_FLASHING_3S);
+        case SDI_IN_CONNECTED_NO_AUDIO      :   led_drv_control_set(handle, LED_SDI_IN_RED,         LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,       LED_FLASHING_3S);
+                                                if (!vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_FLASHING_3S);
+                                                }
                                                 break;
 
-        case SDI_IN_CONNECTED_WITH_AUDIO    :   led_drv_control_set(handle, LED_SDI_IN_RED,      LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_ON);
+        case SDI_IN_CONNECTED_WITH_AUDIO    :   led_drv_control_set(handle, LED_SDI_IN_RED,         LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,       LED_ON);
+                                                if (!vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_ON);
+                                                }
                                                 break;
 
-        case SDI_IN_DISCONNECTED            :   led_drv_control_set(handle, LED_SDI_IN_RED,      LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,    LED_OFF);
+        case SDI_IN_DISCONNECTED            :   led_drv_control_set(handle, LED_SDI_IN_RED,         LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_IN_GREEN,       LED_OFF);
+                                                if (!vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_ON);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
+                                                }
                                                 break;
 
-        case SDI_LOOP_ON_NO_AUDIO           :   led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_FLASHING_3S);
+        case SDI_LOOP_ON_NO_AUDIO           :   led_drv_control_set(handle, LED_SDI_LOOP_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,     LED_FLASHING_3S);
                                                 break;
 
-        case SDI_LOOP_ON_WITH_AUDIO         :   led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_ON);
+        case SDI_LOOP_ON_WITH_AUDIO         :   led_drv_control_set(handle, LED_SDI_LOOP_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,     LED_ON);
                                                 break;
 
-        case SDI_LOOP_OFF                   :   led_drv_control_set(handle, LED_SDI_LOOP_RED,    LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,  LED_OFF);
+        case SDI_LOOP_OFF                   :   led_drv_control_set(handle, LED_SDI_LOOP_RED,       LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_LOOP_GREEN,     LED_OFF);
                                                 break;
 
-        case SDI_OUT_NO_AUDIO               :   led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,  LED_FLASHING_3S);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,  LED_FLASHING_3S);
+        case SDI_OUT_NO_AUDIO               :   led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,     LED_FLASHING_3S);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,     LED_FLASHING_3S);
+                                                if (vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_FLASHING_3S);
+                                                }
                                                 break;
 
-        case SDI_OUT_WITH_AUDIO             :   led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,  LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,  LED_ON);
+        case SDI_OUT_WITH_AUDIO             :   led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,     LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,     LED_ON);
+                                                if (vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_ON);
+                                                }
                                                 break;
 
-        case SDI_OUT_OFF                    :   led_drv_control_set(handle, LED_SDI_OUT1_RED,    LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,    LED_ON);
-                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,  LED_OFF);
-                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,  LED_OFF);
+        case SDI_OUT_OFF                    :   led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_ON);
+                                                led_drv_control_set(handle, LED_SDI_OUT1_GREEN,     LED_OFF);
+                                                led_drv_control_set(handle, LED_SDI_OUT2_GREEN,     LED_OFF);
+                                                if (vrb) {
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_ON);
+                                                    led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
+                                                }
+                                                break;
+
+        case AUDIO_AVAILABLE                :   led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
+                                                break;
+
+        case AUDIO_PLAYING                  :   led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_ON);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
+                                                break;
+
+        case AUDIO_ERROR                    :   led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_ON);
+                                                break;
+
+        case AUDIO_OFF                      :   led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
                                                 break;
 
         default                             :   break;

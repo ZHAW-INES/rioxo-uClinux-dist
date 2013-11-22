@@ -171,8 +171,9 @@ int vrb_audio_board_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connect
     struct in_addr a1; a1.s_addr = vrb.remote.address;
     osd_printf("Streaming unicast Audio %ikHz %i channel from %s\n", m->format.value, aud_chmap2cnt(m->format.value2), inet_ntoa(a1));
 
-    hoi_drv_set_led_status(SDI_OUT_WITH_AUDIO);
     media->result = RTSP_RESULT_PLAYING;
+
+    hoi_drv_set_led_status(AUDIO_PLAYING);
 
     return RTSP_SUCCESS;
 }
@@ -197,7 +198,7 @@ int vrb_audio_board_teardown(t_rtsp_media *media, t_rtsp_req_teardown UNUSED *m,
     vrb.alive_ping = 1;
     vrb.timeout = 0;
 
-    hoi_drv_set_led_status(SDI_OUT_OFF);
+    hoi_drv_set_led_status(AUDIO_AVAILABLE);
 
     return RTSP_SUCCESS;
 }
@@ -217,11 +218,13 @@ int vrb_audio_board_error(t_rtsp_media *media, intptr_t m, t_rtsp_connection* rs
             case 405:   media->result = RTSP_RESULT_SERVER_NO_VTB;
                         break;
             case 406:   media->result = RTSP_RESULT_SERVER_NO_VIDEO_IN;
+                        hoi_drv_set_led_status(AUDIO_ERROR);
                         break;
             case 408:   media->result = RTSP_RESULT_SERVER_HDCP_ERROR;
             			rtsp_client_set_teardown(client);
                         break;
             case 409:   media->result = RTSP_RESULT_SERVER_MULTICAST;
+                        hoi_drv_set_led_status(AUDIO_ERROR);
                         break;
             case RTSP_STATUS_INTERNAL_SERVER_ERROR:
             default:    media->result = RTSP_RESULT_SERVER_ERROR;
@@ -254,7 +257,8 @@ void vrb_audio_board_pause(t_rtsp_media *media)
         hdoipd_set_vtb_state(VTB_AUD_BOARD_IDLE);
     }
 
-    hoi_drv_set_led_status(SDI_OUT_OFF);
+    hoi_drv_set_led_status(AUDIO_AVAILABLE);
+
 }
 
 int vrb_audio_board_ext_pause(t_rtsp_media* media, void* UNUSED m, t_rtsp_connection* rsp)
@@ -338,6 +342,20 @@ int vrb_audio_board_event(t_rtsp_media *media, uint32_t event)
     return RTSP_SUCCESS;
 }
 
+int vrb_audio_board_remove(t_rtsp_media* media, void* UNUSED m, t_rtsp_connection* rsp)
+{
+    char *s;
+
+    s = reg_get("mode-media");
+    if (strstr(s, "audio_board")) {
+        hoi_drv_set_led_status(AUDIO_AVAILABLE);
+    } else {
+        hoi_drv_set_led_status(AUDIO_OFF);
+    }
+
+    return RTSP_SUCCESS;
+}
+
 t_rtsp_media vrb_audio_board = {
     .name = "audio_board",
     .owner = 0,
@@ -354,5 +372,6 @@ t_rtsp_media vrb_audio_board = {
     .ready = RTSP_SUCCESS,              //directely ready for streaming!
     .dosetup = (frtspm*)vrb_audio_board_dosetup,
     .doplay = (frtspm*)vrb_audio_board_doplay,
-    .event = (frtspe*)vrb_audio_board_event
+    .event = (frtspe*)vrb_audio_board_event,
+    .remove = (frtspm*)vrb_audio_board_remove
 };
