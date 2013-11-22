@@ -99,6 +99,7 @@ typedef struct rtsp_media {
     frtspm* doplay;             // local
     frtspm* doteardown;         // local
     frtspe* event;              // local (events)
+    frtspm* remove;				// local
 } t_rtsp_media;
 
 typedef struct {

@@ -61,6 +61,7 @@ int vtb_audio_board_setup(t_rtsp_media* media, t_rtsp_req_setup* m, t_rtsp_conne
     if (reg_test("multicast_en", "true")){
         report(" ? cant stream audio board when in multicast mode");
         rtsp_err_multicast(rsp);
+        hoi_drv_set_led_status(AUDIO_ERROR);
         return RTSP_SUCCESS;
     }
 
@@ -147,6 +148,7 @@ int vtb_audio_board_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_
         report(" ? require active audio input");
         rtsp_err_no_source(rsp);
         hdoipd_set_vtb_state(VTB_AUD_BOARD_IDLE);
+        hoi_drv_set_led_status(AUDIO_ERROR);
         return RTSP_REQUEST_ERROR;
     }
 
@@ -250,6 +252,8 @@ int vtb_audio_board_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_
     media->result = RTSP_RESULT_PLAYING;
     multicast_client_add(MEDIA_IS_AUDIO, (t_rtsp_server*)media->creator);
 
+    hoi_drv_set_led_status(AUDIO_PLAYING);
+
     return RTSP_SUCCESS;
 }
 
@@ -281,6 +285,8 @@ int vtb_audio_board_teardown(t_rtsp_media* media, t_rtsp_req_teardown UNUSED *m,
 
     multicast_client_remove(MEDIA_IS_AUDIO, server);
 
+    hoi_drv_set_led_status(AUDIO_AVAILABLE);
+
     return RTSP_SUCCESS;
 }
 
@@ -304,6 +310,7 @@ void vtb_audio_board_pause(t_rtsp_media *media)
     hoi_drv_eti(hdoipd.local.address, 0, cookie->remote.address, 0, 0, hdoipd.local.aud_port, reg_test("disable_rx_fec", "true"));
 
     //multicast_client_remove(MEDIA_IS_AUDIO, (t_rtsp_server*)media->creator);
+    hoi_drv_set_led_status(AUDIO_AVAILABLE);
 }
 
 int vtb_audio_board_ext_pause(t_rtsp_media* media, void* UNUSED m, t_rtsp_connection* rsp)

@@ -345,6 +345,8 @@ void led_drv_set_status(t_led* handle, uint32_t instruction, bool vrb)
                                                 led_drv_control_set(handle, LED_SDI_LOOP_RED,       LED_OFF);
                                                 led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
                                                 led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_ON);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
                                                 break;
 
         case CONFIGURE_VTB                  :   led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_OFF);
@@ -357,6 +359,8 @@ void led_drv_set_status(t_led* handle, uint32_t instruction, bool vrb)
                                                 led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_OFF);
                                                 led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
                                                 led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_ON);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
                                                 break;
 
         /* Mixed */
@@ -378,6 +382,8 @@ void led_drv_set_status(t_led* handle, uint32_t instruction, bool vrb)
                                                 led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_OFF);
                                                 led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
                                                 led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
                                                 break;
 
         case IDENTIFICATION_ON              :   
@@ -389,6 +395,7 @@ void led_drv_set_status(t_led* handle, uint32_t instruction, bool vrb)
                                                 led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_OFF);
                                                 led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_OFF);
                                                 led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
                                                 led_drv_control_set(handle, LED_POWER_RED,          LED_FLASHING_1S);
                                                 led_drv_control_set(handle, LED_HDMI_IN_RED,        LED_FLASHING_1S);
                                                 led_drv_control_set(handle, LED_HDMI_OUT_RED,       LED_FLASHING_1S);
@@ -397,6 +404,7 @@ void led_drv_set_status(t_led* handle, uint32_t instruction, bool vrb)
                                                 led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_FLASHING_1S);
                                                 led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_FLASHING_1S);
                                                 led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_FLASHING_1S);
                                                 break;
 
         case IDENTIFICATION_OFF             :   led_drv_control_set(handle, LED_POWER_RED,          LED_OFF);
@@ -407,6 +415,7 @@ void led_drv_set_status(t_led* handle, uint32_t instruction, bool vrb)
                                                 led_drv_control_set(handle, LED_SDI_OUT1_RED,       LED_OFF);
                                                 led_drv_control_set(handle, LED_SDI_OUT2_RED,       LED_OFF);
                                                 led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
                                                 break;
 
         case SDI_IN_CONNECTED_NO_AUDIO      :   led_drv_control_set(handle, LED_SDI_IN_RED,         LED_OFF);
@@ -473,6 +482,22 @@ void led_drv_set_status(t_led* handle, uint32_t instruction, bool vrb)
                                                     led_drv_control_set(handle, LED_BOARD_VIDEO_RED,    LED_ON);
                                                     led_drv_control_set(handle, LED_BOARD_VIDEO_GREEN,  LED_OFF);
                                                 }
+                                                break;
+
+        case AUDIO_AVAILABLE                :   led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_FLASHING_1S);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
+                                                break;
+
+        case AUDIO_PLAYING                  :   led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_ON);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
+                                                break;
+
+        case AUDIO_ERROR                    :   led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_ON);
+                                                break;
+
+        case AUDIO_OFF                      :   led_drv_control_set(handle, LED_BOARD_AUDIO_GREEN,  LED_OFF);
+                                                led_drv_control_set(handle, LED_BOARD_AUDIO_RED,    LED_OFF);
                                                 break;
 
         default                             :   break;

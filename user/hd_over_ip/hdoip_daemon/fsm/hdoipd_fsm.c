@@ -326,6 +326,20 @@ int hdoipd_goto_vrb()
     return 0;
 }
 
+void count_all_available_media(char UNUSED *key, char* value, int *count)
+{
+  t_rtsp_media *media;
+
+  if (value == NULL)
+    return;
+
+  media = (t_rtsp_media*)value;
+  if (media->name == NULL || strlen(media->name) == 0)
+    return;
+
+  (*count)++;
+}
+
 /* Activate Media
  *
  * activates a media client.
@@ -334,6 +348,7 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
 {
     int ret;
     char *uri;
+    int count;
 
     report(CHANGE "vrb_setup(%s)", media->name);
 
@@ -378,9 +393,16 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
                 rtsp_media_play(media);
             } else {
                 report(ERROR "hdoipd_vrb_setup() rtsp_media_setup failed (%d)", ret);
-                rtsp_client_close(hdoipd.client, true);
-                hdoipd.client = NULL;
-                return -1;
+                // do not close client if other medias are available
+                count = 0;
+                bstmap_traverse(hdoipd.client->media, count_all_available_media, &count);
+                if (count <= 1) {
+                    rtsp_client_close(hdoipd.client, true);
+                    hdoipd.client = NULL;
+                    return -1;
+                } else {
+                    return 0;
+                }
             }
         } else {
             report(ERROR "hdoipd_vrb_setup() rtsp_client_open failed");
@@ -1052,29 +1074,40 @@ bool hdoipd_init(int drv)
         default:                report("Video card detection failed");
     }
 
+    // activate red LED on used video-board connectors 
+    s = reg_get("mode-start");
+    if (strcmp(s, "vtb") == 0) {
+        hoi_drv_set_led_status(CONFIGURE_VTB);
+    } else if (strcmp(s, "vrb") == 0) {
+        hoi_drv_set_led_status(CONFIGURE_VRB);
+    }
+
 	// detect connected audio card
     hoi_drv_get_audio_device_id(&dev_id);
 
-    if(dev_id == BDT_ID_ANAUDIO_BOARD){
+    if (dev_id == BDT_ID_ANAUDIO_BOARD){
         report("Audio card detected");
         hdoipd.drivers |= DRV_AIC23B_ADC | DRV_AIC23B_DAC;
         hdoipd_set_rsc(RSC_AUDIO_BOARD_IN);
         hdoipd_set_rsc(RSC_AUDIO_BOARD_OUT);
         rtsp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN1_ON);
+
+        // change LED if audio board is available and activated
+        if (!strcmp(reg_get("mode-start"), "vrb")) {
+            s = reg_get("mode-media");
+
+            if (strstr(s, "audio_board")) {
+                hoi_drv_set_led_status(AUDIO_AVAILABLE);
+            }
+        } else {
+            hoi_drv_set_led_status(AUDIO_AVAILABLE);
+        }
     }
     else{
         report("No audio card detected");
         hdoipd_clr_rsc(RSC_AUDIO_BOARD_IN);
         hdoipd_clr_rsc(RSC_AUDIO_BOARD_OUT);
         rtsp_listener_event(&hdoipd.listener, EVENT_AUDIO_IN1_OFF);
-    }
-
-// activate red LED on used video-board connectors 
-    s = reg_get("mode-start");
-    if (strcmp(s, "vtb") == 0) {
-        hoi_drv_set_led_status(CONFIGURE_VTB);
-    } else if (strcmp(s, "vrb") == 0) {
-        hoi_drv_set_led_status(CONFIGURE_VRB);
     }
 
     hdoipd.auto_stream = reg_test("auto-stream", "true");
