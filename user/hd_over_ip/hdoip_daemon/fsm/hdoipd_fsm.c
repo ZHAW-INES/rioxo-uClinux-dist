@@ -522,7 +522,26 @@ void hdoipd_task(void)
     }
 }
 
+void check_available_media(char UNUSED *key, char* value, int *data)
+{
+    t_rtsp_media *media;
 
+    if (value == NULL) {
+        return;
+    }
+
+    media = (t_rtsp_media*)value;
+    if (media->name == NULL || strlen(media->name) == 0) {
+        return;
+    }
+
+    // if data = 1000, only audio from audio board is playing. if data < or > than 1000, there is no audio from audio board or more than audio from audio board.
+    if (!strcmp(vrb_audio_board.name, media->name)) {
+        (*data) += 1000;
+    } else {
+        (*data)++;
+    }
+}
 
 //------------------------------------------------------------------------------
 
@@ -537,8 +556,18 @@ void hdoipd_task(void)
  */
 void hdoipd_fsm_vrb(uint32_t event)
 {
+    int data = 0;
+
     switch (event) {
         case E_ADV9889_CABLE_ON:
+            bstmap_traverse(hdoipd.client->media, check_available_media, &data);    // check available medias if only audio board is streaming
+            if (data == 1000) {     // if only audio board is playing (data == 1000) -> restart to trying to start all other streams
+                hdoipd_force_ready();
+                if (!hdoipd_goto_vrb()) {
+		            hdoipd_set_state(HOID_VRB);
+                }
+            }
+
             // plug in the cable is a start point for the VRB to
             // work when video or embedded audio is desired ...
             if(hdoipd.auto_stream) {

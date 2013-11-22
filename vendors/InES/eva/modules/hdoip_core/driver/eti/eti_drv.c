@@ -96,7 +96,7 @@ int eti_drv_start_vid(t_eti* handle, bool fec_disable)
 {
     uint32_t tmp_ip;
     eti_set_vid_filter_mask(handle->ptr, ETI_VID_FILTER_MASK);
-printk("\n\n\n fec_disable: %x \n\n\n", fec_disable);
+
     if (fec_disable) {
         eti_set_vid_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
         eti_set_vid_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
