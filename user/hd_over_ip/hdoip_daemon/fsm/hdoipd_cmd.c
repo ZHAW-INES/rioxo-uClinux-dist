@@ -259,6 +259,7 @@ void hdoipd_free_buffer(t_hoic_cmd UNUSED *cmd)
 
     // we need free memory!!!
     system("killall snmpd");
+    system("killall dhcpc");
 
     report("free video and audio buffer\n");
 }

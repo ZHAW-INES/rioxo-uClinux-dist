@@ -582,7 +582,7 @@ void hdoipd_fsm_vrb(uint32_t event)
 
     switch (event) {
         case E_ADV9889_CABLE_ON:
-            if (!hdoipd.client) {
+            if (hdoipd.client) {
                 bstmap_traverse(hdoipd.client->media, check_available_media, &data);    // check available medias if only audio board is streaming
                 if (data == 1000) {     // if only audio board is playing (data == 1000) -> restart to trying to start all other streams
                     hdoipd_force_ready();
