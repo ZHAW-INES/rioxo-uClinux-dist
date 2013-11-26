@@ -668,6 +668,9 @@ int rtsp_client_setup(t_rtsp_client* client, t_rtsp_media* media, t_rtsp_transpo
         rmcr_setup(media, (void*)&buf);
     } else if (n == RTSP_RESPONSE_ERROR) {
         if (media->error) media->error(media, (void*)n, &client->con);
+        if (client->con.ecode == RTSP_STATUS_DESTINATION_UNREACHABLE) {
+            n = RTSP_UNREACHABLE;
+        }
     } else {
         perrno("internal failure (%d)", n);
     }

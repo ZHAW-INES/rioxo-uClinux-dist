@@ -399,7 +399,11 @@ int hdoipd_vrb_setup(t_rtsp_media* media, void UNUSED *d)
                 if (count <= 1) {
                     rtsp_client_close(hdoipd.client, true);
                     hdoipd.client = NULL;
-                    return -1;
+                    if (ret == RTSP_UNREACHABLE) {
+                        return -2;  // stop trying to connect further medias because there is no server
+                    } else {
+                        return -1;  // try other medias, there was an error just with that specific media
+                    }
                 } else {
                     return 0;
                 }
