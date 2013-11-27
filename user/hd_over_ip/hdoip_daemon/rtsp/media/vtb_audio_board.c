@@ -250,7 +250,6 @@ int vtb_audio_board_play(t_rtsp_media* media, t_rtsp_req_play UNUSED *m, t_rtsp_
     }
 
     media->result = RTSP_RESULT_PLAYING;
-    multicast_client_add(MEDIA_IS_AUDIO, (t_rtsp_server*)media->creator);
 
     hoi_drv_set_led_status(AUDIO_PLAYING);
 
@@ -283,8 +282,6 @@ int vtb_audio_board_teardown(t_rtsp_media* media, t_rtsp_req_teardown UNUSED *m,
 
     server->timeout.timeout = 0;
 
-    multicast_client_remove(MEDIA_IS_AUDIO, server);
-
     hoi_drv_set_led_status(AUDIO_AVAILABLE);
 
     return RTSP_SUCCESS;
@@ -309,7 +306,6 @@ void vtb_audio_board_pause(t_rtsp_media *media)
     }
     hoi_drv_eti(hdoipd.local.address, 0, cookie->remote.address, 0, 0, hdoipd.local.aud_port, reg_test("disable_rx_fec", "true"));
 
-    //multicast_client_remove(MEDIA_IS_AUDIO, (t_rtsp_server*)media->creator);
     hoi_drv_set_led_status(AUDIO_AVAILABLE);
 }
 
