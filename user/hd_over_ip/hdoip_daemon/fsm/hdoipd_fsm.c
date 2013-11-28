@@ -565,7 +565,11 @@ void check_available_media(char UNUSED *key, char* value, int *data)
     if (!strcmp(vrb_audio_board.name, media->name)) {
         (*data) += 1000;
     } else {
-        (*data)++;
+        if (!strcmp(usb_media.name, media->name)) {
+            (*data) += 1000;
+        } else {
+            (*data)++;
+        }
     }
 }
 
@@ -587,8 +591,8 @@ void hdoipd_fsm_vrb(uint32_t event)
     switch (event) {
         case E_ADV9889_CABLE_ON:
             if (hdoipd.client) {
-                bstmap_traverse(hdoipd.client->media, check_available_media, &data);    // check available medias if only audio board is streaming
-                if (data == 1000) {     // if only audio board is playing (data == 1000) -> restart to trying to start all other streams
+                bstmap_traverse(hdoipd.client->media, check_available_media, &data);    // check available medias if only audio board or usb is streaming
+                if ((data == 1000) || (data == 2000)) {     // if only audio board or/and usb is playing (data == 1000/2000) -> restart to trying to start all other streams
                     hdoipd_force_ready();
                     if (!hdoipd_goto_vrb()) {
 		                hdoipd_set_state(HOID_VRB);
