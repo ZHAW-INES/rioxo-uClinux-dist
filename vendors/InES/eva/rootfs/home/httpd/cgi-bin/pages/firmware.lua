@@ -8,7 +8,17 @@ local IMAGE_HDR_ID = "INES"
 local HW_VERSION_TAG = 1
 
 function rebooting(t)
-    hdoip.html.Header(t, label.page_name .. "Rebooting", script_path)
+    if (t.version_label == "rioxo") then
+        page_name = label.page_name_rioxo
+    elseif (t.version_label == "emcore") then
+        page_name = label.page_name_emcore
+    elseif (t.version_label == "black box") then
+        page_name = label.page_name_black_box
+    else
+        page_name = ""
+    end
+
+    hdoip.html.Header(t, page_name .. "Rebooting", script_path)
     hdoip.html.Title("Firmware update")
     hdoip.html.Text("The firmware will update now and reboot after. This takes  3 .. 4 minutes")
     hdoip.html.Text("<br><b> do NOT turn off the device during this process</b>")
@@ -16,11 +26,21 @@ function rebooting(t)
 end
 
 function rebooting_load_bar(t, t_load, t_restart)
-    hdoip.html.Header(t, label.page_name .. "Rebooting", script_path)
+    if (t.version_label == "rioxo") then
+        page_name = label.page_name_rioxo
+    elseif (t.version_label == "emcore") then
+        page_name = label.page_name_emcore
+    elseif (t.version_label == "black box") then
+        page_name = label.page_name_black_box
+    else
+        page_name = ""
+    end
+
+    hdoip.html.Header(t, page_name .. "Rebooting", script_path)
     hdoip.html.Title("Firmware update")
     hdoip.html.Text("The firmware will update now and reboot after.")
     hdoip.html.Text("<br><b> do NOT turn off the device during this process</b>")
-    hdoip.html.Loadbar(t_load, t_restart)
+    hdoip.html.Loadbar(t_load, t_restart, 0)
     hdoip.html.Bottom(t)
 end
 
@@ -59,9 +79,11 @@ function show(t)
                             return
                         else
                             t.err = t.err .. "This file is not valid for this hardware version<br>\n"
+                            os.execute("/bin/busybox rm "..firmware_image)
                         end
                     else
                         t.err = t.err .. "This firmware image is too old<br>\n"
+                        os.execute("/bin/busybox rm "..firmware_image)
                     end
                 end
             end
@@ -74,7 +96,17 @@ function show(t)
 
     serial = hdoip.pipe.getParam(hdoip.pipe.REG_SERIAL)
 
-    hdoip.html.Header(t, label.page_name .. label.page_firmware, script_path)
+    if (t.version_label == "rioxo") then
+        page_name = label.page_name_rioxo
+    elseif (t.version_label == "emcore") then
+        page_name = label.page_name_emcore
+    elseif (t.version_label == "black box") then
+        page_name = label.page_name_black_box
+    else
+        page_name = ""
+    end
+
+    hdoip.html.Header(t, page_name .. label.page_firmware, script_path)
 
     if(t.fpga_svn ~= nil) then
         hdoip.html.Title(label.p_fw_act_firmware)
@@ -97,8 +129,22 @@ function show(t)
         hdoip.html.TableBottom()
     end
 
-    hdoip.html.Title(label.p_fw_upload)                                             
-    hdoip.html.UploadForm(t, script_path, "image_files", "*")                  
+    hdoip.html.Title(label.p_fw_upload)
+                 
+    if (t.upload_en ~= nil) then
+        hdoip.pipe.free_buffer()
+        hdoip.html.UploadForm(t, script_path, "image_files", "*")        
+    else
+        hdoip.html.FormHeader(script_path, main_form)
+        hdoip.html.TableHeader(2)
+        hdoip.html.Text(label.p_fw_select_file);                                     hdoip.html.TableInsElement(1)
+        hdoip.html.FormCheckbox("upload_en", 1, "", 0)                               hdoip.html.TableInsElement(1)
+        hdoip.html.TableBottom()
+        hdoip.html.TableHeader(1)
+        hdoip.html.Text(label.p_fw_note);                                            hdoip.html.TableInsElement(1)
+        hdoip.html.TableBottom()
+        hdoip.html.FormBottom(t)
+    end
 
     hdoip.html.Bottom(t)
 end

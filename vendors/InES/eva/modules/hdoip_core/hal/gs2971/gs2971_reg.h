@@ -543,7 +543,7 @@
 #define GS2971_B_ACSR3_4B_BYTE14_15       (0x277)
 #define GS2971_B_ACSR3_4B_BYTE16_17       (0x278)
 #define GS2971_B_ACSR3_4B_BYTE18_19       (0x279)
-#define GS2971_B_ACSR3_4B_BYTE20_12       (0x27A)
+#define GS2971_B_ACSR3_4B_BYTE20_21       (0x27A)
 #define GS2971_B_ACSR3_4B_BYTE22          (0x27B)
 
 #define GS2971_B_ACSR_BYTE_0              (0x280)

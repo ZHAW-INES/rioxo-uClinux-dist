@@ -18,6 +18,7 @@
 #define rtsp_err_no_source(x)       rtsp_response_error(x, 406, "No Input")
 #define rtsp_err_def_source(x)      rtsp_response_error(x, 407, "No Audio Input")
 #define rtsp_err_hdcp(x)            rtsp_response_error(x, 408, "HDCP error")
+#define rtsp_err_multicast(x)       rtsp_response_error(x, 409, "Audio board in multicast")
 
 void rtsp_response_line(t_rtsp_connection* msg, int code, char* reason);
 void rtsp_response_error(t_rtsp_connection* msg, int code, char* reason);
@@ -26,6 +27,7 @@ void rtsp_request_cseq(t_rtsp_connection* msg, int s);
 void rtsp_header_session(t_rtsp_connection* msg, char* s);
 void rtsp_header_content_length(t_rtsp_connection* msg, size_t length);
 void rtsp_header_timing(t_rtsp_connection* msg, t_video_timing* timing);
+void rtsp_header_traffic_shaping(t_rtsp_connection* msg, int traffic_shaping);
 void rtsp_header_rtp_format(t_rtsp_connection* msg, t_rtsp_rtp_format* p);
 void rtsp_header_usb(t_rtsp_connection* msg, char* mouse, char* keyboard, char* storage);
 void rtsp_eoh(t_rtsp_connection* msg);
@@ -44,7 +46,7 @@ void rtsp_request_usb_teardown(t_rtsp_connection* msg, char* uri, char* session)
 
 void rtsp_response_pause(t_rtsp_connection* msg, char* session);
 void rtsp_response_setup(t_rtsp_connection* msg, t_rtsp_transport* transport, char* session, char* media, t_rtsp_hdcp* hdcp);
-void rtsp_response_play(t_rtsp_connection* msg, char* session, t_rtsp_rtp_format* fmt, t_video_timing* timing);
+void rtsp_response_play(t_rtsp_connection* msg, char* session, t_rtsp_rtp_format* fmt, t_video_timing* timing, int traffic_shaping, uint16_t* audio_channel_status);
 void rtsp_response_teardown(t_rtsp_connection* msg);
 void rtsp_response_hdcp(t_rtsp_connection* msg, char* session, char* id, char* content);
 void rtsp_response_usb_setup(t_rtsp_connection* msg, t_rtsp_transport* transport, char* session);

@@ -35,6 +35,8 @@
 #define eto_set_config_reduce_fps_0_OFF(p)      HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_REDUCE_FPS_0)
 #define eto_set_config_reduce_fps_1_ON(p)       HOI_WR32(p, ETO_CONFIG_SET_REG, ETO_CONFIG_REDUCE_FPS_1)
 #define eto_set_config_reduce_fps_1_OFF(p)      HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_REDUCE_FPS_1)
+#define eto_set_config_traffic_shaping_en(p)    HOI_WR32(p, ETO_CONFIG_SET_REG, ETO_CONFIG_TRAFFIC_SHAPING)
+#define eto_set_config_traffic_shaping_dis(p)   HOI_WR32(p, ETO_CONFIG_CLR_REG, ETO_CONFIG_TRAFFIC_SHAPING)
 
 #define eto_clr_status_cpu_idle(p)              eto_clr_status_reg(p, ETO_STATUS_CPU_IDLE)
 #define eto_clr_status_vid_idle(p)              eto_clr_status_reg(p, ETO_STATUS_VID_IDLE)
@@ -70,6 +72,10 @@
 #define eto_set_prio_cpu_scale(p, v)            HOI_REG_LD((p), ETO_CPU_PRIORITY_REG, ETO_PRIO_SCALE_MASK, ((v)<<24))
 #define eto_set_prio_aud_scale(p, v)            HOI_REG_LD((p), ETO_AUD_PRIORITY_REG, ETO_PRIO_SCALE_MASK, ((v)<<24))
 #define eto_set_prio_vid_scale(p, v)            HOI_REG_LD((p), ETO_VID_PRIORITY_REG, ETO_PRIO_SCALE_MASK, ((v)<<24))
+
+#define eto_set_frame_period_10ns(p, v)         HOI_WR32((p), ETO_FRAME_PERIOD_10NS, (v))
+#define eto_set_tf_divider_10ns(p, v)           HOI_WR32((p), ETO_TF_DIVIDER, (v))
+#define eto_set_tf_multiplier_10ns(p, v)        HOI_WR32((p), ETO_TF_MULTIPLIER, (v))
 
 /* macros get*/
 #define eto_get_config_reg(p) 			        HOI_RD32((p), ETO_CONFIG_SET_REG)
@@ -117,7 +123,8 @@
 #define eto_get_aes_riv_1(p) 			        HOI_RD32((p), ETO_AES_RIV1_REG)
 
 #define eto_get_status_frame_err(p) 		    HOI_REG_TST(p, ETO_STATUS_REG, ETO_STATUS_FRAME_ERROR)
-#define eto_get_aud_packet_cnt(p) 		        HOI_RD32((p), ETO_AUD_PACKET_CNT_REG)
+#define eto_get_aud_emb_packet_cnt(p)           HOI_RD32((p), ETO_AUD_EMB_PACKET_CNT_REG)
+#define eto_get_aud_board_packet_cnt(p)         HOI_RD32((p), ETO_AUD_BOARD_PACKET_CNT_REG)
 #define eto_get_vid_packet_cnt(p) 		        HOI_RD32((p), ETO_VID_PACKET_CNT_REG)
 #define eto_get_cpu_packet_cnt(p) 		        HOI_RD32((p), ETO_CPU_PACKET_CNT_REG)
 #define eto_get_inv_packet_cnt(p) 		        HOI_RD32((p), ETO_INV_PACKET_CNT_REG)

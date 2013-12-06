@@ -12,7 +12,7 @@ local html_table_str = "<b>table error</b>"
 local html_table_backup = ""
 local html_table_col = 0
 local html_table_col_cnt = 0
- 
+
 function escape(str)
     str = string.gsub(str, "\n", "\r\n")
     str = string.gsub(str, "([^0-9a-zA-Z ])", function (c) return string.format("%%%02X", string.byte(c)) end)
@@ -106,41 +106,45 @@ function FormHidden(name, value)
     html_str = html_str .. "<input style=\"visibility:hidden\" name=\"" .. name .. "\" type=\"hidden\" value=\"" .. value .. "\">\n"
 end
 
-function FormPassword(name, value, size, disabled)
+function FormPassword(name, value, size, disable)
     if(value == nil) then
         value = ""
     end
 
-    if((disabled == 0) and (disabled ~= nil)) then
+    if((disable ~= nil) and (disable > 0))then
+        Text(value)
+    else
         html_str = html_str .. "<input class=\"inputbox\" name=\"" .. name .. "\" type=\"password\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
-    else
-        Text(value)
     end
 
 end
 
 
-function FormText(name, value, size, disabled)
+function FormText(name, value, size, disable)
     if(value == nil) then
         value = ""
     end
 
-    if((disabled == 0) and (disabled ~= nil)) then
-        html_str = html_str .. "<input class=\"inputbox\" name=\"" .. name .. "\" type=\"text\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
-    else
+    if((disable ~= nil) and (disable > 0))then
         Text(value)
+    else
+        html_str = html_str .. "<input class=\"inputbox\" name=\"" .. name .. "\" type=\"text\" size=\"" .. size .. "\" maxlength=\"" .. size .. "\" value=\"" .. value.."\">\n" 
     end
 
 end
 
-function FormRadioSingle(name, value, label, checked)
+function FormRadioSingle(name, value, label, checked, disable)
     if((checked ~= nil) and (checked > 0)) then
         checked = ' checked'
     else 
         checked = ''
     end
 
-    html_str = html_str .. "<input type=\"radio\" name=\"" .. name .. "\" value=\"" .. value .. "\"".. checked .. ">" .. label .. "\n"
+    if((disable ~= nil) and (disable > 0))then
+        html_str = html_str .. "<input type=\"radio\" name=\"" .. name .. "\" value=\"" .. value .. "\" disabled" .. checked .. ">" .. label .. "\n"
+    else
+        html_str = html_str .. "<input type=\"radio\" name=\"" .. name .. "\" value=\"" .. value .. "\"".. checked .. ">" .. label .. "\n"
+    end
 end
 
 function FormRadio(name, values, size, selected)
@@ -178,12 +182,20 @@ function FormIP(name, value0, value1, value2, value3, disable)
     end
 end
 
-function FormCheckbox(name, value, label, checked)
-    html_str = html_str .. "<input type=\"checkbox\" name=\""..name.."\" value=\""..value.."\""
+function FormCheckbox(name, value, label, checked, disable)
+    if((disable ~= nil) and (disable > 0))then
+        html_str = html_str .. "<input type=\"checkbox\" name=\""..name.."\" value=\""..value.."\" disabled"
+    else
+        html_str = html_str .. "<input type=\"checkbox\" name=\""..name.."\" value=\""..value.."\""
+    end
     if((checked ~= nil) and (checked > 0))then
         html_str = html_str .." checked"
     end
     html_str = html_str ..">"..label
+end
+
+function FormSlide(name, min, max, step,size , value)
+    html_str = html_str .. "<input type=\"range\" name=\""..name.."\" value=\""..value.."\" min=\""..min.."\" max=\""..max.."\" step=\""..step.."\" size=\""..size.."\">"
 end
 
 function OneButtonForm(t, script_path, value, button_label)
@@ -229,8 +241,8 @@ function FormBottom(t)
 end
 
 function Header(t, title, script_path, addon)
-    local menu_item_cnt = 9
-    local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_usb; [3] = label.tab_edid; [4] = label.tab_status; [5] = label.tab_firmware; [6] = label.tab_default; [7] = label.tab_settings; [8] = label.tab_test;}
+    local menu_item_cnt = 11
+    local menu_items = {[0] = label.tab_ethernet; [1] = label.tab_streaming; [2] = label.tab_audio; [3] = label.tab_usb; [4] = label.tab_edid; [5] = label.tab_fec; [6] = label.tab_status;  [7] = label.tab_firmware; [8] = label.tab_default; [9] = label.tab_settings; [10] = label.tab_test;}
     local dev_name = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_HOST_NAME)
     local dev_caption = hdoip.pipe.getParam(hdoip.pipe.REG_SYS_DEV_CAPTION)
 
@@ -250,8 +262,17 @@ function Header(t, title, script_path, addon)
     html_str = "<html>\n<head>\n".. t.cookie .."<title>" .. title .. "</title>\n" .. addon .. css .. "</head>\n<body>\n"
    
     html_str = html_str .. '<div id="wrapper">\n<div id="main">\n<div id="box">\n<div id="header">\n'
-    --html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.emcore.com"><img src="/img/emcore_logo.png" alt="emcore"></a></h1>\n'
-    html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.rioxo.ch"><img src="/img/rioxo_logo.png" alt="rioxo&reg;"></a></h1>\n'
+
+    if (t.version_label == "rioxo") then
+        html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.rioxo.ch"><img src="/img/rioxo_logo.png" alt="rioxo&reg;"></a></h1>\n'
+    elseif (t.version_label == "emcore") then
+        html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.emcore.com"><img src="/img/emcore_logo.png" alt="emcore"></a></h1>\n'
+    elseif (t.version_label == "black box") then
+        html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.blackbox.com"><img src="/img/blackbox_logo.png" alt="blackbox&reg;"></a></h1>\n'
+    else
+        html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"></h1>\n'
+    end
+
     html_str = html_str .. '<div id="mainmenu">\n<ul class=\"menu\">\n'
     
     if((t.mode_vrb) and (t.login))then
@@ -290,7 +311,7 @@ function Header(t, title, script_path, addon)
             menu_class = 'current'
         end
         -- show page test only on vrb
-        if((t.mode_vrb) or (i ~= 8)) then
+        if(((t.mode_vrb) or (i ~= 10)) and ((i ~= 2) or (hdoip.pipe.getParam(hdoip.pipe.REG_AUD_BOARD) ~= "none"))) then
             html_str = html_str .. '    <li id="'..menu_class..'"><a href="' .. script_path .. '?page=' .. i .. '"><span>' .. menu_items[i] .. '</span></a></li>\n'
         end
     end
@@ -312,7 +333,9 @@ function Bottom(t)
     print(html_str)
 end
 
-
+function redirect(url)
+    html_str = html_str .. "<meta http-equiv=\"refresh\" content=\"2; url=".. url .."\">\n" 
+end
 
 function TableHeader(col_size)
     html_table = 1
@@ -352,7 +375,11 @@ function UploadForm(t, script_path, label, accept)
     html_str = html_str .. "<input type=\"submit\" value=\"Upload\"></p>\n</form>\n"
 end
 
-function Loadbar(time, time_restart)
+function CarriageReturn()
+    html_str = html_str .. "<br>\n"
+end
+
+function Loadbar(time, time_restart, load_default_ip)
     html_str = html_str .. '<script type="text/javascript">'
     html_str = html_str .. "var count = 0;"
     html_str = html_str .. "var count_restart = 0;"
@@ -383,7 +410,17 @@ function Loadbar(time, time_restart)
     html_str = html_str .. "        }"
     html_str = html_str .. "        else"
     html_str = html_str .. "        {"
-    html_str = html_str .. '            location.href="index.lua";'
+
+    if (load_default_ip ~= nil) then
+        if (load_default_ip == 0) then
+            html_str = html_str .. '    location.href="index.lua";'
+        else
+            html_str = html_str .. '    location.href="http://192.168.1.200";'
+        end
+    else
+        html_str = html_str .. '        location.href="index.lua";'
+    end
+
     html_str = html_str .. "        }"
     html_str = html_str .. "    }"
     html_str = html_str .. "}"
@@ -399,6 +436,31 @@ function Loadbar(time, time_restart)
     html_str = html_str .. '<script type="text/javascript">'
     html_str = html_str .. "loadbar();"
     html_str = html_str .. "</script>"
+end
+
+function DropdownBox3(name, label1, label2, label3, selected)
+    if(tonumber(selected) ~= nil) then
+        selected = tonumber(selected)
+    end
+    html_str = html_str .. "<select name=\""..name.."\" size=1>\n"
+    html_str = html_str .. "<option value=0"
+    if((selected ~= nil) and (selected == 0))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label1.." </option>\n"
+
+    html_str = html_str .. "<option value=1"
+    if((selected ~= nil) and (selected == 1))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label2.." </option>\n"
+
+    html_str = html_str .. "<option value=2"
+    if((selected ~= nil) and (selected == 2))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label3.." </option>\n"
+    html_str = html_str .. "</select>\n"
 end
 
 function DropdownBox4(name, label1, label2, label3, label4, selected)
@@ -432,4 +494,75 @@ function DropdownBox4(name, label1, label2, label3, label4, selected)
     html_str = html_str .. "</select>\n"
 end
 
+function DropdownBox7(name, label1, label2, label3, label4, label5, label6, label7, selected)
+    if(tonumber(selected) ~= nil) then
+        selected = tonumber(selected)
+    end
+    html_str = html_str .. "<select name=\""..name.."\" size=1>\n"
+    html_str = html_str .. "<option value=0"
+    if((selected ~= nil) and (selected == 0))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label1.." </option>\n"
+
+    html_str = html_str .. "<option value=1"
+    if((selected ~= nil) and (selected == 1))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label2.." </option>\n"
+
+    html_str = html_str .. "<option value=2"
+    if((selected ~= nil) and (selected == 2))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label3.." </option>\n"
+
+    html_str = html_str .. "<option value=3"
+    if((selected ~= nil) and (selected == 3))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label4.." </option>\n"
+
+    html_str = html_str .. "<option value=4"
+    if((selected ~= nil) and (selected == 4))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label5.." </option>\n"
+
+    html_str = html_str .. "<option value=5"
+    if((selected ~= nil) and (selected == 5))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label6.." </option>\n"
+
+    html_str = html_str .. "<option value=6"
+    if((selected ~= nil) and (selected == 6))then
+        html_str = html_str .." selected"
+    end
+    html_str = html_str .. "> "..label7.." </option>\n"
+
+    html_str = html_str .. "</select>\n"
+end
+
+function DropdownBoxEdid(name, label_list, item_count, selected, disable)
+    if(tonumber(selected) ~= nil) then
+        selected = tonumber(selected)
+    end
+
+    if((disable ~= nil) and (disable > 0))then
+        Text(label_list[selected])
+    else
+        html_str = html_str .. "<select name=\""..name.."\" size=1>\n"
+
+        for i=0, (item_count-1), 1 do
+            html_str = html_str .. "<option value=" .. i
+            if((selected ~= nil) and (selected == i))then
+                html_str = html_str .." selected"
+            end
+            html_str = html_str .. "> "..label_list[i].." </option>\n"
+        end
+
+        html_str = html_str .. "</select>\n"
+    end
+end
 

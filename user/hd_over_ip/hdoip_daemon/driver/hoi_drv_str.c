@@ -37,13 +37,14 @@ const char* event_str(uint32_t e)
         case E_VSO_TIMESTAMP_ERROR: return "vso timestamp error";
         case E_VSO_ST_ACTIVE: return "vso stream active";
 
-        case E_ASI_RBF_ERROR: return "asi ringbuffer error";
         case E_ASI_NEW_FS: return "asi detected new audio sampling rate";
-    
-        case E_ASO_SIZE_ERROR: return "aso size error";
-        case E_ASO_FIFO_EMPTY: return "aso fifo underflow";
-        case E_ASO_FIFO_FULL: return "aso fifo overflow";
-        case E_ASO_RAM_FULL: return "aso ram full";
+
+        case E_ASO_EMB_TS_ERROR: return "audio_emb: aso timestamp error";
+        case E_ASO_BOARD_TS_ERROR: return "audio_board: aso timestamp error";
+        case E_ASO_EMB_FIFO_EMPTY: return "audio_emb: aso fifo underflow";
+        case E_ASO_BOARD_FIFO_EMPTY: return "audio_board: aso fifo underflow";
+        case E_ASO_EMB_FIFO_FULL: return "audio_emb: aso fifo overflow";
+        case E_ASO_BOARD_FIFO_FULL: return "audio_board: aso fifo overflow";
 
         case E_ETI_LINK_UP: return "Ethernet Input Link UP";
         case E_ETI_LINK_DOWN: return "Ethernet Input Link DOWN";
@@ -51,12 +52,17 @@ const char* event_str(uint32_t e)
         case E_ETO_LINK_DOWN: return "Ethernet Output Link DOWN";
         case E_ETO_VIDEO_ON: return "Ethernet Video stream out started";
         case E_ETO_VIDEO_OFF: return "Ethernet Video stream out stopped";
-        case E_ETO_AUDIO_ON: return "Ethernet Audio stream out started";
-        case E_ETO_AUDIO_OFF: return "Ethernet Audio stream out stopped";
+
+        case E_ETO_AUDIO_EMB_ON: return "Ethernet Audio embedded stream out started";
+        case E_ETO_AUDIO_EMB_OFF: return "Ethernet Audio embedded stream out stopped";
+        case E_ETO_AUDIO_BOARD_ON: return "Ethernet Audio board stream out started";
+        case E_ETO_AUDIO_BOARD_OFF: return "Ethernet Audio board stream out stopped";
         case E_ETI_VIDEO_ON: return "Ethernet Video stream in started";
         case E_ETI_VIDEO_OFF: return "Ethernet Video stream in stopped";
-        case E_ETI_AUDIO_ON: return "Ethernet Audio stream in started";
-        case E_ETI_AUDIO_OFF: return "Ethernet Audio stream in stopped";
+        case E_ETI_AUDIO_EMB_ON: return "Ethernet Audio embedded stream in started";
+        case E_ETI_AUDIO_EMB_OFF: return "Ethernet Audio embedded stream in stopped";
+        case E_ETI_AUDIO_BOARD_ON: return "Ethernet Audio board stream in started";
+        case E_ETI_AUDIO_BOARD_OFF: return "Ethernet Audio board stream in stopped";
 
         case E_VIO_JD0ENC_OOS: return "ADV212[0] out of sync";
         case E_VIO_JD1ENC_OOS: return "ADV212[1] out of sync";

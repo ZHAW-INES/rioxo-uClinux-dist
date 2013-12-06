@@ -24,7 +24,13 @@ static int box_sys_vrb_describe(t_rtsp_media *media, void *_data, t_rtsp_connect
     if (ret)
         return ret;
 
-    /* VRB offers no streams */
+    /* VRB offers no streams */     //wrong
+
+    
+    msgprintf(con, "m=audio 0 RTP/AVP 97\r\n");
+    msgprintf(con, "a=control:/device/1/audio/1/\r\n");
+
+
     rtsp_send(con);
 
     return 0;

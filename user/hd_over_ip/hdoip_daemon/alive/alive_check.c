@@ -12,7 +12,6 @@
 #include "box_sys.h"
 #include "edid.h"
 #include "edid_merge.h"
-// TODO: #include "factory_edid.h"
 #include "hdoipd.h"
 #include "hdoipd_fsm.h"
 #include "hoi_drv_user.h"

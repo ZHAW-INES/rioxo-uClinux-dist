@@ -26,26 +26,64 @@ int eti_drv_stop(t_eti* handle)
 	return ERR_ETI_SUCCESS;
 }
 
-/** Starts audio ringbuffer
+/** Starts audio embedded
  *
  * @param handle pointer to the eti handle
  * @return error code
  */
-int eti_drv_start_aud(t_eti* handle)
+int eti_drv_start_aud_emb(t_eti* handle, bool fec_disable)
 {
-    eti_set_aud_filter_mask(handle->ptr, ETI_AUD_FILTER_MASK);
+    eti_set_aud_emb_filter_mask(handle->ptr, ETI_AUD_EMB_FILTER_MASK);
+    if (fec_disable) {
+        eti_set_aud_emb_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+        eti_set_aud_emb_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    } else {
+        eti_set_aud_emb_fec_col_filter_mask(handle->ptr, ETI_AUD_EMB_FEC_C_FILTER_MASK);
+        eti_set_aud_emb_fec_row_filter_mask(handle->ptr, ETI_AUD_EMB_FEC_R_FILTER_MASK);
+    }
 
     return ERR_ETI_SUCCESS;
 }
 
-/** Stops audio ringbuffer
+/** Starts audio board
  *
  * @param handle pointer to the eti handle
  * @return error code
  */
-int eti_drv_stop_aud(t_eti* handle)
+int eti_drv_start_aud_board(t_eti* handle, bool fec_disable)
 {
-    eti_set_aud_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_aud_board_filter_mask(handle->ptr, ETI_AUD_BOARD_FILTER_MASK);
+    eti_set_aud_board_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_aud_board_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+
+    return ERR_ETI_SUCCESS;
+}
+
+/** Stops audio embedded
+ *
+ * @param handle pointer to the eti handle
+ * @return error code
+ */
+int eti_drv_stop_aud_emb(t_eti* handle)
+{
+    eti_set_aud_emb_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_aud_emb_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_aud_emb_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+
+    return ERR_ETI_SUCCESS;
+}
+
+/** Stops audio board
+ *
+ * @param handle pointer to the eti handle
+ * @return error code
+ */
+int eti_drv_stop_aud_board(t_eti* handle)
+{
+    eti_set_aud_board_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_aud_board_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_aud_board_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+
     return ERR_ETI_SUCCESS;
 }
 
@@ -54,17 +92,23 @@ int eti_drv_stop_aud(t_eti* handle)
  * @param handle pointer to the eti handle
  * @return error code
  */
-int eti_drv_start_vid(t_eti* handle)
+int eti_drv_start_vid(t_eti* handle, bool fec_disable)
 {
     uint32_t tmp_ip;
     eti_set_vid_filter_mask(handle->ptr, ETI_VID_FILTER_MASK);
-    
+
+    if (fec_disable) {
+        eti_set_vid_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+        eti_set_vid_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    } else {
+        eti_set_vid_fec_col_filter_mask(handle->ptr, ETI_VID_FEC_C_FILTER_MASK);
+        eti_set_vid_fec_row_filter_mask(handle->ptr, ETI_VID_FEC_R_FILTER_MASK);
+    }
+
     tmp_ip = eti_get_vid_src_ip(handle->ptr);
     REPORT(INFO, "[ETI] video ip : %pI4", &tmp_ip);
     tmp_ip = eti_get_aud_src_ip(handle->ptr);
     REPORT(INFO, "[ETI] video port : %d", ntohs(eti_get_vid_dst_udp_port(handle->ptr)));
-    
-    rbf_report_dsc(handle->ptr, ETI_VID_START_REG);
 
     return ERR_ETI_SUCCESS;
 }
@@ -77,6 +121,9 @@ int eti_drv_start_vid(t_eti* handle)
 int eti_drv_stop_vid(t_eti* handle)
 {
     eti_set_vid_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_vid_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+    eti_set_vid_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+
     return ERR_ETI_SUCCESS;
 }
 
@@ -153,40 +200,6 @@ int eti_drv_set_cpu_buf(t_eti* handle, void* start_ptr, size_t size)
     return ERR_ETI_SUCCESS;
 }
 
-/** Initialize audio ringbuffer
- *
- * @param handle pointer to the eti handle
- * @param start_ptr start address of the buffer
- * @param size size of the buffer
- * @return error code
- */
-int eti_drv_set_aud_buf(t_eti* handle, void* start_ptr, size_t size)
-{
-    t_rbf_dsc dsc;
-
-    rbf_dsc(&dsc, start_ptr, size);
-    eti_set_aud_desc(handle->ptr, &dsc);
-
-    return ERR_ETI_SUCCESS;
-}
-
-/** Initialize video ringbuffer
- *
- * @param handle pointer to the eti handle
- * @param start_ptr start address of the buffer
- * @param size size of the buffer
- * @return error code
- */
-int eti_drv_set_vid_buf(t_eti* handle, void* start_ptr, size_t size)
-{
-    t_rbf_dsc dsc;
-
-    rbf_dsc(&dsc, start_ptr, size);
-    eti_set_vid_desc(handle->ptr, &dsc);
-
-    return ERR_ETI_SUCCESS;
-}
-
 /** Set the audio & video filter parameters 
  *
  * @param handle pointer to the eti handle
@@ -197,13 +210,15 @@ int eti_drv_set_vid_buf(t_eti* handle, void* start_ptr, size_t size)
  * @param vid_port video udp port
  * @return error code
  */
-int eti_drv_set_filter(t_eti* handle, uint32_t dev_ip, uint32_t aud_src_ip, uint32_t vid_src_ip, uint16_t aud_port, uint16_t vid_port)
+int eti_drv_set_filter(t_eti* handle, uint32_t dev_ip, uint32_t aud_src_ip, uint32_t vid_src_ip, uint16_t aud_emb_port, uint16_t aud_board_port, uint16_t vid_port)
 {
     eti_set_device_ip(handle->ptr, dev_ip);
     if (vid_port) eti_set_vid_src_ip(handle->ptr, vid_src_ip);
     if (vid_port) eti_set_vid_dst_udp_port(handle->ptr, vid_port);
-    if (aud_port) eti_set_aud_src_ip(handle->ptr, aud_src_ip);
-    if (aud_port) eti_set_aud_dst_udp_port(handle->ptr, aud_port);
+    if (aud_emb_port)   eti_set_aud_src_ip(handle->ptr, aud_src_ip);
+    if (aud_emb_port)   eti_set_aud_emb_dst_udp_port(handle->ptr, aud_emb_port);
+    if (aud_board_port) eti_set_aud_src_ip(handle->ptr, aud_src_ip);
+    if (aud_board_port) eti_set_aud_board_dst_udp_port(handle->ptr, aud_board_port);
 
     return ERR_ETI_SUCCESS;
 }
@@ -272,8 +287,10 @@ int eti_drv_init(t_eti* handle, void* ptr)
     handle->link_state = 0;
     handle->vrx = 0;
     handle->arx = 0;
+    handle->abrx = 0;
     handle->vcnt = 0;
     handle->acnt = 0;
+    handle->abcnt = 0;
 
 	eti_drv_stop(handle);
     eti_clr_irq1(handle->ptr);
@@ -283,8 +300,18 @@ int eti_drv_init(t_eti* handle, void* ptr)
 	eti_set_config_video_enc_dis(handle->ptr);
 
 	eti_set_cpu_filter_mask(handle->ptr, ETI_CPU_FILTER_MASK);
-	eti_set_vid_filter_mask(handle->ptr, ETI_VID_FILTER_MASK);
-	eti_set_aud_filter_mask(handle->ptr, ETI_AUD_FILTER_MASK);
+
+
+	eti_set_vid_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_vid_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_vid_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_aud_emb_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_aud_emb_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_aud_emb_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_aud_board_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_aud_board_fec_col_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+	eti_set_aud_board_fec_row_filter_mask(handle->ptr, ETI_DIS_FILTER_MASK);
+
 
     REPORT(INFO, "config reg : %08x", eti_get_config_reg(handle->ptr));
     REPORT(INFO, "status reg : %08x", eti_get_status_reg(handle->ptr));
@@ -297,7 +324,8 @@ int eti_drv_handler(t_eti* handle, t_queue* event_queue)
 {
     uint32_t reg = eti_get_config_reg(handle->ptr) & ETI_CONFIG_FSM_EN;
     uint32_t vrx = eti_get_vid_packet_cnt(handle->ptr);
-    uint32_t arx = eti_get_aud_packet_cnt(handle->ptr);
+    uint32_t arx = eti_get_aud_emb_packet_cnt(handle->ptr);
+    uint32_t abrx = eti_get_aud_board_packet_cnt(handle->ptr);
 
     if(reg != handle->link_state) {
         if(reg > 0) {   /* link up */
@@ -326,15 +354,30 @@ int eti_drv_handler(t_eti* handle, t_queue* event_queue)
     if (arx != handle->arx) {
         handle->arx = arx;
         if (!handle->acnt) {
-            queue_put(event_queue, E_ETI_AUDIO_ON);
+            queue_put(event_queue, E_ETI_AUDIO_EMB_ON);
         }
         handle->acnt = ETI_LINK_COUNT;
     } else {
         if (handle->acnt == 1) {
-            queue_put(event_queue, E_ETI_AUDIO_OFF);
+            queue_put(event_queue, E_ETI_AUDIO_EMB_OFF);
         }
         if (handle->acnt) {
             handle->acnt--;
+        }
+    }
+
+    if (abrx != handle->abrx) {
+        handle->abrx = abrx;
+        if (!handle->abcnt) {
+            queue_put(event_queue, E_ETI_AUDIO_BOARD_ON);
+        }
+        handle->abcnt = ETI_LINK_COUNT;
+    } else {
+        if (handle->abcnt == 1) {
+            queue_put(event_queue, E_ETI_AUDIO_BOARD_OFF);
+        }
+        if (handle->abcnt) {
+            handle->abcnt--;
         }
     }
 

@@ -125,7 +125,7 @@ int vio_get_timing(void* p, t_video_timing* timing)
 
     // check if timing is valid 
     hz = vid_fps(&p_vt);
-    if ((HOI_RD16(p, VIO_OFF_TM_VA) < 100) || (HOI_RD16(p, VIO_OFF_TM_HA) < 100) || (hz < 20) || (hz > 85)) {
+    if ((p_vt.height < 100) || (p_vt.width < 100) || (hz < 20) || (hz > 85)) {
         REPORT(INFO, "vio_get_timing(): timing not valid (%iHz)", hz);
         return ERR_VIO_NO_INPUT;
     }

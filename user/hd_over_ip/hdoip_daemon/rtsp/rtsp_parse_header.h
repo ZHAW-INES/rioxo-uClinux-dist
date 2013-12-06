@@ -14,6 +14,8 @@
 
 int rtsp_parse_ip(char* str, uint32_t* p);
 int rtsp_parse_timing(char* line, t_video_timing* timing);
+int rtsp_parse_audio_channel_status(char* line, uint16_t* acs);
+int rtsp_parse_traffic_shaping(char* line, int* traffic_shaping);
 int rtsp_parse_rtp_format(char* line, t_rtsp_rtp_format* p);
 int rtsp_parse_uint32(char* line, uint32_t* p);
 int rtsp_parse_transport(char* line, t_rtsp_transport* p);

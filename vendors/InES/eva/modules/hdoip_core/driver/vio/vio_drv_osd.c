@@ -12,6 +12,17 @@ int vio_drv_osd_seek_(t_osd* p_osd, int32_t off)
 	return SUCCESS;
 }
 
+void vio_drv_osd_set_border(t_osd* p_osd)
+{
+    p_osd->x_border = 6;
+    p_osd->y_border = 2;
+}
+
+void vio_drv_osd_clr_border(t_osd* p_osd)
+{
+    p_osd->x_border = 0;
+    p_osd->y_border = 0;
+}
 
 int vio_drv_osd_write_(void *p, t_osd* p_osd, uint8_t* src, size_t size)
 {

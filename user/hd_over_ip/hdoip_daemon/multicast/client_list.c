@@ -14,11 +14,12 @@
 #include "edid_merge.h"
 
 
-int add_client_to_list(uint32_t client_ip, t_client_list* first_client, t_edid* edid)
+int add_client_to_list(uint32_t client_ip, char* sessionid, t_client_list* first_client, t_edid* edid)
 {
     t_client_list*   next_client = first_client;
     t_client_list*   last_client;
     t_client_list*   new_client;
+    char*            session;
 
     if ((new_client = (t_client_list*) malloc(sizeof(t_client_list))) == NULL)
         return MULTICAST_ERROR;
@@ -35,7 +36,7 @@ int add_client_to_list(uint32_t client_ip, t_client_list* first_client, t_edid* 
             new_client->next = next_client;
             new_client->ip = client_ip;
             new_client->edid = edid;
-
+            strcpy(new_client->sessionid, sessionid);
             return MULTICAST_SUCCESS;
         }
     }
@@ -45,6 +46,7 @@ int add_client_to_list(uint32_t client_ip, t_client_list* first_client, t_edid* 
     new_client->next = NULL;
     new_client->ip = client_ip;
     new_client->edid = edid;
+    strcpy(new_client->sessionid, sessionid);
 
     return MULTICAST_SUCCESS;
 }
@@ -62,7 +64,6 @@ int remove_client_from_list(uint32_t client_ip, t_client_list* first_client)
             break;
         }
     }
-
     // when it is in list -> delete item
     if (found_client) {
         client = first_client;
@@ -80,14 +81,17 @@ int remove_client_from_list(uint32_t client_ip, t_client_list* first_client)
     return MULTICAST_ERROR;
 }
 
-int search_client_in_list(uint32_t client_ip, t_client_list* first_client)
+int search_client_in_list(uint32_t client_ip, char* sessionid, t_client_list* first_client)
 {
     t_client_list*  client = first_client;
 
     while (client->next) {
         client = client->next;
-        if (client->ip == client_ip)
-            return CLIENT_IS_IN_LIST;
+        if (client->ip == client_ip){   
+            if (!strcmp(client->sessionid,sessionid) || !strcmp(sessionid,"")) {
+                return CLIENT_IS_IN_LIST;
+            }
+        }
     }
     return CLIENT_IS_NOT_IN_LIST;
 }
@@ -100,7 +104,7 @@ int report_client_list(t_client_list* first_client)
     while (client->next) {
         client_count++;
         client = client->next;
-        report("| Nr: %02i - %03i.%03i.%03i.%03i |", client_count, ((client->ip & 0x000000FF)>>0), ((client->ip & 0x0000FF00)>>8), ((client->ip & 0x00FF0000)>>16), ((client->ip & 0xFF000000)>>24));
+        report("| Nr: %02i - %03i.%03i.%03i.%03i , Session: %s|", client_count, ((client->ip & 0x000000FF)>>0), ((client->ip & 0x0000FF00)>>8), ((client->ip & 0x00FF0000)>>16), ((client->ip & 0xFF000000)>>24), client->sessionid);
         if (client_count == 10)
             break;
     }
@@ -119,7 +123,7 @@ int count_client_list(t_client_list* first_client)
     return client_count;
 }
 
-uint32_t get_first_client_and_remove_it_from_list(t_client_list* first_client)
+t_client_list* get_first_client_and_remove_it_from_list(t_client_list* first_client)
 {
     t_client_list*  client = first_client;
     uint32_t ip = 0;
@@ -130,7 +134,7 @@ uint32_t get_first_client_and_remove_it_from_list(t_client_list* first_client)
         remove_client_from_list(ip, first_client);
     }
 
-    return ip;
+    return client;
 }
 
 int merge_edid_list(t_client_list* first_client, t_edid* edid)

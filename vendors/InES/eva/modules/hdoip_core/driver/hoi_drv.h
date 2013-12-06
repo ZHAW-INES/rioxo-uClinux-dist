@@ -19,6 +19,7 @@
 #include "gs2971_drv.h"
 #include "gs2972_drv.h"
 #include "adv212_drv.h"
+#include "tlv320aic23b_drv.h"
 #include "led_drv.h"
 #include "eti_drv.h"
 #include "eto_drv.h"
@@ -36,6 +37,7 @@
 #include "bdt_drv.h"
 #include "spi_drv.h"
 #include "si598.h"
+#include "fec_rx_struct.h"
 
 #define HANDLER_TIMER_INTERVAL      (HZ/20)
 
@@ -52,7 +54,7 @@ typedef struct {
     void                *p_asi;
     void                *p_esi;
     void                *p_vso;
-    void                *p_aso;
+    void                *p_aso[AUD_STREAM_CNT];
     void                *p_adv212;
     void                *p_vrp;
     void                *p_tmr;
@@ -65,6 +67,11 @@ typedef struct {
     void                *p_spi_tx;
     void                *p_spi_rx;
     void                *p_si598;
+    void                *p_fec_tx;
+    void                *p_fec_rx;
+    void                *p_fec_ip_tx;
+    void                *p_fec_ip_rx;
+    void                *p_fec_memory_interface;
 
     t_i2c               i2c_tx;
     t_i2c               i2c_rx;
@@ -81,7 +88,7 @@ typedef struct {
     t_vsi               vsi;
     t_vso               vso;
     t_asi               asi;
-    t_aso               aso;
+    t_aso               aso[AUD_STREAM_CNT];
     t_eto               eto;
     t_eti               eti;
     //t_hdcp				hdcp;
@@ -89,9 +96,13 @@ typedef struct {
     t_adv7441a          adv7441a;
     t_gs2971            gs2971;
     t_gs2972            gs2972;
-    t_sync_means        sync;
+    t_sync_means        sync_slave_0;
+    t_sync_means        sync_slave_1;
     t_bdt               bdt;
     t_si598             si598;
+    t_fec_rx            fec_rx;
+    t_tlv320aic23b      aic23b_rx;
+    t_tlv320aic23b      aic23b_tx;
 
     t_queue             *event;
     wait_queue_head_t   eq;

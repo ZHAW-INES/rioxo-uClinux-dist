@@ -130,6 +130,27 @@ int rtsp_parse_timing(char* line, t_video_timing* timing)
     return RTSP_SUCCESS;
 }
 
+int rtsp_parse_traffic_shaping(char* line, int* traffic_shaping)
+{
+	char* token;
+
+	next(token, line);
+	*traffic_shaping = atoi(token);
+
+    return RTSP_SUCCESS;
+}
+
+int rtsp_parse_audio_channel_status(char* line, uint16_t* acs)
+{
+    uint8_t *audio_channel_status = (uint8_t*)acs;
+
+    for (int i=0;i<24;i++) {
+        audio_channel_status[i] = nextbyte(&line[2*i]);
+    }
+
+    return RTSP_SUCCESS;
+}
+
 int rtsp_parse_rtp_format(char* line, t_rtsp_rtp_format* p)
 {
     char* token;
@@ -397,12 +418,12 @@ static int rtsp_parse_header_common(const char *attrstr, const char *line,
                                     t_rtsp_header_common *common)
 {
     int ret = 0;
+    unsigned int i = 0;
 
     if (!common)
         return -1;
 
     if (strcmp(attrstr, "Session") == 0) {
-        int i = 0;
         strncpy(common->session, line, sizeof(common->session));
         /* If there is an optional timeout in the Session line, ignore it */
         for (i = 0; i < sizeof(common->session); i++) {
@@ -437,17 +458,20 @@ int rtsp_parse_header(t_rtsp_connection* con, const t_map_fnc attr[], void* base
             break;
 
         if ((attrstr = str_next_token(&line, "%:: ;"))) {
-            if (rtsp_parse_header_common(attrstr, line, common) == 0)
+            if (rtsp_parse_header_common(attrstr, line, common) == 0){
                 continue;   // got a common header
-
+            }
             if (base && attr) {
                 n = map_call_fnc(attr, attrstr, line, base);
-                if (n == RTSP_UNKNOWN_HEADER)
+                if (n == RTSP_UNKNOWN_HEADER){
                     report(" ? unknown header: %s", attrstr);
-                else if (n)
+                }
+                else if (n){
                     report(" ? parse header error: %s: %s", attrstr, line);
+                }
             }
-        } else {
+        } 
+        else {
             report(" ? defect header-line: %s", line);
         }
     }
@@ -514,7 +538,6 @@ int rtsp_parse_request(t_rtsp_connection* con, const t_map_set srv_method[], con
       if ((n = rtsp_receive(con, &line, 0, 0, &read)) != RTSP_SUCCESS) {
           return n;
       }
-
       // stop receiving lines as soon as we got a non-empty line
       // N.B. \r\n is considered an empty line
       if (line != NULL && *line != '\0')

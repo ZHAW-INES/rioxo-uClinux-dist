@@ -24,11 +24,14 @@
 
 typedef struct {
     uint32_t link_state;
-    void*    ptr;
+    void*       ptr;
+    int         traffic_shaping_enable;
     uint32_t    vtx;
     uint32_t    atx;
+    uint32_t    abtx;
     int         vcnt;
     int         acnt;
+    int         abcnt;
 } t_eto;
 
 #endif /* ETO_DRV_CFG_H_ */

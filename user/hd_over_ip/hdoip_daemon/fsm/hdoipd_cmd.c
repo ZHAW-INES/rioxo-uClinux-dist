@@ -8,21 +8,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "edid.h"
 #include "hdoipd.h"
+#include "hoi_drv_user.h"
+#include "hoi_image.h"
+#include "hoi_res.h"
+#include "hoi_cfg.h"
 #include "hdoipd_msg.h"
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
 #include "hdoipd_task.h"
-#include "hoi_cfg.h"
-#include "hoi_drv_user.h"
-#include "hoi_image.h"
-#include "hoi_res.h"
 #include "rtsp_client.h"
 #include "rtsp_error.h"
 #include "rtsp_parse_header.h"
 #include "update.h"
-#include "vrb_audio.h"
+#include "edid.h"
+#include "vrb_audio_emb.h"
+#include "vrb_audio_board.h"
 #include "vrb_video.h"
 
 void hdoipd_cmd_canvas(t_hoic_canvas* cmd)
@@ -133,12 +134,13 @@ void hdoipd_cmd_vrb_setup(t_hoic_load* cmd)
 void hdoipd_cmd_play(t_hoic_cmd UNUSED *cmd)
 {
     if (!hdoipd_goto_vrb())
+		hdoipd_set_state(HOID_VRB);
         hdoipd_start_vrb(true);
 }
 
 void hdoipd_cmd_pause(t_hoic_cmd UNUSED *cmd)
 {
-    t_rtsp_media* media = &vrb_audio;           // audio only for debug purposes
+    t_rtsp_media* media = &vrb_audio_board;           // audio only for debug purposes
     t_rtsp_client *client = media->creator;
     u_rtsp_header buf;
     int ret;
@@ -158,7 +160,7 @@ void hdoipd_cmd_pause(t_hoic_cmd UNUSED *cmd)
 
 void hdoipd_cmd_pause_play(t_hoic_cmd UNUSED *cmd)
 {
-    t_rtsp_media* media = &vrb_audio;           // audio only for debug purposes
+    t_rtsp_media* media = &vrb_audio_board;           // audio only for debug purposes
     t_rtsp_client *client = media->creator;
     t_rtsp_rtp_format fmt;
     char *s;
@@ -231,6 +233,37 @@ void hdoipd_remote_update(t_hoic_kvparam *cmd)
     }
 }
 
+void hdoipd_free_buffer(t_hoic_cmd UNUSED *cmd)
+{
+    // stop streaming, so that video and audio buffer can be freed
+    hdoipd_goto_ready();
+
+    // TODO: wait until ethernet input is stopped
+    //while ((hdoipd_rsc(RSC_EABI) || hdoipd_rsc(RSC_EAEI) || hdoipd_rsc(RSC_EVI)));
+
+    // free buffer
+    if (hdoipd.img_buff) {
+        free(hdoipd.img_buff);
+        hdoipd.img_buff = 0;
+    }
+
+    if (hdoipd.vid_tx_buff) {
+        free(hdoipd.vid_tx_buff);
+        hdoipd.vid_tx_buff = 0;
+    }
+
+    if (hdoipd.aud_tx_buff) {
+        free(hdoipd.aud_tx_buff);
+        hdoipd.aud_tx_buff = 0;
+    }
+
+    // we need free memory!!!
+    system("killall snmpd");
+    system("killall dhcpc");
+
+    report("free video and audio buffer\n");
+}
+
 void hdoipd_get_edid(t_hoic_kvparam *cmd)
 {
     t_edid edid;
@@ -271,17 +304,32 @@ void hdoipd_get_hdcp_state(t_hoic_gethdcpstate* cmd, int rsp)
 void hdoipd_factory_default(t_hoic_cmd UNUSED *cmd)
 {
     char mac[18];
+    char mac2[18];
     char serial[15];
     memcpy(mac, reg_get("system-mac"), sizeof(mac));        	/* MAC backup */
+    memcpy(mac2, reg_get("system-mac2"), sizeof(mac2));        	/* MAC2 backup */
     memcpy(serial, reg_get("serial-number"), sizeof(serial));	/* Serial number backup */
     hdoipd_set_default();
     reg_set("system-mac", mac);                           		/* MAC restore */
+    reg_set("system-mac2", mac2);                         		/* MAC2 restore */
     reg_set("serial-number", serial);                          	/* Serial number restore */
 }
 
 void hdoipd_debug(t_hoic_cmd UNUSED *cmd)
 {
     hoi_drv_debug();
+}
+
+void hdoipd_reload_edid(t_hoic_cmd UNUSED *cmd)
+{
+    int edid_length = 256;
+    uint8_t edid_table[edid_length];
+
+    if (reg_test("edid-mode", "default") || multicast_get_enabled()) {
+        if (!edid_read_file(&edid_table, "/mnt/config/edid.bin")) {
+            edid_write_function((t_edid *)edid_table, multicast_get_enabled() ? "unicast edid changed" : "unicast edid changed");
+        }
+    }
 }
 
 void hdoipd_read_ram(t_hoic_kvparam* cmd, int UNUSED rsp)
@@ -316,9 +364,11 @@ void hdoipd_request(uint32_t* cmd, int rsp)
         hdoipdreq(HOIC_STORE_CFG            , hdoipd_store_cfg);
         hdoipdreq(HOIC_PARAM_SET            , hdoipd_set_param);
         hdoipdreq(HOIC_REMOTE_UPDATE        , hdoipd_remote_update);
+        hdoipdreq(HOIC_FREE_BUFFER          , hdoipd_free_buffer);
         hdoipdreq(HOIC_GET_EDID             , hdoipd_get_edid);
         hdoipdreq(HOIC_FACTORY_DEFAULT      , hdoipd_factory_default);
         hdoipdreq(HOIC_DEBUG                , hdoipd_debug);
+        hdoipdreq(HOIC_RELOAD_EDID          , hdoipd_reload_edid);
         hdoipdreq_rsp(HOIC_READ_RAM         , hdoipd_read_ram);
         hdoipdreq_rsp(HOIC_GETVERSION       , hdoipd_get_version);
         hdoipdreq_rsp(HOIC_GETUSB           , hdoipd_get_usb);

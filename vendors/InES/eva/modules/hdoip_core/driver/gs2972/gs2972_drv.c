@@ -48,11 +48,14 @@ void gs2972_driver_init(t_gs2972 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     bdt_drv_clear_reset_1(video_mux_ptr);
 
     // enable all ioproc functions / disable conversion to SMPTE 372M
-    spi_write_reg_16(handle->p_spi, GS2972_IOPROC, IOPROC_RW_DEFAULT | IOPROC_RW_CONV_372);
+    spi_write_reg_16(handle->p_spi, GS2972_IOPROC, IOPROC_RW_DEFAULT | IOPROC_RW_CONV_372 | IOPROC_RW_SMPTE_325M_INS);
 
     // set drive strength to min
     spi_write_reg_16(handle->p_spi, GS2972_DRIVE_STRENGTH, DRIVE_STRENGTH_RW_4_MA);
     spi_write_reg_16(handle->p_spi, GS2972_DRIVE_STRENGTH2, DRIVE_STRENGTH2_RW_4_MA);
+
+    // set 24bit audio
+    spi_write_reg_16(handle->p_spi, GS2972_A_CFG_AUD, A_CFG_AUD_DEFAULT | A_CFG_AUD_24_BIT);
 }
 
 void gs2972_handler(t_gs2972 *handle, t_queue *event_queue)
@@ -97,3 +100,40 @@ void gs2972_debug(t_gs2972 *handle)
     printk("\n hlock: %i, vlock: %i, std_lock: %i, interlaced: %i, vid_std: %02x\n", (format & 0x01), (format & 0x02), (format & 0x04), (format & 0x10), ((format & 0x03E0)>>5));
 }
 
+
+
+void gs2972_set_audio_channel_status(t_gs2972 *handle, uint16_t *acs)
+{
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_1,  (acs[0] & 0xFF));
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_2,  ((acs[0]>>8) & 0xFF));
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_3,  acs[1]);
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_4,  acs[2]);
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_5,  acs[3]);
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_6,  acs[4]);
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_7,  acs[5]);
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_8,  acs[6]);
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_9,  acs[7]);
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_10, acs[8]);
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_11, acs[9]);
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_12, acs[10]);
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STATUS_REG_13, acs[11]);
+
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_1,  (acs[0] & 0xFF));
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_2,  ((acs[0]>>8) & 0xFF));
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_3,  acs[1]);
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_4,  acs[2]);
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_5,  acs[3]);
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_6,  acs[4]);
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_7,  acs[5]);
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_8,  acs[6]);
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_9,  acs[7]);
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_10, acs[8]);
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_11, acs[9]);
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_12, acs[10]);
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STATUS_REG_13, acs[11]);
+
+    // enables inserting of audio channel status
+    spi_write_reg_16(handle->p_spi, GS2972_A_CHANNEL_STAT_REGEN, 0x0001);
+    spi_write_reg_16(handle->p_spi, GS2972_B_CHANNEL_STAT_REGEN, 0x0001);
+
+}

@@ -16,6 +16,7 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
 {
     handle->p_spi = spi_ptr;
     handle->p_i2c = i2c_ptr;
+    handle->video_mux_ptr = video_mux_ptr;
     handle->video_status = false;
     handle->no_phase_info = false;
     handle->delay_queue_input = 0;
@@ -47,7 +48,7 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
     clr_io_exp_rx_pin(handle->p_i2c, RX_RC_BYP);
 
     // clear reset pin
-    bdt_drv_clear_reset_0(video_mux_ptr);
+    bdt_drv_clear_reset_0(handle->video_mux_ptr);
 
     // set slew rate to sd-video (for loopback)
     gs2971_driver_set_slew_rate(handle, 270);
@@ -63,17 +64,6 @@ void gs2971_driver_init(t_gs2971 *handle, void *spi_ptr, void *i2c_ptr, void *vi
 
     // invert hsync and vsync timing (low active)
     spi_write_reg_16(handle->p_spi, GS2971_TIM_861_CFG, TIM_861_CFG_HSYNC_INVERT | TIM_861_CFG_VSYNC_INVERT);
-
-    // ------AUDIO-CONFIG------
-
-    // output always I2S-audio 24bit (SD)
-    spi_write_reg_16(handle->p_spi, GS2971_A_CFG_OUTPUT, A_CFG_OUTPUT_BIT_LENGTH_24 | A_CFG_OUTPUT_MODE_I2S);
-
-    // output always I2S-audio 24bit (HD/3G)
-    spi_write_reg_16(handle->p_spi, GS2971_B_CFG_AUD, B_CFG_AUD_DEFAULT_CHANNEL_SELECT | B_CFG_AUD_MODE_I2S | B_CFG_AUD_BIT_LENGTH_24);
-
-    // unmute audio channels 1-8 (HD/3G)
-    spi_write_reg_16(handle->p_spi, GS2971_B_CH_MUTE, B_CH_MUTE_OFF);
 }
 
 void gs2971_hd_3g_audio_handler(t_gs2971 *handle)
@@ -132,6 +122,15 @@ void gs2971_handler(t_gs2971 *handle, t_queue *event_queue)
             handle->delay_queue_input++;
         }
         if (handle->delay_queue_input == (RECOGNIZE_INPUT_DELAY - 1)) {
+            // ------AUDIO-CONFIG------
+            // output always I2S-audio 24bit (SD)
+            spi_write_reg_16(handle->p_spi, GS2971_A_CFG_OUTPUT, A_CFG_OUTPUT_BIT_LENGTH_24 | A_CFG_OUTPUT_MODE_I2S);
+            // output always I2S-audio 24bit (HD/3G)
+            spi_write_reg_16(handle->p_spi, GS2971_B_CFG_AUD, B_CFG_AUD_DEFAULT_CHANNEL_SELECT | B_CFG_AUD_MODE_I2S | B_CFG_AUD_BIT_LENGTH_24);
+            // unmute audio channels 1-8 (HD/3G)
+            spi_write_reg_16(handle->p_spi, GS2971_B_CH_MUTE, B_CH_MUTE_OFF);
+
+            // send event to daemon
             queue_put(event_queue, E_GS2971_VIDEO_ON);
             // enable loopback
             gs2971_driver_configure_loopback(handle, LOOP_ON);
@@ -292,15 +291,77 @@ int gs2971_get_video_timing(t_gs2971 *handle, t_video_timing *measured_timing)
 int gs2971_get_audio_config(t_gs2971 *handle)
 {
     handle->aud_st.fs = 48000;
-    handle->aud_st.channel_cnt = 8;
+    handle->aud_st.ch_map = 0x00FF; /* constant 8 channels */
     handle->aud_st.bit_width = 24;
     handle->aud_st.mute= 0;
 
     REPORT(INFO, "[SDI IN] audio sampling rate has changed\n");
     REPORT(INFO, "[SDI IN] Audio fs = %d Hz", handle->aud_st.fs);
     REPORT(INFO, "[SDI IN] Audio width = %d Bit", handle->aud_st.bit_width);
-    REPORT(INFO, "[SDI IN] Audio count = %d", handle->aud_st.channel_cnt);
+    REPORT(INFO, "[SDI IN] Audio ch map = 0x%02X", handle->aud_st.ch_map);
     REPORT(INFO, "[SDI IN] Audio mute = %d\n", handle->aud_st.mute);
 
     return 1;
 }
+
+int gs2971_get_audio_channel_status(t_gs2971 *handle, uint16_t *acs)
+{
+    int timeout = 0;
+    int video_format = (spi_read_reg_16(handle->p_spi, GS2971_RASTER_STRUC_4) & RASTER_STRUC_4_RATE_SEL_READBACK_MASK) >> RASTER_STRUC_4_RATE_SEL_READBACK_SHIFT;
+
+    if ((video_format == RATE_SEL_READBACK_SD_1) || (video_format == RATE_SEL_READBACK_SD_2)) {
+        spi_write_reg_16(handle->p_spi, GS2971_A_DBN_ERR, 0x0001);
+
+        while ((spi_read_reg_16(handle->p_spi, GS2971_A_DBN_ERR) & 0x01) != 0x01) {
+            msleep(1);
+            if (timeout >= 100) {
+                break;
+            } else {
+                timeout++;
+            }
+        }
+
+        acs[0]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE0_1);
+        acs[1]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE2_3);
+        acs[2]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE4_5);
+        acs[3]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE6_7);
+        acs[4]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE8_9);
+        acs[5]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE10_11);
+        acs[6]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE12_13);
+        acs[7]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE14_15);
+        acs[8]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE16_17);
+        acs[9]  = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE18_19);
+        acs[10] = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE20_21);
+        acs[11] = spi_read_reg_16(handle->p_spi, GS2971_A_ACSR1_2A_BYTE22);
+        return 1;
+
+    } else if ((video_format == RATE_SEL_READBACK_HD) || (video_format == RATE_SEL_READBACK_3G)) {
+        spi_write_reg_16(handle->p_spi, GS2971_B_ACS_DET, 0x0001);
+
+        while ((spi_read_reg_16(handle->p_spi, GS2971_B_ACS_DET) & 0x01) != 0x01) {
+            msleep(1);
+            if (timeout >= 100) {
+                break;
+            } else {
+                timeout++;
+            }
+        }
+
+        acs[0]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE0_1);
+        acs[1]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE2_3);
+        acs[2]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE4_5);
+        acs[3]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE6_7);
+        acs[4]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE8_9);
+        acs[5]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE10_11);
+        acs[6]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE12_13);
+        acs[7]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE14_15);
+        acs[8]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE16_17);
+        acs[9]  = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE18_19);
+        acs[10] = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE20_21);
+        acs[11] = spi_read_reg_16(handle->p_spi, GS2971_B_ACSR1_2A_BYTE22);
+        return 1;
+    }
+
+    return 0;
+}
+

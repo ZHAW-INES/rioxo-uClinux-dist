@@ -21,6 +21,6 @@ void vsi_report_eth(t_vsi* handle)
 
     REPORT(INFO, "ctrl:   %8x", vsi_get_ctrl(handle->p_vsi, 0xffffffff));
     REPORT(INFO, "status: %8x", vsi_get_status(handle->p_vsi, 0xffffffff));
-    eth_report_params(&eth);
+    eth_report_params(&eth, 0);
 }
 

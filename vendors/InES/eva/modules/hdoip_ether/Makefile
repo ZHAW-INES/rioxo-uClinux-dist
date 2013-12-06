@@ -8,9 +8,14 @@ INCLUDE	+= ../hdoip_core/hal/ext_pio
 
 INCLUDE += ../hdoip_core/driver/queue
 FILES	+= ../hdoip_core/driver/queue/queue.o
-	
+
+INCLUDE += ../hdoip_core/driver/fec_tx
+
 INCLUDE += ../hdoip_core/hal/rbf
 FILES 	+= ../hdoip_core/hal/rbf/stdrbf.o
+
+INCLUDE += ../hdoip_core/hal/vid
+FILES   += ../hdoip_core/hal/vid/stdvid.o
 
 INCLUDE += ../hdoip_core/hal/eto
 FILES 	+= ../hdoip_core/hal/eto/eto_hal.o

@@ -357,7 +357,14 @@ int rmcr_teardown(t_rtsp_media* media, void* msg)
 {
     int ret = RTSP_SUCCESS;
 
-    if (media->teardown && !rtsp_media_sinit(media)) ret = media->teardown(media, msg, 0);
+    if (media->teardown && !rtsp_media_sinit(media)) {
+        ret = media->teardown(media, msg, 0);
+    } else {
+        if (media->remove) {
+            media->remove(media, msg, 0);
+        }
+    }
+
     media->state = RTSP_STATE_INIT;
     return ret;
 }
@@ -427,29 +434,6 @@ int rtsp_media_event(t_rtsp_media* media, uint32_t event)
     return ret;
 }
 
-static char *strtrim(char *p, char c)
-{
-    size_t len = strlen(p);
-    char *q;
-
-    while (*p && len--) {
-        if (*p == c)
-            p++;
-        else
-            break;
-    }
-
-    len = strlen(p);
-    while (*p && len) {
-        q = p + len - 1;
-        if (*q == c)
-            *q = 0;
-        else
-            break;
-        len = strlen(p);
-    }
-}
-
 int rtsp_handle_describe_generic(t_rtsp_media *media, t_rtsp_req_describe *data,
                                  t_rtsp_connection *con)
 {
@@ -458,7 +442,7 @@ int rtsp_handle_describe_generic(t_rtsp_media *media, t_rtsp_req_describe *data,
     time_t now;
     struct tm *nowp;
     char now_str[200];
-    char accept[200], *ptr;
+    char accept[200];
     size_t len;
 
     /* check if the client asked for Content-Type application/sdp, we don't
@@ -467,10 +451,6 @@ int rtsp_handle_describe_generic(t_rtsp_media *media, t_rtsp_req_describe *data,
 
     /* TODO: Split string by ',' and only accept application/sdp */
     strncpy(accept, data->accept, sizeof(accept));
-    ptr = accept;
-    ptr = strtrim(ptr, ' ');
-    ptr = strtrim(ptr, '\n');
-    ptr = strtrim(ptr, '\r');
 
     if (strcmp(accept, "application/sdp") != 0) {
         report(ERROR "Invalid Accept header: %s", data->accept);

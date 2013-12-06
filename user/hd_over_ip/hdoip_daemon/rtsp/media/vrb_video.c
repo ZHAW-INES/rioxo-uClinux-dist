@@ -106,7 +106,7 @@ int vrb_video_setup(t_rtsp_media *media, t_rtsp_rsp_setup* m, t_rtsp_connection*
 
 #ifdef ETI_PATH
     // setup ethernet input
-    hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0);
+    hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0, 0, reg_test("disable_rx_fec", "true"));
 #endif
 
     hdoipd_set_vtb_state(VTB_VID_IDLE);
@@ -144,8 +144,6 @@ int vrb_video_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UN
         }
 	}
 
-    media->result = RTSP_RESULT_PLAYING;
-
     osd_permanent(false);
 
     // join multicast group
@@ -154,29 +152,21 @@ int vrb_video_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UN
     }
 
     // set slave timer when not already synced
-    if (!hdoipd_rsc(RSC_SYNC)) {
-        hoi_drv_set_stime(m->format.rtptime+PROCESSING_DELAY_CORRECTION-21000); //TODO: set slave timer correctly
+    if (!hdoipd_rsc(RSC_VIDEO_SYNC)) {
+        hoi_drv_set_stime(0/*slave_nr*/, m->format.rtptime+PROCESSING_DELAY_CORRECTION-21000);
     }
-
-    if (m->format.compress == FORMAT_UNKNOWN)
-        m->format.compress = FORMAT_JPEG2000;
-    // the driver expects 0 = plain, > 0 = compressed
-    if (m->format.compress > 0)
-      m->format.compress -= 1;
 
     if (m->format.compress) {
         compress |= DRV_CODEC_JP2;
     }
     if (reg_test("mode-sync", "streamsync")) {
-        if (reg_test("sync-target", "video") || !hdoipd_rsc(RSC_SYNC)) {
             compress |= DRV_STREAM_SYNC;
             hdoipd_set_rsc(RSC_VIDEO_SYNC);
-        }
     }
 
 #ifdef VID_OUT_PATH
     // start vso (20 ms max. network delay)
-    hoi_drv_vso(compress, 0, &m->timing, m->format.value, reg_get_int("network-delay"));
+    hoi_drv_vso(compress, 0, &m->timing, m->format.value, reg_get_int("network-delay"), m->traffic_shaping);
 #endif
 
     hdoipd_set_vtb_state(VTB_VIDEO);
@@ -189,9 +179,10 @@ int vrb_video_play(t_rtsp_media *media, t_rtsp_rsp_play* m, t_rtsp_connection UN
     }
 
     struct in_addr a1; a1.s_addr = vrb.remote.address;
-    osd_printf("Streaming%sVideo %d x %d from %s\n", stream_type, m->timing.width, m->timing.height, inet_ntoa(a1));
+    osd_printf("Streaming%svideo %d x %d from %s\n", stream_type, m->timing.width, m->timing.height, inet_ntoa(a1));
 
     hoi_drv_set_led_status(SDI_OUT_NO_AUDIO);
+    media->result = RTSP_RESULT_PLAYING;
 
     return RTSP_SUCCESS;
 }
@@ -272,7 +263,7 @@ void vrb_video_pause(t_rtsp_media *media)
         hdoipd_hw_reset(DRV_RST_VID_OUT);
 #endif
 #ifdef ETI_PATH
-        hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0);
+        hoi_drv_eti(vrb.dst_ip, vrb.remote.address, 0, hdoipd.local.vid_port, 0, 0, reg_test("disable_rx_fec", "true"));
 #endif
 
         // disable HDCP on AD9889
@@ -285,7 +276,7 @@ void vrb_video_pause(t_rtsp_media *media)
     hoi_drv_set_led_status(SDI_OUT_OFF);
 }
 
-int vrb_video_ext_pause(t_rtsp_media* media, void *m UNUSED, t_rtsp_connection *rsp UNUSED)
+int vrb_video_ext_pause(t_rtsp_media *media, void *m UNUSED, t_rtsp_connection *rsp UNUSED)
 {
     vrb_video_pause(media);
 
@@ -394,6 +385,7 @@ int vrb_video_event(t_rtsp_media *media, uint32_t event)
 
     switch (event) {
         case EVENT_VIDEO_SINK_ON:
+            report(INFO "vrb video event: EVENT_VIDEO_SINK_ON");
             if (!rtsp_media_sinit(media))
                 return RTSP_WRONG_STATE;
 
@@ -408,6 +400,7 @@ int vrb_video_event(t_rtsp_media *media, uint32_t event)
             break;
 
         case EVENT_VIDEO_SINK_OFF:
+            report(INFO "vrb video event: EVENT_VIDEO_SINK_OFF");
             if (rtsp_media_sinit(media))
                 return RTSP_WRONG_STATE;
 

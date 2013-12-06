@@ -298,8 +298,7 @@ void usb_try_to_connect_device(t_usb_devices* old_values)
 
         media = &usb_media;
         usb_clone = (t_rtsp_usb*) malloc(sizeof(t_rtsp_usb));
-	if (!usb_clone)
-		return;
+	    if (!usb_clone) return;
 
         usb_clone->mouse[0] = '\0';
         usb_clone->keyboard[0] = '\0';

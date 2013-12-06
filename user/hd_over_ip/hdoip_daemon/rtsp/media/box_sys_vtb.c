@@ -12,6 +12,7 @@
 #include "hdoipd_osd.h"
 #include "multicast.h"
 #include "rtsp_server.h"
+#include "client_list.h"
 
 #define TICK_TIMEOUT_MULTICAST          (hdoipd.eth_timeout * 2)
 #define TICK_TIMEOUT_UNICAST            (hdoipd.eth_timeout)
@@ -33,8 +34,10 @@ static int box_sys_vtb_describe(t_rtsp_media *media, void *_data, t_rtsp_connect
     /* TODO: Implement dynamically */
     msgprintf(con, "m=video 0 RTP/AVP 96\r\n");
     msgprintf(con, "a=control:/video\r\n");
-    msgprintf(con, "m=audio 0 RTP/AVP 96\r\n");
-    msgprintf(con, "a=control:/audio\r\n");
+    msgprintf(con, "m=audio 0 RTP/AVP 97\r\n");
+    msgprintf(con, "a=control:/audio_emb\r\n");
+    msgprintf(con, "m=audio 0 RTP/AVP 97\r\n");
+    msgprintf(con, "a=control:/audio_board\r\n");
     msgprintf(con, "m=usb 0 TCP/USB over IP\r\n");
     msgprintf(con, "a=control:/usb\r\n");
 
@@ -47,9 +50,13 @@ int box_sys_vtb_get_parameter(t_rtsp_media *media, void *data, t_rtsp_connection
 {
   if (media == NULL || media->creator == NULL)
     return RTSP_NULL_POINTER;
-
-  ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
-  return box_sys_get_parameter(media, data, rsp);
+//TODO 
+//  if(multicast_check_client_list(rsp->address, NULL)==CLIENT_IS_IN_LIST){
+    ((t_rtsp_server*)media->creator)->timeout.timeout = 0;
+    return box_sys_get_parameter(media, data, rsp);
+//  }
+//    printf("\ntimeout received but no client\n");
+  return 0;
 }
 
 static int box_sys_vtb_event(t_rtsp_media *media, uint32_t event)
@@ -81,9 +88,12 @@ static int box_sys_vtb_event(t_rtsp_media *media, uint32_t event)
         // (will be executed after all events are processed)
         server->timeout.timeout = 0;
         rtsp_listener_add_kill(&hdoipd.listener, server);
-        hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
-        osd_permanent(true);
-        osd_printf("connection lost...\n");
+
+        if ((!multicast_get_enabled()) || (multicast_client_check_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+            hdoipd_clr_rsc(RSC_VIDEO_OUT | RSC_OSD);
+            osd_permanent(true);
+            osd_printf("connection lost...\n");
+        }
       }
       break;
     }

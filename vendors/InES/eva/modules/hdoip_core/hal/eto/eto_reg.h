@@ -41,10 +41,16 @@
 #define ETO_DMA_ALMOST_FULL_REG         120
 #define ETO_AES_COUNT_START_L_REG       128
 #define ETO_AES_COUNT_START_H_REG       132
-#define ETO_AUD_PACKET_CNT_REG          136
+#define ETO_AUD_EMB_PACKET_CNT_REG      136
 #define ETO_VID_PACKET_CNT_REG          140
 #define ETO_CPU_PACKET_CNT_REG          144
 #define ETO_INV_PACKET_CNT_REG          148
+#define ETO_FRAME_PERIOD_10NS           164
+
+#define ETO_TF_DIVIDER                  184
+#define ETO_TF_MULTIPLIER               188
+
+#define ETO_AUD_BOARD_PACKET_CNT_REG    208
 
 #define ETO_PRIORITY_CONFIG_REG         256
 #define ETO_CPU_PRIORITY_REG            260	
@@ -63,6 +69,7 @@
 #define ETO_CONFIG_SEND_AUD_FRAME_DISABLE   0x00000100
 #define ETO_CONFIG_REDUCE_FPS_0             0x00000400
 #define ETO_CONFIG_REDUCE_FPS_1             0x00000800
+#define ETO_CONFIG_TRAFFIC_SHAPING          0x00001000
 
 #define ETO_STATUS_FSM_IDLE                 0x00000002
 #define ETO_STATUS_FRAME_ERROR              0x00000040

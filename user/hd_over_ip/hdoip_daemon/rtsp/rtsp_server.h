@@ -44,6 +44,6 @@ int rtsp_server_thread(t_rtsp_server* handle);
 
 void rtsp_server_update_media(t_rtsp_media* media, uint32_t event);
 
-int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid);
+int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid, t_rtsp_media *media);
 
 #endif /* RTSP_SERVER_H_ */

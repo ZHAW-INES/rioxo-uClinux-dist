@@ -6,11 +6,21 @@ require("hdoip.pipe")
 REG_MODE_USB_LABEL = "usb_mode"
 
 function reboot(t)
-    hdoip.html.Header(t, label.page_name .. "Rebooting", script_path)
+    if (t.version_label == "rioxo") then
+        page_name = label.page_name_rioxo
+    elseif (t.version_label == "emcore") then
+        page_name = label.page_name_emcore
+    elseif (t.version_label == "black box") then
+        page_name = label.page_name_black_box
+    else
+        page_name = ""
+    end
+
+    hdoip.html.Header(t, page_name .. "Rebooting", script_path)
     hdoip.html.Title("Reboot")
     hdoip.html.Text("Please wait until device is rebooted.")
     hdoip.html.Text("<br>")
-    hdoip.html.Loadbar(0, 30)
+    hdoip.html.Loadbar(0, 33, 0)
     hdoip.html.Bottom(t)
     hdoip.pipe.reboot()
     os.exit(0)
@@ -28,7 +38,7 @@ function show(t)
         t.usb_mode = t_mode_reg[hdoip.pipe.getParam(hdoip.pipe.REG_MODE_USB)]
     else
         if(hdoip.pipe.getParam(hdoip.pipe.REG_MODE_USB) ~= t_mode_conv[tonumber(t.usb_mode)]) then
-            hdoip.pipe.setParam(hdoip.pipe.REG_MODE_USB, t_mode_conv[tonumber(t.usb_mode)])
+            hdoip.pipe.setParam(hdoip.pipe.REG_TEMP6, t_mode_conv[tonumber(t.usb_mode)])
             pages.restart.show(t)
         end
 
@@ -36,16 +46,37 @@ function show(t)
     end
 
     if(t.button_restart_yes ~= nil) then
+        t.usb_mode_changed = hdoip.pipe.getParam(hdoip.pipe.REG_TEMP6)
+
+        if(t.usb_mode_changed ~= nil) then
+            if(t.usb_mode_changed ~= "") then
+                hdoip.pipe.setParam(hdoip.pipe.REG_MODE_USB, t.usb_mode_changed)
+            end
+        end
+
+        hdoip.pipe.setParam(hdoip.pipe.REG_IDENTIFICATION, "17")
+        hdoip.pipe.store_cfg()
         reboot(t)
     end
 
     hdoip.pipe.getUSB(t)
 
-    hdoip.html.Header(t, label.page_name .. label.page_usb, script_path)
-    hdoip.html.FormHeader(script_path, main_form)
-    hdoip.html.Title(label.page_usb)
-    hdoip.html.TableHeader(2)
-  
+    if(t.show_restart == nil) then
+        if (t.version_label == "rioxo") then
+            page_name = label.page_name_rioxo
+        elseif (t.version_label == "emcore") then
+            page_name = label.page_name_emcore
+        elseif (t.version_label == "black box") then
+            page_name = label.page_name_black_box
+        else
+            page_name = ""
+        end
+
+        hdoip.html.Header(t, page_name .. label.page_usb, script_path)
+        hdoip.html.FormHeader(script_path, main_form)
+        hdoip.html.Title(label.page_usb)
+        hdoip.html.TableHeader(2)
+      
         hdoip.html.Text(label.p_usb_mode);                                                          hdoip.html.TableInsElement(1);
         hdoip.html.FormRadio(REG_MODE_USB_LABEL, t_mode, 3, t.usb_mode);                            hdoip.html.TableInsElement(1);
 
@@ -56,9 +87,10 @@ function show(t)
             hdoip.html.Text(t.usb_product);                                                         hdoip.html.TableInsElement(1);
         end
 
-    hdoip.html.TableBottom()
-    hdoip.html.FormBottom(t)
-    hdoip.html.Bottom(t)
+        hdoip.html.TableBottom()
+        hdoip.html.FormBottom(t)
+        hdoip.html.Bottom(t)
+    end
 end
 
 

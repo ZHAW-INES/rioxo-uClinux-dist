@@ -20,6 +20,7 @@
 typedef struct {
     void                *p_spi;
     void                *p_i2c;
+    void                *video_mux_ptr;
     bool                video_status;
     bool                no_phase_info;
     uint32_t            delay_queue_input;
@@ -39,4 +40,5 @@ void gs2971_debug(t_gs2971 *handle);
 bool gs2971_get_interlaced(t_gs2971 *handle);
 int  gs2971_get_video_timing(t_gs2971 *handle, t_video_timing *measured_timing);
 int  gs2971_get_audio_config(t_gs2971 *handle);
+int  gs2971_get_audio_channel_status(t_gs2971 *handle, uint16_t *acs);
 #endif /* GS2971_DRV_H_ */

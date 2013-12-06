@@ -2,6 +2,7 @@
 #include "stdrbf.h"
 #include "vso_drv.h"
 #include "sta_hal.h"
+#include "fec_rx_hal.h"
 #include "debug.h"
 
 static int vso_drv_clear_reordering(t_vso* handle) 
@@ -41,15 +42,25 @@ int vso_drv_start(t_vso* handle)
  * @param handle pointer to the vso handle
  * @return error code
  */
-int vso_drv_stop(t_vso* handle)
+int vso_drv_stop(t_vso* handle, void* p_fec_rx)
 {
+    uint32_t time;
     PTR(handle);
     PTR(handle->p_vso);
 
 	vso_disable(handle->p_vso);
   	vso_drv_clear_reordering(handle);
 
-    while(vso_get_status(handle->p_vso, VSO_ST_IDLE) == 0);
+    time = jiffies;
+    while(vso_get_status(handle->p_vso, VSO_ST_IDLE) == 0) {
+        if ((time + HZ) < jiffies) {
+            // gateware is blocking -> do a reset
+            fec_rx_enable_reset_vso(p_fec_rx);
+            printk("VSO stop timeout\n");
+            fec_rx_disable_reset_vso(p_fec_rx);
+            break;
+        }
+    }
     handle->status = handle->status & ~VSO_DRV_STATUS_ACTIV;
 	return ERR_VSO_SUCCESS;
 }
@@ -65,7 +76,7 @@ int vso_drv_stop(t_vso* handle)
  * @param scomm5_delay_ns SCOMM5 signla delay in nanoseconds
  * @return error code
  */
-int vso_drv_init(t_vso* handle, void* p_vso) 
+int vso_drv_init(t_vso* handle, void* p_vso, void* p_fec_rx)
 {
     PTR(handle);
     PTR(p_vso);
@@ -78,7 +89,7 @@ int vso_drv_init(t_vso* handle, void* p_vso)
 	handle->p_vso = p_vso;
 	handle->status = 0;
 
-	vso_drv_stop(handle);
+	vso_drv_stop(handle, p_fec_rx);
 
  	vso_set_dma_burst_size(p_vso, VSO_DRV_DMA_BURST_SIZE);
 	vso_set_dma_almost_full(p_vso, VSO_DRV_DMA_ALMOST_FULL);

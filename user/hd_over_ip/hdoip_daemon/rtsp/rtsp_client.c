@@ -328,11 +328,11 @@ void* rtsp_client_req_thread(void* _client)
     pthread_setcanceltype  (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 
-    //lock("rtsp_client_req_thread-start");
+    lock("rtsp_client_req_thread-start");
 #ifdef REPORT_RTSP_CLIENT
     report(" + RTSP Client [%d] receiving requests", client->nr);
 #endif
-    //unlock("rtsp_client_req_thread-start");
+    unlock("rtsp_client_req_thread-start");
 
     while (!(client->task & E_RTSP_CLIENT_KILL)) {
         memset(&buf, 0, sizeof(u_rtsp_header));
@@ -371,11 +371,11 @@ void* rtsp_client_req_thread(void* _client)
 
     }
 
-    //lock("rtsp_client_req_thread-close");
+    lock("rtsp_client_req_thread-close");
 #ifdef REPORT_RTSP_CLIENT
     report(" - RTSP Client [%d] request thread ended", client->nr);
 #endif
-    //unlock("rtsp_client_req_thread-close");
+    unlock("rtsp_client_req_thread-close");
 
     return 0;
 }
@@ -547,10 +547,10 @@ t_rtsp_client* rtsp_client_open(char* address, t_rtsp_media *media)
         if (media) {
             add_media(client, media);
 
-            unlock("rtsp_client_split");
+//            unlock("rtsp_client_split");
                 pthread(client->th1, rtsp_client_thread, client);
                 pthread(client->th2, rtsp_client_req_thread, client);
-            lock("rtsp_client_split");
+//            lock("rtsp_client_split");
         }
         client->open = true;
     } else {
@@ -617,11 +617,11 @@ int rtsp_client_close(t_rtsp_client* client, bool freeClient)
         report(" i RTSP Client [%d] waiting for handler to finish", client->nr);
 #endif
 
-        unlock("rtsp_client_close");
+//        unlock("rtsp_client_close");
             pthread_join(client->th1, 0);
             // cancel thread because there is a blocking read in it (should a cleanup handler be called after this?)
             pthread_cancel(client->th2);
-        lock("rtsp_client_close");
+//        lock("rtsp_client_close");
 
         close(client->con.fdr);
         close(client->con2.fdr);
@@ -668,6 +668,9 @@ int rtsp_client_setup(t_rtsp_client* client, t_rtsp_media* media, t_rtsp_transpo
         rmcr_setup(media, (void*)&buf);
     } else if (n == RTSP_RESPONSE_ERROR) {
         if (media->error) media->error(media, (void*)n, &client->con);
+        if (client->con.ecode == RTSP_STATUS_DESTINATION_UNREACHABLE) {
+            n = RTSP_UNREACHABLE;
+        }
     } else {
         perrno("internal failure (%d)", n);
     }
@@ -831,6 +834,8 @@ int rtsp_client_event(t_rtsp_client* client, uint32_t event)
     client->task = 0;
     return n;
   }
+
+  //client->uri immer Transmitter
 
   if (client->task & E_RTSP_CLIENT_TEARDOWN)
     n = rtsp_client_teardown(client, NULL);

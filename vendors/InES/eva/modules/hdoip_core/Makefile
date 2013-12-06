@@ -51,6 +51,9 @@ INCLUDE += hal/ext_pio
 INCLUDE += hal/adv212/sea
   FILES += hal/adv212/sea/adv212_decode_2_14_1.o
   FILES += hal/adv212/sea/adv212_encode_2_13_0.o
+INCLUDE += hal/fec_tx
+INCLUDE += hal/fec_rx
+INCLUDE += hal/tlv320aic23b
 INCLUDE += driver/i2c
   FILES += driver/i2c/i2c_drv.o
   FILES += driver/i2c/i2c_str.o
@@ -106,6 +109,15 @@ INCLUDE += driver/bdt
   FILES += driver/bdt/bdt_drv.o
 INCLUDE += driver/spi
   FILES += driver/spi/spi_drv.o
+INCLUDE += driver/fec_tx
+  FILES += driver/fec_tx/fec_tx_drv.o
+INCLUDE += driver/fec_rx
+  FILES += driver/fec_rx/fec_rx_drv.o
+INCLUDE += driver/tlv320aic23b
+  FILES += driver/tlv320aic23b/tlv320aic23b_drv.o
+
+# we need version label from version.h
+INCLUDE += ../../../../../user/hd_over_ip/hdoip_daemon
 
 # +----------------------------------------------------------------------
 # | Module Object

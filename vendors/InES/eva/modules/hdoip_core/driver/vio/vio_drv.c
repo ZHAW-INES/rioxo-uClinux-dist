@@ -203,8 +203,7 @@ int vio_drv_reset(t_vio* handle, uint32_t device)
     memset(&handle->osd, 0, sizeof(t_osd));
     
     // set OSD border
-    handle->osd.x_border = 6;
-    handle->osd.y_border = 2;
+    vio_drv_osd_set_border(&handle->osd);
 
     // stop everything
     vio_reset(handle->p_vio);
@@ -547,6 +546,7 @@ int vio_drv_plainin(t_vio* handle, uint32_t device)
 
     // store config
     vio_drv_change_mode(handle, VIO_CONFIG_PLAININ);
+
 
     // stop everything
     vio_reset(handle->p_vio);
@@ -894,6 +894,8 @@ int vio_drv_set_osd(t_vio* handle, bool en)
 		if (handle->active) {
 			vio_set_cfg(handle->p_vio, VIO_CFG_OVERLAY);
 		}
+        // set OSD border
+        vio_drv_osd_set_border(&handle->osd);
 	} else {
 		vio_drv_clr_cfg(handle, VIO_CONFIG_OSD);
 		if (handle->active) {

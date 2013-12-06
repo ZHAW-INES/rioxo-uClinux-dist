@@ -244,8 +244,11 @@ int eto_drv_init(t_eto* handle, void* ptr)
     handle->link_state = 0;
     handle->vtx = 0;
     handle->atx = 0;
+    handle->abtx = 0;
     handle->vcnt = 0;
     handle->acnt = 0;
+    handle->abcnt = 0;
+    handle->traffic_shaping_enable = 0;
 
 	eto_drv_stop(handle);
     eto_set_config_cpu_frame_disable(handle->ptr);
@@ -277,7 +280,8 @@ int eto_drv_handler(t_eto* handle, t_queue* event_queue)
 {
     uint32_t reg = eto_get_config_reg(handle->ptr) & ETO_CONFIG_FSM_EN;
     uint32_t vtx = eto_get_vid_packet_cnt(handle->ptr);
-    uint32_t atx = eto_get_aud_packet_cnt(handle->ptr);
+    uint32_t atx = eto_get_aud_emb_packet_cnt(handle->ptr);
+    uint32_t abtx = eto_get_aud_board_packet_cnt(handle->ptr);
 
     if(reg != handle->link_state) {
         if(reg > 0) {   /* link up */
@@ -306,15 +310,30 @@ int eto_drv_handler(t_eto* handle, t_queue* event_queue)
     if (atx != handle->atx) {
         handle->atx = atx;
         if (!handle->acnt) {
-            queue_put(event_queue, E_ETO_AUDIO_ON);
+            queue_put(event_queue, E_ETO_AUDIO_EMB_ON);
         }
         handle->acnt = ETO_LINK_COUNT;
     } else {
         if (handle->acnt == 1) {
-            queue_put(event_queue, E_ETO_AUDIO_OFF);
+            queue_put(event_queue, E_ETO_AUDIO_EMB_OFF);
         }
         if (handle->acnt) {
             handle->acnt--;
+        }
+    }
+
+    if (abtx != handle->abtx) {
+        handle->abtx = abtx;
+        if (!handle->abcnt) {
+            queue_put(event_queue, E_ETO_AUDIO_BOARD_ON);
+        }
+        handle->abcnt = ETO_LINK_COUNT;
+    } else {
+        if (handle->abcnt == 1) {
+            queue_put(event_queue, E_ETO_AUDIO_BOARD_OFF);
+        }
+        if (handle->abcnt) {
+            handle->abcnt--;
         }
     }
 
@@ -337,3 +356,62 @@ void eto_drv_frame_rate_reduction(t_eto* handle, int reduction)
                     eto_set_config_reduce_fps_1_OFF(handle->ptr);
     }
 }
+
+void eto_drv_set_frame_period(t_eto* handle, t_video_timing* timing, t_fec_setting* fec, int enable)
+{
+    uint32_t h;
+    uint32_t v;
+    uint32_t period_10ns;
+    uint32_t packet_divider;
+    uint32_t packet_multiplier;
+
+    uint32_t l = fec->video_l;
+    uint32_t d = fec->video_d;
+    handle->traffic_shaping_enable = enable;
+
+    h = (timing->width + timing->hfront + timing->hpulse + timing->hback);
+    v = (timing->height + timing->vfront + timing->vpulse + timing->vback);
+    period_10ns = (uint32_t)(((uint64_t)100000000*h*v)/timing->pfreq);
+
+    // calculate overhead packets due to FEC
+    if (fec->video_enable) {
+        if (fec->video_col_only) {
+            packet_divider = d;
+            packet_multiplier = 1;
+        } else {
+            packet_divider = l * d;
+            packet_multiplier = l + d;
+        }
+    } else {
+        packet_divider = 1;
+        packet_multiplier = 1;
+    }
+
+    // reduce the fraction
+    if ((packet_divider % packet_multiplier) == 0) {
+        packet_divider = packet_divider / packet_multiplier;
+        packet_multiplier = 1;
+    }
+    if ((packet_divider % (packet_multiplier / 2)) == 0) {
+        packet_divider = packet_divider / (packet_multiplier / 2);
+        packet_multiplier = 2;
+    }
+
+    // set correction factor to modify count of packets
+    eto_set_tf_divider_10ns(handle->ptr, packet_divider);
+    eto_set_tf_multiplier_10ns(handle->ptr, packet_multiplier);
+
+    // period_10ns must not be longer than real refresh rate of video.
+    // There can be a measurement error of 5% and it still works
+    period_10ns -= period_10ns / 10;
+
+    eto_set_frame_period_10ns(handle->ptr, period_10ns);
+
+    // enable or disable traffic shaping of video packets
+    if (enable) {
+        eto_set_config_traffic_shaping_en(handle->ptr);
+    } else {
+        eto_set_config_traffic_shaping_dis(handle->ptr);
+    }
+}
+

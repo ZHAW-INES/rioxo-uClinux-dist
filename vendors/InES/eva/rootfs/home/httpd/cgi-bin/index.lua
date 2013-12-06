@@ -2,9 +2,11 @@
 require("pages.status")
 require("pages.ethernet")
 require("pages.usb")
+require("pages.fec")
 require("pages.test")
 require("pages.edid")
 require("pages.streaming")
+require("pages.audio")
 require("pages.firmware")
 require("pages.default")
 require("pages.debug")
@@ -22,15 +24,18 @@ img_path = "/img/"
 main_form = "mainform"
 PAGE_ID_ETH = 0
 PAGE_ID_STREAM = 1
-PAGE_ID_USB = 2
-PAGE_ID_EDID = 3
-PAGE_ID_STATUS = 4
-PAGE_ID_FIRMWARE = 5
-PAGE_ID_DEFAULT = 6
-PAGE_ID_SETTING = 7
-PAGE_ID_TEST = 8
+PAGE_ID_AUDIO = 2
+PAGE_ID_USB = 3
+PAGE_ID_EDID = 4
+PAGE_ID_FEC = 5
+PAGE_ID_STATUS = 6
+PAGE_ID_FIRMWARE = 7
+PAGE_ID_DEFAULT = 8
+PAGE_ID_SETTING = 9
+PAGE_ID_TEST = 10
 
 PAGE_ID_LOGIN = 20
+PAGE_ID_RESTART = 40
 PAGE_START = 0
 
 local init_err = ""
@@ -96,6 +101,9 @@ else
     require("lang.en")
     label = lang.en.label
 end
+-----------------------------------------------
+-- version label (rioxo, emcore, black box, ...)
+query.version_label = hdoip.pipe.getParam(hdoip.pipe.REG_VERSION_LABEL)
 
 -----------------------------------------------
 -- Web authentification
@@ -148,28 +156,32 @@ end
 
 -----------------------------------------------
 -- Page select
-if(query.page == 0) then
+if(query.page == PAGE_ID_ETH) then
     pages.ethernet.show(query)
-elseif(query.page == 1) then
+elseif(query.page == PAGE_ID_STREAM) then
     pages.streaming.show(query)
-elseif(query.page == 2) then
+elseif(query.page == PAGE_ID_AUDIO) then
+    pages.audio.show(query)
+elseif(query.page == PAGE_ID_USB) then
     pages.usb.show(query)
-elseif(query.page == 3) then 
+elseif(query.page == PAGE_ID_EDID) then 
     pages.edid.show(query)
-elseif(query.page == 4) then 
+elseif(query.page == PAGE_ID_FEC) then 
+    pages.fec.show(query)
+elseif(query.page == PAGE_ID_STATUS) then 
     pages.status.show(query)
-elseif(query.page == 5) then 
+elseif(query.page == PAGE_ID_FIRMWARE) then 
     pages.firmware.show(query)
-elseif(query.page == 6) then 
+elseif(query.page == PAGE_ID_DEFAULT) then 
     pages.default.show(query)
-elseif(query.page == 7) then 
+elseif(query.page == PAGE_ID_SETTING) then 
     pages.settings.show(query)
-elseif(query.page == 8) then 
+elseif(query.page == PAGE_ID_TEST) then 
     pages.test.show(query)
 
-elseif(query.page == 20) then
+elseif(query.page == PAGE_ID_LOGIN) then
     pages.login.show(query)
-elseif(query.page == 40) then
+elseif(query.page == PAGE_ID_RESTART) then
     pages.restart.show(query)
 else 
     pages.debug.show(query)

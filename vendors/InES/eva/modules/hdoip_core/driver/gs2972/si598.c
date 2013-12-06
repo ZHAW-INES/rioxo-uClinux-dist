@@ -64,13 +64,20 @@ void set_si598_small_frequency_change(t_si598 *handle, uint64_t rfreq_i)
 }
 
 
-void set_si598_output_frequency (t_si598 *handle, uint32_t frequency) 
+void set_si598_output_frequency (t_si598 *handle, uint32_t frequency, int advcnt) 
 {
     switch (frequency) {
-        case (13500000):    handle->n1     = 0x1B;  // 13.5MHz -> Output 27MHz (Clock is divided in half in gateware)
-                            handle->hs_div = 0x03;
-                            handle->rfreq  = ((uint64_t)27000000 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;
-                            handle->mode   = SI598_MODE_SD;
+        case (13500000):    if (advcnt == 1) {
+                                handle->n1     = 0x1B;  // 27MHz (Clock is divided in half in gateware)
+                                handle->hs_div = 0x03;
+                                handle->rfreq  = ((uint64_t)27000000 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;
+                                handle->mode   = SI598_MODE_SD;
+                            } else {
+                                handle->n1     = 0x37;  // 13.5MHz
+                                handle->hs_div = 0x03;
+                                handle->rfreq  = ((uint64_t)13500000 * ((uint64_t)handle->hs_div + (uint64_t)4) * ((uint64_t)handle->n1 + (uint64_t)1) << 28) / handle->fxtal;
+                                handle->mode   = SI598_MODE_SD;
+                            }
                             break;
         case (74250000):    handle->n1     = 0x09;  // 74.25MHz
                             handle->hs_div = 0x03;

@@ -8,19 +8,19 @@
 #ifndef HDOIPD_H_
 #define HDOIPD_H_
 
-#include <pthread.h>
-#include <stdbool.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
-#include "alive_check.h"
-#include "bstmap.h"
 #include "debug.h"
+#include "bstmap.h"
+#include "alive_check.h"
+#include "usb.h"
 #include "led_drv_instructions.h"
 #include "rtsp_listener.h"
 #include "rtsp_client.h"
-#include "usb.h"
 
 #define CFG_FILE                    "/mnt/config/hdoipd.cfg"
 #define CFG_RSP_TIMEOUT             15
@@ -31,6 +31,10 @@
 
 #define EDID_PATH_VIDEO_IN          "/tmp/edid_vid_in"
 #define EDID_PREAMBLE               "/tmp/edid_"
+
+#define AUD_FS                      48000
+#define AUD_SAMPLE_WIDTH            16
+#define AUD_CH_MAP                  0x0003
 
 typedef void (f_task)(void* value);
 
@@ -46,25 +50,30 @@ enum {
 
 // upstream state for video and audio
 enum {
-    VTB_OFF         = 0x01,			// no upstream
-    VTB_VID_IDLE    = 0x02,			// video configured but not active
-    VTB_AUD_IDLE    = 0x04,			// audio configured but not active
-    VTB_VIDEO       = 0x08,         // video active
-    VTB_AUDIO       = 0x10,         // audio active
-    VTB_VID_OFF     = 0x20,			// goto video off (remove idle & active bit)
-    VTB_AUD_OFF     = 0x40,			// goto audio off (remove idle & active bit)
-    VTB_VID_MASK    = 0x2a,
-    VTB_AUD_MASK    = 0x54,
-    VTB_VALID       = 0x1f,
-    VTB_ACTIVE      = 0x1e
+    VTB_OFF             = 0x0001,			// no upstream
+    VTB_VID_IDLE        = 0x0002,			// video configured but not active
+    VTB_AUD_BOARD_IDLE  = 0x0004,			// audio board configured but not active
+    VTB_AUD_EMB_IDLE    = 0x0008,           // audio emb configured but not active
+    VTB_VIDEO           = 0x0010,           // video active
+    VTB_AUDIO_BOARD     = 0x0020,           // audio board active
+    VTB_AUDIO_EMB       = 0x0040,           // audio emb active
+    VTB_VID_OFF         = 0x0100,			// goto video off (remove idle & active bit)
+    VTB_AUD_BOARD_OFF   = 0x0200,			// goto audio board off (remove idle & active bit)
+    VTB_AUD_EMB_OFF     = 0x0400,			// goto audio emb off (remove idle & active bit)
+    VTB_VID_MASK        = 0x0112,
+    VTB_AUD_BOARD_MASK  = 0x0224,
+    VTB_AUD_EMB_MASK    = 0x0448,
+    VTB_VALID           = 0x00ff,         // all active but off
+    VTB_ACTIVE          = 0x00fe          // all active
 };
 
 // downstream state for audio backchannel
 enum {
     VRB_OFF         = 0x01,
     VRB_IDLE        = 0x02,         // not streaming
-    VRB_AUDIO       = 0x04,         // streaming audio back
-    VRB_AUD_MASK    = 0x06
+    VRB_AUDIO_EMB   = 0x04,         // streaming audio back to video card
+    VRB_AUDIO_BOARD = 0x08,         // streaming audio back to audio card
+    VRB_AUD_MASK    = 0x0F
 };
 
 // hdcp enabled / disabled in HW
@@ -93,25 +102,28 @@ enum {
 
 // what is
 enum {
-    RSC_AUDIO0_IN   = 0x000001,     // active audio input (from video board)
-    RSC_AUDIO1_IN   = 0x000002,     // active audio input (from audio board)
-    RSC_AUDIO_IN    = 0x000003,     // active audio input
+    RSC_AUDIO_EMB_IN = 0x000001,     // active audio input (from video board)
+    RSC_AUDIO_BOARD_IN = 0x000002,     // active audio input (from audio board)    (audio board detected (test if source on not possible))
+    RSC_AUDIO_IN    = 0x000003,     // active audio input (not used anymore)
     RSC_VIDEO_IN    = 0x000010,     // active video input
     RSC_VIDEO_IN_HDCP=0x000020,	    // HDCP required
     RSC_VIDEO_IN_VGA =0x000040,     // active VGA input
-    RSC_VIDEO_IN_SDI =0x000080,		// active SDI input
+    RSC_VIDEO_IN_SDI =0x000080,	    // active SDI input
     RSC_VIDEO_SINK  = 0x000100,     // a video sink is connected
     RSC_ETH_LINK    = 0x000200,     // a ethernet link is on
-    RSC_AUDIO_OUT   = 0x001000,     // active audio output
-    RSC_VIDEO_OUT   = 0x002000,     // active video output
-    RSC_OSD         = 0x004000,     // osd output is active
+    RSC_AUDIO_EMB_OUT = 0x001000,   // active audio output (to video board)
+    RSC_AUDIO_BOARD_OUT = 0x002000, // active audio output (to audio board)     (audio board detected (test if sink on not possible))
+    RSC_VIDEO_OUT   = 0x004000,     // active video output
+    RSC_OSD         = 0x008000,     // osd output is active
     RSC_VIDEO_SYNC  = 0x010000,     // sync running on video
-    RSC_AUDIO_SYNC  = 0x020000,     // sync running on audio
-    RSC_SYNC        = 0x030000,     // sync running
+    RSC_AUDIO_EMB_SYNC = 0x020000,     // sync running on audio (video)
+    RSC_AUDIO_IF_BOARD_SYNC = 0x040000,     // sync running on audio (board)
+    RSC_SYNC        = 0x070000,     // sync running
     RSC_EVI         = 0x100000,     // ethernet video input
-    RSC_EAI         = 0x200000,     // ethernet audio input
-    RSC_EVO         = 0x400000,     // ethernet video output
-    RSC_EAO         = 0x800000      // ethernet audio output
+    RSC_EAEI         = 0x200000,     // ethernet audio embedded input
+    RSC_EABI        = 0x400000,     // ethernet audio board input
+    RSC_EVO         = 0x800000,     // ethernet video output
+    RSC_EAO         = 0xc00000      // ethernet audio output
 };
 
 // events
@@ -124,8 +136,8 @@ enum {
     EVENT_VIDEO_IN_OFF  = 0x00000020,   // Video input deactivated
     EVENT_VIDEO_SINK_ON = 0x00000100,   // Video input activated
     EVENT_VIDEO_SINK_OFF= 0x00000200,   // Video input deactivated
-    EVENT_VIDEO_STIN_OFF= 0x00001000,   // Ethernet Video Stream Input stoped
-    EVENT_AUDIO_STIN_OFF= 0x00002000,   // Ethernet Audio Stream Input stoped
+    EVENT_VIDEO_STIN_OFF= 0x00001000,   // Ethernet Video Stream Input stopped
+    EVENT_AUDIO_STIN_OFF= 0x00002000,   // Ethernet Audio Stream Input stopped
     EVENT_TICK          = 0x10000000    // a tick event
 };
 
@@ -148,21 +160,21 @@ typedef struct {
 
 // hdcp variables
 typedef struct {
-    uint32_t enc_state;      //encryption enabled disabled
-    uint32_t state;          //hdcp statemachine
-    uint32_t ske_executed;   //session key exchange executed previously?
-    uint32_t keys[6];        //ks and riv ready to write to kernel
+	uint32_t			enc_state;		//encryption enabled disabled
+    uint32_t            state;			//hdcp statemachine
+    uint32_t			ske_executed;	//session key exchange executed previously?
+    uint32_t 			keys[6];		//ks and riv ready to write to kernel
     //the secret values from flash
-    char     certrx[1046];   //public certificate
-    char     p[129];         //private key
-    char     q[129];         //private key
-    char     dp[129];        //private key
-    char     dq[129];        //private key
-    char     qInv[129];      //private key
-    char     lc128[33];      //secret global constant
-    char     ks[33];         //session key
-    char     ks_x_lc128[33]; //session key
-    char     riv[17];        //random number to session key
+	char				certrx[1046];	//public certificate
+	char				p[129];			//private key
+	char				q[129];			//private key
+	char				dp[129];		//private key
+	char				dq[129];		//private key
+	char				qInv[129];		//private key
+	char				lc128[33];		//secret global constant
+	char 			    ks[33];			//session key
+	char 			    ks_x_lc128[33];	//session key
+	char 				riv[17];		//random number to session key
 } t_hdcp;
 
 typedef struct {
@@ -204,7 +216,9 @@ typedef struct {
     t_hdoip_log         main_log;
     t_hdoip_log         rtsp_log;
 
-    uint32_t*           img_buff;       // pointer to test-image buffer
+    uint32_t*           img_buff;       // pointer to test-image buffer (also FEC buffer)
+    uint32_t*           aud_tx_buff;    // pointer to audio transmit buffer
+    uint32_t*           vid_tx_buff;    // pointer to video transmit buffer
 } t_hdoipd;
 
 extern t_hdoipd                 hdoipd;
@@ -213,21 +227,21 @@ extern t_hdoipd                 hdoipd;
 //------------------------------------------------------------------------------
 // report functions
 
-#define report(...) do { \
+#define report(...) { \
     hdoip_report(&hdoipd.main_log, __VA_ARGS__); \
-} while (0)
+}
 
-#define reportn(...) do { \
+#define reportn(...) { \
     hdoip_reportn(&hdoipd.main_log, __VA_ARGS__); \
-} while (0)
+}
 
-#define perrno(...) do { \
+#define perrno(...) { \
     hdoip_perrno(&hdoipd.main_log, __VA_ARGS__);\
-} while (0)
+}
 
-#define report_rtsp(...) do { \
-    hdoip_report(&hdoipd.rtsp_log, __VA_ARGS__); \
-} while (0)
+#define report_rscp(...) {\
+    hdoip_report(&hdoipd.rscp_log, __VA_ARGS__); \
+}
 
 //------------------------------------------------------------------------------
 //
@@ -237,6 +251,20 @@ static inline bool tick_delay(uint64_t x)
     return (hdoipd.tick - x);
 }
 
+
+//------------------------------------------------------------------------------
+// convert functions
+
+static inline uint8_t aud_chmap2cnt(uint16_t ch_map)
+{
+    int i;
+    uint8_t ch = 0;
+
+    for (i = 0; i < 15; i++) {
+        if (ch_map & (1<<i)) ch++;
+    }
+    return ch;
+}
 
 //------------------------------------------------------------------------------
 //
@@ -277,25 +305,30 @@ static inline void get_call(char* n, char** k)
     if (f) f(k); else *k = reg_get(n);
 }
 
+
+//------------------------------------------------------------------------------
+//
+
+
 #define pthread(th, f, d) \
-do { \
+{ \
     int ret = pthread_create(&th, 0, f, d); \
     if (ret) { \
         report2(ERROR #f ".pthread_create: failed %d", ret); \
     } else { \
         report2(INFO #f ".pthread_create successful"); \
     } \
-} while (0)
+}
 
 #define pthreada(th, a, f, d) \
-do { \
+{ \
     int ret = pthread_create(&th, a, f, d); \
     if (ret) { \
         report2(ERROR #f ".pthread_create: failed %d", ret); \
     } else { \
         report2(INFO #f ".pthread_create successful"); \
     } \
-} while (0)
+}
 
 static inline void lock(const char *s MAYBE_UNUSED)
 {
@@ -308,5 +341,6 @@ static inline void unlock(const char *s MAYBE_UNUSED)
     report2("hdoipd:pthread_mutex_unlock(%d, %s)", pthread_self(), s);
     if (pthread_mutex_unlock(&hdoipd.mutex)) perrno("hdoipd:pthread_mutex_unlock() failed");
 }
+
 
 #endif /* HDOIPD_H_ */

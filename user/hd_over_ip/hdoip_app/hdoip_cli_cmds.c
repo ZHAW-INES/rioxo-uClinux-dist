@@ -225,6 +225,12 @@ int hdoip_cli_remote_update(int fd, int fdr, char** argv, int argc)
     return 0;
 }
 
+int hdoip_free_buffer(int fd, int fdr, char** argv, int argc)
+{
+    hoic_free_buffer(fd);
+    return 0;
+}
+
 int hdoip_cli_get_edid(int fd, int fdr, char** argv, int argc)
 {
     hoic_get_edid(fd, argv[0]);
@@ -286,6 +292,7 @@ const t_hdoip_cli_cmd_arr cmd_arr[] = {
         { "reboot",         0, hdoip_cli_reboot,        ""},
         { "read",           1, hdoip_cli_read,          "hex-address"},
         { "remote-update",  1, hdoip_cli_remote_update, "file"},
+        { "free-buffer",    0, hdoip_free_buffer,       ""},
         { "version",        0, hdoip_cli_getversion,    ""},
         { "factory-default",0, hdoip_cli_default,       ""},
         { "debug"          ,0, hdoip_cli_debug,         ""},

@@ -266,7 +266,10 @@ int rtsp_listener_close(t_rtsp_listener* handle)
 
 int rtsp_listener_add_media(t_rtsp_listener* handle, t_rtsp_media* media)
 {
-    if (media->state == RTSP_STATE_NONE) media->state = RTSP_STATE_INIT;
+    if (media->state == RTSP_STATE_NONE){
+        media->state = RTSP_STATE_INIT;
+    }
+    
 
     listener_lock(handle, "rtsp_listener_add_media");
         bstmap_setp(&handle->media, media->name, media);
@@ -471,8 +474,10 @@ void rtsp_listener_close_connection(t_rtsp_listener* handle, uint32_t remote_add
   listener_lock(handle, "rtsp_listener_close_connection");
   // try to find the server matching the given remote address
   node = list_find(handle->cons, (f_node_compare*)find_connection_by_ip, &remote_address);
-  if (node == NULL || node->elem == NULL)
+  if (node == NULL || node->elem == NULL){
+    listener_unlock(handle, "rtsp_listener_close_connection");
     return;
+  }
 
   server = (t_rtsp_server*)node->elem;
 

@@ -24,6 +24,6 @@ typedef struct hdoip_eth_params {
     uint8_t     src_mac[6];
 } __attribute__((packed)) hdoip_eth_params;
 
-int eth_report_params(struct hdoip_eth_params* eth_params);
+int eth_report_params(struct hdoip_eth_params* eth_params, int unsigned stream);
 
 #endif /* STDETH_H_ */

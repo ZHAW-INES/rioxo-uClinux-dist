@@ -186,7 +186,6 @@ void traverse_teardown(t_rtsp_server* server, t_rtsp_media* media, void* data)
 
   // a server connection is active for this media -> use it to send a teardown message
   rtsp_request_teardown(&server->con, uri, media->sessionid);
-
   traverse_remove(server, media, NULL);
 }
 
@@ -327,10 +326,11 @@ int rtsp_server_thread(t_rtsp_server* handle)
 
         // connection closed...
         if (n) {
-            if (n > RTSP_PAUSE)
+            if (n > RTSP_PAUSE) {
                 report(ERROR "RTSP Server [%d] failed to parse request (%d)", handle->nr, n);
-            else
+            } else {
                 report(INFO "RTSP Server [%d] closed by remote (%d)", handle->nr, n);
+            }
             break;
         }
 
@@ -352,7 +352,7 @@ int rtsp_server_thread(t_rtsp_server* handle)
             media = rtsp_server_get_media_by_name(handle, common.uri.name);
         }
 
-        media_new = media == NULL;
+        media_new = (media == NULL);
         if (media_new) {
             // fall back to the general list of media-controls available
             media = rtsp_listener_get_media(handle->owner, common.uri.name);
@@ -403,7 +403,6 @@ int rtsp_server_thread(t_rtsp_server* handle)
 
         unlock("rtsp_server_thread");
     }
-
     lock("rtsp_server_thread");
     traverse(handle, NULL, NULL, traverse_remove);
     remove_media_all(handle);
@@ -481,16 +480,16 @@ void rtsp_server_update_media(t_rtsp_media* media, uint32_t event)
   traverse(media->creator, media->name, &event, traverse_update);
 }
 
-int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
+int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid, t_rtsp_media *media)
 {
   int edid_length = 256;
   int ret;
   t_edid edid_old;
   uint8_t edid_table[edid_length];
 
-  if (handle == NULL)
+  if (handle == NULL){
     return -1;
-
+  }
   multicast_set_enabled(reg_test("multicast_en", "true"));
 
   // if no EDID has been provided and edid-mode is not set to use
@@ -499,27 +498,20 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
       return 0;
 
   // use default edid if requested
-  if (reg_test("edid-mode", "default")) {
-    memcpy(edid_table, factory_edid, edid_length);
-  }
-  else
-    memcpy(edid_table, edid->edid, edid_length);
-
-  // multicast, only run this for non default EDID
-  if (multicast_get_enabled() && !reg_test("edid-mode", "default")) {
-    // we only need to do the edid merging if ...
-    // we don't use the default edid and
-    // the client has provided an edid and
-    // the input is not SDI
-    if (!hdoipd_rsc(RSC_VIDEO_IN_SDI)) {
-        // add connection to start list
-        multicast_edid_add((t_edid *)edid_table, handle);
-        // this call will block until the multicast setup procedure has been finished
-        if (multicast_connection_add(handle) != 0)
-          return -1;
+  if (reg_test("edid-mode", "default") || multicast_get_enabled()) {
+    if (edid_read_file(&edid_table, "/mnt/config/edid.bin")) {
+      // fallback to factory edid if own edid fails
+      memcpy(edid_table, factory_edid, edid_length);
     }
+  } else {
+    memcpy(edid_table, edid->edid, edid_length);
+  }
 
-    return 0;
+  // dont reload edid if more than one multicast client
+  if (multicast_get_enabled()) {
+    if (!(multicast_client_check_availability(MEDIA_IS_VIDEO) == CLIENT_AVAILABLE_ONLY_ONE)) {
+      return 0;
+    }
   }
 
   // unicast
@@ -528,16 +520,17 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
     ret = edid_read_file(&edid_old, EDID_PATH_VIDEO_IN);
     if (ret != -1) {
       edid_merge((t_edid *)edid_table, (t_edid *)edid_table); // modify edid
-
       // write edid only when it has changed
       // no previous E-EDID exists
-      if (ret == -2)
+      if (ret == -2){
         edid_write_function((t_edid *)edid_table, multicast_get_enabled() ? "multicast first edid" : "unicast first edid");
+      }
       // a previous E-EDID exists
       else {
         // check if edid has changed
-        if (multicast_edid_compare(&edid_old, (t_edid *)edid_table))
+        if (multicast_edid_compare(&edid_old, (t_edid *)edid_table)){
           edid_write_function((t_edid *)edid_table, multicast_get_enabled() ? "unicast edid changed" : "unicast edid changed");
+        }
       }
     }
     else
@@ -545,9 +538,9 @@ int rtsp_server_handle_setup(t_rtsp_server* handle, t_rtsp_edid *edid)
   }
 
   // response only when not already streaming
-  if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO)) {
+  if (!hdoipd_tstate(VTB_VIDEO | VTB_AUDIO_EMB | VTB_AUDIO_BOARD)) {
     // make sure the EDID change was successful
-    return check_input_after_edid_changed();
+    return 0; //check_input_after_edid_changed();
   }
 
   return 0;

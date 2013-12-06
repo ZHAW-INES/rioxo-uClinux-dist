@@ -9,6 +9,7 @@
 // System frequency
 #define SFREQ               (100000000)
 #define SPERIOD             (10) /* in ns */
+#define AUD_GEN_FREQ        (2*SFREQ)
 // Video pll base frequency
 #define BFREQ               (75000000)
 // ADV Frequency
@@ -33,7 +34,8 @@
 #define BASE_I2C_AUD_TAG    (na_tag_aud_i2c)
 #define BASE_VSO	        (na_acb_vid_st_out)
 #define BASE_VSI	        (na_acb_vid_st_in)
-#define BASE_ASO            (na_acb_aud_st_out)
+#define BASE_ASO_0          (na_acb_aud_st_out_0)
+#define BASE_ASO_1          (na_acb_aud_st_out_1)
 #define BASE_ASI            (na_acb_aud_st_in)
 #define BASE_ETI            (na_acb_eth_in)
 #define BASE_ETI_IRQ        (na_acb_eth_in_irq)
@@ -47,7 +49,11 @@
 #define BASE_VIDEO_MUX      (na_acb_video_mux)
 #define BASE_SPI_TX         (na_spi_tx)
 #define BASE_SPI_RX         (na_spi_rx)
-
+#define BASE_FEC_TX         (na_acb_fec_tx)
+#define BASE_FEC_RX         (na_acb_fec_rx)
+#define BASE_FEC_IP_TX      (na_fec_tx)
+#define BASE_FEC_IP_RX      (na_fec_rx)
+#define BASE_FEC_MEMORY     (na_fec_memory_interface_0_control_slave)
 // Register area sizes
 #define TSE_MAC_SIZE        0x400
 

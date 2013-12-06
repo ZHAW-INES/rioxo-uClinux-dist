@@ -50,7 +50,8 @@ typedef enum {
     RTSP_RESULT_SERVER_NO_VTB,
     RTSP_RESULT_SERVER_TRY_LATER,
     RTSP_RESULT_SERVER_NO_VIDEO_IN,
-    RTSP_RESULT_SERVER_HDCP_ERROR
+    RTSP_RESULT_SERVER_HDCP_ERROR,
+    RTSP_RESULT_SERVER_MULTICAST
 } e_rtsp_media_result;
 
 typedef int (frtspm)(struct rtsp_media *, void *msg, struct rtsp_connection *);
@@ -72,9 +73,9 @@ typedef struct t_rtsp_media_hdcp {
 typedef struct rtsp_media {
     void*   creator;            // Pointer to client or server thread creates this media (t_rtsp_server / t_rtsp_client)
     void*   top;                // UNUSED
-    struct rtsp_media* owner; // Pointer to origin media (video, audio or box_sys)
+    struct rtsp_media* owner;   // Pointer to origin media (video, audio_board, audio_emb or box_sys)
     t_node* children;           // UNUSED
-    char*   name;               // "audio", "video" or "" (box_sys)
+    char*   name;               // "audio_board", "audio_emb", "video" or "" (box_sys)
     char    sessionid[20];      // Session string (ID)
     int     state;              // Media state (INIT, READY, PLAYING)
     int		hdcp_state;			// HDCP state
@@ -98,6 +99,7 @@ typedef struct rtsp_media {
     frtspm* doplay;             // local
     frtspm* doteardown;         // local
     frtspe* event;              // local (events)
+    frtspm* remove;				// local
 } t_rtsp_media;
 
 typedef struct {

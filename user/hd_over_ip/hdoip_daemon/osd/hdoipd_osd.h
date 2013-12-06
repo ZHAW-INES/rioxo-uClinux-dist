@@ -9,8 +9,6 @@
 #define HDOIPD_OSD_H_
 
 #include <stdio.h>
-#include <stdlib.h>
-
 #include "hdoipd.h"
 
 #define OSD_BUFFER_LENGTH   256
@@ -35,6 +33,7 @@ extern char osdtmp[OSD_BUFFER_LENGTH];
     hdoipd_osd_deactivate(); \
     hdoipd_clr_rsc(RSC_VIDEO_OUT); \
     hdoipd_osd_activate(108060); \
+    hoi_drv_osd_clr_border(); \
     if((p = malloc(0x8000)) != NULL) { \
         for (i=0; i<(0x8000); i+=2) { \
             p[i]   = 128; \
@@ -52,6 +51,7 @@ extern char osdtmp[OSD_BUFFER_LENGTH];
     hdoipd_osd_deactivate(); \
     hdoipd_clr_rsc(RSC_VIDEO_OUT); \
     hdoipd_osd_activate(108024); \
+    hoi_drv_osd_clr_border(); \
     if((p = malloc(0x8000)) != NULL) { \
         for (i=0; i<(0x8000); i+=2) { \
             p[i]   = 128; \
@@ -69,6 +69,7 @@ extern char osdtmp[OSD_BUFFER_LENGTH];
     hdoipd_osd_deactivate(); \
     hdoipd_clr_rsc(RSC_VIDEO_OUT); \
     hdoipd_osd_activate(72060); \
+    hoi_drv_osd_clr_border(); \
     if((p = malloc(0x8000)) != NULL) { \
         for (i=0; i<(0x8000); i+=2) { \
             p[i]   = 128; \

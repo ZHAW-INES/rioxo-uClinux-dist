@@ -2,10 +2,12 @@
 module (..., package.seeall)
 
 label = {
-    page_name = "Rioxo&reg; : ";
-    
+    page_name_rioxo = "Rioxo&reg; : ";
+    page_name_emcore = "Emcore : ";    
+    page_name_black_box = "Black Box&reg; : ";
+
     u_decimal = "[decimal]";
-    u_mbps = "[Mbit / s]";
+    u_mbps = "[MBit / s]";
     u_ms = "[ms]";
     u_s = "[s]";
     u_percent = "[% of half datarate]";
@@ -41,6 +43,8 @@ label = {
     button_restore = "Restore";
     button_yes = "yes";
     button_no = "no";
+    button_cancel = "cancel";
+    button_save_and_reboot = "save and reboot";
     button_focus_1080p60 = "focus 1080p60";
     button_focus_1080p24 = "focus 1080p24";
     button_focus_720p60  = "focus  720p60";
@@ -51,10 +55,17 @@ label = {
     err_gateway_not_valid = "Gateway is not valid";
     err_aud_port_not_in_range = "Audio port is not in range (0 .. 65535)";
     err_aud_port_not_number = "Audio port is not a number";
+    err_aud_port_not_even = "Audio port must be even";
     err_vid_port_not_in_range = "Video port is not in range (0 .. 65535)";
     err_vid_port_not_number = "Video port is not a number";
+    err_vid_port_not_even = "Video port must be even";
+    err_aud_port_cross_vid_port = "Audio port must not be in range (video port - 4) .. (video port + 4)";
+    err_aud_port_cross_aud_port = "Audio port must not be in range (audio port - 4) .. (audio port + 4)";
+    err_vid_port_cross_aud_port = "Video port must not be in range (audio port - 4) .. (audio port + 4)";
     err_rtsp_port_not_in_range = "RTSP port is not in range (0 .. 65535)";
+    err_hello_port_not_in_range = "HELLO port is not in range (0 .. 65535)";
     err_rtsp_port_not_number = "RTSP port is not a number";
+    err_hello_port_not_number = "HELLO port is not a number";
     err_datarate_not_number = "Max. datarate is not a number";
     err_datarate_not_in_range = "Max. datarate is not in range (1 .. 800)";
     err_datarate_chroma_not_in_range = "Max. chroma datarate is not in range (0 .. 100%)";
@@ -64,15 +75,16 @@ label = {
     err_av_delay_not_in_range = "Audio-video delay is not in range (-100 .. 100)";
     err_osd_time_not_number = "OSD time is not a number";
     err_osd_time_not_in_range = "OSD time is not in range (0 .. 100)";
-    err_rtsp_timeout_not_in_range = "RTSP timeout is not in range (0 .. 60)";
-    err_rtsp_timeout_not_number = "RTSP timeout is not a number";
+    err_ttl_not_in_range = "TTL is not in range (0 .. 255)";
 
     -- Page names
     page_streaming = "Stream configuration";
+    page_audio = "Stream configuration";
     page_ethernet = "System configuration";
     page_firmware = "Firmware";
     page_status = "Status";
     page_usb = "USB";
+    page_fec = "Forward Error Correction";
     page_test = "Test";
     page_edid = "EDID - Extended display identification data";
     page_default = "Factory defaults";
@@ -80,6 +92,7 @@ label = {
     page_settings = "Settings";
     page_login = "Login";
     tab_streaming = "Stream";
+    tab_audio = "Audio";
     tab_ethernet = "Ethernet";
     tab_firmware = "Firmware";
     tab_status = "Status";
@@ -87,6 +100,7 @@ label = {
     tab_settings = "Settings";
     tab_login = "Login";
     tab_usb = "USB";
+    tab_fec = "FEC";
     tab_test = "Test";
     tab_edid = "EDID";
 
@@ -118,13 +132,35 @@ label = {
     p_usb_off = "Disabled";
     p_usb_label_device = "Connected Device";
 
+    -- Page FEC
+    p_fec_transmitter_only = "only available on transmitter";
+    p_fec_media = "Media type";
+    p_fec_video = "Video";
+    p_fec_audio_emb = "Audio embedded";
+    p_fec_audio_board = "Audio board";
+    p_fec_enable = "Enable";
+    p_fec_interleave = "Interleaving";
+    p_fec_interleave_off = "Off";
+    p_fec_interleave_style1 = "SMPTE 2022-1 annex B";
+    p_fec_interleave_style2 = "SMPTE 2022-1 annex C";
+    p_fec_column_only = "Column only";
+    p_fec_l = "L (rows)";
+    p_fec_d = "D (columns)";
+    p_fec_matrix = "Size of matrix";
+    p_fec_overhead = "Overhead";
+    p_fec_received_packets = "Received packets";
+    p_fec_lost_packets = "Lost packets";
+    p_fec_recovered_packets = "Recovered packets";
+    p_fec_buffer_status = "Buffer status";
+    p_fec_not_available = "Not available";
+
     -- Page TEST
     p_usb_image = "Test Images";
 
     -- Page EDID
     p_edid_mode = "EDID - Extended display identification data";
     p_edid_mode_receiver = "Use EDID of receiver";
-    p_edid_mode_default = "Use default EDID";
+    p_edid_mode_default = "Use own EDID";
     p_edid_transmitter_only = "only available on transmitter";
 
     -- Page firmware
@@ -133,6 +169,8 @@ label = {
     p_fw_sopc_ver = "SOPC";
     p_fw_software_ver = "Software";
     p_fw_software_tag = "Tag";
+    p_fw_select_file = "Select a file";
+    p_fw_note = "Note: stream will be stopped because device have to allocate memory for uploaded file";
     p_fw_upload = "Upload new Firmware";
     p_fw_act_firmware = "Current Firmware version";
     p_fw_hw_ver = "Hardware version";
@@ -155,11 +193,13 @@ label = {
 
     -- Page streaming
     p_st_video = "Video";
-    p_st_audio = "Audio";
+    p_st_audio_board = "Audio (Audioboard)";
+    p_st_audio_emb = "Audio (Videoboard)";
     p_st_connect = "Connect to";
     p_st_media_sel = "Media select";
-    p_st_vid_port = "Video UDP Port";
-    p_st_aud_port = "Audio UDP Port";
+    p_st_vid_port = "Video UDP port";
+    p_st_aud_emb_port = "Audio (embedded) UDP port";
+    p_st_aud_board_port = "Audio (audio board) UDP port";
     p_st_rtsp_port = "RTSP TCP Port";
     p_st_datarate = "Max. datarate";
     p_st_dec_chroma = "Chroma datarate";
@@ -168,13 +208,27 @@ label = {
     p_st_fps_divide = "Reduce refresh rate";
     p_st_eit_only = "(only with EIT software decoder)";
     p_st_auto_stream = "Auto stream";
+    p_st_traffic_shaping = "Traffic shaping";
     p_st_force_hdcp = "Force HDCP"; 
     p_st_multicast_en = "Multicast enable";
     p_st_multicast_group = "Multicast group";
     p_st_unicast = "Unicast";
     p_st_multicast = "Multicast";
     p_osd_time = "OSD time";
-    p_st_rtsp_timeout = "RTSP timeout";
+    p_st_ttl = "IP TTL (time to live)";
+
+    -- Page audio
+    p_aud_source_sel = "Audio source select";
+    p_aud_mic = "Microphone";
+    p_aud_line_in = "Line In";
+    p_aud_hpgain = "Headphones gain (0..100)";
+    p_aud_hpgain_warning = "Gain can just be defined in the range of 0 to 100";
+    p_aud_linegain = "Line in gain (0..100)";
+    p_aud_linegain_warning = "Gain can just be defined in the range of 0 to 100";
+    p_aud_mic_label = "Microphone boost";
+    p_aud_mic_boost = "+20dB";
+    p_aud_board = "Audio card: ";
+    p_aud_mute = "Mute";
 
     -- Page reboot
     p_rb_desc = "The new setting will take effect only after a restart of the device.<br>Should the device be restarted?<br>";

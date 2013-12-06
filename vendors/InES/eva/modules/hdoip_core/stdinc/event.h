@@ -21,6 +21,11 @@
 /* HDCP events */
 #define E_HDCP_STREAMING_ERROR (E_ADV7441A_ID + 0x00000009)  /* HDCP Error, streaming without permission */
 
+/* FEC events */
+#define E_FEC_ID                (0xD0000000)
+#define E_FEC_CNT               1
+#define E_FEC_CORRUPT           (E_FEC_ID + 0x00000001)
+
 /* AD9889 events */
 #define E_ADV9889_ID            (0x90000000)
 #define E_ADV9889_CNT           4
@@ -60,16 +65,18 @@
 /* ASI events */
 #define E_ASI_ID                (0x50000000)
 #define E_ASI_CNT               1
-#define E_ASI_RBF_ERROR         (E_ASI_ID + 0x00000001)
-#define E_ASI_NEW_FS            (E_ASI_ID + 0x00000002)
+#define E_ASI_NEW_FS            (E_ASI_ID + 0x00000001)
 
 /* ASO events */
 #define E_ASO_ID                (0x60000000)
-#define E_ASO_CNT               4
-#define E_ASO_SIZE_ERROR        (E_ASO_ID + 0x00000001)
-#define E_ASO_FIFO_EMPTY        (E_ASO_ID + 0x00000002)
-#define E_ASO_FIFO_FULL         (E_ASO_ID + 0x00000003)
-#define E_ASO_RAM_FULL          (E_ASO_ID + 0x00000004)
+#define E_ASO_CNT               6
+#define E_ASO_EMB_TS_ERROR      (E_ASO_ID + 0x00000001)
+#define E_ASO_BOARD_TS_ERROR    (E_ASO_ID + 0x00000002)
+#define E_ASO_EMB_FIFO_EMPTY    (E_ASO_ID + 0x00000003)
+#define E_ASO_BOARD_FIFO_EMPTY  (E_ASO_ID + 0x00000004)
+#define E_ASO_EMB_FIFO_FULL     (E_ASO_ID + 0x00000005)
+#define E_ASO_BOARD_FIFO_FULL   (E_ASO_ID + 0x00000006)
+
 
 /* ETI events */
 #define E_ETI_ID                (0x70000000)
@@ -78,19 +85,22 @@
 #define E_ETI_LINK_DOWN         (E_ETI_ID + 0x00000002)
 #define E_ETI_VIDEO_ON          (E_ETI_ID + 0x00000003)
 #define E_ETI_VIDEO_OFF         (E_ETI_ID + 0x00000004)
-#define E_ETI_AUDIO_ON          (E_ETI_ID + 0x00000005)
-#define E_ETI_AUDIO_OFF         (E_ETI_ID + 0x00000006)
+#define E_ETI_AUDIO_EMB_ON      (E_ETI_ID + 0x00000005)
+#define E_ETI_AUDIO_EMB_OFF     (E_ETI_ID + 0x00000006)
+#define E_ETI_AUDIO_BOARD_ON    (E_ETI_ID + 0x00000007)
+#define E_ETI_AUDIO_BOARD_OFF   (E_ETI_ID + 0x00000008)
 
 /* ETO events */
 #define E_ETO_ID                (0x80000000)
-#define E_ETO_CNT               6
+#define E_ETO_CNT               8
 #define E_ETO_LINK_UP           (E_ETO_ID + 0x00000001)
 #define E_ETO_LINK_DOWN         (E_ETO_ID + 0x00000002)
 #define E_ETO_VIDEO_ON          (E_ETO_ID + 0x00000003)
 #define E_ETO_VIDEO_OFF         (E_ETO_ID + 0x00000004)
-#define E_ETO_AUDIO_ON          (E_ETO_ID + 0x00000005)
-#define E_ETO_AUDIO_OFF         (E_ETO_ID + 0x00000006)
-
+#define E_ETO_AUDIO_EMB_ON      (E_ETO_ID + 0x00000005)
+#define E_ETO_AUDIO_EMB_OFF     (E_ETO_ID + 0x00000006)
+#define E_ETO_AUDIO_BOARD_ON    (E_ETO_ID + 0x00000007)
+#define E_ETO_AUDIO_BOARD_OFF   (E_ETO_ID + 0x00000008)
 
 /* VIO events */
 #define E_VIO_ID                (0x30000000)

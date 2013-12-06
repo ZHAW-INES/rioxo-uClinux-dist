@@ -4,20 +4,21 @@
  *  Created on: 07.12.2010
  *      Author: alda
  */
-
+#include "hoi_drv_user.h"
 #include "hdoipd.h"
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
-#include "hoi_cfg.h"
-#include "hoi_drv_user.h"
 #include "multicast.h"
-#include "rtsp_client.h"
 #include "rtsp_listener.h"
+#include "rtsp_client.h"
+#include "hoi_cfg.h"
+#include "usb.h"
 #include "rtsp_media.h"
 #include "testimage.h"
-#include "usb.h"
-#include "vrb_audio.h"
+
 #include "vrb_video.h"
+#include "vrb_audio_emb.h"
+#include "vrb_audio_board.h"
 
 // local buffer
 static char buf[256];
@@ -30,6 +31,7 @@ enum {
 	HOID_TSK_UPD_SYS_MAC 		= 0x00000004,
 	HOID_TSK_UPD_SYS_DNS        = 0x00000008,
 	HOID_TSK_UPD_REMOTE_URI 	= 0x00000010,
+	// empty					= 0x00000020,
 	HOID_TSK_UPD_MODE_START 	= 0x00000040,
 	HOID_TSK_UPD_AUTO_STREAM    = 0x00000080,
 	HOID_TSK_UPD_AMX            = 0x00000100,
@@ -40,6 +42,7 @@ enum {
 	HOID_TSK_EXEC_GOTO_READY	= 0x01000000,
 	HOID_TSK_EXEC_START			= 0x02000000,
 	HOID_TSK_EXEC_RESTART		= 0x03000000,
+	// empty					= 0x04000000,
 	HOID_TSK_EXEC_RESTART_VRB   = 0x10000000,
 	HOID_TSK_EXEC_RESTART_VTB   = 0x20000000
 };
@@ -186,14 +189,16 @@ void task_get_vrb_state(char** p)
             switch (hdoipd.vrb_state) {
                 case VRB_OFF: *p = "off (remote state unknown)"; break;
                 case VRB_IDLE: *p = "no audio backchannel"; break;
-                case VRB_AUDIO: *p = "audio backchannel active"; break;
+                case VRB_AUDIO_EMB: *p = "audio embedded backchannel active"; break;
+                case VRB_AUDIO_BOARD: *p = "audio board backchannel active"; break;
             }
         break;
         case HOID_VRB:
             switch (hdoipd.vrb_state) {
                 case VRB_OFF: *p = "idle"; break;
                 case VRB_IDLE: *p = "idle"; break;
-                case VRB_AUDIO: *p = "sending audio back"; break;
+                case VRB_AUDIO_EMB: *p = "sending audio embedded back"; break;
+                case VRB_AUDIO_BOARD: *p = "sending audio board back"; break;
             }
         break;
     }
@@ -207,10 +212,12 @@ void task_get_rsc_state(char** p)
     if (hdoipd.rsc_state & RSC_AUDIO_IN) tmp += sprintf(tmp, "Audio-In ");
     if (hdoipd.rsc_state & RSC_VIDEO_SINK) tmp += sprintf(tmp, "Video-Sink ");
     if (hdoipd.rsc_state & RSC_VIDEO_OUT) tmp += sprintf(tmp, "Video-Out ");
-    if (hdoipd.rsc_state & RSC_AUDIO_OUT) tmp += sprintf(tmp, "Audio-Out ");
+    if (hdoipd.rsc_state & RSC_AUDIO_EMB_OUT) tmp += sprintf(tmp, "Audio0-Out ");
+    if (hdoipd.rsc_state & RSC_AUDIO_BOARD_OUT) tmp += sprintf(tmp, "Audio1-Out ");
     if (hdoipd.rsc_state & RSC_OSD) tmp += sprintf(tmp, "OSD ");
     if (hdoipd.rsc_state & RSC_VIDEO_SYNC) tmp += sprintf(tmp, "Sync-Video ");
-    if (hdoipd.rsc_state & RSC_AUDIO_SYNC) tmp += sprintf(tmp, "Sync-Audio ");
+    if (hdoipd.rsc_state & RSC_AUDIO_EMB_SYNC) tmp += sprintf(tmp, "Sync-Audio video board");
+    if (hdoipd.rsc_state & RSC_AUDIO_IF_BOARD_SYNC) tmp += sprintf(tmp, "Sync-Audio audio board");
 
     if (tmp!=buf) tmp--;
     *tmp = 0;
@@ -221,11 +228,38 @@ void task_get_eth_status(char** p)
 {
     t_hoi_msg_ethstat *stat;
     hoi_drv_ethstat(&stat);
-    sprintf(buf, "TX|RX (C: %d|%d, V: %d|%d, A: %d|%d, Inv: %d|%d)",
+    sprintf(buf, "TX|RX (C: %d|%d, V: %d|%d, AE: %d|%d, AB: %d|%d, Inv: %d|%d)",
             stat->tx_cpu_cnt, stat->rx_cpu_cnt,
             stat->tx_vid_cnt, stat->rx_vid_cnt,
-            stat->tx_aud_cnt, stat->rx_aud_cnt,
+            stat->tx_aud_emb_cnt, stat->rx_aud_emb_cnt,
+            stat->tx_aud_board_cnt, stat->rx_aud_board_cnt,
             stat->tx_inv_cnt, stat->rx_inv_cnt);
+    *p = buf;
+}
+
+void task_get_fec_status(char** p)
+{
+    t_hoi_msg_fecstat *stat;
+    hoi_drv_fecstat(&stat);
+    sprintf(buf, "VID       (pkg: %i mis: %i fix: %i en: %i buf: %i/%i)\nAUD_EMB   (pkg: %i mis: %i fix: %i en: %i buf: %i/%i)\nAUD_BOARD (pkg: %i mis: %i fix: %i en: %i buf: %i/%i))",
+            stat->vid_pkg_cnt,
+            stat->vid_mis_cnt,
+            stat->vid_fix_cnt,
+            stat->vid_fec_en,
+            stat->vid_buf,
+            stat->buf_size,
+            stat->aud_emb_pkg_cnt,
+            stat->aud_emb_mis_cnt,
+            stat->aud_emb_fix_cnt,
+            stat->aud_emb_fec_en,
+            stat->aud_emb_buf,
+            stat->buf_size,
+            stat->aud_board_pkg_cnt,
+            stat->aud_board_mis_cnt,
+            stat->aud_board_fix_cnt,
+            stat->aud_board_fec_en,
+            stat->aud_board_buf,
+            stat->buf_size);
     *p = buf;
 }
 
@@ -266,10 +300,6 @@ void task_get_aso_status(char** p)
     hoi_drv_asoreg(&stat);
 
     tmp += sprintf(buf, "config: 0x%08x, status: 0x%08x\n",stat->config, stat->status);
-    tmp += sprintf(tmp, " start = 0x%08x\n", stat->start);
-    tmp += sprintf(tmp, " stop  = 0x%08x\n", stat->stop);
-    tmp += sprintf(tmp, " read  = 0x%08x\n", stat->read);
-    tmp += sprintf(tmp, " write = 0x%08x\n", stat->write);
 
     *p = buf;
 }
@@ -319,10 +349,11 @@ void task_get_system_state(char** p)
     else tmp += sprintf(tmp, "Box is Idle. ");
 
     if (hdoipd_state(HOID_VTB|HOID_VRB)) {
-        int m = hdoipd_tstate(VTB_VIDEO|VTB_AUDIO);
-        if (m==(VTB_VIDEO|VTB_AUDIO)) tmp += sprintf(tmp, "Streaming Video & Audio. ");
+        int m = hdoipd_tstate(VTB_VIDEO|VTB_AUDIO_BOARD|VTB_AUDIO_EMB);
+        if (m==(VTB_VIDEO|VTB_AUDIO_BOARD|VTB_AUDIO_EMB)) tmp += sprintf(tmp, "Streaming Video & all Audio. ");
         if (m==VTB_VIDEO) tmp += sprintf(tmp, "Streaming Video. ");
-        if (m==VTB_AUDIO) tmp += sprintf(tmp, "Streaming Audio. ");
+        if (m==VTB_AUDIO_BOARD) tmp += sprintf(tmp, "Streaming Audio from Board. ");
+        if (m==VTB_AUDIO_EMB) tmp += sprintf(tmp, "Streaming Audio from Embedded. ");
     }
 
     if (hdoipd.update) tmp += sprintf(tmp, "Device update pending. Restart box to continue");
@@ -349,7 +380,7 @@ void task_get_system_update(char** p)
 
 			if (hdoipd_state(HOID_VRB|HOID_VTB)) {
 				report("set device into ready state...");
-				streaming = vrb_video.state == RTSP_STATE_PLAYING || vrb_audio.state == RTSP_STATE_PLAYING;
+				streaming = vrb_video.state == RTSP_STATE_PLAYING || vrb_audio_emb.state == RTSP_STATE_PLAYING || vrb_audio_board.state == RTSP_STATE_PLAYING;
 				hdoipd_goto_ready();
 	    	}
 		}
@@ -533,10 +564,22 @@ void task_get_vrb_is_playing(char** p)
                             break;
     }
 
-    switch(vrb_audio.state) {
+    switch(vrb_audio_board.state) {
         case RTSP_STATE_PLAYING:  *p = "true";
                             break;
     }
+}
+
+void task_get_aud_board(char** p){
+    // detect connected audio card
+    uint32_t dev_id;
+    hoi_drv_get_audio_device_id(&dev_id);
+	if(dev_id == BDT_ID_ANAUDIO_BOARD){
+		*p = "AIC23B";
+	}
+	else{
+		*p = "none";
+	}
 }
 
 int task_ready(void)
@@ -591,9 +634,9 @@ void task_set_bw(char *p UNUSED)
         bw = (uint32_t)((uint64_t)(60+60*chroma/100)*(1048576)/8);
     }
 
-    // limit bandwidth to 50Mbit/s for 576i and 480i
-    if ((timing.width == 720) && ((timing.height == 240) || (timing.height == 243) || (timing.height == 244) || (timing.height == 288)) && (bw > (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8))) {
-        bw = (uint32_t)((uint64_t)(25+25*chroma/100)*(1048576)/8);
+    // limit bandwidth to 30Mbit/s for 576i and 480i
+    if ((timing.width == 720) && ((timing.height == 240) || (timing.height == 243) || (timing.height == 244) || (timing.height == 288)) && (bw > (uint32_t)((uint64_t)(15+15*chroma/100)*(1048576)/8))) {
+        bw = (uint32_t)((uint64_t)(15+15*chroma/100)*(1048576)/8);
     }
 
     if (bw) hoi_drv_bw(bw, chroma);
@@ -656,7 +699,96 @@ void task_set_mode_start(char *p UNUSED)
 
 void task_set_mode_media(char *p UNUSED)
 {
+    char *s;
+
+    // change LED if audio board is available and activated
+    // (doesn't need a check for vrb, because this is called only on vrb)
+    s = reg_get("mode-media");
+    if (strstr(s, "audio_board")) {
+        hoi_drv_set_led_status(AUDIO_AVAILABLE);
+    } else {
+        hoi_drv_set_led_status(AUDIO_OFF);
+    }
+
 	update_vector |= HOID_TSK_EXEC_RESTART_VRB;
+}
+
+void task_set_audio_hpgain(char* p){
+    struct hdoip_aud_params aud;
+    int volume;
+ 
+    uint32_t fs = AUD_FS;
+    uint32_t sample_width = AUD_SAMPLE_WIDTH;
+    uint16_t ch_map = AUD_CH_MAP; // stereo
+
+    volume = atoi(reg_get("audio-hpgain"));
+    volume = volume*79/100 - 73;
+
+    hoi_drv_aic23b_dac(AIC23B_ENABLE, volume, fs, sample_width, ch_map);
+
+}
+
+void task_set_audio_linegain(char* p){
+    struct hdoip_aud_params aud;
+    int volume;
+    int mic_boost, source;
+
+    aud.fs = AUD_FS;
+    aud.sample_width = AUD_SAMPLE_WIDTH;
+    aud.ch_map = AUD_CH_MAP; // stereo
+
+    volume = atoi(reg_get("audio-linegain"));
+    volume = volume*31/100;
+    
+    if(reg_test("audio-mic-boost","0")) mic_boost = AIC23B_ADC_MICBOOST_0DB;    //just to choose between 0 and 20dB mic-boost
+    else                                mic_boost = AIC23B_ADC_MICBOOST_20DB;
+
+    if(reg_test("audio-source","mic"))  source = AIC23B_ADC_SRC_MIC;
+    else                                source = AIC23B_ADC_SRC_LINE;
+
+    hoi_drv_aic23b_adc(AIC23B_ENABLE, source, volume, mic_boost, &aud);
+}
+
+void task_set_audio_mic_boost(char* p){
+    struct hdoip_aud_params aud;
+    int volume;
+    int mic_boost;
+    int source;
+    aud.fs = AUD_FS;
+    aud.sample_width = AUD_SAMPLE_WIDTH;
+    aud.ch_map = AUD_CH_MAP; // stereo
+    
+    volume = atoi(reg_get("audio-linegain"));
+    volume = volume*31/100;
+
+    if(reg_test("audio-mic-boost","0")) mic_boost = AIC23B_ADC_MICBOOST_0DB;    //just to choose between 0 and 20dB mic-boost
+    else                                mic_boost = AIC23B_ADC_MICBOOST_20DB;
+
+    if(reg_test("audio-source","mic"))  source = AIC23B_ADC_SRC_MIC;
+    else                                source = AIC23B_ADC_SRC_LINE;
+
+    hoi_drv_aic23b_adc(AIC23B_ENABLE, source, volume, mic_boost, &aud);
+}
+
+void task_set_audio_source(char* p){
+    struct hdoip_aud_params aud;
+    int volume;
+    int mic_boost;
+    int source;
+    aud.fs = AUD_FS;
+    aud.sample_width = AUD_SAMPLE_WIDTH;
+    aud.ch_map = AUD_CH_MAP; // stereo
+
+    volume = atoi(reg_get("audio-linegain"));
+    volume = volume*31/100;
+
+    if(reg_test("audio-mic-boost","0")) mic_boost = AIC23B_ADC_MICBOOST_0DB;    //just to choose between 0 and 20dB mic-boost
+    else                                mic_boost = AIC23B_ADC_MICBOOST_20DB;
+    
+    if(reg_test("audio-source","mic"))  source = AIC23B_ADC_SRC_MIC;
+    else                                source = AIC23B_ADC_SRC_LINE;
+
+    hoi_drv_aic23b_adc(AIC23B_ENABLE, source, volume, mic_boost, &aud);
 }
 
 void task_set_amx_update(char *p UNUSED)
@@ -744,6 +876,33 @@ void task_set_fps_divide(char *p UNUSED)
     hoi_drv_set_fps_reduction(reg_get_int("fps_divide"));
 }
 
+void task_set_fec_setting (char *p)
+{
+    char *fec_setting;
+    t_fec_setting fec;
+
+    fec_setting = reg_get("fec_setting");
+
+    // convert from ascii to integer
+    fec.video_enable = fec_setting[0] - 48;
+    fec.video_l = fec_setting[1] - 48 + 4;
+    fec.video_d = fec_setting[2] - 48 + 4;
+    fec.video_interleaving = fec_setting[3] - 48;
+    fec.video_col_only = fec_setting[4] - 48;
+    fec.audio_enable =fec_setting[5] - 48;
+    fec.audio_l = fec_setting[6] - 48 + 4;
+    fec.audio_d = fec_setting[7] - 48 + 4;
+    fec.audio_interleaving = fec_setting[8] - 48;
+    fec.audio_col_only = fec_setting[9] - 48;
+
+    hoi_drv_set_fec_tx_params(&fec);
+}
+
+void task_set_eth_ttl (char *p)
+{
+    update_vector |= HOID_TSK_EXEC_RESTART;
+}
+
 void hdoipd_register_task()
 {
     get_listener("system-state", task_get_system_state);
@@ -759,6 +918,7 @@ void hdoipd_register_task()
     get_listener("daemon-vrb-state", task_get_vrb_state);
     get_listener("daemon-rsc-state", task_get_rsc_state);
     get_listener("eth-status", task_get_eth_status);
+    get_listener("fec-status", task_get_fec_status);
     get_listener("vso-status", task_get_vso_status);
     get_listener("vio-status", task_get_vio_status);
     get_listener("aso-status", task_get_aso_status);
@@ -767,11 +927,13 @@ void hdoipd_register_task()
     get_listener("stream-state", task_get_rtsp_state);
     get_listener("multicast", task_get_multicast_client);
     get_listener("vrb_is_playing", task_get_vrb_is_playing);
+    get_listener("audio-board", task_get_aud_board);
 
     // set-listener are called when a new value is written to the register
     // if the same value is written as already stored the listener isn't called
     set_listener("bandwidth", task_set_bw);
     set_listener("chroma-bandwidth", task_set_bw);
+    set_listener("traffic-shaping", task_set_traffic_shaping);
     set_listener("system-ip", task_set_ip);
     set_listener("system-subnet", task_set_subnet);
     set_listener("system-gateway", task_set_gateway);
@@ -784,6 +946,10 @@ void hdoipd_register_task()
     set_listener("av-delay", task_set_av_delay);
     set_listener("mode-start", task_set_mode_start);
     set_listener("mode-media", task_set_mode_media);
+    set_listener("audio-linegain", task_set_audio_linegain);
+    set_listener("audio-hpgain", task_set_audio_hpgain);
+    set_listener("audio-mic-boost", task_set_audio_mic_boost);
+    set_listener("audio-source", task_set_audio_source);
     set_listener("remote-uri", task_set_remote);
     set_listener("auto-stream", task_set_auto_stream);
     set_listener("amx-en", task_set_amx_update);
@@ -797,6 +963,8 @@ void hdoipd_register_task()
     set_listener("usb-mode", task_set_usb_mode);
     set_listener("test-image", task_set_test_image);
     set_listener("edid-mode", task_set_edid_mode);
-    set_listener("fps_divide", task_set_fps_divide);;
+    set_listener("fps_divide", task_set_fps_divide);
+    set_listener("fec_setting", task_set_fec_setting);
+    set_listener("eth-ttl", task_set_eth_ttl);
 }
 

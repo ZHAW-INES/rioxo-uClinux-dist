@@ -25,7 +25,7 @@ end
 
 local function get_stream_param(str)
     local value, type, dir = "", nil, nil;
-    string.gsub(str, "[%b  ]%a+", function(c) value = value .. c end)
+    string.gsub(str, " %a+", function(c) value = c end)
     string.gsub(str, "(%a+)", function(c) type = c end)
     string.gsub(str, "{(%a+)}", function(c) dir = c end)
     return value, type, dir
@@ -68,7 +68,17 @@ function show(t)
     
     hdoip.pipe.getHDCP(t)
 
-    hdoip.html.Header(t, label.page_name .. label.page_status, script_path)
+    if (t.version_label == "rioxo") then
+        page_name = label.page_name_rioxo
+    elseif (t.version_label == "emcore") then
+        page_name = label.page_name_emcore
+    elseif (t.version_label == "black box") then
+        page_name = label.page_name_black_box
+    else
+        page_name = ""
+    end
+
+    hdoip.html.Header(t, page_name .. label.page_status, script_path)
     hdoip.html.Title(label.p_stat_title)
 
     hdoip.html.TableHeader(2)
@@ -102,6 +112,7 @@ function show(t)
             hdoip.html.Text(t[i].state);                                            hdoip.html.TableInsElement(1);   
         end
     end
+
     hdoip.html.TableBottom()
     hdoip.html.Bottom(t)
 end

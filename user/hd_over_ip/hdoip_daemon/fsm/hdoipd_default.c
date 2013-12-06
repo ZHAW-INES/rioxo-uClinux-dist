@@ -8,7 +8,7 @@
 #include "hoi_cfg.h"
 
 #define CFGTAG      "config-version"
-#define CFGVERSION  "v0.5"
+#define CFGVERSION  "v0.6"
 
 void hdoipd_set_default()
 {
@@ -19,14 +19,20 @@ void hdoipd_set_default()
     reg_set("system-subnet", "255.255.255.0");
     reg_set("system-gateway", "192.168.1.1");
     reg_set("system-mac", "00:15:12:00:00:42");
+    reg_set("system-mac2", "00:15:12:00:00:43");
     reg_set("system-dns1", "");
     reg_set("system-dns2", "");
     reg_set("system-dhcp", "false");
     reg_set("system-cmd", "");
+    reg_set("eth-ttl", "30");
 
     reg_set("auto-stream", "true");
     reg_set("mode-start", "none");
-    reg_set("mode-media", "video");
+    reg_set("mode-media", "video audio_emb");
+    reg_set("audio-source", "linein");
+    reg_set("audio-hpgain", "50");
+    reg_set("audio-linegain", "50");
+    reg_set("audio-mic-boost","0");
     reg_set("mode-sync", "streamsync");
     reg_set("sync-target", "video");
     reg_set("remote-uri", RTSP_SCHEME "://192.168.1.201");
@@ -38,9 +44,10 @@ void hdoipd_set_default()
     reg_set("network-delay", "20");
     reg_set("av-delay", "0");
     reg_set("network-alive", "1");
-    reg_set("network-timeout", "60");
+    reg_set("network-timeout", "3");
     reg_set("video-port", "3400");
-    reg_set("audio-port", "3402");
+    reg_set("audio-port", "3406");
+    reg_set("audio-port-board", "3412");
     reg_set("rtsp-server-port", "554");
     reg_set("rtsp-timeout", "5");
 
@@ -60,10 +67,28 @@ void hdoipd_set_default()
     reg_set("multicast_group", "224.0.1.0");
 
     reg_set("led_instruction", "0");
-    reg_set("osd-time", "10");
+    reg_set("osd-time", "5");
     reg_set("serial-number", "00000000000000");
 
     reg_set("usb-mode", "off");
+    reg_set("traffic-shaping", "true");
+    reg_set("fec_setting", "1441014410");     
+
+    reg_set("edid-mode", "receiver");
+    reg_set("edid-resolution", "12");
+    reg_set("edid-pixelclock", "74250");
+    reg_set("edid-interlaced", "0");
+    reg_set("edid-h-active", "1280");
+    reg_set("edid-v-active", "720");
+    reg_set("edid-h-blank", "370");
+    reg_set("edid-v-blank", "30");
+    reg_set("edid-h-offset", "110");
+    reg_set("edid-v-offset", "5");
+    reg_set("edid-h-pulse", "40");
+    reg_set("edid-v-pulse", "5");
+    reg_set("edid-audio-channels", "1");
+    reg_set("edid-audio-bit", "101");
+    reg_set("edid-audio-fs", "1110000");
 
     reg_set(CFGTAG, "origin");
 }
@@ -73,16 +98,16 @@ static void update_0_0_to_0_1()
     char *p;
     p = reg_get("rtsp-server-port");
     if (p) {
-        reg_set("rtsp-server-port", p);
+        reg_set("rscp-server-port", p);
         reg_del("rtsp-server-port");
     }
     p = reg_get("remote-uri");
     if (p && (strncmp(p, "rtsp", 4) == 0)) {
-        memcpy(p, "rtsp", 4);
+        memcpy(p, "rscp", 4);
     }
     p = reg_get("hello-uri");
     if (p && (strncmp(p, "rtsp", 4) == 0)) {
-        memcpy(p, "rtsp", 4);
+        memcpy(p, "rscp", 4);
     }
 
     reg_set(CFGTAG, "v0.1");
@@ -137,9 +162,24 @@ static void update_0_2_to_0_3()
     }
 
     reg_set(CFGTAG, "v0.3");
+
+    report(INFO "updated registry from version 0.2 to 0.3");
 }
 
 static void update_0_3_to_0_4()
+{
+    char *p;
+
+    // because fec, one port must be at least 6 bigger than the other port
+    reg_set("video-port", "3400");
+    reg_set("audio-port", "3406");
+
+    reg_set(CFGTAG, "v0.4");
+
+    report(INFO "updated registry from version 0.3 to 0.4");
+}
+
+static void update_0_4_to_0_5()
 {
     size_t length = 0;
     char *p, *tmp;
@@ -184,10 +224,10 @@ static void update_0_3_to_0_4()
         reg_del("rscp-server-port");
     }
 
-    reg_set(CFGTAG, "v0.4");
+    reg_set(CFGTAG, "v0.5");
 }
 
-static void update_0_4_to_0_5()
+static void update_0_5_to_0_6()
 {
     if (reg_get("alive-check") != NULL)
         reg_del("alive-check");
@@ -196,7 +236,7 @@ static void update_0_4_to_0_5()
     if (reg_get("alive-check-port") != NULL)
         reg_del("alive-check-port");
 
-    reg_set(CFGTAG, "v0.5");
+    reg_set(CFGTAG, "v0.6");
 }
 
 /** upgrade config
@@ -220,39 +260,38 @@ void hdoipd_registry_update()
         update = true;
     }
 
-    if (!reg_test(CFGTAG, CFGVERSION))
-    {
-      if (reg_test(CFGTAG, "v0.1")) {
-          update_0_1_to_0_2();
-          update = true;
-      }
+    if (reg_test(CFGTAG, "v0.1")) {
+        update_0_1_to_0_2();
+        update = true;
+    }
 
-      if (reg_test(CFGTAG, "v0.2")) {
-          update_0_2_to_0_3();
-          update = true;
-      }
+    if (reg_test(CFGTAG, "v0.2")) {
+        update_0_2_to_0_3();
+        update = true;
+    }
 
-      if (reg_test(CFGTAG, "v0.3")) {
-          update_0_3_to_0_4();
-          update = true;
-      }
+    if (reg_test(CFGTAG, "v0.3")) {
+        update_0_3_to_0_4();
+        update = true;
+    }
 
-      if (reg_test(CFGTAG, "v0.4")) {
-          update_0_4_to_0_5();
-          update = true;
-      }
+    if (reg_test(CFGTAG, "v0.4")) {
+        update_0_4_to_0_5();
+        update = true;
+    }
 
-      // ... further version upgrades
-      // if (reg_test(CFGTAG, "v0.1")) -> upgrade to 0.2 etc..
+    if (reg_test(CFGTAG, "v0.5")) {
+        update_0_5_to_0_6();
+        update = true;
+    }
 
-      // when update store the result
-      if (update) {
-          report(INFO "store updated config");
-          hoi_cfg_write(CFG_FILE);
-      }
+    // when update store the result
+    if (update) {
+        report(INFO "store updated config");
+        hoi_cfg_write(CFG_FILE);
+    }
 
-      if (!reg_test(CFGTAG, CFGVERSION)) {
-          report(INFO "unknown config version");
-      }
+    if (!reg_test(CFGTAG, CFGVERSION)) {
+        report(INFO "unknown config version");
     }
 }

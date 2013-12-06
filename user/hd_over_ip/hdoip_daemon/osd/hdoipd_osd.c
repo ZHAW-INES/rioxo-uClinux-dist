@@ -4,18 +4,17 @@
  *  Created on: 26.11.2010
  *      Author: alda
  */
-
-#include "hdoip_log.h"
+#include "hoi_drv_user.h"
 #include "hdoipd.h"
 #include "hdoipd_msg.h"
 #include "hdoipd_osd.h"
 #include "hdoipd_fsm.h"
-#include "hoi_drv_user.h"
 #include "hoi_image.h"
 #include "hoi_res.h"
-#include "multicast.h"
-#include "rtsp_client.h"
 #include "rtsp_string.h"
+#include "rtsp_client.h"
+#include "hdoip_log.h"
+#include "multicast.h"
 
 char osdtmp[OSD_BUFFER_LENGTH];
 
@@ -91,10 +90,11 @@ void* hdoipd_osd_timer(void UNUSED *d)
         lock("hdoipd_osd_timer");
         if (hdoipd.osd_timeout > 0) {
             hdoipd.osd_timeout--;
-        }
-        if (hdoipd.osd_timeout == 0) {
-            if (hdoipd_rsc(RSC_OSD)) {
-                hdoipd_osd_deactivate();
+        } else { 
+            if (hdoipd.osd_timeout == 0) {
+                if (hdoipd_rsc(RSC_OSD)) {
+                    hdoipd_osd_deactivate();
+                }
             }
         }
         unlock("hdoipd_osd_timer");
@@ -112,9 +112,9 @@ void* hdoipd_osd_timer(void UNUSED *d)
         usb_device_handler(&hdoipd.usb_devices);
 
         // Multicast Handler
-        if (hdoipd_state(HOID_VTB) && multicast_get_enabled()) {
-            multicast_handler();
-        }
+    //    if (hdoipd_state(HOID_VTB) && multicast_get_enabled()) {
+    //        multicast_handler();
+    //    }
 
         hdoipd.tick++;
 #ifdef USE_SYS_TICK

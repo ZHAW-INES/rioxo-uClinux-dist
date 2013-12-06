@@ -12,7 +12,7 @@
  *
  */
 
-#define ETI_ADDR_SPACE              168
+#define ETI_ADDR_SPACE              212
 
 #define ETI_CONFIG_SET_REG          0
 #define ETI_CONFIG_CLR_REG          4
@@ -22,21 +22,13 @@
 #define ETI_CPU_STOP_REG            20
 #define ETI_CPU_WRITE_REG           24
 #define ETI_CPU_READ_REG            28
-#define ETI_AUD_START_REG           32
-#define ETI_AUD_STOP_REG            36
-#define ETI_AUD_WRITE_REG           40
-#define ETI_AUD_READ_REG            44
-#define ETI_VID_START_REG           48
-#define ETI_VID_STOP_REG            52
-#define ETI_VID_WRITE_REG           56
-#define ETI_VID_READ_REG            60
 #define ETI_CPU_FILTER_MASK_REG     64
-#define ETI_AUD_FILTER_MASK_REG     68
+#define ETI_AUD_EMB_FILTER_MASK_REG 68
 #define ETI_VID_FILTER_MASK_REG     72
 #define ETI_DEVICE_IP_REG           76
 #define ETI_AUD_SRC_IP_REG          80
 #define ETI_VID_SRC_IP_REG          84
-#define ETI_AUD_DST_UDP_PORT_REG    88
+#define ETI_AUD_EMB_DST_UDP_PORT_REG 88
 #define ETI_VID_DST_UDP_PORT_REG    92
 #define ETI_AES_SESSION_KEY0_REG    96
 #define ETI_AES_SESSION_KEY1_REG    100
@@ -44,14 +36,23 @@
 #define ETI_AES_SESSION_KEY3_REG    108
 #define ETI_AES_RIV0_REG            112
 #define ETI_AES_RIV1_REG            116
-#define ETI_DEBUG_REG               124
-#define ETI_AUD_PACKET_CNT_REG      136
+#define ETI_AUD_EMB_PACKET_CNT_REG  136
 #define ETI_VID_PACKET_CNT_REG      140
 #define ETI_CPU_PACKET_CNT_REG      144
 #define ETI_INV_PACKET_CNT_REG      148
+#define ETI_FLS_PACKET_CNT_REG      152
 
-#define ETI_FRAME_PERIOD            156
-#define ETI_FRAME_GAP               160
+#define ETI_AUD_EMB_FEC_COL_FILTER_MASK_REG     168
+#define ETI_AUD_EMB_FEC_ROW_FILTER_MASK_REG     172
+#define ETI_VID_FEC_COL_FILTER_MASK_REG         176
+#define ETI_VID_FEC_ROW_FILTER_MASK_REG         180
+#define ETI_AUD_BOARD_FILTER_MASK_REG           192
+#define ETI_AUD_BOARD_FEC_COL_FILTER_MASK_REG   196
+#define ETI_AUD_BOARD_FEC_ROW_FILTER_MASK_REG   200
+#define ETI_AUD_BOARD_DST_UDP_PORT_REG          204
+#define ETI_AUD_BOARD_PACKET_CNT_REG            208
+
+
 /** bit indexes 
  *
  */

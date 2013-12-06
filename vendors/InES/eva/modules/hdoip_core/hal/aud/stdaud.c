@@ -1,4 +1,5 @@
 #include "stdaud.h"
+#include "std.h"
 
 /* converts container format to amount of bits
  *
@@ -32,6 +33,20 @@ uint32_t aud_bits_to_container(uint8_t bits)
     }
 }
 
+/** convert the active channels map to number of channels
+ * @param ch_map        active channels bitvector
+ * @return              number of active channels
+ */
+uint8_t aud_chmap2cnt(uint16_t ch_map)
+{
+    int i;
+    uint8_t ch = 0;
+
+    for (i = 0; i < 15; i++) {
+        if (ch_map & (1<<i)) ch++;
+    }
+    return ch;
+}
 
 /* Align the amount of channels and bits per sample to 32 bit words
  *
@@ -81,13 +96,12 @@ uint8_t aud_get_sample_length(uint8_t bits, uint8_t channels)
  *
  * @param aud_params pointer to the audio parameter struct
  */
-void aud_report_params(struct hdoip_aud_params* aud_params) 
+void aud_report_params(struct hdoip_aud_params* aud_params, int unsigned stream)
 {
-
-    REPORT(INFO, "Channel left count  : %d", aud_params->ch_cnt_left);
-    REPORT(INFO, "Channel right count : %d", aud_params->ch_cnt_right);
+    REPORT(INFO, "Stream              : %d", stream);
+    REPORT(INFO, "Channel map         : 0x%01X", aud_params->ch_map);
     REPORT(INFO, "Sampling frequency  : %d Hz", aud_params->fs);
-    REPORT(INFO, "Bits / sample       : %d bit", aud_params->sample_width);    
+    REPORT(INFO, "Bits / sample       : %d bit\n", aud_params->sample_width);
 
 }
 
