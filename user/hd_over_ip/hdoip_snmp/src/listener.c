@@ -51,9 +51,8 @@ void init_listener(void){
     static oid modeStart_oid[] = { 1,3,6,1,4,1,1111,1,2,5 };
     static oid modeMedia_oid[] = { 1,3,6,1,4,1,1111,1,2,6 };
     static oid remoteUri_oid[] = { 1,3,6,1,4,1,1111,1,2,7 };
-    static oid helloUri_oid[] = { 1,3,6,1,4,1,1111,1,2,8 };
-    static oid bandwidth_oid[] = { 1,3,6,1,4,1,1111,1,2,9 };
-    static oid networkDelay_oid[] = { 1,3,6,1,4,1,1111,1,2,10 };
+    static oid bandwidth_oid[] = { 1,3,6,1,4,1,1111,1,2,8 };
+    static oid networkDelay_oid[] = { 1,3,6,1,4,1,1111,1,2,9 };
 
     DEBUGMSGTL(("listener", "Initializing\n"));
 
@@ -64,7 +63,6 @@ void init_listener(void){
     REGISTER_SCALAR(modeStart, "mode-start")
     REGISTER_SCALAR(modeMedia, "mode-media")
     REGISTER_SCALAR(remoteUri, "remote-uri")
-    REGISTER_SCALAR(helloUri, "hello-uri")
     REGISTER_SCALAR(bandwidth, "bandwidth")
     REGISTER_SCALAR(networkDelay, "network-delay")
 }
@@ -82,7 +80,6 @@ HANDLE_FUNCTION(systemMac, "system-mac")
 HANDLE_FUNCTION(modeStart, "mode-start")
 HANDLE_FUNCTION(modeMedia, "mode-media")
 HANDLE_FUNCTION(remoteUri, "remote-uri")
-HANDLE_FUNCTION(helloUri, "hello-uri")
 HANDLE_FUNCTION(bandwidth, "bandwidth")  //Umrechnen
 HANDLE_FUNCTION(networkDelay, "network-delay")
 

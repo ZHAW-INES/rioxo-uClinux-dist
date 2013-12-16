@@ -21,7 +21,9 @@ int getset_value_generic(t_snmp_array* arr, int mode, netsnmp_request_info *requ
 
     int fd = -1, fdr = -1, ret;
     char* s;
-    
+    int len;
+    int i;
+
     // open pipe to hdoipd and check if it was successful
     fd = open(FIFO_NODEC, O_RDWR, 0600); 
     if(fd == -1) {
@@ -78,7 +80,16 @@ int getset_value_generic(t_snmp_array* arr, int mode, netsnmp_request_info *requ
             switch(arr->arg_cnt){
                 case 1:
                     //Call function 1: hoic_set_param
+                    //replace end of text marker with '\0'
+                    len = strlen(requests->requestvb->val.string);
+                    requests->requestvb->val.string[len-1] = '\0';
+                    // set param
                     hoic_set_param(fd, arr->p_name, requests->requestvb->val.string);
+                    // delete string
+                    len = strlen(requests->requestvb->val.string);
+                    for (i=0;i<len;i++) {
+                        requests->requestvb->val.string[i] = '\0';
+                    }
                 break;
                 case 2:
                     //Call function 2: hoic_sw (used for commands)

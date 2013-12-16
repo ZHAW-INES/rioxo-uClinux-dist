@@ -304,11 +304,14 @@ void hdoipd_get_hdcp_state(t_hoic_gethdcpstate* cmd, int rsp)
 void hdoipd_factory_default(t_hoic_cmd UNUSED *cmd)
 {
     char mac[18];
+    char mac2[18];
     char serial[15];
     memcpy(mac, reg_get("system-mac"), sizeof(mac));        	/* MAC backup */
+    memcpy(mac2, reg_get("system-mac2"), sizeof(mac2));        	/* MAC2 backup */
     memcpy(serial, reg_get("serial-number"), sizeof(serial));	/* Serial number backup */
     hdoipd_set_default();
     reg_set("system-mac", mac);                           		/* MAC restore */
+    reg_set("system-mac2", mac2);                         		/* MAC2 restore */
     reg_set("serial-number", serial);                          	/* Serial number restore */
 }
 
