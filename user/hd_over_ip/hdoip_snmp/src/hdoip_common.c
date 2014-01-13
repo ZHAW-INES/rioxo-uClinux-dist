@@ -3,6 +3,7 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include "../../hdoip_daemon/hdoipd_msg.h"
 #include "hdoip_common.h"
@@ -21,17 +22,14 @@ int getset_value_generic(t_snmp_array* arr, int mode, netsnmp_request_info *requ
 
     int fd = -1, fdr = -1, ret;
     char* s;
-    int len;
-    int i;
 
     // open pipe to hdoipd and check if it was successful
-    fd = open(FIFO_NODEC, O_RDWR, 0600); 
+    fd = open(FIFO_NODEC, O_RDWR, 0600);
     if(fd == -1) {
         snmp_log(LOG_ERR, "Failed to open (fd) %s: %s \n", FIFO_NODEC, strerror(errno));
         return -1;
     }
     
-    // open pipe to hdoipd and check if it was successful
     fdr = open(FIFO_NODER, O_RDWR, 0600);
     if(fdr == -1) {
         snmp_log(LOG_ERR, "Failed to open (fdr) %s: %s \n", FIFO_NODEC, strerror(errno));
@@ -45,7 +43,7 @@ int getset_value_generic(t_snmp_array* arr, int mode, netsnmp_request_info *requ
             case MODE_GET:     
                 s = hoic_get_param(fd, fdr, arr->p_name);
                 snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR, (u_char *)s, strlen((char *)s));
-                free(s);
+                //free(s);
                 break;
             default:
                 // we should never get here, so this is a really bad error
@@ -62,7 +60,7 @@ int getset_value_generic(t_snmp_array* arr, int mode, netsnmp_request_info *requ
             case MODE_GET:     
                 s = hoic_get_param(fd, fdr, arr->p_name);
                 snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR, (u_char *)s, strlen((char *)s));
-                free(s);
+                //free(s);
                 break;
             // if a value is set, the following modes are executed
             case MODE_SET_RESERVE1:
@@ -79,20 +77,13 @@ int getset_value_generic(t_snmp_array* arr, int mode, netsnmp_request_info *requ
             // Select the right function
             switch(arr->arg_cnt){
                 case 1:
-                    //Call function 1: hoic_set_param
-                    //replace end of text marker with '\0'
-                    len = strlen(requests->requestvb->val.string);
-                    requests->requestvb->val.string[len-1] = '\0';
-                    // set param
+                    snmp_log(LOG_ERR, "set (%s)\n", requests->requestvb->val.string );
+                	//Call function 1: hoic_set_param
                     hoic_set_param(fd, arr->p_name, requests->requestvb->val.string);
-                    // delete string
-                    len = strlen(requests->requestvb->val.string);
-                    for (i=0;i<len;i++) {
-                        requests->requestvb->val.string[i] = '\0';
-                    }
                 break;
                 case 2:
                     //Call function 2: hoic_sw (used for commands)
+                	//snmp_log(LOG_ERR, "here (%s) \n", requests->requestvb->val.string );
                     hoic_sw(fd, arr->id);
                     break;
                 case 3:

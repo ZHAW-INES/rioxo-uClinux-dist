@@ -4,7 +4,7 @@
  */
 /*
  * Portions of this file are copyrighted by:
- * Copyright © 2003 Sun Microsystems, Inc. All rights reserved.
+ * Copyright ï¿½ 2003 Sun Microsystems, Inc. All rights reserved.
  * Use is subject to license terms specified in the COPYING file
  * distributed with the Net-SNMP package.
  */
@@ -607,7 +607,7 @@ netsnmp_call_handlers(netsnmp_handler_registration *reginfo,
     for (request = requests ; request; request = request->next) {
         request->processed = 0;
     }
-
+	
     status = netsnmp_call_handler(reginfo->handler, reginfo, reqinfo, requests);
 
     return status;

@@ -151,7 +151,7 @@ typedef struct variable_list {
    /** buffer to hold the OID */
    oid             name_loc[MAX_OID_LEN];  
    /** 90 percentile < 40. */
-   u_char          buf[0];
+   u_char          buf[0]; //TODO AMIN
    /** (Opaque) hook for additional data */
    void           *data;
    /** callback to free above */
