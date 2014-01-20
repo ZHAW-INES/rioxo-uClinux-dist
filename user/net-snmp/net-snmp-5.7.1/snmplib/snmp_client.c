@@ -29,7 +29,7 @@ SOFTWARE.
 ******************************************************************/
 /*
  * Portions of this file are copyrighted by:
- * Copyright © 2003 Sun Microsystems, Inc. All rights reserved.
+ * Copyright ï¿½ 2003 Sun Microsystems, Inc. All rights reserved.
  * Use is subject to license terms specified in the COPYING file
  * distributed with the Net-SNMP package.
  */
@@ -265,11 +265,12 @@ snmp_clone_var(netsnmp_variable_list * var, netsnmp_variable_list * newvar)
             if (var->val_len <= sizeof(var->buf))
                 newvar->val.string = newvar->buf;
             else {
-                newvar->val.string = (u_char *) malloc(var->val_len);
+                newvar->val.string = (u_char *) malloc(var->val_len+10); //TODO AMIN
                 if (!newvar->val.string)
                     return 1;
             }
             memmove(newvar->val.string, var->val.string, var->val_len);
+            newvar->val.string[var->val_len]='\0';//TODO AMIN KOLESH
         } else {                /* fix the pointer to new local store */
             newvar->val.string = newvar->buf;
             /*
@@ -296,7 +297,8 @@ snmp_clone_mem(void **dstPtr, const void *srcPtr, unsigned len)
 {
     *dstPtr = NULL;
     if (srcPtr) {
-        *dstPtr = malloc(len + 1);
+        //*dstPtr = malloc(len + 1);
+        *dstPtr= calloc(1,len+100);			//TODO AMIN
         if (!*dstPtr) {
             return 1;
         }
@@ -514,6 +516,7 @@ _copy_pdu_vars(netsnmp_pdu *pdu,        /* source PDU */
 #endif
 
     newpdu->variables = _copy_varlist(var, drop_idx, copy_count);
+
 #if TEMPORARILY_DISABLED
     if (newpdu->variables)
         copied = 1;
@@ -536,6 +539,9 @@ _copy_pdu_vars(netsnmp_pdu *pdu,        /* source PDU */
         return 0;
     }
 #endif
+
+    //snmp_reset_var_buffers(var);//TODO AMIN
+
     return newpdu;
 }
 
@@ -554,8 +560,7 @@ _clone_pdu(netsnmp_pdu *pdu, int drop_err)
 {
     netsnmp_pdu    *newpdu;
     newpdu = _clone_pdu_header(pdu);
-    newpdu = _copy_pdu_vars(pdu, newpdu, drop_err, 0, 10000);   /* skip none, copy all */
-
+    newpdu = _copy_pdu_vars(pdu, newpdu, drop_err, 0, 10000);   /* skip none, copy all */  //TODO AMIN
     return newpdu;
 }
 
@@ -792,6 +797,14 @@ int
 snmp_set_var_value(netsnmp_variable_list * vars,
                    const void * value, size_t len)
 {
+    snmp_log(LOG_ERR,"\n SXXXXXXXXXXX \n");
+    if (len > 0)
+    	if (len < 100)
+			if (vars->val.string)
+				snmp_log(LOG_ERR,"\n %s %d\n",vars->val.string, len);
+
+
+
     int             largeval = 1;
 
     /*
@@ -799,20 +812,27 @@ snmp_set_var_value(netsnmp_variable_list * vars,
      * memory, if len < vars->val_len ?
      */
     if (vars->val.string && vars->val.string != vars->buf) {
+        snmp_log(LOG_ERR,"SXXXXXXXXXXX 1\n");
         free(vars->val.string);
     }
     vars->val.string = NULL;
+    //vars->val_len = (size_t*)malloc(sizeof(size_t));//TODO AMIN
     vars->val_len = 0;
 
     /*
      * use built-in storage for smaller values 
      */
+    //TODO AMIN comment kardam paiino
+
     if (len <= sizeof(vars->buf)) {
         vars->val.string = (u_char *) vars->buf;
         largeval = 0;
     }
 
+
     if ((0 == len) || (NULL == value)) {
+        snmp_log(LOG_ERR,"SXXXXXXXXXXX 2\n");
+        vars->val.string= (u_char*)malloc(2*sizeof(u_char));//TODO AMIN
         vars->val.string[0] = 0;
         return 0;
     }
@@ -929,9 +949,11 @@ snmp_set_var_value(netsnmp_variable_list * vars,
     case ASN_OPAQUE:
     case ASN_NSAP:
         if (vars->val_len >= sizeof(vars->buf)) {
+            snmp_log(LOG_ERR,"SXXXXXXXXXXX 7\n");
             vars->val.string = (u_char *) malloc(vars->val_len + 1);
         }
         if (vars->val.string == NULL) {
+            snmp_log(LOG_ERR,"SXXXXXXXXXXX 8\n");
             snmp_log(LOG_ERR,"no storage for string\n");
             return 1;
         }
@@ -942,6 +964,7 @@ snmp_set_var_value(netsnmp_variable_list * vars,
          * assumptions.  
          */
         vars->val.string[vars->val_len] = '\0';
+        vars->val.string[vars->val_len] = 0;//TODO AMIN
         break;
 
     case SNMP_NOSUCHOBJECT:
@@ -1277,6 +1300,7 @@ netsnmp_query_get_default_session( void ) {
 static int _query(netsnmp_variable_list *list,
                   int                    request,
                   netsnmp_session       *session) {
+    snmp_log(LOG_ERR, "IN _query\n");
 
     netsnmp_pdu *pdu      = snmp_pdu_create( request );
     netsnmp_pdu *response = NULL;
@@ -1622,6 +1646,8 @@ _row_status_state_single_value_cols(netsnmp_state_machine_input *input,
         /*
          * send set
          */
+        snmp_log(LOG_ERR, "IN NETSNMP QUERY SET\n");//TODO AMIN
+
         rc = netsnmp_query_set( var, ctx->session );
         var->next_variable = tmp_next;
         if (-2 == rc)
@@ -1832,6 +1858,9 @@ int
 netsnmp_row_create(netsnmp_session *sess, netsnmp_variable_list *vars,
                    int row_status_index)
 {
+    snmp_log(LOG_ERR, "\nIN netsnmp_row create!!\n");
+
+
     netsnmp_state_machine_step rc_cleanup =
         { "row_create_cleanup", 0, _row_status_state_cleanup,
           0, NULL, NULL, 0, NULL };

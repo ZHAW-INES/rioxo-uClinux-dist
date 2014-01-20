@@ -7,7 +7,8 @@
 
 /* function declarations */
 void init_only_registry(void);
-Netsnmp_Node_Handler handle_audioPort;
+Netsnmp_Node_Handler handle_audioEmbPort;
+Netsnmp_Node_Handler handle_audioBoardPort;
 Netsnmp_Node_Handler handle_videoPort;
 Netsnmp_Node_Handler handle_rtspServerPort;
 Netsnmp_Node_Handler handle_hdcpForce;
