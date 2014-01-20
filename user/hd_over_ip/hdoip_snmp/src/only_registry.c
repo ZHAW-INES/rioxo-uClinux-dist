@@ -42,18 +42,20 @@ netsnmp_register_scalar(                                                      \
 
 // Initializes the only_registry module
 void init_only_registry(void){
-    static oid audioPort_oid[] = { 1,3,6,1,4,1,1111,1,3,1 };
-    static oid videoPort_oid[] = { 1,3,6,1,4,1,1111,1,3,2 };
-    static oid rscpServerPort_oid[] = { 1,3,6,1,4,1,1111,1,3,3 };
-    static oid hdcpForce_oid[] = { 1,3,6,1,4,1,1111,1,3,4 };
-    static oid networkAlive_oid[] = { 1,3,6,1,4,1,1111,1,3,5 };
-    static oid networkTimeout_oid[] = { 1,3,6,1,4,1,1111,1,3,6 };
+    static oid audioEmbPort_oid[] = { 1,3,6,1,4,1,1111,1,3,1 };
+    static oid audioBoardPort_oid[] = { 1,3,6,1,4,1,1111,1,3,2 };
+    static oid videoPort_oid[] = { 1,3,6,1,4,1,1111,1,3,3 };
+    static oid rtspServerPort_oid[] = { 1,3,6,1,4,1,1111,1,3,4 };
+    static oid hdcpForce_oid[] = { 1,3,6,1,4,1,1111,1,3,5 };
+    static oid networkAlive_oid[] = { 1,3,6,1,4,1,1111,1,3,6 };
+    static oid networkTimeout_oid[] = { 1,3,6,1,4,1,1111,1,3,7 };
 
     DEBUGMSGTL(("only_registry", "Initializing\n"));
 
-    REGISTER_SCALAR(audioPort, "audio-port")
+    REGISTER_SCALAR(audioEmbPort, "audio-port")
+    REGISTER_SCALAR(audioBoardPort, "audio-port-board")
     REGISTER_SCALAR(videoPort, "video-port")
-    REGISTER_SCALAR(rscpServerPort, "rscp-server-port")
+    REGISTER_SCALAR(rtspServerPort, "rtsp-server-port")
     REGISTER_SCALAR(hdcpForce, "hdcp-force")
     REGISTER_SCALAR(networkAlive, "network-alive")
     REGISTER_SCALAR(networkTimeout, "network-timeout")
@@ -65,9 +67,10 @@ void init_only_registry(void){
  * @param       2. Name of the parameter we want to set/get in the registry
  * @return      error message
  * */
-HANDLE_FUNCTION(audioPort, "audio-port")
+HANDLE_FUNCTION(audioEmbPort, "audio-port")
+HANDLE_FUNCTION(audioBoardPort, "audio-port-board")
 HANDLE_FUNCTION(videoPort, "video-port")
-HANDLE_FUNCTION(rscpServerPort, "rscp-server-port")
+HANDLE_FUNCTION(rtspServerPort, "rtsp-server-port")
 HANDLE_FUNCTION(hdcpForce, "hdcp-force")
 HANDLE_FUNCTION(networkAlive, "network-alive")
 HANDLE_FUNCTION(networkTimeout, "network-timeout")

@@ -14,7 +14,6 @@ Netsnmp_Node_Handler handle_systemMac;
 Netsnmp_Node_Handler handle_modeStart;
 Netsnmp_Node_Handler handle_modeMedia;
 Netsnmp_Node_Handler handle_remoteUri;
-Netsnmp_Node_Handler handle_helloUri;
 Netsnmp_Node_Handler handle_bandwidth;
 Netsnmp_Node_Handler handle_networkDelay;
 
