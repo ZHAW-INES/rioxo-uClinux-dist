@@ -71,11 +71,9 @@ void hdoipd_osd_activate(int res)
                 hdoipd_set_rsc(RSC_VIDEO_OUT);
             }
         }
-        if (osd_timeout > 0) {
-            hoi_drv_osdon();
-            report(CHANGE "osd on");
-            hdoipd_set_rsc(RSC_OSD);
-        }
+        hoi_drv_osdon();
+        report(CHANGE "osd on");
+        hdoipd_set_rsc(RSC_OSD);
     }
     if (hdoipd.osd_timeout >= 0) hdoipd.osd_timeout = osd_timeout;
 }
