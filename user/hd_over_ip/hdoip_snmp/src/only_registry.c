@@ -50,6 +50,7 @@ void init_only_registry(void){
     static oid networkAlive_oid[] = { 1,3,6,1,4,1,1111,1,3,6 };
     static oid networkTimeout_oid[] = { 1,3,6,1,4,1,1111,1,3,7 };
 
+
     DEBUGMSGTL(("only_registry", "Initializing\n"));
 
     REGISTER_SCALAR(audioEmbPort, "audio-port")
