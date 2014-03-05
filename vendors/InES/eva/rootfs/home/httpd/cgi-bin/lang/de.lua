@@ -158,7 +158,9 @@ label = {
 
     -- Page EDID
     p_edid_mode_receiver = "Benutze EDID vom Empf&auml;nger";
-    p_edid_mode_default = "Benutze eigenes EDID";
+    p_edid_mode_default = "Benutze generiertes EDID";
+    p_edid_use_advanced = "Benutze erweiterte Einstellungen";
+    p_edid_advanced = "Erweiterte Einstellungen";
     p_edid_transmitter_only = "Nur beim Sender verf&uuml;gbar";
 
     -- Page firmware

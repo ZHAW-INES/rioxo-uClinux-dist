@@ -60,7 +60,7 @@ function show(t)
                         [16] = "1920x1080p @ 30Hz";
                         [17] = "1920x1080p @ 25Hz";
                         [18] = "1920x1080p @ 24Hz";
-                        [19] = "   own resolution";
+                        [19] = label.p_edid_use_advanced;
                        }
 
     local timing = {    [" 640x480p  @ 60Hz"] = { 25175, 0,  640,  480,  160, 45,  16, 10,  96, 2, 1};
@@ -82,7 +82,7 @@ function show(t)
                         ["1920x1080p @ 30Hz"] = { 74250, 0, 1920, 1080,  280, 45,  88,  4,  44, 5, 34};
                         ["1920x1080p @ 25Hz"] = { 74250, 0, 1920, 1080,  720, 45, 528,  4,  44, 5, 33};
                         ["1920x1080p @ 24Hz"] = { 74250, 0, 1920, 1080,  830, 45, 638,  4,  44, 5, 32};
-                        ["   own resolution"] = {t.own_pixelclock, t.own_interlaced, t.own_horizontal_active, t.own_vertical_active, t.own_horizontal_blanking,t.own_vertical_blanking, t.own_horizontal_offset, t.own_vertical_offset, t.own_horizontal_pulse, t.own_vertical_pulse, 0};
+                        [label.p_edid_use_advanced] = {t.own_pixelclock, t.own_interlaced, t.own_horizontal_active, t.own_vertical_active, t.own_horizontal_blanking,t.own_vertical_blanking, t.own_horizontal_offset, t.own_vertical_offset, t.own_horizontal_pulse, t.own_vertical_pulse, 0};
                     }
 
 
@@ -486,46 +486,46 @@ function show(t)
                                                                                                                                                         hdoip.html.TableInsElement(2);
         hdoip.html.Title("Video")                                                                                                                       hdoip.html.TableInsElement(2);
         hdoip.html.Text("Supported resolution");                                                                                                        hdoip.html.TableInsElement(1);
-        hdoip.html.DropdownBoxEdid("resolution_0", menu_items, menu_items_count, t.resolution_0, t.edid_mode_receiver)                                  hdoip.html.TableInsElement(1);
+        hdoip.html.DropdownBoxEdid("resolution_0", menu_items, menu_items_count, t.resolution_0, 0)                                                     hdoip.html.TableInsElement(1);
         hdoip.html.TableBottom()
 
         hdoip.html.TableHeader(3)
-        hdoip.html.Title("Own resolution:");                                                                                                            hdoip.html.TableInsElement(3);
+        hdoip.html.Title(label.p_edid_advanced..":");                                                                                                   hdoip.html.TableInsElement(3);
         hdoip.html.Text("");                                                                                                                            hdoip.html.TableInsElement(1);
         hdoip.html.Text("Horizontal");                                                                                                                  hdoip.html.TableInsElement(1);
         hdoip.html.Text("Vertical");                                                                                                                    hdoip.html.TableInsElement(1);
         hdoip.html.Text("Active pixels/lines");                                                                                                         hdoip.html.TableInsElement(1);
-        hdoip.html.FormText("own_horizontal_active", t.own_horizontal_active, 4, t.edid_mode_receiver);                                                 hdoip.html.TableInsElement(1);
-        hdoip.html.FormText("own_vertical_active", t.own_vertical_active, 4, t.edid_mode_receiver);                                                     hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_horizontal_active", t.own_horizontal_active, 4, 0);                                                                    hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_vertical_active", t.own_vertical_active, 4, 0);                                                                        hdoip.html.TableInsElement(1);
         hdoip.html.Text("Blanking pixels/lines");                                                                                                       hdoip.html.TableInsElement(1);
-        hdoip.html.FormText("own_horizontal_blanking", t.own_horizontal_blanking, 4, t.edid_mode_receiver);                                             hdoip.html.TableInsElement(1);
-        hdoip.html.FormText("own_vertical_blanking", t.own_vertical_blanking, 4, t.edid_mode_receiver);                                                 hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_horizontal_blanking", t.own_horizontal_blanking, 4, 0);                                                                hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_vertical_blanking", t.own_vertical_blanking, 4, 0);                                                                    hdoip.html.TableInsElement(1);
         hdoip.html.Text("Sync offset");                                                                                                                 hdoip.html.TableInsElement(1);
-        hdoip.html.FormText("own_horizontal_offset", t.own_horizontal_offset, 4, t.edid_mode_receiver);                                                 hdoip.html.TableInsElement(1);
-        hdoip.html.FormText("own_vertical_offset", t.own_vertical_offset, 4, t.edid_mode_receiver);                                                     hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_horizontal_offset", t.own_horizontal_offset, 4, 0);                                                                    hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_vertical_offset", t.own_vertical_offset, 4, 0);                                                                        hdoip.html.TableInsElement(1);
         hdoip.html.Text("Pulse width");                                                                                                                 hdoip.html.TableInsElement(1);
-        hdoip.html.FormText("own_horizontal_pulse", t.own_horizontal_pulse, 4, t.edid_mode_receiver);                                                   hdoip.html.TableInsElement(1);
-        hdoip.html.FormText("own_vertical_pulse", t.own_vertical_pulse, 4, t.edid_mode_receiver);                                                       hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_horizontal_pulse", t.own_horizontal_pulse, 4, 0);                                                                      hdoip.html.TableInsElement(1);
+        hdoip.html.FormText("own_vertical_pulse", t.own_vertical_pulse, 4, 0);                                                                          hdoip.html.TableInsElement(1);
         hdoip.html.Text("Pixel clock");                                                                                                                 hdoip.html.TableInsElement(1);
-        hdoip.html.FormText("own_pixelclock", t.own_pixelclock, 6, t.edid_mode_receiver);
+        hdoip.html.FormText("own_pixelclock", t.own_pixelclock, 6, 0);
         hdoip.html.Text("kHz");                                                                                                                         hdoip.html.TableInsElement(2);
         hdoip.html.Text("Interlaced");                                                                                                                  hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("own_interlaced", 1, "", tonumber(t.own_interlaced), t.edid_mode_receiver)                                              hdoip.html.TableInsElement(2);
+        hdoip.html.FormCheckbox("own_interlaced", 1, "", tonumber(t.own_interlaced), 0)                                                                 hdoip.html.TableInsElement(2);
         hdoip.html.TableBottom()
 
         hdoip.html.TableHeader(2)
         hdoip.html.Title("Audio")                                                                                                                       hdoip.html.TableInsElement(2);
         hdoip.html.Text("Basic audio support");                                                                                                         hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("basic_audio", 1, "", tonumber(t.basic_audio), t.edid_mode_receiver)                                                    hdoip.html.TableInsElement(1);
+        hdoip.html.FormCheckbox("basic_audio", 1, "", tonumber(t.basic_audio), 0)                                                                       hdoip.html.TableInsElement(1);
 
         hdoip.html.Text("Channels");                                                                                                                    hdoip.html.TableInsElement(1);
-        hdoip.html.DropdownBoxEdid("audio_channels", channel_items, channel_items_count, t.audio_channels, t.edid_mode_receiver)                        hdoip.html.TableInsElement(1);
+        hdoip.html.DropdownBoxEdid("audio_channels", channel_items, channel_items_count, t.audio_channels, 0)                                           hdoip.html.TableInsElement(1);
         hdoip.html.Text("Bit rates");                                                                                                                   hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("audio_bit_16", 1, "", tonumber(t.audio_bit_16), 1)
         hdoip.html.Text("16");
-        hdoip.html.FormCheckbox("audio_bit_20", 1, "", tonumber(t.audio_bit_20), t.edid_mode_receiver + basic_audio_inverted)
+        hdoip.html.FormCheckbox("audio_bit_20", 1, "", tonumber(t.audio_bit_20), basic_audio_inverted)
         hdoip.html.Text("20");
-        hdoip.html.FormCheckbox("audio_bit_24", 1, "", tonumber(t.audio_bit_24), t.edid_mode_receiver + basic_audio_inverted)
+        hdoip.html.FormCheckbox("audio_bit_24", 1, "", tonumber(t.audio_bit_24), basic_audio_inverted)
         hdoip.html.Text("24");                                                                                                                          hdoip.html.TableInsElement(1);
         hdoip.html.Text("Sampling frequencies");                                                                                                        hdoip.html.TableInsElement(1);
         hdoip.html.FormCheckbox("audio_frequency_32", 1, "", tonumber(t.audio_frequency_32), 1)
@@ -534,13 +534,13 @@ function show(t)
         hdoip.html.Text("44.1kHz");
         hdoip.html.FormCheckbox("audio_frequency_48", 1, "", tonumber(t.audio_frequency_48), 1)
         hdoip.html.Text("48kHz");
-        hdoip.html.FormCheckbox("audio_frequency_88", 1, "", tonumber(t.audio_frequency_88), t.edid_mode_receiver + basic_audio_inverted)
+        hdoip.html.FormCheckbox("audio_frequency_88", 1, "", tonumber(t.audio_frequency_88), basic_audio_inverted)
         hdoip.html.Text("88.2kHz");
-        hdoip.html.FormCheckbox("audio_frequency_96", 1, "", tonumber(t.audio_frequency_96), t.edid_mode_receiver + basic_audio_inverted)
+        hdoip.html.FormCheckbox("audio_frequency_96", 1, "", tonumber(t.audio_frequency_96), basic_audio_inverted)
         hdoip.html.Text("96kHz");
-        hdoip.html.FormCheckbox("audio_frequency_176", 1, "", tonumber(t.audio_frequency_176), t.edid_mode_receiver + basic_audio_inverted)
+        hdoip.html.FormCheckbox("audio_frequency_176", 1, "", tonumber(t.audio_frequency_176), basic_audio_inverted)
         hdoip.html.Text("176.4kHz");
-        hdoip.html.FormCheckbox("audio_frequency_192", 1, "", tonumber(t.audio_frequency_192), t.edid_mode_receiver + basic_audio_inverted)
+        hdoip.html.FormCheckbox("audio_frequency_192", 1, "", tonumber(t.audio_frequency_192), basic_audio_inverted)
         hdoip.html.Text("192kHz");                                                                                                                      hdoip.html.TableInsElement(1);
         hdoip.html.TableBottom()
     else
