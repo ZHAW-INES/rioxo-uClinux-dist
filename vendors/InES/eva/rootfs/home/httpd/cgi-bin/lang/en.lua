@@ -164,6 +164,7 @@ label = {
     p_edid_use_advanced = "Use advanced settings";
     p_edid_advanced = "Advanced settings";
     p_edid_transmitter_only = "only available on transmitter";
+    p_edid_supported_resolution = "Supported resolution";
 
     -- Page firmware
     p_serial_number = "Serial number";

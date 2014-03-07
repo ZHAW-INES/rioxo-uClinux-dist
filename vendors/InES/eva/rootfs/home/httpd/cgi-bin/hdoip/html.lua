@@ -147,7 +147,7 @@ function FormRadioSingle(name, value, label, checked, disable)
     end
 end
 
-function FormRadio(name, values, size, selected)
+function FormRadio(name, values, size, selected, disable)
     local cnt = 0
     local checked
 
@@ -158,7 +158,7 @@ function FormRadio(name, values, size, selected)
             checked = 0
         end
         
-        FormRadioSingle(name, cnt, values[cnt], checked)
+        FormRadioSingle(name, cnt, values[cnt], checked, disable)
         html_str = html_str .. '<br>\n'
         cnt = cnt + 1
     end

@@ -39,6 +39,7 @@ end
 -- EDID page
 -- ------------------------------------------------------------------
 function show(t)
+    local t_mode = {[1] = "interlaced"; [0] = "progressive";}
 
     local menu_items_count = 20
     local menu_items = {[0] =  " 640x480p  @ 60Hz";
@@ -230,9 +231,10 @@ function show(t)
             end
 
             if (t.own_interlaced == nil) then
-                t.own_interlaced = 0
+                t.own_interlaced = hdoip.pipe.getParam(hdoip.pipe.REG_EDID_INTERLACED)
+            else
+                hdoip.pipe.setParam(hdoip.pipe.REG_EDID_INTERLACED, t.own_interlaced)
             end
-            hdoip.pipe.setParam(hdoip.pipe.REG_EDID_INTERLACED, t.own_interlaced)
 
             if (t.own_horizontal_active == nil) then
                 t.own_horizontal_active = hdoip.pipe.getParam(hdoip.pipe.REG_EDID_H_ACTIVE)
@@ -518,7 +520,7 @@ function show(t)
         end
                                                                                                                                                         hdoip.html.TableInsElement(2);
         hdoip.html.Title("Video")                                                                                                                       hdoip.html.TableInsElement(2);
-        hdoip.html.Text("Supported resolution");                                                                                                        hdoip.html.TableInsElement(1);
+        hdoip.html.Text(label.p_edid_supported_resolution);                                                                                             hdoip.html.TableInsElement(1);
         hdoip.html.DropdownBoxEdid("resolution_0", menu_items, menu_items_count, t.resolution_0, 0)                                                     hdoip.html.TableInsElement(1);
         hdoip.html.TableBottom()
 
@@ -542,8 +544,8 @@ function show(t)
         hdoip.html.Text("Pixel clock");                                                                                                                 hdoip.html.TableInsElement(1);
         hdoip.html.FormText("own_pixelclock", t.own_pixelclock, 6, t.own);
         hdoip.html.Text("kHz");                                                                                                                         hdoip.html.TableInsElement(2);
-        hdoip.html.Text("Interlaced");                                                                                                                  hdoip.html.TableInsElement(1);
-        hdoip.html.FormCheckbox("own_interlaced", 1, "", tonumber(t.own_interlaced), t.own)                                                             hdoip.html.TableInsElement(2);
+        hdoip.html.Text("Scan type");                                                                                                                   hdoip.html.TableInsElement(1);
+        hdoip.html.FormRadio("own_interlaced", t_mode, 2, t.own_interlaced, t.own)                                                                      hdoip.html.TableInsElement(2);
         hdoip.html.TableBottom()
 
         hdoip.html.TableHeader(2)
