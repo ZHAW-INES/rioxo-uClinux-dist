@@ -32,6 +32,11 @@ void hdoipd_osd_activate(int res)
     t_video_timing* timing;
     int osd_timeout = reg_get_int("osd-time");
     int h_pixel, v_pixel, fps;
+    bool osd_enable = false;
+
+    if (osd_timeout != 0) {
+        osd_enable = true;
+    }
 
     switch (res)  {
 
@@ -67,11 +72,11 @@ void hdoipd_osd_activate(int res)
         if (!(hdoipd_rsc(RSC_VIDEO_OUT))) {
             report(CHANGE "activate %dx%d@%d debug output screen for osd", h_pixel, v_pixel, fps);
             if ((timing = hoi_res_timing(h_pixel, v_pixel, fps))) {
-                hoi_drv_set_timing(timing);
+                hoi_drv_set_timing(timing, !osd_enable);
                 hdoipd_set_rsc(RSC_VIDEO_OUT);
             }
         }
-        if (osd_timeout != 0) {
+        if (osd_enable) {
             hoi_drv_osdon();
         }
         report(CHANGE "osd on");

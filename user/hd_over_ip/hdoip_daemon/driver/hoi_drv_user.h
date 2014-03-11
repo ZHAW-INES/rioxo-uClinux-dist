@@ -33,7 +33,7 @@ int hoi_drv_aic23b_dac(uint32_t enable, int hp_gain, uint32_t fs, uint32_t width
 int hoi_drv_capture(bool compress, void* buffer, size_t size, t_video_timing* timing, uint32_t* advcnt);
 int hoi_drv_show(bool compress, void* buffer, t_video_timing* timing, uint32_t advcnt);
 int hoi_drv_debug(void);
-int hoi_drv_set_timing(t_video_timing* timing);
+int hoi_drv_set_timing(t_video_timing* timing, bool osd_disable);
 int hoi_drv_bw(uint32_t bw, uint32_t chroma);
 int hoi_drv_set_fec_tx_params(t_fec_setting* fec);
 int hoi_drv_set_led_status(uint32_t instruction);
