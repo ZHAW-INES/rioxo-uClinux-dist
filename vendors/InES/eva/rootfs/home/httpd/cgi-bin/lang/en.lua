@@ -159,9 +159,12 @@ label = {
 
     -- Page EDID
     p_edid_mode = "EDID - Extended display identification data";
-    p_edid_mode_receiver = "Use EDID of receiver";
-    p_edid_mode_default = "Use own EDID";
+    p_edid_mode_receiver = "Use EDID of monitor";
+    p_edid_mode_default = "Use EDID parameters from menu below";
+    p_edid_use_advanced = "Use advanced settings";
+    p_edid_advanced = "Advanced video settings";
     p_edid_transmitter_only = "only available on transmitter";
+    p_edid_supported_resolution = "Supported resolution";
 
     -- Page firmware
     p_serial_number = "Serial number";

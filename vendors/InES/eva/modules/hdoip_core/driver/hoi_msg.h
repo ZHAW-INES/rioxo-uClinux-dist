@@ -456,6 +456,7 @@ typedef struct {
     t_video_timing      timing;     //!< timing of video
     bool				vtb;		//!< true if transmitter
     uint32_t            advcnt;     //!< adv count when compression = true
+    bool                osd_disable;//!< true disables ODS messages
 } t_hoi_msg_image;
 
 #define hoi_msg_capture_init(p) hoi_msg_init(p, HOI_MSG_CAPTURE, t_hoi_msg_image)

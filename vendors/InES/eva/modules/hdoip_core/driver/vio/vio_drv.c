@@ -617,7 +617,7 @@ int vio_drv_plainin(t_vio* handle, uint32_t device)
  * @param handle vio handle
  */
 
-int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb, t_gs2972 *sdi_tx, t_adv7441a* hdmi_in)
+int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb, t_gs2972 *sdi_tx, t_adv7441a* hdmi_in, bool disable_osd)
 {
     int ret = ERR_VIO_SUCCESS;    
     int no_input = 1;
@@ -674,10 +674,19 @@ int vio_drv_debug(t_vio* handle, uint32_t device, bool vtb, t_gs2972 *sdi_tx, t_
     // setup muxes
     if (no_input) {
         vio_set_vout(handle->p_vio, VIO_MUX_VOUT_DEBUG);
-        vio_set_cfg(handle->p_vio, VIO_CFG_VOUT | VIO_CFG_OVERLAY);
+        if (disable_osd) {
+            vio_set_cfg(handle->p_vio, VIO_CFG_VOUT);
+        } else {
+            vio_set_cfg(handle->p_vio, VIO_CFG_VOUT | VIO_CFG_OVERLAY);
+        }
+
     } else {
         vio_set_vout(handle->p_vio, VIO_MUX_VOUT_LOOP);
-        vio_set_cfg(handle->p_vio, VIO_CFG_VIN | VIO_CFG_VOUT | VIO_CFG_OVERLAY);
+        if (disable_osd) {
+            vio_set_cfg(handle->p_vio, VIO_CFG_VIN | VIO_CFG_VOUT);
+        } else {
+            vio_set_cfg(handle->p_vio, VIO_CFG_VIN | VIO_CFG_VOUT | VIO_CFG_OVERLAY);
+        }
     }
     
     // START ...
@@ -848,11 +857,11 @@ int vio_drv_plainoutx(t_vio* handle, t_video_timing* p_vt, uint32_t device)
  * @param handle vio handle
  * @param p_vt video timing struct
  */
-int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, bool vtb, uint32_t device, t_gs2972 *sdi_tx, t_adv7441a* hdmi_in)
+int vio_drv_debugx(t_vio* handle, t_video_timing* p_vt, bool vtb, uint32_t device, t_gs2972 *sdi_tx, t_adv7441a* hdmi_in, bool disable_osd)
 {
     PTR(handle); PTR(handle->p_vio); PTR(handle->p_adv); PTR(p_vt);
     memcpy(&handle->timing, p_vt, sizeof(t_video_timing));
-    return vio_drv_debug(handle, device, vtb, sdi_tx, hdmi_in);
+    return vio_drv_debug(handle, device, vtb, sdi_tx, hdmi_in, disable_osd);
 }
 
 int vio_drv_set_format_in(t_vio* handle, t_video_format f)

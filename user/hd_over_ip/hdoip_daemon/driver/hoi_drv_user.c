@@ -438,7 +438,7 @@ int hoi_drv_set_fec_tx_params(t_fec_setting* fec)
     return ret;
 }
 
-int hoi_drv_set_timing(t_video_timing* timing)
+int hoi_drv_set_timing(t_video_timing* timing, bool osd_disable)
 {
     int ret=0;
     t_hoi_msg_image msg;
@@ -450,6 +450,8 @@ int hoi_drv_set_timing(t_video_timing* timing)
     } else {
         msg.vtb = false;
     }
+
+    msg.osd_disable = osd_disable;
 
     hoi_msg_set_timing_init(&msg);
     ret = hoi_msg(&msg);

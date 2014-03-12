@@ -5,7 +5,7 @@ require("hdoip.pipe")
 
 local IMAGE_HDR_SIZE = 32
 local IMAGE_HDR_ID = "INES"
-local HW_VERSION_TAG = 1
+local HW_VERSION_TAG = 2
 
 function rebooting(t)
     if (t.version_label == "rioxo") then
