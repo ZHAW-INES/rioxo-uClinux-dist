@@ -130,7 +130,7 @@ static int      snmp_synch_input(int op, netsnmp_session * session,
 netsnmp_pdu    *
 snmp_pdu_create(int command)
 {
-    netsnmp_pdu    *pdu;
+	netsnmp_pdu    *pdu;
 
     pdu = (netsnmp_pdu *) calloc(1, sizeof(netsnmp_pdu));
     if (pdu) {
@@ -169,6 +169,7 @@ snmp_synch_input(int op,
                  netsnmp_session * session,
                  int reqid, netsnmp_pdu *pdu, void *magic)
 {
+
     struct synch_state *state = (struct synch_state *) magic;
     int             rpt_type;
 
@@ -242,6 +243,9 @@ snmp_clone_var(netsnmp_variable_list * var, netsnmp_variable_list * newvar)
     if (!newvar || !var)
         return 1;
 
+    snmp_log(LOG_ERR,"\n umad ta inja 1\n");
+
+
     memmove(newvar, var, sizeof(netsnmp_variable_list));
     newvar->next_variable = NULL;
     newvar->name = NULL;
@@ -250,6 +254,10 @@ snmp_clone_var(netsnmp_variable_list * var, netsnmp_variable_list * newvar)
     newvar->dataFreeHook = NULL;
     newvar->index = 0;
 
+    //newvar->val.integer= NULL; //TODO AMIN
+
+    snmp_log(LOG_ERR,"\n umad ta inja 2\n");
+
     /*
      * Clone the object identifier and the value.
      * Allocate memory iff original will not fit into local storage.
@@ -257,28 +265,46 @@ snmp_clone_var(netsnmp_variable_list * var, netsnmp_variable_list * newvar)
     if (snmp_set_var_objid(newvar, var->name, var->name_length))
         return 1;
 
+    snmp_log(LOG_ERR,"\n umad ta inja 3\n");
+
     /*
      * need a pointer to copy a string value. 
      */
     if (var->val.string) {
+
         if (var->val.string != &var->buf[0]) {
+
             if (var->val_len <= sizeof(var->buf))
                 newvar->val.string = newvar->buf;
             else {
+
                 newvar->val.string = (u_char *) malloc(var->val_len+10); //TODO AMIN
                 if (!newvar->val.string)
                     return 1;
             }
+
             memmove(newvar->val.string, var->val.string, var->val_len);
-            newvar->val.string[var->val_len]='\0';//TODO AMIN KOLESH
+            newvar->val.string[var->val_len]='\0';//TODO AMIN 
         } else {                /* fix the pointer to new local store */
-            newvar->val.string = newvar->buf;
+
+
+       		newvar->val.string = newvar->buf; //todo amin
+
+		newvar->val.integer = (int*)malloc(sizeof(int));
+		
+		if (var->val.integer)
+        		*(newvar->val.integer)=*(var->val.integer);
+		
+
+
             /*
              * no need for a memmove, since we copied the whole var
              * struct (and thus var->buf) at the beginning of this function.
              */
         }
     } else {
+        snmp_log(LOG_ERR,"\n umad ta inja 9\n");
+
         newvar->val.string = NULL;
         newvar->val_len = 0;
     }
@@ -295,6 +321,7 @@ snmp_clone_var(netsnmp_variable_list * var, netsnmp_variable_list * newvar)
 int
 snmp_clone_mem(void **dstPtr, const void *srcPtr, unsigned len)
 {
+
     *dstPtr = NULL;
     if (srcPtr) {
         //*dstPtr = malloc(len + 1);
@@ -320,6 +347,7 @@ snmp_clone_mem(void **dstPtr, const void *srcPtr, unsigned len)
 void
 snmp_reset_var_buffers(netsnmp_variable_list * var)
 {
+
     while (var) {
         if (var->name != var->name_loc) {
             if(NULL != var->name)
@@ -350,6 +378,7 @@ static
 netsnmp_pdu    *
 _clone_pdu_header(netsnmp_pdu *pdu)
 {
+
     netsnmp_pdu    *newpdu;
     struct snmp_secmod_def *sptr;
     int ret;
@@ -422,7 +451,9 @@ netsnmp_variable_list *
 _copy_varlist(netsnmp_variable_list * var,      /* source varList */
               int errindex,     /* index of variable to drop (if any) */
               int copy_count)
-{                               /* !=0 number variables to copy */
+{
+
+	/* !=0 number variables to copy */
     netsnmp_variable_list *newhead, *newvar, *oldvar;
     int             ii = 0;
 
@@ -491,6 +522,7 @@ _copy_pdu_vars(netsnmp_pdu *pdu,        /* source PDU */
                int skip_count,  /* !=0 number of variables to skip */
                int copy_count)
 {                               /* !=0 number of variables to copy */
+
     netsnmp_variable_list *var;
 #if TEMPORARILY_DISABLED
     int             copied;
@@ -540,8 +572,6 @@ _copy_pdu_vars(netsnmp_pdu *pdu,        /* source PDU */
     }
 #endif
 
-    //snmp_reset_var_buffers(var);//TODO AMIN
-
     return newpdu;
 }
 
@@ -574,6 +604,7 @@ _clone_pdu(netsnmp_pdu *pdu, int drop_err)
 netsnmp_variable_list *
 snmp_clone_varbind(netsnmp_variable_list * varlist)
 {
+
     return _copy_varlist(varlist, 0, 10000);    /* skip none, copy all */
 }
 
@@ -586,6 +617,7 @@ snmp_clone_varbind(netsnmp_variable_list * varlist)
 netsnmp_pdu    *
 snmp_clone_pdu(netsnmp_pdu *pdu)
 {
+
     return _clone_pdu(pdu, 0);  /* copies all variables */
 }
 
@@ -603,6 +635,7 @@ snmp_clone_pdu(netsnmp_pdu *pdu)
 netsnmp_pdu    *
 snmp_split_pdu(netsnmp_pdu *pdu, int skip_count, int copy_count)
 {
+
     netsnmp_pdu    *newpdu;
     newpdu = _clone_pdu_header(pdu);
     newpdu = _copy_pdu_vars(pdu, newpdu, 0,     /* don't drop any variables */
@@ -628,6 +661,7 @@ snmp_split_pdu(netsnmp_pdu *pdu, int skip_count, int copy_count)
 netsnmp_pdu    *
 snmp_fix_pdu(netsnmp_pdu *pdu, int command)
 {
+
     netsnmp_pdu    *newpdu;
 
     if ((pdu->command != SNMP_MSG_RESPONSE)
@@ -661,6 +695,7 @@ snmp_fix_pdu(netsnmp_pdu *pdu, int command)
 unsigned long
 snmp_varbind_len(netsnmp_pdu *pdu)
 {
+
     register netsnmp_variable_list *vars;
     unsigned long   retVal = 0;
     if (pdu)
@@ -681,6 +716,7 @@ int
 snmp_set_var_objid(netsnmp_variable_list * vp,
                    const oid * objid, size_t name_length)
 {
+
     size_t          len = sizeof(oid) * name_length;
 
     if (vp->name != vp->name_loc && vp->name != NULL) {
@@ -726,6 +762,7 @@ int
 snmp_set_var_typed_value(netsnmp_variable_list * newvar, u_char type,
                          const void * val_str, size_t val_len)
 {
+
     newvar->type = type;
     return snmp_set_var_value(newvar, val_str, val_len);
 }
@@ -734,6 +771,7 @@ int
 snmp_set_var_typed_integer(netsnmp_variable_list * newvar,
                            u_char type, long val)
 {
+
     newvar->type = type;
     return snmp_set_var_value(newvar, &val, sizeof(long));
 }
@@ -741,7 +779,7 @@ snmp_set_var_typed_integer(netsnmp_variable_list * newvar,
 int
 count_varbinds(netsnmp_variable_list * var_ptr)
 {
-    int             count = 0;
+	int             count = 0;
 
     for (; var_ptr != NULL; var_ptr = var_ptr->next_variable)
         count++;
@@ -754,6 +792,7 @@ netsnmp_feature_child_of(count_varbinds_of_type, netsnmp_unused)
 int
 count_varbinds_of_type(netsnmp_variable_list * var_ptr, u_char type)
 {
+
     int             count = 0;
 
     for (; var_ptr != NULL; var_ptr = var_ptr->next_variable)
@@ -769,6 +808,7 @@ netsnmp_feature_child_of(find_varind_of_type, netsnmp_unused)
 netsnmp_variable_list *
 find_varbind_of_type(netsnmp_variable_list * var_ptr, u_char type)
 {
+
     for (; var_ptr != NULL && var_ptr->type != type;
          var_ptr = var_ptr->next_variable);
 
@@ -780,6 +820,7 @@ netsnmp_variable_list*
 find_varbind_in_list( netsnmp_variable_list *vblist,
                       const oid *name, size_t len)
 {
+
     for (; vblist != NULL; vblist = vblist->next_variable)
         if (!snmp_oid_compare(vblist->name, vblist->name_length, name, len))
             return vblist;
@@ -797,7 +838,7 @@ int
 snmp_set_var_value(netsnmp_variable_list * vars,
                    const void * value, size_t len)
 {
-    snmp_log(LOG_ERR,"\n SXXXXXXXXXXX \n");
+
     if (len > 0)
     	if (len < 100)
 			if (vars->val.string)
@@ -812,7 +853,7 @@ snmp_set_var_value(netsnmp_variable_list * vars,
      * memory, if len < vars->val_len ?
      */
     if (vars->val.string && vars->val.string != vars->buf) {
-        snmp_log(LOG_ERR,"SXXXXXXXXXXX 1\n");
+        //snmp_log(LOG_ERR,"vars->val.string= %s %d\n", vars->val.string, *(vars->val.integer));
         free(vars->val.string);
     }
     vars->val.string = NULL;
@@ -822,7 +863,6 @@ snmp_set_var_value(netsnmp_variable_list * vars,
     /*
      * use built-in storage for smaller values 
      */
-    //TODO AMIN comment kardam paiino
 
     if (len <= sizeof(vars->buf)) {
         vars->val.string = (u_char *) vars->buf;
@@ -831,7 +871,6 @@ snmp_set_var_value(netsnmp_variable_list * vars,
 
 
     if ((0 == len) || (NULL == value)) {
-        snmp_log(LOG_ERR,"SXXXXXXXXXXX 2\n");
         vars->val.string= (u_char*)malloc(2*sizeof(u_char));//TODO AMIN
         vars->val.string[0] = 0;
         return 0;
@@ -915,8 +954,8 @@ snmp_set_var_value(netsnmp_variable_list * vars,
                 }
             }
             else {
-                snmp_log(LOG_ERR,"bad size for integer-like type (%d)\n",
-                         (int)vars->val_len);
+     //           snmp_log(LOG_ERR,"bad size for integer-like type (%d)\n",
+      //                   (int)vars->val_len);
                 return (1);
             }
         } else
@@ -949,11 +988,9 @@ snmp_set_var_value(netsnmp_variable_list * vars,
     case ASN_OPAQUE:
     case ASN_NSAP:
         if (vars->val_len >= sizeof(vars->buf)) {
-            snmp_log(LOG_ERR,"SXXXXXXXXXXX 7\n");
             vars->val.string = (u_char *) malloc(vars->val_len + 1);
         }
         if (vars->val.string == NULL) {
-            snmp_log(LOG_ERR,"SXXXXXXXXXXX 8\n");
             snmp_log(LOG_ERR,"no storage for string\n");
             return 1;
         }
@@ -964,7 +1001,7 @@ snmp_set_var_value(netsnmp_variable_list * vars,
          * assumptions.  
          */
         vars->val.string[vars->val_len] = '\0';
-        vars->val.string[vars->val_len] = 0;//TODO AMIN
+        vars->val.string[vars->val_len] = 0;
         break;
 
     case SNMP_NOSUCHOBJECT:
@@ -1025,6 +1062,8 @@ void
 snmp_replace_var_types(netsnmp_variable_list * vbl, u_char old_type,
                        u_char new_type)
 {
+   snmp_log(LOG_ERR,"\n snmp_replace_var_types \n");
+
     while (vbl) {
         if (vbl->type == old_type) {
             snmp_set_var_typed_value(vbl, new_type, NULL, 0);
@@ -1037,6 +1076,8 @@ snmp_replace_var_types(netsnmp_variable_list * vbl, u_char old_type,
 void
 snmp_reset_var_types(netsnmp_variable_list * vbl, u_char new_type)
 {
+    snmp_log(LOG_ERR,"\n snmp_reset_var_types \n");
+
     while (vbl) {
         snmp_set_var_typed_value(vbl, new_type, NULL, 0);
         vbl = vbl->next_variable;
@@ -1049,6 +1090,8 @@ snmp_synch_response_cb(netsnmp_session * ss,
                        netsnmp_pdu *pdu,
                        netsnmp_pdu **response, snmp_callback pcb)
 {
+    snmp_log(LOG_ERR,"\n snmp_synch_response_cb \n");
+
     struct synch_state lstate, *state;
     snmp_callback   cbsav;
     void           *cbmagsav;
@@ -1128,6 +1171,8 @@ int
 snmp_synch_response(netsnmp_session * ss,
                     netsnmp_pdu *pdu, netsnmp_pdu **response)
 {
+    snmp_log(LOG_ERR,"\n snmp_synch_response \n");
+
     return snmp_synch_response_cb(ss, pdu, response, snmp_synch_input);
 }
 
@@ -1135,6 +1180,8 @@ int
 snmp_sess_synch_response(void *sessp,
                          netsnmp_pdu *pdu, netsnmp_pdu **response)
 {
+    snmp_log(LOG_ERR,"\n snmp_sess_synch_response \n");
+
     netsnmp_session *ss;
     struct synch_state lstate, *state;
     snmp_callback   cbsav;
@@ -1212,6 +1259,8 @@ snmp_sess_synch_response(void *sessp,
 const char     *
 snmp_errstring(int errstat)
 {
+    snmp_log(LOG_ERR,"\n snmp_errstring \n");
+
     const char * const error_string[19] = {
         "(noError) No Error",
         "(tooBig) Response message would have been too large.",
@@ -1393,12 +1442,14 @@ retry:
  */
 int netsnmp_query_get(netsnmp_variable_list *list,
                       netsnmp_session       *session){
+    snmp_log(LOG_ERR, "IN _query get\n");
     return _query( list, SNMP_MSG_GET, session );
 }
 
 
 int netsnmp_query_getnext(netsnmp_variable_list *list,
                           netsnmp_session       *session){
+    snmp_log(LOG_ERR, "IN _query gn\n");
     return _query( list, SNMP_MSG_GETNEXT, session );
 }
 
@@ -1406,6 +1457,7 @@ int netsnmp_query_getnext(netsnmp_variable_list *list,
 #ifndef NETSNMP_NO_WRITE_SUPPORT
 int netsnmp_query_set(netsnmp_variable_list *list,
                       netsnmp_session       *session){
+    snmp_log(LOG_ERR, "IN _query s\n");
     return _query( list, SNMP_MSG_SET, session );
 }
 #endif /* !NETSNMP_NO_WRITE_SUPPORT */
@@ -1577,6 +1629,7 @@ static int
 _row_status_state_activate(netsnmp_state_machine_input *input,
                   netsnmp_state_machine_step *step)
 {
+
     rowcreate_state       *ctx;
     netsnmp_variable_list *rs_var, *var = NULL;
     int32_t                rc, val = RS_ACTIVE;
@@ -1618,6 +1671,7 @@ static int
 _row_status_state_single_value_cols(netsnmp_state_machine_input *input,
                                     netsnmp_state_machine_step *step)
 {
+
     rowcreate_state       *ctx;
     netsnmp_variable_list *var, *tmp_next, *row_status;
     int                    rc = SNMPERR_GENERR;
@@ -1725,6 +1779,7 @@ static int
 _row_status_state_single_value_createAndWait(netsnmp_state_machine_input *input,
                                              netsnmp_state_machine_step *step)
 {
+
     rowcreate_state       *ctx;
     netsnmp_variable_list *var = NULL, *rs_var;
     int32_t                rc, val = RS_CREATEANDWAIT;
@@ -1763,6 +1818,7 @@ static int
 _row_status_state_all_values_createAndWait(netsnmp_state_machine_input *input,
                                            netsnmp_state_machine_step *step)
 {
+
     rowcreate_state       *ctx;
     netsnmp_variable_list *vars, *rs_var;
     int                    rc;
@@ -1810,6 +1866,7 @@ static int
 _row_status_state_all_values_createAndGo(netsnmp_state_machine_input *input,
                                          netsnmp_state_machine_step *step)
 {
+
     rowcreate_state       *ctx;
     netsnmp_variable_list *vars, *rs_var;
     int                    rc;
@@ -1858,8 +1915,6 @@ int
 netsnmp_row_create(netsnmp_session *sess, netsnmp_variable_list *vars,
                    int row_status_index)
 {
-    snmp_log(LOG_ERR, "\nIN netsnmp_row create!!\n");
-
 
     netsnmp_state_machine_step rc_cleanup =
         { "row_create_cleanup", 0, _row_status_state_cleanup,

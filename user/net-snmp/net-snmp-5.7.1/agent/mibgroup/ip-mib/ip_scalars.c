@@ -20,11 +20,14 @@ handle_ipForwarding(netsnmp_mib_handler *handler,
                     netsnmp_agent_request_info *reqinfo,
                     netsnmp_request_info *requests);
 
+
 int
 handle_ipDefaultTTL(netsnmp_mib_handler *handler,
                           netsnmp_handler_registration *reginfo,
                           netsnmp_agent_request_info *reqinfo,
                           netsnmp_request_info *requests);
+
+
 
 int
 handle_ipv6IpForwarding(netsnmp_mib_handler *handler,
@@ -45,7 +48,7 @@ void
 init_ip_scalars(void)
 {
     static oid 	    ipForwarding_oid[] = { 1, 3, 6, 1, 2, 1, 4, 1 };
-    static oid 	    ipDefaultTTL_oid[] = { 1, 3, 6, 1, 2, 1, 4, 2, 0 };
+    static oid 	    ipDefaultTTL_oid[] = { 1, 3, 6, 1, 2, 1, 4, 2, 0 }; 
     static oid      ipReasmTimeout_oid[] = { 1, 3, 6, 1, 2, 1, 4, 13, 0 };
     static oid      ipv6IpForwarding_oid[] = { 1, 3, 6, 1, 2, 1, 4, 25 };
     static oid      ipv6IpDefaultHopLimit_oid[] =
@@ -87,12 +90,14 @@ init_ip_scalars(void)
          "/proc/sys/net/ipv6/conf/default/hop_limit", ASN_INTEGER,
          HANDLER_CAN_RWRITE, NULL, NULL);
 
+
      netsnmp_register_num_file_instance
         ("ipDefaultTTL",
          ipDefaultTTL_oid, OID_LENGTH(ipDefaultTTL_oid),
          "/proc/sys/net/ipv4/ip_default_ttl", ASN_INTEGER,
          HANDLER_CAN_RWRITE, NULL, NULL);
                                        
+
 }
 
 int

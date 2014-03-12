@@ -54,6 +54,11 @@ void init_listener(void){
     static oid bandwidth_oid[] = { 1,3,6,1,4,1,1111,1,2,8 };
     static oid networkDelay_oid[] = { 1,3,6,1,4,1,1111,1,2,9 };
 
+    static oid sysLocation_oid[] = { 1,3,6,1,2,1,1,6 };
+    static oid sysName_oid[] = { 1,3,6,1,2,1,1,5 };
+    static oid sysContact_oid[] = { 1,3,6,1,2,1,1,4 };
+    static oid ipDefaultTTL_oid[] = { 1,3,6,1,2,1,4,2 };
+
     DEBUGMSGTL(("listener", "Initializing\n"));
 
     REGISTER_SCALAR(systemIp, "system-ip")
@@ -65,6 +70,11 @@ void init_listener(void){
     REGISTER_SCALAR(remoteUri, "remote-uri")
     REGISTER_SCALAR(bandwidth, "bandwidth")
     REGISTER_SCALAR(networkDelay, "network-delay")
+
+    REGISTER_SCALAR(sysLocation, "sysLocation");
+    REGISTER_SCALAR(sysName, "sysName");
+    REGISTER_SCALAR(sysContact, "sysContact");
+    REGISTER_SCALAR(ipDefaultTTL, "ipDefaultTTL");
 }
 
 /* These functions register the handler for each request
@@ -82,4 +92,11 @@ HANDLE_FUNCTION(modeMedia, "mode-media")
 HANDLE_FUNCTION(remoteUri, "remote-uri")
 HANDLE_FUNCTION(bandwidth, "bandwidth")  //Umrechnen
 HANDLE_FUNCTION(networkDelay, "network-delay")
+
+HANDLE_FUNCTION(sysLocation, "sysLocation")
+HANDLE_FUNCTION(sysName, "sysName")
+HANDLE_FUNCTION(sysContact, "sysContact")
+HANDLE_FUNCTION(ipDefaultTTL, "ipDefaultTTL")
+
+
 

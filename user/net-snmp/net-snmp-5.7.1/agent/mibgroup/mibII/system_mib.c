@@ -230,8 +230,8 @@ handle_sysUpTime(netsnmp_mib_handler *handler,
                    netsnmp_agent_request_info *reqinfo,
                    netsnmp_request_info *requests)
 {
-    snmp_set_var_typed_integer(requests->requestvb, ASN_TIMETICKS,
-                               netsnmp_get_agent_uptime());
+    snmp_set_var_typed_integer(requests->requestvb, ASN_TIMETICKS, 
+                               netsnmp_get_agent_uptime()); 
     return SNMP_ERR_NOERROR;
 }
 
@@ -342,6 +342,7 @@ init_system_mib(void)
                 WATCHER_MAX_SIZE | WATCHER_SIZE_IS_PTR,
                 MAX_OID_LEN, &sysObjectIDByteLength));
     }
+/*TODO AMIN    
     {
         const oid sysUpTime_oid[] = { 1, 3, 6, 1, 2, 1, 1, 3 };
         netsnmp_register_scalar(
@@ -350,6 +351,7 @@ init_system_mib(void)
                 sysUpTime_oid, OID_LENGTH(sysUpTime_oid),
                 HANDLER_CAN_RONLY));
     }
+*/
     {
         const oid sysContact_oid[] = { 1, 3, 6, 1, 2, 1, 1, 4 };
         static netsnmp_watcher_info sysContact_winfo;

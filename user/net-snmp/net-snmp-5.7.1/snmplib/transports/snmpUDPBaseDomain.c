@@ -244,7 +244,8 @@ netsnmp_udpbase_recvfrom(int s, void *buf, int len, struct sockaddr *from,
         if (cmsgptr->cmsg_level != SOL_IP || cmsgptr->cmsg_type != IP_PKTINFO)
             continue;
 
-        netsnmp_assert(dstip->sa_family == AF_INET);
+        netsnmp_assert(dstip->sa_family == AF_INET); //TODO AMIN
+
         ((struct sockaddr_in*)dstip)->sin_addr = *netsnmp_dstaddr(cmsgptr);
         *if_index = (((struct in_pktinfo *)(CMSG_DATA(cmsgptr)))->ipi_ifindex);
         DEBUGMSGTL(("udpbase:recv",

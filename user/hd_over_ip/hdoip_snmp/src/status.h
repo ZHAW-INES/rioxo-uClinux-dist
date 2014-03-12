@@ -22,4 +22,22 @@ Netsnmp_Node_Handler handle_hdcpStatus;
 Netsnmp_Node_Handler handle_serialNumber;
 Netsnmp_Node_Handler handle_systemUpdate;
 
+Netsnmp_Node_Handler handle_sysDescr;
+Netsnmp_Node_Handler handle_sysObjectId;
+Netsnmp_Node_Handler handle_sysUpTime;
+
+
+Netsnmp_Node_Handler handle_ifNumber;
+Netsnmp_Node_Handler handle_ifIndex1;
+Netsnmp_Node_Handler handle_ifDescr1;
+Netsnmp_Node_Handler handle_ifPhysAddress1;
+Netsnmp_Node_Handler handle_ifIndex2;
+Netsnmp_Node_Handler handle_ifDescr2;
+Netsnmp_Node_Handler handle_ifPhysAddress2;
+
+Netsnmp_Node_Handler handle_ipAdEntAddr;
+Netsnmp_Node_Handler handle_ipAdEntNetMask;
+Netsnmp_Node_Handler handle_ipAdEntBcastAddr;
+
+
 #endif /* STATUS_H */

@@ -313,8 +313,10 @@ ip_handler(netsnmp_mib_handler          *handler,
         type = ASN_INTEGER;
         break;
     case IPDEFAULTTTL:
+///* TODO AMIN
         ret_value = ipstat.ipDefaultTTL;
         type = ASN_INTEGER;
+//*/
         break;
     case IPINRECEIVES:
         ret_value = ipstat.ipInReceives & 0xffffffff;
@@ -385,12 +387,14 @@ ip_handler(netsnmp_mib_handler          *handler,
         /* 
          * Query these two individually
          */
+///* TODO AMIN
         ret_value = ip_load(NULL, (void *)subid);
         if (ret_value == -1 ) {
             netsnmp_set_request_error(reqinfo, request, SNMP_NOSUCHOBJECT);
             continue;
 	}
         type = ASN_INTEGER;
+//*/
         break;
     case IPINRECEIVES:
         ret_value = ipstat.ips_total & 0xffffffff;
@@ -548,9 +552,11 @@ ip_handler(netsnmp_mib_handler          *handler,
         type = ASN_INTEGER;
         break;
     case IPDEFAULTTTL:
+///* TODO AMIN
         ipTTL     = ipstat.dwDefaultTTL;
         ret_value = ipstat.dwDefaultTTL;
         type = ASN_INTEGER;
+//*/
         break;
     case IPINRECEIVES:
         ret_value = ipstat.dwInReceives;
@@ -613,8 +619,10 @@ ip_handler(netsnmp_mib_handler          *handler,
         type = ASN_INTEGER;
         break;
     case IPDEFAULTTTL:
+///* TODO AMIN
         ret_value = 0;
         type = ASN_INTEGER;
+//*/
         break;
     case IPINRECEIVES:
         ret_value = ps_proto.u.ip.ipackets;
@@ -724,7 +732,9 @@ ip_load(netsnmp_cache *cache, void *vmagic)
         p.objid = ID_ipForwarding;
         break;
     case IPDEFAULTTTL:
+///*
         p.objid = ID_ipDefaultTTL;
+//*/
         break;
     case IPINRECEIVES:
         p.objid = ID_ipInReceives;
@@ -896,13 +906,14 @@ ip_load(netsnmp_cache *cache, void *vmagic)
                       : 2 /* HOST    */ );
 
     case IPDEFAULTTTL:
+///* TODO AMIN
         len = sizeof i;
         sname[3] = IPCTL_DEFTTL;
         if (sysctl(sname, 4, &i, &len, 0, 0) < 0)
             return -1;
         else
             return i;
-
+//*/
     default:
         len = sizeof(ipstat);
         sname[3] = IPCTL_STATS;
@@ -933,12 +944,13 @@ ip_load(netsnmp_cache *cache, void *vmagic)
                               : 2 /* HOST    */ );
 
     case IPDEFAULTTTL:
+///* TODO AMIN
         if (!auto_nlist
             (TCP_TTL_SYMBOL, (char *) &ret_value, sizeof(ret_value)))
             return -1;
         else
             return ret_value;
-
+///
     default:
         ret_value = sysmp(MP_SAGET, MPSA_TCPIPSTATS, &ipstat, sizeof ipstat);
 
@@ -967,12 +979,13 @@ ip_load(netsnmp_cache *cache, void *vmagic)
                               : 2 /* HOST    */ );
 
     case IPDEFAULTTTL:
+///* TODO AMIN
         if (!auto_nlist
             (TCP_TTL_SYMBOL, (char *) &ret_value, sizeof(ret_value)))
             return -1;
         else
             return ret_value;
-
+//*/
     default:
         if (auto_nlist(IPSTAT_SYMBOL, (char *)&ipstat, sizeof(ipstat)))
             ret_value = 0;

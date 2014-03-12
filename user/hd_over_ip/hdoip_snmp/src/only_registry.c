@@ -18,6 +18,7 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/time.h>
 
 #include "only_registry.h"
 #include "../../hdoip_daemon/hdoipd_msg.h"
@@ -50,6 +51,20 @@ void init_only_registry(void){
     static oid networkAlive_oid[] = { 1,3,6,1,4,1,1111,1,3,6 };
     static oid networkTimeout_oid[] = { 1,3,6,1,4,1,1111,1,3,7 };
 
+    FILE* fd;
+
+    fd = fopen("/tmp/sysuptime.txt", "r");
+    if(!fd) {
+    	fd = fopen("/tmp/sysuptime.txt","w+");
+    	if (fd){
+    		struct timeval tv;
+    		gettimeofday(&tv, 0);
+    		long long time_mil = (tv.tv_sec)*1000LL + (tv.tv_usec)/1000;
+    		long long hundredth_of_seconds = time_mil / 10;
+			fprintf(fd,"%lld\n",hundredth_of_seconds);
+			fclose(fd);
+    	}
+    }
 
     DEBUGMSGTL(("only_registry", "Initializing\n"));
 

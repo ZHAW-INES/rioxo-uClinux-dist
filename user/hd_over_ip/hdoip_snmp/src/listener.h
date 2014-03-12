@@ -17,4 +17,10 @@ Netsnmp_Node_Handler handle_remoteUri;
 Netsnmp_Node_Handler handle_bandwidth;
 Netsnmp_Node_Handler handle_networkDelay;
 
+Netsnmp_Node_Handler handle_sysLocation; //TODO AMIN
+Netsnmp_Node_Handler handle_sysName; //TODO AMIN
+Netsnmp_Node_Handler handle_sysContact; //TODO AMIN
+Netsnmp_Node_Handler handle_ipDefaultTTL; //TODO AMIN
+
+
 #endif /* LISTENER_H */
