@@ -392,6 +392,7 @@ int getset_value_generic(t_snmp_array* arr, int mode, netsnmp_request_info *requ
             		read_from_config_file("sysContact",value);
             		s = (char*)malloc(strlen(*value)+1);
             		strcpy(s,*value);
+					hoic_set_param(fd, arr->p_name, *value);
             		free(*value);
             		free(value);
 			//isString=0;
@@ -399,9 +400,11 @@ int getset_value_generic(t_snmp_array* arr, int mode, netsnmp_request_info *requ
             		char** value = (char**)malloc(sizeof(char*));
             		read_from_config_file("sysName",value);
             		s = (char*)malloc(strlen(*value)+1);
+					hoic_set_param(fd, arr->p_name, *value);
             		strcpy(s,*value);
             		free(*value);
             		free(value);
+
 			//isString=0;
 
             	}else if (strcmp(arr->p_name,"sysLocation")==0){
@@ -409,6 +412,7 @@ int getset_value_generic(t_snmp_array* arr, int mode, netsnmp_request_info *requ
             		read_from_config_file("sysLocation",value);
             		s = (char*)malloc(strlen(*value)+1);
             		strcpy(s,*value);
+					hoic_set_param(fd, arr->p_name, *value);
             		free(*value);
             		free(value);
 			//isString=0;
@@ -447,6 +451,7 @@ int getset_value_generic(t_snmp_array* arr, int mode, netsnmp_request_info *requ
             case MODE_SET_ACTION:
 
             	if ((strcmp(arr->p_name,"sysContact")==0)||(strcmp(arr->p_name,"sysName")==0)||(strcmp(arr->p_name,"sysLocation")==0)){
+					hoic_set_param(fd, arr->p_name, requests->requestvb->val.string);
             		rewrite_config_file(arr->p_name,requests->requestvb->val.string);
             	}else if (strcmp(arr->p_name,"ipDefaultTTL")==0){
             		char* value = (char*)malloc(40*sizeof(char));
