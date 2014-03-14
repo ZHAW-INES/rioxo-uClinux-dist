@@ -377,6 +377,19 @@ function show(t)
             edid[85] = 0x4f
             edid[86] = 0x58
             edid[87] = 0x0a
+        elseif (t.version_label == "riedel") then
+            edid[9] =  0x48
+            edid[10] = 0x8c
+            edid[78] = 0x52
+            edid[79] = 0x49
+            edid[80] = 0x45
+            edid[81] = 0x44
+            edid[82] = 0x45
+            edid[83] = 0x4c
+            edid[84] = 0x0a
+            edid[85] = 0x20
+            edid[86] = 0x20
+            edid[87] = 0x20
         end
 
         -- set manufacturing date and serial number 
@@ -502,6 +515,8 @@ function show(t)
         page_name = label.page_name_emcore
     elseif (t.version_label == "black box") then
         page_name = label.page_name_black_box
+    elseif (t.version_label == "riedel") then
+        page_name = label.page_name_riedel
     else
         page_name = ""
     end

@@ -121,6 +121,8 @@ function show(t)
         page_name = label.page_name_emcore
     elseif (t.version_label == "black box") then
         page_name = label.page_name_black_box
+    elseif (t.version_label == "riedel") then
+        page_name = label.page_name_riedel
     else
         page_name = ""
     end

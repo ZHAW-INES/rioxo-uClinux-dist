@@ -269,6 +269,8 @@ function Header(t, title, script_path, addon)
         html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.emcore.com"><img src="/img/emcore_logo.png" alt="emcore"></a></h1>\n'
     elseif (t.version_label == "black box") then
         html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.blackbox.com"><img src="/img/blackbox_logo.png" alt="blackbox&reg;"></a></h1>\n'
+    elseif (t.version_label == "riedel") then
+        html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.riedel.net"><img src="/img/riedel_logo.png" alt="riedel"></a></h1>\n'
     else
         html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"></h1>\n'
     end

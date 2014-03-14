@@ -221,6 +221,25 @@ void edid_merge_display_dsc(uint8_t *edid, uint8_t *dscs1, uint8_t *dscs2, bool 
         ptr3[15] = 0x20;
         ptr3[16] = 0x20;
         ptr3[17] = 0x20;
+#elif defined VERSION_LABEL_RIEDEL
+        ptr3[0]  = 0x00;
+        ptr3[1]  = 0x00;
+        ptr3[2]  = 0x00;
+        ptr3[3]  = 0xFC;
+        ptr3[4]  = 0x00;
+        ptr3[5]  = 'R';
+        ptr3[6]  = 'I';
+        ptr3[7]  = 'E';
+        ptr3[8]  = 'D';
+        ptr3[9]  = 'E';
+        ptr3[10] = 'L';
+        ptr3[11] = 0x0A;
+        ptr3[12] = 0x20;
+        ptr3[13] = 0x20;
+        ptr3[14] = 0x20;
+        ptr3[15] = 0x20;
+        ptr3[16] = 0x20;
+        ptr3[17] = 0x20;
 #else
     #error NO LABEL IS SELECTED IN FILE: "version.h"
 #endif
@@ -288,6 +307,8 @@ void edid_merge(t_edid *edid1, t_edid *edid2)
     edid.id_manufacturer    = 0xA315; // EMC
 #elif defined VERSION_LABEL_BLACKBOX
     edid.id_manufacturer    = 0x5808; // BBX
+#elif defined VERSION_LABEL_RIEDEL
+    edid.id_manufacturer    = 0x8C48; // RDL
 #else
     #error NO LABEL IS SELECTED IN FILE: "version.h"
 #endif

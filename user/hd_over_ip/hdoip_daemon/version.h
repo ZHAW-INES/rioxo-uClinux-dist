@@ -7,17 +7,19 @@
 #define VERSION_MINOR           (VERSION_SOFTWARE & 0xFFFF)
 
 // version tag (max. 50 letters)
-#define VERSION_TAG             "test version"
+#define VERSION_TAG             "edid"
 
 // select one label
-#define VERSION_LABEL_RIOXO
+#undef  VERSION_LABEL_RIOXO
 #undef  VERSION_LABEL_EMCORE
 #undef  VERSION_LABEL_BLACKBOX
+#define VERSION_LABEL_RIEDEL
 
 // check if only one label is selected
-#if (((defined VERSION_LABEL_RIOXO) && (!defined VERSION_LABEL_EMCORE) && (!defined VERSION_LABEL_BLACKBOX)) || \
-    ((!defined VERSION_LABEL_RIOXO) && (defined VERSION_LABEL_EMCORE) && (!defined VERSION_LABEL_BLACKBOX)) || \
-    ((!defined VERSION_LABEL_RIOXO) && (!defined VERSION_LABEL_EMCORE) && (defined VERSION_LABEL_BLACKBOX)))
+#if (((defined VERSION_LABEL_RIOXO) && (!defined VERSION_LABEL_EMCORE) && (!defined VERSION_LABEL_BLACKBOX) && (!defined VERSION_LABEL_RIEDEL)) || \
+    ((!defined VERSION_LABEL_RIOXO) && ( defined VERSION_LABEL_EMCORE) && (!defined VERSION_LABEL_BLACKBOX) && (!defined VERSION_LABEL_RIEDEL)) || \
+    ((!defined VERSION_LABEL_RIOXO) && (!defined VERSION_LABEL_EMCORE) && ( defined VERSION_LABEL_BLACKBOX) && (!defined VERSION_LABEL_RIEDEL)) || \
+    ((!defined VERSION_LABEL_RIOXO) && (!defined VERSION_LABEL_EMCORE) && (!defined VERSION_LABEL_BLACKBOX) && ( defined VERSION_LABEL_RIEDEL)))
 #else
     #error NONE OR MORE THAN ONE LABEL IS SELECTED IN FILE: "version.h"
 #endif
