@@ -1088,6 +1088,8 @@ bool hdoipd_init(int drv)
     reg_set("version_label", "emcore");
 #elif defined VERSION_LABEL_BLACKBOX
     reg_set("version_label", "black box");
+#elif defined VERSION_LABEL_RIEDEL
+    reg_set("version_label", "riedel");
 #else
     #error NO LABEL IS SELECTED IN FILE: "version.h"
 #endif

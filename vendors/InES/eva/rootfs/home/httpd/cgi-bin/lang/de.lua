@@ -5,6 +5,7 @@ label = {
     page_name_rioxo = "Rioxo&reg; : ";
     page_name_emcore = "Emcore : ";    
     page_name_black_box = "Black Box&reg; : ";
+    page_name_riedel = "Riedel : ";
 
     u_decimal = "[dezimal]";
     u_mbps = "[MBit / s]";
@@ -157,9 +158,12 @@ label = {
     p_usb_image = "Testbilder";
 
     -- Page EDID
-    p_edid_mode_receiver = "Benutze EDID vom Empf&auml;nger";
-    p_edid_mode_default = "Benutze eigenes EDID";
+    p_edid_mode_receiver = "Benutze EDID vom Monitor";
+    p_edid_mode_default = "Benutze EDID Parameter vom untenstehenden Menu";
+    p_edid_use_advanced = "Benutze erweiterte Einstellungen";
+    p_edid_advanced = "Erweiterte Video Einstellungen";
     p_edid_transmitter_only = "Nur beim Sender verf&uuml;gbar";
+    p_edid_supported_resolution = "Unterst&uuml;tzte Aufl&ouml;sung";
 
     -- Page firmware
     p_serial_number = "Seriennummer";

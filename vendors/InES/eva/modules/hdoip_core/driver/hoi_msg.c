@@ -714,7 +714,7 @@ int hoi_drv_msg_set_timing(t_hoi* handle, t_hoi_msg_image* msg)
 {
     uint32_t ret = SUCCESS;
 
-    vio_drv_debugx(&handle->vio, &msg->timing, msg->vtb, bdt_return_video_device(&handle->bdt), &handle->gs2972, &handle->adv7441a);
+    vio_drv_debugx(&handle->vio, &msg->timing, msg->vtb, bdt_return_video_device(&handle->bdt), &handle->gs2972, &handle->adv7441a, msg->osd_disable);
 
     return ret;
 }

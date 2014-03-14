@@ -151,7 +151,7 @@ typedef struct variable_list {
    /** buffer to hold the OID */
    oid             name_loc[MAX_OID_LEN];  
    /** 90 percentile < 40. */
-   u_char          buf[0]; //TODO AMIN
+   u_char          buf[1]; //TODO AMIN: net-snmp LIB BUG changed it from 40 to 1
    /** (Opaque) hook for additional data */
    void           *data;
    /** callback to free above */

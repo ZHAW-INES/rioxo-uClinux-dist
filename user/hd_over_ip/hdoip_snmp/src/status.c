@@ -30,7 +30,7 @@ int handle_##h_para(netsnmp_mib_handler *handler,                             \
                           netsnmp_agent_request_info   *reqinfo,              \
                           netsnmp_request_info         *requests){            \
     t_snmp_array arr = {HOIC_GET_R_ONLY, 0, parameter};                       \
-    if (getset_value_generic(&arr, reqinfo->mode, requests) != 0){            \
+	if (getset_value_generic(&arr, reqinfo->mode, requests) != 0){            \
         snmp_log(LOG_ERR, "Could not get/set parameter in (%d)\n", reqinfo->mode ); \
         return SNMP_ERR_GENERR;}                                              \
     return SNMP_ERR_NOERROR;}                                                 \
@@ -56,6 +56,23 @@ void init_status(void){
     static oid serialNumber_oid[] = { 1,3,6,1,4,1,1111,1,1,12 };
     static oid systemUpdate_oid[] = { 1,3,6,1,4,1,1111,1,1,13 };
 
+    static oid sysDescr_oid[] = {1,3,6,1,2,1,1,1};
+    static oid sysObjectId_oid[] = {1,3,6,1,2,1,1,2};
+    static oid sysUpTime_oid[] = {1,3,6,1,2,1,1,3};
+
+    static oid ifNumber_oid[] = 	  {1,3,6,1,2,1,2,1};
+    static oid ifIndex1_oid[] =       {1,3,6,1,2,1,2,2,1,1,1};
+    static oid ifDescr1_oid[] =       {1,3,6,1,2,1,2,2,1,2,1};
+    static oid ifPhysAddress1_oid[] = {1,3,6,1,2,1,2,2,1,6,1};
+    static oid ifIndex2_oid[] =       {1,3,6,1,2,1,2,2,1,1,2};
+    static oid ifDescr2_oid[] =       {1,3,6,1,2,1,2,2,1,2,2};
+    static oid ifPhysAddress2_oid[] = {1,3,6,1,2,1,2,2,1,6,2};
+
+    static oid ipAdEntAddr_oid[] = {1,3,6,1,2,1,4,20,1,1};
+    static oid ipAdEntNetMask_oid[] = {1,3,6,1,2,1,4,20,1,3};
+    static oid ipAdEntBcastAddr_oid[] = {1,3,6,1,2,1,4,20,1,4};
+
+
     DEBUGMSGTL(("status", "Initializing\n"));
 
     REGISTER_SCALAR(systemState, "systemState")
@@ -71,6 +88,24 @@ void init_status(void){
     REGISTER_SCALAR(hdcpStatus, "hdcpStatus")
     REGISTER_SCALAR(serialNumber, "serialNumber")
     REGISTER_SCALAR(systemUpdate, "systemUpdate")
+
+    REGISTER_SCALAR(sysDescr,"sysDescr");
+    REGISTER_SCALAR(sysObjectId,"sysObjectId");
+    REGISTER_SCALAR(sysUpTime,"sysUpTime");
+
+    REGISTER_SCALAR(ifNumber,"ifNumber");
+    REGISTER_SCALAR(ifIndex1,"ifIndex1");
+    REGISTER_SCALAR(ifDescr1,"ifDescr1");
+    REGISTER_SCALAR(ifPhysAddress1,"ifPhysAddress1");
+    REGISTER_SCALAR(ifIndex2,"ifIndex2");
+    REGISTER_SCALAR(ifDescr2,"ifDescr2");
+    REGISTER_SCALAR(ifPhysAddress2,"ifPhysAddress2");
+
+    REGISTER_SCALAR(ipAdEntAddr,"ipAdEntAddr");
+    REGISTER_SCALAR(ipAdEntNetMask,"ipAdEntNetMask");
+    REGISTER_SCALAR(ipAdEntBcastAddr,"ipAdEntBcastAddr");
+
+
 }
 
 /* These functions register the handler for each request
@@ -92,4 +127,21 @@ HANDLE_FUNCTION(multicast, "multicast")
 HANDLE_FUNCTION(hdcpStatus, "hdcp-status")
 HANDLE_FUNCTION(serialNumber, "serial-number")
 HANDLE_FUNCTION(systemUpdate, "system-update")
+
+HANDLE_FUNCTION(sysDescr,"sysDescr")
+HANDLE_FUNCTION(sysObjectId,"sysObjectId")
+HANDLE_FUNCTION(sysUpTime,"sysUpTime")
+
+HANDLE_FUNCTION(ifNumber,"ifNumber")
+HANDLE_FUNCTION(ifDescr1,"ifDescr1")
+HANDLE_FUNCTION(ifIndex1,"ifIndex1")
+HANDLE_FUNCTION(ifPhysAddress1,"ifPhysAddress1")
+HANDLE_FUNCTION(ifDescr2,"ifDescr2")
+HANDLE_FUNCTION(ifIndex2,"ifIndex2")
+HANDLE_FUNCTION(ifPhysAddress2,"ifPhysAddress2")
+
+HANDLE_FUNCTION(ipAdEntAddr,"ipAdEntAddr")
+HANDLE_FUNCTION(ipAdEntNetMask,"ipAdEntNetMask")
+HANDLE_FUNCTION(ipAdEntBcastAddr,"ipAdEntBcastAddr")
+
 

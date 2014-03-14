@@ -26,7 +26,7 @@
 
 /* Default values for MAC registers */
 #define HDOIP_MII_ID			    0
-#define HDOIP_PHY_ID			    0x12  /*  HW revision 1.2: 0x14      HW revision 1.3: 0x12*/
+#define HDOIP_PHY_ID			    0x12  /*  HW revision 1.4: 0x14      HW revision 1.3: 0x12*/
 
 /* Maximum size of a ringbuffer entry. Also defines the maximum packet size. */
 #define MAX_PKTBUF_SIZE				2048

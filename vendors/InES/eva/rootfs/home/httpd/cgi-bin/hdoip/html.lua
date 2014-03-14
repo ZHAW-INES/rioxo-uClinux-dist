@@ -5,7 +5,7 @@ require ("hdoip.pipe")
 
 local html_css_file = "/main.css"
 local html_css_ie = "/ieonly.css"
-local html_favicon = "/favicon.ico"
+--local html_favicon = "/favicon.ico"
 local html_str = "<b>html error</b>"
 local html_table = 0
 local html_table_str = "<b>table error</b>"
@@ -147,7 +147,7 @@ function FormRadioSingle(name, value, label, checked, disable)
     end
 end
 
-function FormRadio(name, values, size, selected)
+function FormRadio(name, values, size, selected, disable)
     local cnt = 0
     local checked
 
@@ -158,7 +158,7 @@ function FormRadio(name, values, size, selected)
             checked = 0
         end
         
-        FormRadioSingle(name, cnt, values[cnt], checked)
+        FormRadioSingle(name, cnt, values[cnt], checked, disable)
         html_str = html_str .. '<br>\n'
         cnt = cnt + 1
     end
@@ -248,8 +248,8 @@ function Header(t, title, script_path, addon)
 
     local menu_class = ""
     local css = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".. html_css_file .."\">\n"
-    local css = css .. '<!--[if IE ]><link href="'.. html_css_ie ..'" rel="stylesheet" type="text/css" /><![endif]-->'
-    local css = css .. "<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\""..html_favicon.."\">\n"
+    local css = css .. '<!--[if IE ]><link href="'.. html_css_ie ..'" rel="stylesheet" type="text/css" /><![endif]-->\n'
+    --local css = css .. "<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\""..html_favicon.."\">\n"
 
     if(t.cookie == nil) then
         t.cookie = ""
@@ -269,6 +269,8 @@ function Header(t, title, script_path, addon)
         html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.emcore.com"><img src="/img/emcore_logo.png" alt="emcore"></a></h1>\n'
     elseif (t.version_label == "black box") then
         html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.blackbox.com"><img src="/img/blackbox_logo.png" alt="blackbox&reg;"></a></h1>\n'
+    elseif (t.version_label == "riedel") then
+        html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"><a href="http://www.riedel.net"><img src="/img/riedel_logo.png" alt="riedel"></a></h1>\n'
     else
         html_str = html_str .. '<div id="headerright"><b>'..dev_name..'</b><br>'..dev_caption..'</div><h1 id="logo"></h1>\n'
     end
